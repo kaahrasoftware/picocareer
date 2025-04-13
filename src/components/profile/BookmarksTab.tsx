@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -15,25 +14,25 @@ import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-
 export function BookmarksTab() {
-  const { user } = useAuthState();
+  const {
+    user
+  } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
-  
+
   // Pagination states
   const [mentorsPage, setMentorsPage] = useState(1);
   const [careersPage, setCareersPage] = useState(1);
   const [majorsPage, setMajorsPage] = useState(1);
   const [scholarshipsPage, setScholarshipsPage] = useState(1);
-  
+
   // State for profile dialog
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
-  
+
   // State for career dialog
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const [showCareerDialog, setShowCareerDialog] = useState(false);
-  
   const PAGE_SIZE = 6;
 
   // Function to handle View Profile button click
@@ -49,33 +48,38 @@ export function BookmarksTab() {
   };
 
   // Fetch bookmarked mentors with pagination
-  const { data: mentorBookmarksData = { data: [], count: 0 }, isLoading: mentorsLoading } = useQuery({
+  const {
+    data: mentorBookmarksData = {
+      data: [],
+      count: 0
+    },
+    isLoading: mentorsLoading
+  } = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, mentorsPage],
     queryFn: async () => {
-      if (!user) return { data: [], count: 0 };
+      if (!user) return {
+        data: [],
+        count: 0
+      };
 
       // Get total count first
-      const { count, error: countError } = await supabase
-        .from("user_bookmarks")
-        .select('*', { count: 'exact' })
-        .eq("profile_id", user.id)
-        .eq("content_type", "mentor");
-      
+      const {
+        count,
+        error: countError
+      } = await supabase.from("user_bookmarks").select('*', {
+        count: 'exact'
+      }).eq("profile_id", user.id).eq("content_type", "mentor");
       if (countError) throw countError;
 
       // Get paginated data with proper join
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
-
-      const { data, error } = await supabase
-        .from("user_bookmarks")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("user_bookmarks").select(`
           content_id
-        `)
-        .eq("profile_id", user.id)
-        .eq("content_type", "mentor")
-        .range(start, end);
-
+        `).eq("profile_id", user.id).eq("content_type", "mentor").range(start, end);
       if (error) {
         console.error("Error fetching mentor bookmarks:", error);
         throw error;
@@ -84,10 +88,10 @@ export function BookmarksTab() {
       // Now fetch the actual mentor profiles
       if (data && data.length > 0) {
         const mentorIds = data.map(bookmark => bookmark.content_id);
-        
-        const { data: mentorProfiles, error: mentorError } = await supabase
-          .from("profiles")
-          .select(`
+        const {
+          data: mentorProfiles,
+          error: mentorError
+        } = await supabase.from("profiles").select(`
             id,
             full_name,
             avatar_url,
@@ -98,27 +102,20 @@ export function BookmarksTab() {
             location,
             skills,
             top_mentor
-          `)
-          .in("id", mentorIds);
-          
+          `).in("id", mentorIds);
         if (mentorError) {
           console.error("Error fetching mentor profiles:", mentorError);
           throw mentorError;
         }
 
         // Fetch company names if needed
-        const companyIds = mentorProfiles
-          .filter(profile => profile.company_id)
-          .map(profile => profile.company_id);
-
+        const companyIds = mentorProfiles.filter(profile => profile.company_id).map(profile => profile.company_id);
         let companiesData = {};
-        
         if (companyIds.length > 0) {
-          const { data: companies, error: companiesError } = await supabase
-            .from("companies")
-            .select("id, name")
-            .in("id", companyIds);
-            
+          const {
+            data: companies,
+            error: companiesError
+          } = await supabase.from("companies").select("id, name").in("id", companyIds);
           if (companiesError) {
             console.error("Error fetching companies:", companiesError);
           } else if (companies) {
@@ -130,18 +127,13 @@ export function BookmarksTab() {
         }
 
         // Fetch career titles for positions
-        const careerIds = mentorProfiles
-          .filter(profile => profile.position)
-          .map(profile => profile.position);
-
+        const careerIds = mentorProfiles.filter(profile => profile.position).map(profile => profile.position);
         let careersData = {};
-        
         if (careerIds.length > 0) {
-          const { data: careers, error: careersError } = await supabase
-            .from("careers")
-            .select("id, title")
-            .in("id", careerIds);
-            
+          const {
+            data: careers,
+            error: careersError
+          } = await supabase.from("careers").select("id, title").in("id", careerIds);
           if (careersError) {
             console.error("Error fetching careers:", careersError);
           } else if (careers) {
@@ -158,63 +150,72 @@ export function BookmarksTab() {
           company_name: profile.company_id ? companiesData[profile.company_id] : null,
           career_title: profile.position ? careersData[profile.position] : null
         }));
-        
-        return { 
-          data: enrichedProfiles, 
-          count: count || 0 
+        return {
+          data: enrichedProfiles,
+          count: count || 0
         };
       }
-      
-      return { data: [], count: count || 0 };
+      return {
+        data: [],
+        count: count || 0
+      };
     },
-    enabled: !!user && activeTab === "mentors",
+    enabled: !!user && activeTab === "mentors"
   });
 
   // Fetch bookmarked careers with pagination - FIXED JOIN QUERY
-  const { data: careerBookmarksData = { data: [], count: 0 }, isLoading: careersLoading } = useQuery({
+  const {
+    data: careerBookmarksData = {
+      data: [],
+      count: 0
+    },
+    isLoading: careersLoading
+  } = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
-      if (!user) return { data: [], count: 0 };
+      if (!user) return {
+        data: [],
+        count: 0
+      };
 
       // Get total count first 
-      const { count, error: countError } = await supabase
-        .from("user_bookmarks")
-        .select('*', { count: 'exact' })
-        .eq("profile_id", user.id)
-        .eq("content_type", "career");
-      
+      const {
+        count,
+        error: countError
+      } = await supabase.from("user_bookmarks").select('*', {
+        count: 'exact'
+      }).eq("profile_id", user.id).eq("content_type", "career");
       if (countError) {
         console.error("Error counting career bookmarks:", countError);
         throw countError;
       }
-      
+
       // Calculate pagination offsets
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
       // First get bookmark IDs
-      const { data: bookmarks, error: bookmarksError } = await supabase
-        .from("user_bookmarks")
-        .select("content_id")
-        .eq("profile_id", user.id)
-        .eq("content_type", "career")
-        .range(start, end);
-
+      const {
+        data: bookmarks,
+        error: bookmarksError
+      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "career").range(start, end);
       if (bookmarksError) {
         console.error("Error fetching career bookmarks:", bookmarksError);
         throw bookmarksError;
       }
-      
       if (!bookmarks || bookmarks.length === 0) {
-        return { data: [], count: count || 0 };
+        return {
+          data: [],
+          count: count || 0
+        };
       }
-      
+
       // Get the actual career data using the bookmark IDs
       const careerIds = bookmarks.map(bookmark => bookmark.content_id);
-      
-      const { data: careers, error: careersError } = await supabase
-        .from("careers")
-        .select(`
+      const {
+        data: careers,
+        error: careersError
+      } = await supabase.from("careers").select(`
           id,
           title,
           description,
@@ -222,35 +223,41 @@ export function BookmarksTab() {
           image_url,
           industry,
           profiles_count
-        `)
-        .in("id", careerIds);
-      
+        `).in("id", careerIds);
       if (careersError) {
         console.error("Error fetching careers data:", careersError);
         throw careersError;
       }
-      
-      return { 
-        data: careers || [], 
-        count: count || 0 
+      return {
+        data: careers || [],
+        count: count || 0
       };
     },
-    enabled: !!user && activeTab === "careers",
+    enabled: !!user && activeTab === "careers"
   });
 
   // Fetch bookmarked academic majors with pagination - FIXED JOIN QUERY
-  const { data: majorBookmarksData = { data: [], count: 0 }, isLoading: majorsLoading } = useQuery({
+  const {
+    data: majorBookmarksData = {
+      data: [],
+      count: 0
+    },
+    isLoading: majorsLoading
+  } = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
-      if (!user) return { data: [], count: 0 };
+      if (!user) return {
+        data: [],
+        count: 0
+      };
 
       // Get total count first
-      const { count, error: countError } = await supabase
-        .from("user_bookmarks")
-        .select('*', { count: 'exact' })
-        .eq("profile_id", user.id)
-        .eq("content_type", "major");
-      
+      const {
+        count,
+        error: countError
+      } = await supabase.from("user_bookmarks").select('*', {
+        count: 'exact'
+      }).eq("profile_id", user.id).eq("content_type", "major");
       if (countError) {
         console.error("Error counting major bookmarks:", countError);
         throw countError;
@@ -259,63 +266,67 @@ export function BookmarksTab() {
       // Get paginated bookmark IDs
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
-
-      const { data: bookmarks, error: bookmarksError } = await supabase
-        .from("user_bookmarks")
-        .select("content_id")
-        .eq("profile_id", user.id)
-        .eq("content_type", "major")
-        .range(start, end);
-
+      const {
+        data: bookmarks,
+        error: bookmarksError
+      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "major").range(start, end);
       if (bookmarksError) {
         console.error("Error fetching major bookmarks:", bookmarksError);
         throw bookmarksError;
       }
-      
       if (!bookmarks || bookmarks.length === 0) {
-        return { data: [], count: count || 0 };
+        return {
+          data: [],
+          count: count || 0
+        };
       }
-      
+
       // Get the actual majors data using the bookmark IDs
       const majorIds = bookmarks.map(bookmark => bookmark.content_id);
-      
-      const { data: majors, error: majorsError } = await supabase
-        .from("majors")
-        .select(`
+      const {
+        data: majors,
+        error: majorsError
+      } = await supabase.from("majors").select(`
           id,
           title,
           description,
           degree_levels,
           featured
-        `)
-        .in("id", majorIds);
-      
+        `).in("id", majorIds);
       if (majorsError) {
         console.error("Error fetching majors data:", majorsError);
         throw majorsError;
       }
-      
-      return { 
-        data: majors || [], 
-        count: count || 0 
+      return {
+        data: majors || [],
+        count: count || 0
       };
     },
-    enabled: !!user && activeTab === "majors",
+    enabled: !!user && activeTab === "majors"
   });
 
   // Fetch bookmarked scholarships with pagination - FIXED JOIN QUERY
-  const { data: scholarshipBookmarksData = { data: [], count: 0 }, isLoading: scholarshipsLoading } = useQuery({
+  const {
+    data: scholarshipBookmarksData = {
+      data: [],
+      count: 0
+    },
+    isLoading: scholarshipsLoading
+  } = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
-      if (!user) return { data: [], count: 0 };
+      if (!user) return {
+        data: [],
+        count: 0
+      };
 
       // Get total count first
-      const { count, error: countError } = await supabase
-        .from("user_bookmarks")
-        .select('*', { count: 'exact' })
-        .eq("profile_id", user.id)
-        .eq("content_type", "scholarship");
-      
+      const {
+        count,
+        error: countError
+      } = await supabase.from("user_bookmarks").select('*', {
+        count: 'exact'
+      }).eq("profile_id", user.id).eq("content_type", "scholarship");
       if (countError) {
         console.error("Error counting scholarship bookmarks:", countError);
         throw countError;
@@ -324,75 +335,64 @@ export function BookmarksTab() {
       // Get paginated bookmark IDs
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
-
-      const { data: bookmarks, error: bookmarksError } = await supabase
-        .from("user_bookmarks")
-        .select("content_id")
-        .eq("profile_id", user.id)
-        .eq("content_type", "scholarship")
-        .range(start, end);
-
+      const {
+        data: bookmarks,
+        error: bookmarksError
+      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "scholarship").range(start, end);
       if (bookmarksError) {
         console.error("Error fetching scholarship bookmarks:", bookmarksError);
         throw bookmarksError;
       }
-      
       if (!bookmarks || bookmarks.length === 0) {
-        return { data: [], count: count || 0 };
+        return {
+          data: [],
+          count: count || 0
+        };
       }
-      
+
       // Get the actual scholarships data using the bookmark IDs
       const scholarshipIds = bookmarks.map(bookmark => bookmark.content_id);
-      
-      const { data: scholarships, error: scholarshipsError } = await supabase
-        .from("scholarships")
-        .select("*")
-        .in("id", scholarshipIds);
-      
+      const {
+        data: scholarships,
+        error: scholarshipsError
+      } = await supabase.from("scholarships").select("*").in("id", scholarshipIds);
       if (scholarshipsError) {
         console.error("Error fetching scholarships data:", scholarshipsError);
         throw scholarshipsError;
       }
-      
+
       // Transform the data to ensure eligibility_criteria is properly structured
       const transformedData = scholarships.map(scholarship => {
         return {
           ...scholarship,
           // Ensure eligibility_criteria is properly structured
-          eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' 
-            ? JSON.parse(scholarship.eligibility_criteria) 
-            : scholarship.eligibility_criteria || {}
+          eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' ? JSON.parse(scholarship.eligibility_criteria) : scholarship.eligibility_criteria || {}
         };
       });
-      
-      return { 
-        data: transformedData, 
-        count: count || 0 
+      return {
+        data: transformedData,
+        count: count || 0
       };
     },
-    enabled: !!user && activeTab === "scholarships",
+    enabled: !!user && activeTab === "scholarships"
   });
 
   // Extract the data arrays and counts
   const mentorBookmarks = mentorBookmarksData?.data || [];
   const mentorsTotalCount = mentorBookmarksData?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
-
   const careerBookmarks = careerBookmarksData?.data || [];
   const careersTotalCount = careerBookmarksData?.count || 0;
   const careersTotalPages = Math.ceil(careersTotalCount / PAGE_SIZE);
-
   const majorBookmarks = majorBookmarksData?.data || [];
   const majorsTotalCount = majorBookmarksData?.count || 0;
   const majorsTotalPages = Math.ceil(majorsTotalCount / PAGE_SIZE);
-
   const scholarshipBookmarks = scholarshipBookmarksData?.data || [];
   const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
   const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
 
   // Function to render empty state with custom message
-  const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => (
-    <Card className="text-center p-8 border-dashed bg-muted/30">
+  const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => <Card className="text-center p-8 border-dashed bg-muted/30">
       <div className="flex flex-col items-center gap-2">
         <div className="bg-primary/10 p-3 rounded-full">
           {icon}
@@ -405,8 +405,7 @@ export function BookmarksTab() {
           <Link to={linkPath}>Browse {type}</Link>
         </Button>
       </div>
-    </Card>
-  );
+    </Card>;
 
   // Log data for debugging purposes
   useEffect(() => {
@@ -414,9 +413,7 @@ export function BookmarksTab() {
       console.log("No mentor bookmarks found");
     }
   }, [activeTab, mentorBookmarks.length, mentorsLoading]);
-
-  return (
-    <>
+  return <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -442,23 +439,13 @@ export function BookmarksTab() {
           </TabsList>
 
           <TabsContent value="mentors" className="space-y-4">
-            {mentorsLoading ? (
-              <div className="flex justify-center items-center py-12">
+            {mentorsLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : mentorBookmarks.length === 0 ? (
-              renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor")
-            ) : (
-              <>
+              </div> : mentorBookmarks.length === 0 ? renderEmptyState("mentors", <User className="h-8 w-8 text-primary" />, "/mentor") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mentorBookmarks.map((mentor) => (
-                    <Card key={mentor.id} className="hover:shadow transition-all">
+                  {mentorBookmarks.map(mentor => <Card key={mentor.id} className="hover:shadow transition-all">
                       <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                        <ProfileAvatar
-                          avatarUrl={mentor.avatar_url}
-                          imageAlt={mentor.full_name || "Mentor"}
-                          size="md"
-                        />
+                        <ProfileAvatar avatarUrl={mentor.avatar_url} imageAlt={mentor.full_name || "Mentor"} size="md" />
                         <div>
                           <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
                           <p className="text-sm text-muted-foreground">
@@ -471,56 +458,31 @@ export function BookmarksTab() {
                           {mentor.bio || "No bio available"}
                         </p>
                         <div className="mt-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full"
-                            onClick={() => handleViewProfile(mentor.id)}
-                          >
+                          <Button variant="outline" size="sm" className="w-full" onClick={() => handleViewProfile(mentor.id)}>
                             View Profile
                           </Button>
                         </div>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>)}
                 </div>
                 
-                <StandardPagination 
-                  currentPage={mentorsPage}
-                  totalPages={mentorsTotalPages}
-                  onPageChange={setMentorsPage}
-                />
-              </>
-            )}
+                <StandardPagination currentPage={mentorsPage} totalPages={mentorsTotalPages} onPageChange={setMentorsPage} />
+              </>}
           </TabsContent>
 
           <TabsContent value="careers" className="space-y-4">
-            {careersLoading ? (
-              <div className="flex justify-center items-center py-12">
+            {careersLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : careerBookmarks.length === 0 ? (
-              renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career")
-            ) : (
-              <>
+              </div> : careerBookmarks.length === 0 ? renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {careerBookmarks.map((career) => (
-                    <Card key={career.id} className="hover:shadow transition-all overflow-hidden group">
+                  {careerBookmarks.map(career => <Card key={career.id} className="hover:shadow transition-all overflow-hidden group">
                       {/* Redesigned header with more visible images */}
                       <div className="h-40 bg-gradient-to-br from-blue-50 to-indigo-100 relative">
-                        {career.image_url && (
-                          <img 
-                            src={career.image_url} 
-                            alt={career.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        {career.image_url && <img src={career.image_url} alt={career.title} className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
                           <div className="p-3 text-white">
                             <h3 className="font-semibold text-lg drop-shadow-md">{career.title}</h3>
-                            {career.industry && (
-                              <p className="text-sm opacity-90">{career.industry}</p>
-                            )}
+                            {career.industry && <p className="text-sm opacity-90">{career.industry}</p>}
                           </div>
                         </div>
                       </div>
@@ -529,139 +491,76 @@ export function BookmarksTab() {
                           {career.description}
                         </p>
                         <div className="flex items-center justify-between mb-3">
-                          {career.salary_range && (
-                            <span className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block">
+                          {career.salary_range && <span className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block">
                               {career.salary_range}
-                            </span>
-                          )}
-                          {career.profiles_count > 0 && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            </span>}
+                          {career.profiles_count > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1">
                               <User className="h-3 w-3" />
                               {career.profiles_count} {career.profiles_count === 1 ? 'Mentor' : 'Mentors'}
-                            </span>
-                          )}
+                            </span>}
                         </div>
-                        <Button
-                          onClick={() => handleViewCareerDetails(career.id)}
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full mt-2"
-                        >
+                        <Button onClick={() => handleViewCareerDetails(career.id)} variant="outline" size="sm" className="w-full mt-2">
                           View Details
                         </Button>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>)}
                 </div>
                 
-                <StandardPagination 
-                  currentPage={careersPage}
-                  totalPages={careersTotalPages}
-                  onPageChange={setCareersPage}
-                />
-              </>
-            )}
+                <StandardPagination currentPage={careersPage} totalPages={careersTotalPages} onPageChange={setCareersPage} />
+              </>}
           </TabsContent>
 
           <TabsContent value="majors" className="space-y-4">
-            {majorsLoading ? (
-              <div className="flex justify-center items-center py-12">
+            {majorsLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : majorBookmarks.length === 0 ? (
-              renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors")
-            ) : (
-              <>
+              </div> : majorBookmarks.length === 0 ? renderEmptyState("academic majors", <BookOpen className="h-8 w-8 text-primary" />, "/majors") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {majorBookmarks.map((major) => (
-                    <Card key={major.id} className="hover:shadow transition-all">
+                  {majorBookmarks.map(major => <Card key={major.id} className="hover:shadow transition-all">
                       <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                           <BookOpen className="h-5 w-5 text-primary" />
                           {major.title}
                         </CardTitle>
-                        {major.featured && (
-                          <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                            Featured
-                          </span>
-                        )}
+                        {major.featured}
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
                           {major.description}
                         </p>
-                        {major.degree_levels && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {Array.isArray(major.degree_levels) && major.degree_levels.slice(0, 3).map((degree, index) => (
-                              <span key={index} className="bg-blue-50 text-blue-700 text-xs rounded-full px-2 py-0.5">
+                        {major.degree_levels && <div className="flex flex-wrap gap-1 mb-3">
+                            {Array.isArray(major.degree_levels) && major.degree_levels.slice(0, 3).map((degree, index) => <span key={index} className="bg-blue-50 text-blue-700 text-xs rounded-full px-2 py-0.5">
                                 {degree}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                              </span>)}
+                          </div>}
                         <Button asChild variant="outline" size="sm" className="w-full mt-2">
                           <Link to={`/majors/${major.id}`}>View Details</Link>
                         </Button>
                       </CardContent>
-                    </Card>
-                  ))}
+                    </Card>)}
                 </div>
                 
-                <StandardPagination 
-                  currentPage={majorsPage}
-                  totalPages={majorsTotalPages}
-                  onPageChange={setMajorsPage}
-                />
-              </>
-            )}
+                <StandardPagination currentPage={majorsPage} totalPages={majorsTotalPages} onPageChange={setMajorsPage} />
+              </>}
           </TabsContent>
 
           <TabsContent value="scholarships" className="space-y-4">
-            {scholarshipsLoading ? (
-              <div className="flex justify-center items-center py-12">
+            {scholarshipsLoading ? <div className="flex justify-center items-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : scholarshipBookmarks.length === 0 ? (
-              renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships")
-            ) : (
-              <>
+              </div> : scholarshipBookmarks.length === 0 ? renderEmptyState("scholarships", <GraduationCap className="h-8 w-8 text-primary" />, "/scholarships") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {scholarshipBookmarks.map((scholarship) => (
-                    <ScholarshipCard
-                      key={scholarship.id}
-                      scholarship={scholarship}
-                    />
-                  ))}
+                  {scholarshipBookmarks.map(scholarship => <ScholarshipCard key={scholarship.id} scholarship={scholarship} />)}
                 </div>
                 
-                <StandardPagination 
-                  currentPage={scholarshipsPage}
-                  totalPages={scholarshipsTotalPages}
-                  onPageChange={setScholarshipsPage}
-                />
-              </>
-            )}
+                <StandardPagination currentPage={scholarshipsPage} totalPages={scholarshipsTotalPages} onPageChange={setScholarshipsPage} />
+              </>}
           </TabsContent>
         </Tabs>
       </div>
 
       {/* Dialog for Mentor Profile */}
-      {selectedMentorId && (
-        <ProfileDetailsDialog
-          userId={selectedMentorId}
-          open={showProfileDialog}
-          onOpenChange={setShowProfileDialog}
-        />
-      )}
+      {selectedMentorId && <ProfileDetailsDialog userId={selectedMentorId} open={showProfileDialog} onOpenChange={setShowProfileDialog} />}
 
       {/* Dialog for Career Details */}
-      {selectedCareerId && (
-        <CareerDetailsDialog
-          careerId={selectedCareerId}
-          open={showCareerDialog}
-          onOpenChange={setShowCareerDialog}
-        />
-      )}
-    </>
-  );
+      {selectedCareerId && <CareerDetailsDialog careerId={selectedCareerId} open={showCareerDialog} onOpenChange={setShowCareerDialog} />}
+    </>;
 }
