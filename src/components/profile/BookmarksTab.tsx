@@ -14,6 +14,9 @@ import { StandardPagination } from "@/components/common/StandardPagination";
 import { EmptyState } from "@/components/scholarships/EmptyState";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { MajorDetails } from "@/components/MajorDetails";
+import type { Major } from "@/types/database/majors";
+
 export function BookmarksTab() {
   const {
     user
@@ -33,6 +36,11 @@ export function BookmarksTab() {
   // State for career dialog
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const [showCareerDialog, setShowCareerDialog] = useState(false);
+  
+  // State for major dialog
+  const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
+  const [showMajorDialog, setShowMajorDialog] = useState(false);
+  
   const PAGE_SIZE = 6;
 
   // Function to handle View Profile button click
@@ -45,6 +53,12 @@ export function BookmarksTab() {
   const handleViewCareerDetails = (careerId: string) => {
     setSelectedCareerId(careerId);
     setShowCareerDialog(true);
+  };
+  
+  // Function to handle View Major Details button click
+  const handleViewMajorDetails = (major: Major) => {
+    setSelectedMajor(major);
+    setShowMajorDialog(true);
   };
 
   // Fetch bookmarked mentors with pagination
@@ -263,42 +277,65 @@ export function BookmarksTab() {
         throw countError;
       }
 
-      // Get paginated bookmark IDs
+      // Get paginated data with proper join
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
       const {
-        data: bookmarks,
-        error: bookmarksError
-      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "major").range(start, end);
-      if (bookmarksError) {
-        console.error("Error fetching major bookmarks:", bookmarksError);
-        throw bookmarksError;
+        data,
+        error
+      } = await supabase.from("user_bookmarks").select(`
+          content_id
+        `).eq("profile_id", user.id).eq("content_type", "major").range(start, end);
+      if (error) {
+        console.error("Error fetching major bookmarks:", error);
+        throw error;
       }
-      if (!bookmarks || bookmarks.length === 0) {
+
+      // Now fetch the actual major profiles
+      if (data && data.length > 0) {
+        const majorIds = data.map(bookmark => bookmark.content_id);
+        const {
+          data: majors,
+          error: majorsError
+        } = await supabase.from("majors").select(`
+            id,
+            title,
+            description,
+            degree_levels,
+            featured,
+            potential_salary,
+            skill_match,
+            tools_knowledge,
+            common_courses,
+            profiles_count,
+            learning_objectives,
+            interdisciplinary_connections,
+            job_prospects,
+            certifications_to_consider,
+            affiliated_programs,
+            gpa_expectations,
+            transferable_skills,
+            passion_for_subject,
+            professional_associations,
+            global_applicability,
+            common_difficulties,
+            career_opportunities,
+            intensity,
+            stress_level,
+            dropout_rates,
+            majors_to_consider_switching_to
+          `).in("id", majorIds);
+        if (majorsError) {
+          console.error("Error fetching majors data:", majorsError);
+          throw majorsError;
+        }
         return {
-          data: [],
+          data: majors || [],
           count: count || 0
         };
       }
-
-      // Get the actual majors data using the bookmark IDs
-      const majorIds = bookmarks.map(bookmark => bookmark.content_id);
-      const {
-        data: majors,
-        error: majorsError
-      } = await supabase.from("majors").select(`
-          id,
-          title,
-          description,
-          degree_levels,
-          featured
-        `).in("id", majorIds);
-      if (majorsError) {
-        console.error("Error fetching majors data:", majorsError);
-        throw majorsError;
-      }
       return {
-        data: majors || [],
+        data: [],
         count: count || 0
       };
     },
@@ -532,8 +569,13 @@ export function BookmarksTab() {
                                 {degree}
                               </span>)}
                           </div>}
-                        <Button asChild variant="outline" size="sm" className="w-full mt-2">
-                          <Link to={`/majors/${major.id}`}>View Details</Link>
+                        <Button 
+                          onClick={() => handleViewMajorDetails(major)} 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full mt-2"
+                        >
+                          View Details
                         </Button>
                       </CardContent>
                     </Card>)}
@@ -562,5 +604,14 @@ export function BookmarksTab() {
 
       {/* Dialog for Career Details */}
       {selectedCareerId && <CareerDetailsDialog careerId={selectedCareerId} open={showCareerDialog} onOpenChange={setShowCareerDialog} />}
+      
+      {/* Dialog for Major Details */}
+      {selectedMajor && (
+        <MajorDetails
+          major={selectedMajor}
+          open={showMajorDialog}
+          onOpenChange={setShowMajorDialog}
+        />
+      )}
     </>;
 }
