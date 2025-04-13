@@ -29,6 +29,8 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
         count: 0
       };
 
+      console.log("Fetching career bookmarks for user:", user.id);
+
       // Get total count first 
       const {
         count,
@@ -36,6 +38,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
       } = await supabase.from("user_bookmarks").select('*', {
         count: 'exact'
       }).eq("profile_id", user.id).eq("content_type", "career");
+      
       if (countError) {
         console.error("Error counting career bookmarks:", countError);
         throw countError;
@@ -49,17 +52,27 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
       const {
         data: bookmarks,
         error: bookmarksError
-      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "career").range(start, end);
+      } = await supabase.from("user_bookmarks")
+        .select("content_id")
+        .eq("profile_id", user.id)
+        .eq("content_type", "career")
+        .range(start, end);
+        
       if (bookmarksError) {
         console.error("Error fetching career bookmarks:", bookmarksError);
         throw bookmarksError;
       }
+      
       if (!bookmarks || bookmarks.length === 0) {
+        console.log("No career bookmarks found");
         return {
           data: [],
           count: count || 0
         };
       }
+
+      // Log the bookmarks we found
+      console.log("Career bookmark IDs found:", bookmarks.map(b => b.content_id));
 
       // Get the actual career data using the bookmark IDs
       const careerIds = bookmarks.map(bookmark => bookmark.content_id);
@@ -75,10 +88,14 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
           industry,
           profiles_count
         `).in("id", careerIds);
+        
       if (careersError) {
         console.error("Error fetching careers data:", careersError);
         throw careersError;
       }
+      
+      console.log("Career data fetched:", careers);
+      
       return {
         data: careers || [],
         count: count || 0

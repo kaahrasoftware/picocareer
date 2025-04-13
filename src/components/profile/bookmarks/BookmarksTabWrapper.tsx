@@ -55,6 +55,8 @@ export function BookmarksTabWrapper() {
   useEffect(() => {
     if (!user) return;
     
+    console.log('Setting up real-time subscription for bookmarks, user ID:', user.id);
+    
     // Listen for changes to bookmarks for the current user
     const channel = supabase
       .channel('bookmark-changes')
@@ -75,6 +77,8 @@ export function BookmarksTabWrapper() {
             const contentId = payload.new?.content_id || payload.old?.content_id;
             const isDelete = payload.eventType === 'DELETE';
             
+            console.log(`Bookmark ${isDelete ? 'removed' : 'added'} - Type: ${contentType}, ID: ${contentId}`);
+            
             // Pass the update details to our processing function
             const bookmarkUpdate: RealtimeBookmarkUpdate = {
               contentType: contentType as any,
@@ -83,13 +87,17 @@ export function BookmarksTabWrapper() {
             };
             
             // Update the query cache based on content type
-            if (bookmarkUpdate.contentType === 'mentor') {
+            if (contentType === 'mentor') {
+              console.log('Invalidating mentor bookmarks query');
               queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
-            } else if (bookmarkUpdate.contentType === 'career') {
+            } else if (contentType === 'career') {
+              console.log('Invalidating career bookmarks query');
               queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
-            } else if (bookmarkUpdate.contentType === 'major') {
+            } else if (contentType === 'major') {
+              console.log('Invalidating major bookmarks query');
               queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
-            } else if (bookmarkUpdate.contentType === 'scholarship') {
+            } else if (contentType === 'scholarship') {
+              console.log('Invalidating scholarship bookmarks query');
               queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
             }
             
@@ -108,6 +116,7 @@ export function BookmarksTabWrapper() {
     
     // Clean up subscription on unmount
     return () => {
+      console.log('Cleaning up bookmark subscription');
       supabase.removeChannel(channel);
     };
   }, [user, queryClient]);
