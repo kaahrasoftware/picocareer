@@ -11,12 +11,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailRequest {
-  sessionId: string;
-  type: 'confirmation' | 'cancellation' | 'update' | 'reminder';
-  fromEmail?: string;
-}
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const handler = async (req: Request): Promise<Response> => {
@@ -84,26 +78,22 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Failed to create notifications');
     }
 
-    // Get mentor's reminder time settings
-    const { data: mentorSettings, error: settingsError } = await supabase
-      .from('user_settings')
-      .select('setting_value')
+    // Get mentor's reminder times from the new mentor_reminder_settings table
+    const { data: reminderSettings, error: reminderSettingsError } = await supabase
+      .from('mentor_reminder_settings')
+      .select('minutes_before')
       .eq('profile_id', session.mentor_id)
-      .eq('setting_type', 'session_settings')
-      .single();
+      .eq('enabled', true);
 
-    // Default reminder times if settings not found
+    if (reminderSettingsError) {
+      console.error('Error fetching reminder settings:', reminderSettingsError);
+    }
+
+    // Default reminder time if no settings found
     let reminderTimes = [30]; // Default reminder time in minutes
     
-    if (!settingsError && mentorSettings?.setting_value) {
-      try {
-        const parsedSettings = JSON.parse(mentorSettings.setting_value);
-        if (parsedSettings.reminderTimes && Array.isArray(parsedSettings.reminderTimes)) {
-          reminderTimes = parsedSettings.reminderTimes;
-        }
-      } catch (e) {
-        console.error('Error parsing mentor settings:', e);
-      }
+    if (reminderSettings && reminderSettings.length > 0) {
+      reminderTimes = reminderSettings.map(setting => setting.minutes_before);
     }
 
     // Schedule reminders based on mentor settings

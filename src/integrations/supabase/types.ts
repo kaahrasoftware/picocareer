@@ -1863,6 +1863,41 @@ export type Database = {
           },
         ]
       }
+      mentor_reminder_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          minutes_before: number
+          profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          minutes_before: number
+          profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          minutes_before?: number
+          profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_reminder_settings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_resources: {
         Row: {
           author_id: string
@@ -3590,6 +3625,10 @@ export type Database = {
         Returns: undefined
       }
       match_profiles_with_majors: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      migrate_reminder_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

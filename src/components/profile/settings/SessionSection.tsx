@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useReminderSettings, ReminderSetting } from "@/hooks/useReminderSettings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -9,12 +11,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckIcon, Info, Plus, Trash } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+
 interface SessionSectionProps {
   profileId: string;
 }
+
 interface SessionSettings {
   defaultSessionDuration: number;
-  reminderTimes: Array<15 | 30 | 60 | 1440>;
   defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
   customMeetingPlatform: string;
   allowRescheduling: boolean;
@@ -22,9 +25,9 @@ interface SessionSettings {
   allowCancellation: boolean;
   cancellationTimeLimit: number;
 }
+
 const defaultSessionSettings: SessionSettings = {
   defaultSessionDuration: 30,
-  reminderTimes: [30],
   defaultMeetingPlatform: 'Google Meet',
   customMeetingPlatform: '',
   allowRescheduling: true,
@@ -32,6 +35,9 @@ const defaultSessionSettings: SessionSettings = {
   allowCancellation: true,
   cancellationTimeLimit: 24
 };
+
+type ReminderTimeOption = 15 | 30 | 60 | 1440;
+
 export function SessionSection({
   profileId
 }: SessionSectionProps) {
@@ -39,10 +45,20 @@ export function SessionSection({
     getSetting,
     updateSetting
   } = useUserSettings(profileId);
+  
+  const {
+    reminderSettings,
+    isLoading: isLoadingReminders,
+    isAddingReminder,
+    addReminderSetting,
+    deleteReminderSetting
+  } = useReminderSettings(profileId);
+
   const [settings, setSettings] = useState<SessionSettings>(defaultSessionSettings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [newReminderTime, setNewReminderTime] = useState<15 | 30 | 60 | 1440>(30);
+  const [newReminderTime, setNewReminderTime] = useState<ReminderTimeOption>(30);
+
   useEffect(() => {
     const sessionSettings = getSetting('session_settings');
     if (sessionSettings) {
@@ -57,50 +73,55 @@ export function SessionSection({
       }
     }
   }, [getSetting]);
+
   const handleToggle = (key: keyof SessionSettings, value: boolean) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
+
   const handleInputChange = (key: keyof SessionSettings, value: string | number) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
+
   const addReminderTime = () => {
-    if (settings.reminderTimes.length >= 5) {
+    if (reminderSettings.length >= 5) {
       setErrorMessage("Maximum of 5 reminder times allowed");
       return;
     }
 
-    // Don't add duplicate times
-    if (!settings.reminderTimes.includes(newReminderTime)) {
-      setSettings(prev => ({
-        ...prev,
-        reminderTimes: [...prev.reminderTimes, newReminderTime].sort((a, b) => a - b)
-      }));
-      setErrorMessage(null);
-    } else {
+    // Check if this reminder time already exists
+    if (reminderSettings.some(rs => rs.minutes_before === newReminderTime)) {
       setErrorMessage("This reminder time is already added");
+      return;
     }
+
+    addReminderSetting.mutate(
+      { minutesBefore: newReminderTime },
+      {
+        onSuccess: () => setErrorMessage(null)
+      }
+    );
   };
-  const removeReminderTime = (time: number) => {
-    if (settings.reminderTimes.length <= 1) {
+
+  const removeReminderTime = (id: string) => {
+    if (reminderSettings.length <= 1) {
       setErrorMessage("At least one reminder time is required");
       return;
     }
-    setSettings(prev => ({
-      ...prev,
-      reminderTimes: prev.reminderTimes.filter(t => t !== time)
-    }));
-    setErrorMessage(null);
+    
+    deleteReminderSetting.mutate(id);
   };
+
   const saveSettings = async () => {
     setSaveStatus('saving');
     setErrorMessage(null);
     try {
+      // Update other session settings (excluding reminderTimes which are now in a separate table)
       await updateSetting.mutateAsync({
         type: 'session_settings',
         value: JSON.stringify(settings)
@@ -114,6 +135,11 @@ export function SessionSection({
       setTimeout(() => setSaveStatus('idle'), 5000);
     }
   };
+
+  const formatReminderTime = (minutes: number): string => {
+    return minutes === 1440 ? "1 day" : `${minutes} minutes`;
+  };
+
   return <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold mb-2">Session Settings</h3>
@@ -158,22 +184,24 @@ export function SessionSection({
                   </TooltipProvider>
                 </div>
                 <Badge variant="outline" className="text-xs">
-                  {settings.reminderTimes.length}/5
+                  {reminderSettings.length}/5
                 </Badge>
               </div>
               
               <div className="flex flex-wrap gap-2 mb-2">
-                {settings.reminderTimes.map(time => <Badge key={time} variant="secondary" className="flex items-center gap-1 px-2 py-1">
-                    {time === 1440 ? "1 day" : `${time} minutes`}
-                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4 p-0 ml-1" onClick={() => removeReminderTime(time)}>
+                {reminderSettings.map(reminder => (
+                  <Badge key={reminder.id} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                    {formatReminderTime(reminder.minutes_before)}
+                    <Button type="button" variant="ghost" size="icon" className="h-4 w-4 p-0 ml-1" onClick={() => removeReminderTime(reminder.id)}>
                       <Trash className="h-3 w-3" />
                       <span className="sr-only">Remove reminder</span>
                     </Button>
-                  </Badge>)}
+                  </Badge>
+                ))}
               </div>
               
               <div className="flex items-center gap-2">
-                <Select value={newReminderTime.toString()} onValueChange={value => setNewReminderTime(parseInt(value) as 15 | 30 | 60 | 1440)}>
+                <Select value={newReminderTime.toString()} onValueChange={value => setNewReminderTime(parseInt(value) as ReminderTimeOption)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select time" />
                   </SelectTrigger>
@@ -185,7 +213,7 @@ export function SessionSection({
                   </SelectContent>
                 </Select>
                 
-                <Button type="button" variant="outline" size="sm" onClick={addReminderTime} disabled={settings.reminderTimes.length >= 5}>
+                <Button type="button" variant="outline" size="sm" onClick={addReminderTime} disabled={isAddingReminder || reminderSettings.length >= 5}>
                   <Plus className="h-4 w-4 mr-1" />
                   Add
                 </Button>
@@ -224,10 +252,6 @@ export function SessionSection({
                 <Input id="customMeetingPlatform" type="text" value={settings.customMeetingPlatform} onChange={e => handleInputChange('customMeetingPlatform', e.target.value)} placeholder="Enter platform name" />
               </div>}
           </div>
-
-          
-
-          {settings.allowRescheduling}
 
           <div className="flex items-center justify-between">
             <div>
