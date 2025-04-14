@@ -74,8 +74,11 @@ export function GenericBookmarkButton({
     
     // Set up real-time subscription for bookmark changes
     if (authSession) {
+      const channelName = `bookmark-${contentType}-${contentId}`;
+      console.log(`Setting up channel: ${channelName}`);
+      
       const channel = supabase
-        .channel(`bookmark-${contentType}-${contentId}`)
+        .channel(channelName)
         .on(
           'postgres_changes',
           {
@@ -100,9 +103,12 @@ export function GenericBookmarkButton({
             });
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`Bookmark subscription status for ${channelName}:`, status);
+        });
       
       return () => {
+        console.log(`Removing channel: ${channelName}`);
         supabase.removeChannel(channel);
       };
     }

@@ -91,7 +91,9 @@ export function BookmarksTab() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Bookmark subscription status:', status);
+      });
     
     return () => {
       supabase.removeChannel(channel);

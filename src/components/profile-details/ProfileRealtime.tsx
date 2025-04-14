@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QueryClient } from "@tanstack/react-query";
@@ -30,7 +31,9 @@ export function ProfileRealtime({ userId, open, session, queryClient }: ProfileR
           queryClient.invalidateQueries({ queryKey: ['profile', userId] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Profile subscription status:', status);
+      });
 
     return () => {
       console.log('Cleaning up real-time subscription');
