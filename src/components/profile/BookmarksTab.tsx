@@ -1,4 +1,4 @@
 
-import { BookmarksTab } from './bookmarks';
+import { BookmarksTabWrapper } from './bookmarks/BookmarksTabWrapper';
 
-export { BookmarksTab };
+export { BookmarksTabWrapper as BookmarksTab };

@@ -1,2 +1,2 @@
 
-export { BookmarksTabWrapper as BookmarksTab } from './BookmarksTabWrapper';
+export { BookmarksTabWrapper } from './BookmarksTabWrapper';
