@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -47,7 +48,8 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
 
         setIsBookmarked(false);
         // Invalidate the bookmarks query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        // Using wildcard to invalidate all pages
+        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
         
         toast({
           title: "Bookmark removed",
@@ -65,7 +67,8 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
 
         setIsBookmarked(true);
         // Invalidate the bookmarks query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        // Using wildcard to invalidate all pages
+        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
         
         toast({
           title: "Profile bookmarked",
