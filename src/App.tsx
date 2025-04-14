@@ -5,7 +5,6 @@ import { ThemeProvider } from './components/ui/theme-provider';
 import { AuthProvider } from './context/AuthContext';
 import { Router } from './Router';
 import { Toaster } from '@/components/ui/toaster';
-import { SessionTimeoutHandler } from './SessionTimeoutHandler';
 import { HubStorageInitializer } from './components/hub/HubStorageInitializer';
 
 function App() {
@@ -23,7 +22,6 @@ function App() {
         <ThemeProvider defaultTheme="light" storageKey="ui-theme">
           <Router />
           <Toaster />
-          <SessionTimeoutHandler />
           <HubStorageInitializer />
         </ThemeProvider>
       </AuthProvider>
