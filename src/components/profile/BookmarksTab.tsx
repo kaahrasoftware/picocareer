@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,37 +22,45 @@ export function BookmarksTab() {
   const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
 
+  // Pagination states
   const [mentorsPage, setMentorsPage] = useState(1);
   const [careersPage, setCareersPage] = useState(1);
   const [majorsPage, setMajorsPage] = useState(1);
   const [scholarshipsPage, setScholarshipsPage] = useState(1);
 
+  // State for profile dialog
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
 
+  // State for career dialog
   const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
   const [showCareerDialog, setShowCareerDialog] = useState(false);
   
+  // State for major dialog
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [showMajorDialog, setShowMajorDialog] = useState(false);
   
   const PAGE_SIZE = 6;
 
+  // Function to handle View Profile button click
   const handleViewProfile = (mentorId: string) => {
     setSelectedMentorId(mentorId);
     setShowProfileDialog(true);
   };
 
+  // Function to handle View Career Details button click
   const handleViewCareerDetails = (careerId: string) => {
     setSelectedCareerId(careerId);
     setShowCareerDialog(true);
   };
   
+  // Function to handle View Major Details button click
   const handleViewMajorDetails = (major: Major) => {
     setSelectedMajor(major);
     setShowMajorDialog(true);
   };
 
+  // Set up real-time subscription for bookmark changes
   useEffect(() => {
     if (!user) return;
     
@@ -66,35 +75,30 @@ export function BookmarksTab() {
           filter: `profile_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Bookmark change detected:', payload);
+          console.log('Bookmark changed:', payload);
           
+          // Determine which query to invalidate based on content_type
           const contentType = payload.new?.content_type || payload.old?.content_type;
           
-          switch(contentType) {
-            case 'mentor':
-              refetchMentors();
-              break;
-            case 'career':
-              refetchCareers();
-              break;
-            case 'major':
-              refetchMajors();
-              break;
-            case 'scholarship':
-              refetchScholarships();
-              break;
+          if (contentType === 'mentor') {
+            refetchMentors();
+          } else if (contentType === 'career') {
+            refetchCareers();
+          } else if (contentType === 'major') {
+            refetchMajors();
+          } else if (contentType === 'scholarship') {
+            refetchScholarships();
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Bookmark subscription status:', status);
-      });
+      .subscribe();
     
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, refetchMentors, refetchCareers, refetchMajors, refetchScholarships]);
+  }, [user]);
 
+  // Fetch bookmarked mentors with pagination
   const {
     data: mentorBookmarksData = {
       data: [],
@@ -110,6 +114,7 @@ export function BookmarksTab() {
         count: 0
       };
 
+      // Get total count first
       const {
         count,
         error: countError
@@ -118,6 +123,7 @@ export function BookmarksTab() {
       }).eq("profile_id", user.id).eq("content_type", "mentor");
       if (countError) throw countError;
 
+      // Get paginated data with proper join
       const start = (mentorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
       const {
@@ -131,6 +137,7 @@ export function BookmarksTab() {
         throw error;
       }
 
+      // Now fetch the actual mentor profiles
       if (data && data.length > 0) {
         const mentorIds = data.map(bookmark => bookmark.content_id);
         const {
@@ -153,6 +160,7 @@ export function BookmarksTab() {
           throw mentorError;
         }
 
+        // Fetch company names if needed
         const companyIds = mentorProfiles.filter(profile => profile.company_id).map(profile => profile.company_id);
         let companiesData = {};
         if (companyIds.length > 0) {
@@ -170,6 +178,7 @@ export function BookmarksTab() {
           }
         }
 
+        // Fetch career titles for positions
         const careerIds = mentorProfiles.filter(profile => profile.position).map(profile => profile.position);
         let careersData = {};
         if (careerIds.length > 0) {
@@ -187,6 +196,7 @@ export function BookmarksTab() {
           }
         }
 
+        // Enrich mentor profiles with company names and career titles
         const enrichedProfiles = mentorProfiles.map(profile => ({
           ...profile,
           company_name: profile.company_id ? companiesData[profile.company_id] : null,
@@ -205,6 +215,7 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "mentors"
   });
 
+  // Fetch bookmarked careers with pagination
   const {
     data: careerBookmarksData = {
       data: [],
@@ -220,6 +231,7 @@ export function BookmarksTab() {
         count: 0
       };
 
+      // Get total count first 
       const {
         count,
         error: countError
@@ -231,9 +243,11 @@ export function BookmarksTab() {
         throw countError;
       }
 
+      // Calculate pagination offsets
       const start = (careersPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
 
+      // First get bookmark IDs
       const {
         data: bookmarks,
         error: bookmarksError
@@ -249,6 +263,7 @@ export function BookmarksTab() {
         };
       }
 
+      // Get the actual career data using the bookmark IDs
       const careerIds = bookmarks.map(bookmark => bookmark.content_id);
       const {
         data: careers,
@@ -274,6 +289,7 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "careers"
   });
 
+  // Fetch bookmarked academic majors with pagination
   const {
     data: majorBookmarksData = {
       data: [],
@@ -289,6 +305,7 @@ export function BookmarksTab() {
         count: 0
       };
 
+      // Get total count first
       const {
         count,
         error: countError
@@ -300,6 +317,7 @@ export function BookmarksTab() {
         throw countError;
       }
 
+      // Get paginated data with proper join
       const start = (majorsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
       const {
@@ -313,6 +331,7 @@ export function BookmarksTab() {
         throw error;
       }
 
+      // Now fetch the actual major profiles
       if (data && data.length > 0) {
         const majorIds = data.map(bookmark => bookmark.content_id);
         const {
@@ -363,6 +382,7 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "majors"
   });
 
+  // Fetch bookmarked scholarships with pagination
   const {
     data: scholarshipBookmarksData = {
       data: [],
@@ -378,6 +398,7 @@ export function BookmarksTab() {
         count: 0
       };
 
+      // Get total count first
       const {
         count,
         error: countError
@@ -389,6 +410,7 @@ export function BookmarksTab() {
         throw countError;
       }
 
+      // Get paginated bookmark IDs
       const start = (scholarshipsPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
       const {
@@ -406,6 +428,7 @@ export function BookmarksTab() {
         };
       }
 
+      // Get the actual scholarships data using the bookmark IDs
       const scholarshipIds = bookmarks.map(bookmark => bookmark.content_id);
       const {
         data: scholarships,
@@ -416,9 +439,11 @@ export function BookmarksTab() {
         throw scholarshipsError;
       }
 
+      // Transform the data to ensure eligibility_criteria is properly structured
       const transformedData = scholarships.map(scholarship => {
         return {
           ...scholarship,
+          // Ensure eligibility_criteria is properly structured
           eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' ? JSON.parse(scholarship.eligibility_criteria) : scholarship.eligibility_criteria || {}
         };
       });
@@ -430,6 +455,7 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "scholarships"
   });
 
+  // Extract the data arrays and counts
   const mentorBookmarks = mentorBookmarksData?.data || [];
   const mentorsTotalCount = mentorBookmarksData?.count || 0;
   const mentorsTotalPages = Math.ceil(mentorsTotalCount / PAGE_SIZE);
@@ -443,6 +469,7 @@ export function BookmarksTab() {
   const scholarshipsTotalCount = scholarshipBookmarksData?.count || 0;
   const scholarshipsTotalPages = Math.ceil(scholarshipsTotalCount / PAGE_SIZE);
 
+  // Function to render empty state with custom message
   const renderEmptyState = (type: string, icon: React.ReactNode, linkPath: string) => <Card className="text-center p-8 border-dashed bg-muted/30">
       <div className="flex flex-col items-center gap-2">
         <div className="bg-primary/10 p-3 rounded-full">
@@ -521,6 +548,7 @@ export function BookmarksTab() {
               </div> : careerBookmarks.length === 0 ? renderEmptyState("careers", <Briefcase className="h-8 w-8 text-primary" />, "/career") : <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {careerBookmarks.map(career => <Card key={career.id} className="hover:shadow transition-all overflow-hidden group">
+                      {/* Redesigned header with more visible images */}
                       <div className="h-40 bg-gradient-to-br from-blue-50 to-indigo-100 relative">
                         {career.image_url && <img src={career.image_url} alt={career.title} className="w-full h-full object-cover" />}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
@@ -606,8 +634,13 @@ export function BookmarksTab() {
         </Tabs>
       </div>
 
+      {/* Dialog for Mentor Profile */}
       {selectedMentorId && <ProfileDetailsDialog userId={selectedMentorId} open={showProfileDialog} onOpenChange={setShowProfileDialog} />}
+
+      {/* Dialog for Career Details */}
       {selectedCareerId && <CareerDetailsDialog careerId={selectedCareerId} open={showCareerDialog} onOpenChange={setShowCareerDialog} />}
+      
+      {/* Dialog for Major Details */}
       {selectedMajor && (
         <MajorDetails
           major={selectedMajor}

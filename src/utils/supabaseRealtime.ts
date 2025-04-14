@@ -10,7 +10,7 @@ export async function enableRealtimeForTables() {
     // Check if real-time is already enabled for these tables
     const { data, error } = await supabase.from('_realtime').select('*');
     
-    console.log('Setting up real-time subscriptions for bookmarks and other tables');
+    console.log('Setting up real-time subscriptions for bookmarks');
     
     // Set up channel for user bookmarks
     const bookmarksChannel = supabase
@@ -22,9 +22,7 @@ export async function enableRealtimeForTables() {
       }, payload => {
         console.log('Bookmark change detected:', payload);
       })
-      .subscribe(status => {
-        console.log('Bookmark subscription status:', status);
-      });
+      .subscribe();
       
     return bookmarksChannel;
   } catch (error) {
