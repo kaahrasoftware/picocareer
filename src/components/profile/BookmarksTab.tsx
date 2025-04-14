@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -18,9 +19,7 @@ import { MajorDetails } from "@/components/MajorDetails";
 import type { Major } from "@/types/database/majors";
 
 export function BookmarksTab() {
-  const {
-    user
-  } = useAuthState();
+  const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
 
   // Pagination states
@@ -61,13 +60,52 @@ export function BookmarksTab() {
     setShowMajorDialog(true);
   };
 
+  // Set up real-time subscription for bookmark changes
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('bookmarks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_bookmarks',
+          filter: `profile_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Bookmark changed:', payload);
+          
+          // Determine which query to invalidate based on content_type
+          const contentType = payload.new?.content_type || payload.old?.content_type;
+          
+          if (contentType === 'mentor') {
+            refetchMentors();
+          } else if (contentType === 'career') {
+            refetchCareers();
+          } else if (contentType === 'major') {
+            refetchMajors();
+          } else if (contentType === 'scholarship') {
+            refetchScholarships();
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Fetch bookmarked mentors with pagination
   const {
     data: mentorBookmarksData = {
       data: [],
       count: 0
     },
-    isLoading: mentorsLoading
+    isLoading: mentorsLoading,
+    refetch: refetchMentors
   } = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, mentorsPage],
     queryFn: async () => {
@@ -177,13 +215,14 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "mentors"
   });
 
-  // Fetch bookmarked careers with pagination - FIXED JOIN QUERY
+  // Fetch bookmarked careers with pagination
   const {
     data: careerBookmarksData = {
       data: [],
       count: 0
     },
-    isLoading: careersLoading
+    isLoading: careersLoading,
+    refetch: refetchCareers
   } = useQuery({
     queryKey: ["bookmarked-careers", user?.id, careersPage],
     queryFn: async () => {
@@ -250,13 +289,14 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "careers"
   });
 
-  // Fetch bookmarked academic majors with pagination - FIXED JOIN QUERY
+  // Fetch bookmarked academic majors with pagination
   const {
     data: majorBookmarksData = {
       data: [],
       count: 0
     },
-    isLoading: majorsLoading
+    isLoading: majorsLoading,
+    refetch: refetchMajors
   } = useQuery({
     queryKey: ["bookmarked-majors", user?.id, majorsPage],
     queryFn: async () => {
@@ -342,13 +382,14 @@ export function BookmarksTab() {
     enabled: !!user && activeTab === "majors"
   });
 
-  // Fetch bookmarked scholarships with pagination - FIXED JOIN QUERY
+  // Fetch bookmarked scholarships with pagination
   const {
     data: scholarshipBookmarksData = {
       data: [],
       count: 0
     },
-    isLoading: scholarshipsLoading
+    isLoading: scholarshipsLoading,
+    refetch: refetchScholarships
   } = useQuery({
     queryKey: ["bookmarked-scholarships", user?.id, scholarshipsPage],
     queryFn: async () => {
@@ -444,12 +485,6 @@ export function BookmarksTab() {
       </div>
     </Card>;
 
-  // Log data for debugging purposes
-  useEffect(() => {
-    if (activeTab === "mentors" && mentorBookmarks.length === 0 && !mentorsLoading) {
-      console.log("No mentor bookmarks found");
-    }
-  }, [activeTab, mentorBookmarks.length, mentorsLoading]);
   return <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">

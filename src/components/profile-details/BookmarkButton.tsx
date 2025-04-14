@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,6 +21,67 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
   if (authSession?.user?.id === profileId) {
     return null;
   }
+
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      if (!authSession) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("user_bookmarks")
+          .select()
+          .match({
+            profile_id: authSession.user.id,
+            content_type: "mentor",
+            content_id: profileId,
+          })
+          .maybeSingle();
+
+        if (error) throw error;
+        setIsBookmarked(!!data);
+      } catch (error) {
+        console.error("Error checking bookmark status:", error);
+      }
+    };
+
+    checkBookmarkStatus();
+    
+    // Set up real-time subscription for bookmark changes
+    if (authSession) {
+      const channel = supabase
+        .channel('bookmark-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_bookmarks',
+            filter: `profile_id=eq.${authSession.user.id}`
+          },
+          (payload) => {
+            console.log('Bookmark changed:', payload);
+            
+            // Invalidate all bookmark-related queries to trigger refetch
+            queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+            queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
+            queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
+            queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
+            
+            // If this is specifically for the current profile, update state
+            if (payload.new && payload.new.content_id === profileId) {
+              setIsBookmarked(true);
+            } else if (payload.old && payload.old.content_id === profileId) {
+              setIsBookmarked(false);
+            }
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [authSession, profileId, queryClient]);
 
   const handleBookmark = async () => {
     if (!authSession) {
@@ -46,8 +108,9 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
         if (error) throw error;
 
         setIsBookmarked(false);
-        // Invalidate the bookmarks query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        
+        // Invalidate specific bookmark queries to trigger immediate UI update
+        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
         
         toast({
           title: "Bookmark removed",
@@ -64,8 +127,9 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
         if (error) throw error;
 
         setIsBookmarked(true);
-        // Invalidate the bookmarks query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+        
+        // Invalidate specific bookmark queries to trigger immediate UI update
+        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
         
         toast({
           title: "Profile bookmarked",
@@ -81,32 +145,6 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
       });
     }
   };
-
-  // Check if profile is bookmarked on component mount
-  useEffect(() => {
-    const checkBookmarkStatus = async () => {
-      if (!authSession) return;
-
-      try {
-        const { data, error } = await supabase
-          .from("user_bookmarks")
-          .select()
-          .match({
-            profile_id: authSession.user.id,
-            content_type: "mentor",
-            content_id: profileId,
-          })
-          .maybeSingle();
-
-        if (error) throw error;
-        setIsBookmarked(!!data);
-      } catch (error) {
-        console.error("Error checking bookmark status:", error);
-      }
-    };
-
-    checkBookmarkStatus();
-  }, [authSession, profileId]);
 
   return (
     <button
