@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { MeetingPlatform } from "@/types/calendar";
 import { useBookSession } from "@/hooks/useBookSession";
 import { useToast } from "@/hooks/use-toast";
@@ -46,15 +45,11 @@ export function useSessionBooking() {
         menteeTelegramUsername: formData.menteeTelegramUsername
       });
       
-      if (!formData.date || !formData.selectedTime || !formData.sessionType) {
-        throw new Error("Missing required session information");
-      }
-      
       const sessionResult = await bookSession({
         mentorId,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
+        date: formData.date!,
+        selectedTime: formData.selectedTime!,
+        sessionTypeId: formData.sessionType!,
         note: formData.note,
         meetingPlatform: formData.meetingPlatform,
         menteePhoneNumber: formData.menteePhoneNumber,
@@ -65,27 +60,11 @@ export function useSessionBooking() {
         throw new Error(sessionResult.error || 'Failed to book session');
       }
 
-      // Get the session type name for notification
-      let sessionTypeName = "Mentoring Session";
-      try {
-        const { data: sessionType } = await supabase
-          .from('mentor_session_types')
-          .select('type, custom_type_name')
-          .eq('id', formData.sessionType)
-          .single();
-          
-        if (sessionType) {
-          sessionTypeName = sessionType.custom_type_name || sessionType.type;
-        }
-      } catch (error) {
-        console.error('Error fetching session type name:', error);
-      }
-
       // Notify admins about the new session booking
       await notifyAdmins({
         mentorName,
         menteeName,
-        sessionType: sessionTypeName,
+        sessionType: "Unknown Session Type",
         scheduledAt: formData.date
       });
 
