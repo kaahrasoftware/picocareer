@@ -1,10 +1,11 @@
+
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { MentorTab } from "@/components/profile/MentorTab";
-import { BookmarksTab } from "@/components/profile/BookmarksTab";
+import { BookmarksTabWrapper } from "@/components/profile/BookmarksTabWrapper";
 import { SettingsTab } from "@/components/profile/SettingsTab";
 import { WalletTab } from "@/components/profile/WalletTab";
 import { 
@@ -20,11 +21,11 @@ import type { Profile } from "@/types/database/profiles";
 interface ProfileTabsProps {
   profile: Profile | null;
   isMentor: boolean;
+  isAdmin: boolean;
   onTabChange: (value: string) => void;
 }
 
-export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
-  const isAdmin = profile?.user_type === 'admin';
+export function ProfileTabs({ profile, isMentor, isAdmin, onTabChange }: ProfileTabsProps) {
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const defaultTab = tabFromUrl || 'profile';
@@ -102,7 +103,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
       )}
 
       <TabsContent value="bookmarks">
-        <BookmarksTab />
+        <BookmarksTabWrapper />
       </TabsContent>
 
       {isAdmin && (
