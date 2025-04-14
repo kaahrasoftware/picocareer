@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
 import { TimeSlotSelector } from "./TimeSlotSelector";
@@ -42,7 +42,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   // Reset meeting platform when session type changes
   useEffect(() => {
     if (availablePlatforms.length > 0) {
-      setMeetingPlatform(availablePlatforms[0]);
+      setMeetingPlatform(availablePlatforms[0] as MeetingPlatform);
       setPhoneNumber("");
       setTelegramUsername("");
     }
@@ -59,7 +59,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
       menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
       menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
     });
-  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
+  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername, onFormChange]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -90,7 +90,9 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
                 sessionTypes={sessionTypes}
                 onSessionTypeSelect={(type) => {
                   setSessionType(type);
-                  setMeetingPlatform(availablePlatforms[0] || "Google Meet");
+                  if (availablePlatforms[0]) {
+                    setMeetingPlatform(availablePlatforms[0] as MeetingPlatform);
+                  }
                 }}
               />
             </div>
@@ -107,7 +109,7 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
                   value={meetingPlatform}
                   onValueChange={setMeetingPlatform}
                   onGoogleAuthErrorClear={() => {}}
-                  availablePlatforms={availablePlatforms}
+                  availablePlatforms={availablePlatforms as MeetingPlatform[]}
                 />
 
                 {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (

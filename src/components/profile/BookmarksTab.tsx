@@ -1,5 +1,5 @@
 
-// Simple re-export to maintain the same API
+// Direct export of BookmarksTabWrapper
 import { BookmarksTabWrapper } from './bookmarks/BookmarksTabWrapper';
 
 export { BookmarksTabWrapper as BookmarksTab };

@@ -1,11 +1,12 @@
 
-import React from 'react';  // Explicitly import React
+import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
 import { User } from "lucide-react";
-import { MentorProfile } from "./types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { MentorProfile } from "./types";
 
 export function MentorBookmarks() {
   const { session } = useAuthSession();
@@ -25,15 +26,12 @@ export function MentorBookmarks() {
             id,
             full_name,
             avatar_url,
-            user_type,
             position,
-            bio,
             company_id,
-            company:companies(name),
             location,
-            skills,
-            top_mentor
-          )
+            bio
+          ),
+          companies(name)
         `)
         .eq('profile_id', userId)
         .eq('content_type', 'mentor')
@@ -45,14 +43,10 @@ export function MentorBookmarks() {
         id: bookmark.content_id,
         full_name: bookmark.profiles.full_name,
         avatar_url: bookmark.profiles.avatar_url,
-        user_type: bookmark.profiles.user_type,
         position: bookmark.profiles.position,
-        bio: bookmark.profiles.bio,
-        company_id: bookmark.profiles.company_id,
+        company_name: bookmark.companies?.name,
         location: bookmark.profiles.location,
-        skills: bookmark.profiles.skills,
-        top_mentor: bookmark.profiles.top_mentor,
-        company_name: bookmark.profiles.company?.name
+        bio: bookmark.profiles.bio
       }));
 
       return { 
@@ -68,9 +62,7 @@ export function MentorBookmarks() {
   const totalPages = data?.totalPages || 1;
 
   const handleViewMentor = (mentor: MentorProfile) => {
-    // Open the mentor profile dialog
     window.history.pushState({}, '', `/mentor?dialog=true&profileId=${mentor.id}`);
-    // Dispatch a custom event to open the mentor profile dialog
     window.dispatchEvent(new CustomEvent('openMentorProfile', { detail: mentor.id }));
   };
 
@@ -80,24 +72,30 @@ export function MentorBookmarks() {
       className="cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
       onClick={() => onView(mentor)}
     >
-      <div className="flex p-4 items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-          {mentor.avatar_url ? (
-            <img src={mentor.avatar_url} alt={mentor.full_name} className="w-12 h-12 rounded-full object-cover" />
-          ) : (
-            <User className="h-6 w-6 text-primary" />
-          )}
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-4">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={mentor.avatar_url || ''} alt={mentor.full_name} />
+            <AvatarFallback>
+              {mentor.full_name?.charAt(0) || '?'}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-semibold text-base">{mentor.full_name}</h3>
+            {mentor.position && (
+              <p className="text-sm text-muted-foreground">
+                {mentor.position} {mentor.company_name ? `at ${mentor.company_name}` : ''}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="flex-1 overflow-hidden">
-          <h3 className="font-semibold text-base truncate">{mentor.full_name}</h3>
-          <p className="text-sm text-muted-foreground truncate">
-            {mentor.position}
-            {mentor.company_name && ` at ${mentor.company_name}`}
-          </p>
-          {mentor.location && (
-            <p className="text-xs text-muted-foreground truncate">{mentor.location}</p>
-          )}
-        </div>
+        
+        {mentor.location && (
+          <div className="text-sm mt-2">
+            <span className="font-medium">Location:</span>{" "}
+            <span className="text-muted-foreground">{mentor.location}</span>
+          </div>
+        )}
       </div>
     </div>
   );

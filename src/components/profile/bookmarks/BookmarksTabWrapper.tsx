@@ -1,5 +1,5 @@
 
-import React from 'react';  // Explicitly import React to ensure hooks work
+import React from 'react';  // Explicitly import React to ensure hooks work correctly
 import { Bookmark, GraduationCap, Briefcase, Award } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MentorBookmarks } from './MentorBookmarks';

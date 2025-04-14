@@ -1,32 +1,24 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';
 import { Link } from "react-router-dom";
-import { StandardPagination } from "@/components/common/StandardPagination";
-import { EmptyState } from "@/components/scholarships/EmptyState";
-import { BookmarkedEntity, BookmarkType } from "./types";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Button } from "@/components/ui/button";
+import { PageLoader } from "@/components/ui/page-loader";
+import { Pagination } from "@/components/ui/pagination";
+import type { EmptyStateProps } from "./types";
 
-interface BookmarksListProps<T extends BookmarkedEntity> {
+interface BookmarksListProps<T> {
   bookmarks: T[];
   isLoading: boolean;
-  emptyStateProps: {
-    icon: React.ReactNode;
-    linkPath: string;
-    type: string;
-  };
+  emptyStateProps: EmptyStateProps;
   totalPages: number;
   currentPage: number;
   setPage: (page: number) => void;
   onViewDetails: (item: T) => void;
-  renderCard: (item: T, handleView: (item: T) => void) => React.ReactNode;
-  bookmarkType: BookmarkType;
+  renderCard: (item: T, onView: (item: T) => void) => React.ReactNode;
+  bookmarkType: string;
 }
 
-export function BookmarksList<T extends BookmarkedEntity>({
+export function BookmarksList<T>({
   bookmarks,
   isLoading,
   emptyStateProps,
@@ -38,44 +30,45 @@ export function BookmarksList<T extends BookmarkedEntity>({
   bookmarkType
 }: BookmarksListProps<T>) {
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <PageLoader isLoading={true} variant="cards" count={4} />;
   }
 
   if (bookmarks.length === 0) {
     return (
-      <Card className="text-center p-8 border-dashed bg-muted/30">
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-primary/10 p-3 rounded-full">
-            {emptyStateProps.icon}
-          </div>
-          <h3 className="font-semibold text-xl mt-2">No bookmarked {emptyStateProps.type}</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-            You haven't bookmarked any {emptyStateProps.type} yet. When you find {emptyStateProps.type} you 
-            like, click the bookmark icon to save them here.
-          </p>
-          <Button asChild>
-            <Link to={emptyStateProps.linkPath}>Browse {emptyStateProps.type}</Link>
-          </Button>
+      <div className="text-center py-8 bg-card border rounded-lg p-8">
+        <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          {emptyStateProps.icon}
         </div>
-      </Card>
+        <h3 className="text-lg font-medium mb-2">No Bookmarked {emptyStateProps.type}</h3>
+        <p className="text-muted-foreground mb-4">
+          You haven't bookmarked any {emptyStateProps.type.toLowerCase()} yet.
+        </p>
+        <Button asChild>
+          <Link to={emptyStateProps.linkPath}>Explore {emptyStateProps.type}</Link>
+        </Button>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bookmarks.map((item) => renderCard(item, onViewDetails))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {bookmarks.map((bookmark, index) => (
+          <React.Fragment key={index}>
+            {renderCard(bookmark, onViewDetails)}
+          </React.Fragment>
+        ))}
       </div>
-      
-      <StandardPagination 
-        currentPage={currentPage} 
-        totalPages={totalPages} 
-        onPageChange={setPage} 
-      />
-    </>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      )}
+    </div>
   );
 }

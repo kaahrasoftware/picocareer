@@ -1,11 +1,11 @@
 
-import React from 'react';  // Explicitly import React
+import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
 import { GraduationCap } from "lucide-react";
-import { MajorProfile } from "./types";
+import type { MajorProfile } from "./types";
 
 export function MajorBookmarks() {
   const { session } = useAuthSession();
@@ -25,13 +25,8 @@ export function MajorBookmarks() {
             id,
             title,
             description,
-            degree_levels,
-            featured,
-            potential_salary,
-            skill_match,
-            tools_knowledge,
-            common_courses,
-            profiles_count
+            image_url,
+            category
           )
         `)
         .eq('profile_id', userId)
@@ -44,13 +39,8 @@ export function MajorBookmarks() {
         id: bookmark.content_id,
         title: bookmark.majors.title,
         description: bookmark.majors.description,
-        degree_levels: bookmark.majors.degree_levels,
-        featured: bookmark.majors.featured,
-        potential_salary: bookmark.majors.potential_salary,
-        skill_match: bookmark.majors.skill_match,
-        tools_knowledge: bookmark.majors.tools_knowledge,
-        common_courses: bookmark.majors.common_courses,
-        profiles_count: bookmark.majors.profiles_count
+        image_url: bookmark.majors.image_url,
+        category: bookmark.majors.category
       }));
 
       return { 
@@ -66,9 +56,7 @@ export function MajorBookmarks() {
   const totalPages = data?.totalPages || 1;
 
   const handleViewMajor = (major: MajorProfile) => {
-    // Open the major details dialog
     window.history.pushState({}, '', `/program?dialog=true&majorId=${major.id}`);
-    // Dispatch a custom event to open the major details dialog
     window.dispatchEvent(new CustomEvent('openMajorDetails', { detail: major.id }));
   };
 
@@ -86,20 +74,12 @@ export function MajorBookmarks() {
           <h3 className="font-semibold text-base">{major.title}</h3>
         </div>
         
-        <div className="flex flex-col gap-2 mt-4">
-          {major.potential_salary && (
-            <div className="text-sm">
-              <span className="font-medium">Potential Salary:</span>{" "}
-              <span className="text-muted-foreground">{major.potential_salary}</span>
-            </div>
-          )}
-          {major.degree_levels && major.degree_levels.length > 0 && (
-            <div className="text-sm">
-              <span className="font-medium">Degree Levels:</span>{" "}
-              <span className="text-muted-foreground">{major.degree_levels.join(', ')}</span>
-            </div>
-          )}
-        </div>
+        {major.category && (
+          <div className="text-sm mt-4">
+            <span className="font-medium">Category:</span>{" "}
+            <span className="text-muted-foreground">{major.category}</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
 import { Briefcase } from "lucide-react";
-import { CareerProfile } from "./types";
+import type { CareerProfile } from "./types";
 
 export function CareerBookmarks() {
   const { session } = useAuthSession();
