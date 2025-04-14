@@ -10,8 +10,6 @@ export type AuthProtectionLevel = 'required' | 'optional' | 'public';
 
 export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional') {
   const { session, user, loading, error, signOut } = useAuth();
-  const navigate = useNavigate();
-  
   let queryClient;
   
   try {
@@ -20,6 +18,8 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
   } catch (e) {
     console.warn('useQueryClient called outside QueryClientProvider, some features may not work properly');
   }
+  
+  const navigate = useNavigate();
   
   // Handle route protection based on authentication state
   React.useEffect(() => {

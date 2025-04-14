@@ -1,28 +1,33 @@
 
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from './components/ui/theme-provider';
-import { AuthProvider } from './context/AuthContext';
-import { Router } from './Router';
-import { Toaster } from '@/components/ui/toaster';
-import { HubStorageInitializer } from './components/hub/HubStorageInitializer';
+import { BrowserRouter as Router } from "react-router-dom";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { AppRoutes } from "@/router/AppRoutes";
+import { AuthProvider } from "@/context/AuthContext";
+import { SessionTimeoutHandler } from "@/components/auth/SessionTimeoutHandler";
+
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000, // 1 minute
-      },
-    },
-  });
-  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          <Router />
-          <Toaster />
-          <HubStorageInitializer />
+        <ThemeProvider defaultTheme="light" storageKey="picocareer-theme">
+          <Router>
+            <SessionTimeoutHandler />
+            <AppRoutes />
+            <Toaster />
+          </Router>
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
