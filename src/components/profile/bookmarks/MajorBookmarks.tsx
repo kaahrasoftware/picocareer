@@ -149,7 +149,7 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
       isLoading={majorBookmarksQuery.isLoading}
       emptyStateProps={{
         icon: <BookOpen className="h-8 w-8 text-primary" />,
-        linkPath: "/majors",
+        linkPath: "/program",
         type: "academic majors"
       }}
       totalPages={totalPages}

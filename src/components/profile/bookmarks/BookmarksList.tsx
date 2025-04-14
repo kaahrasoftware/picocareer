@@ -58,7 +58,7 @@ export function BookmarksList<T extends BookmarkedEntity>({
             like, click the bookmark icon to save them here.
           </p>
           <Button asChild>
-            <Link to={emptyStateProps.linkPath}>Browse {emptyStateProps.type}</Link>
+            <Link to={bookmarkType === "major" ? "/program" : emptyStateProps.linkPath}>Browse {emptyStateProps.type}</Link>
           </Button>
         </div>
       </Card>

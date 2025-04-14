@@ -13,10 +13,12 @@ import { CareerBookmarks } from "./CareerBookmarks";
 import { MajorBookmarks } from "./MajorBookmarks";
 import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
 import { MajorProfile, RealtimeBookmarkUpdate } from "./types";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function BookmarksTabWrapper() {
   const { user } = useAuthState();
   const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
+  const queryClient = useQueryClient();
 
   // State for profile dialog
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
@@ -96,7 +98,7 @@ export function BookmarksTabWrapper() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, queryClient]);
 
   return (
     <div className="space-y-6">
