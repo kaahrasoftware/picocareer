@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -52,49 +51,6 @@ export function BookmarksTab() {
     setSelectedMajor(major);
     setShowMajorDialog(true);
   };
-
-  useEffect(() => {
-    if (!user) return;
-    
-    const channel = supabase
-      .channel('bookmarks-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_bookmarks',
-          filter: `profile_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Bookmark change detected:', payload);
-          
-          const contentType = payload.new?.content_type || payload.old?.content_type;
-          
-          switch(contentType) {
-            case 'mentor':
-              refetchMentors();
-              break;
-            case 'career':
-              refetchCareers();
-              break;
-            case 'major':
-              refetchMajors();
-              break;
-            case 'scholarship':
-              refetchScholarships();
-              break;
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Bookmark subscription status:', status);
-      });
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, refetchMentors, refetchCareers, refetchMajors, refetchScholarships]);
 
   const {
     data: mentorBookmarksData = {
@@ -458,6 +414,49 @@ export function BookmarksTab() {
         </Button>
       </div>
     </Card>;
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('bookmarks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_bookmarks',
+          filter: `profile_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Bookmark change detected:', payload);
+          
+          const contentType = payload.new?.content_type || payload.old?.content_type;
+          
+          switch(contentType) {
+            case 'mentor':
+              refetchMentors();
+              break;
+            case 'career':
+              refetchCareers();
+              break;
+            case 'major':
+              refetchMajors();
+              break;
+            case 'scholarship':
+              refetchScholarships();
+              break;
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Bookmark subscription status:', status);
+      });
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetchMentors, refetchCareers, refetchMajors, refetchScholarships]);
 
   return <>
       <div className="space-y-6">
