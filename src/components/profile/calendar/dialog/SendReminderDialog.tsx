@@ -26,38 +26,12 @@ export function SendReminderDialog({
   const handleSendReminder = async () => {
     setIsLoading(true);
     try {
-      // Get session details to identify mentee
-      const { data: session, error: sessionError } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          scheduled_at,
-          mentor_id,
-          mentee_id,
-          mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, email),
-          mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, email),
-          session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
-        `)
-        .eq('id', sessionId)
-        .single();
-
-      if (sessionError) throw sessionError;
-      
-      // Verify sender is the mentor
-      if (session.mentor_id !== senderId) {
-        throw new Error("Only the mentor can send session reminders");
-      }
-
-      const customMessage = message.trim() 
-        ? message 
-        : `This is a reminder for our upcoming mentoring session.`;
-
       // Call the edge function to send the reminder
       const { error } = await supabase.functions.invoke('send-session-reminder', {
         body: {
           sessionId,
           senderId,
-          customMessage
+          customMessage: message.trim()
         }
       });
 
@@ -90,33 +64,27 @@ export function SendReminderDialog({
             Send a reminder to the mentee about the upcoming session.
           </DialogDescription>
         </DialogHeader>
-
+        
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <label htmlFor="message" className="text-sm font-medium">
-              Custom message (optional)
+              Add a personal message (optional)
             </label>
             <Textarea
               id="message"
-              placeholder="Add a personalized message to your reminder..."
+              placeholder="Looking forward to our session!"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="h-24"
+              rows={4}
             />
-            <p className="text-xs text-muted-foreground">
-              If left empty, a default reminder message will be sent.
-            </p>
           </div>
         </div>
-
+        
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSendReminder} 
-            disabled={isLoading}
-          >
+          <Button onClick={handleSendReminder} disabled={isLoading}>
             {isLoading ? "Sending..." : "Send Reminder"}
           </Button>
         </DialogFooter>

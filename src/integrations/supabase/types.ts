@@ -2904,6 +2904,44 @@ export type Database = {
           },
         ]
       }
+      session_reminders: {
+        Row: {
+          created_at: string
+          id: string
+          minutes_before: number
+          reminder_time: string
+          sent: boolean
+          sent_at: string | null
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minutes_before: number
+          reminder_time: string
+          sent?: boolean
+          sent_at?: string | null
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minutes_before?: number
+          reminder_time?: string
+          sent?: boolean
+          sent_at?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_reminders_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "mentor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       token_packages: {
         Row: {
           created_at: string

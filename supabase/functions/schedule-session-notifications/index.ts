@@ -93,7 +93,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     // Default reminder times if settings not found
-    let reminderTimes = [60, 30, 10]; // Default reminder times in minutes
+    let reminderTimes = [30]; // Default reminder time in minutes
     
     if (!settingsError && mentorSettings?.setting_value) {
       try {
@@ -106,8 +106,9 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Schedule reminder notifications based on mentor settings
+    // Schedule reminders based on mentor settings
     const scheduledAt = new Date(session.scheduled_at);
+    const sessionReminders = [];
 
     for (const minutes of reminderTimes) {
       const reminderTime = new Date(scheduledAt.getTime() - minutes * 60000);
@@ -115,31 +116,22 @@ const handler = async (req: Request): Promise<Response> => {
       // Skip if reminder time is in the past
       if (reminderTime <= new Date()) continue;
 
-      const reminderNotifications = [
-        {
-          profile_id: session.mentor_id,
-          title: `Session Reminder: ${minutes === 1440 ? '1 day' : `${minutes} minutes`}`,
-          message: `Your session with ${session.mentee.full_name} starts ${minutes === 1440 ? 'tomorrow' : `in ${minutes} minutes`}.${meetingLinkInfo}`,
-          type: 'session_reminder',
-          action_url: '/profile?tab=calendar'
-        },
-        {
-          profile_id: session.mentee_id,
-          title: `Session Reminder: ${minutes === 1440 ? '1 day' : `${minutes} minutes`}`,
-          message: `Your session with ${session.mentor.full_name} starts ${minutes === 1440 ? 'tomorrow' : `in ${minutes} minutes`}.${meetingLinkInfo}`,
-          type: 'session_reminder',
-          action_url: '/profile?tab=calendar'
-        }
-      ];
-
-      // Schedule reminder notifications
-      const { error: reminderError } = await supabase.rpc('schedule_notification', {
-        p_notifications: reminderNotifications,
-        p_scheduled_for: reminderTime.toISOString()
+      // Add to session_reminders table
+      sessionReminders.push({
+        session_id: session.id,
+        minutes_before: minutes,
+        reminder_time: reminderTime.toISOString()
       });
+    }
 
-      if (reminderError) {
-        console.error(`Failed to schedule ${minutes} minute reminder:`, reminderError);
+    // Insert reminder records
+    if (sessionReminders.length > 0) {
+      const { error: remindersError } = await supabase
+        .from('session_reminders')
+        .insert(sessionReminders);
+
+      if (remindersError) {
+        console.error('Error scheduling reminders:', remindersError);
       }
     }
 

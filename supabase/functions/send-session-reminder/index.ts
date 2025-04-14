@@ -18,9 +18,10 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { sessionId, senderId, customMessage } = await req.json();
+    const { sessionId, senderId, customMessage, minutesBefore, isAutomated } = await req.json();
 
-    if (!sessionId || !senderId) {
+    // Require either sessionId (for automated reminders) or both sessionId and senderId (for manual reminders)
+    if (!sessionId || (!isAutomated && !senderId)) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -62,8 +63,8 @@ serve(async (req) => {
       );
     }
 
-    // Verify sender is the mentor
-    if (session.mentor_id !== senderId) {
+    // If not automated, verify sender is the mentor
+    if (!isAutomated && session.mentor_id !== senderId) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -81,6 +82,7 @@ serve(async (req) => {
     const mentorName = session.mentor.full_name;
     const menteeName = session.mentee.full_name;
     const sessionType = session.session_type.type;
+    
     const formattedTime = sessionTime.toLocaleString('en-US', {
       month: 'long', 
       day: 'numeric', 
@@ -90,7 +92,21 @@ serve(async (req) => {
       hour12: true
     });
 
-    const notificationMessage = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled for ${formattedTime}. ${customMessage || ''}`;
+    // Create message with appropriate wording based on whether it's automated or manual
+    let reminderText = "";
+    if (isAutomated && minutesBefore) {
+      if (minutesBefore === 1440) {
+        reminderText = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled for tomorrow at ${formattedTime}.`;
+      } else {
+        reminderText = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled in ${minutesBefore} minutes.`;
+      }
+    } else {
+      reminderText = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled for ${formattedTime}.`;
+    }
+
+    const notificationMessage = customMessage 
+      ? `${reminderText} ${customMessage}` 
+      : reminderText;
 
     // Insert in-app notification
     const notification = {
