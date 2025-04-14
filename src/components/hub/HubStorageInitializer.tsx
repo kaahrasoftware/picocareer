@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { synchronizeAllHubStorage } from '@/utils/storageUtils';
-import { enableRealtimeForTables } from '@/utils/supabaseRealtime';
 
 export function HubStorageInitializer() {
   useEffect(() => {
@@ -29,18 +28,7 @@ export function HubStorageInitializer() {
       }
     };
     
-    // Initialize storage values
     initializeStorageValues();
-    
-    // Enable real-time functionality
-    const channel = enableRealtimeForTables();
-    
-    // Cleanup function
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
   }, []);
   
   return null; // This component doesn't render anything

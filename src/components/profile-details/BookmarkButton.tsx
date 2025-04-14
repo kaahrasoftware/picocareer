@@ -9,9 +9,14 @@ import { useQueryClient } from "@tanstack/react-query";
 interface BookmarkButtonProps {
   profileId: string;
   session: any;
+  contentType?: "mentor" | "career" | "major" | "scholarship";
 }
 
-export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
+export function BookmarkButton({ 
+  profileId, 
+  session, 
+  contentType = "mentor" 
+}: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
   const { session: authSession } = useAuthSession();
@@ -21,67 +26,6 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
   if (authSession?.user?.id === profileId) {
     return null;
   }
-
-  useEffect(() => {
-    const checkBookmarkStatus = async () => {
-      if (!authSession) return;
-
-      try {
-        const { data, error } = await supabase
-          .from("user_bookmarks")
-          .select()
-          .match({
-            profile_id: authSession.user.id,
-            content_type: "mentor",
-            content_id: profileId,
-          })
-          .maybeSingle();
-
-        if (error) throw error;
-        setIsBookmarked(!!data);
-      } catch (error) {
-        console.error("Error checking bookmark status:", error);
-      }
-    };
-
-    checkBookmarkStatus();
-    
-    // Set up real-time subscription for bookmark changes
-    if (authSession) {
-      const channel = supabase
-        .channel('bookmark-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_bookmarks',
-            filter: `profile_id=eq.${authSession.user.id}`
-          },
-          (payload) => {
-            console.log('Bookmark changed:', payload);
-            
-            // Invalidate all bookmark-related queries to trigger refetch
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
-            
-            // If this is specifically for the current profile, update state
-            if (payload.new && payload.new.content_id === profileId) {
-              setIsBookmarked(true);
-            } else if (payload.old && payload.old.content_id === profileId) {
-              setIsBookmarked(false);
-            }
-          }
-        )
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [authSession, profileId, queryClient]);
 
   const handleBookmark = async () => {
     if (!authSession) {
@@ -101,7 +45,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
           .delete()
           .match({
             profile_id: authSession.user.id,
-            content_type: "mentor",
+            content_type: contentType,
             content_id: profileId,
           });
 
@@ -109,18 +53,20 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
 
         setIsBookmarked(false);
         
-        // Invalidate specific bookmark queries to trigger immediate UI update
-        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+        // Invalidate all bookmark-related queries to trigger refetch
+        queryClient.invalidateQueries({ 
+          queryKey: [`bookmarked-${contentType}s`] 
+        });
         
         toast({
           title: "Bookmark removed",
-          description: "Profile has been removed from your bookmarks",
+          description: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} has been removed from your bookmarks`,
         });
       } else {
         // Add bookmark
         const { error } = await supabase.from("user_bookmarks").insert({
           profile_id: authSession.user.id,
-          content_type: "mentor",
+          content_type: contentType,
           content_id: profileId,
         });
 
@@ -128,12 +74,14 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
 
         setIsBookmarked(true);
         
-        // Invalidate specific bookmark queries to trigger immediate UI update
-        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+        // Invalidate all bookmark-related queries to trigger refetch
+        queryClient.invalidateQueries({ 
+          queryKey: [`bookmarked-${contentType}s`] 
+        });
         
         toast({
-          title: "Profile bookmarked",
-          description: "Profile has been added to your bookmarks",
+          title: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} bookmarked`,
+          description: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} has been added to your bookmarks`,
         });
       }
     } catch (error) {
@@ -145,6 +93,32 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
       });
     }
   };
+
+  // Check if profile is bookmarked on component mount
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      if (!authSession) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("user_bookmarks")
+          .select()
+          .match({
+            profile_id: authSession.user.id,
+            content_type: contentType,
+            content_id: profileId,
+          })
+          .maybeSingle();
+
+        if (error) throw error;
+        setIsBookmarked(!!data);
+      } catch (error) {
+        console.error("Error checking bookmark status:", error);
+      }
+    };
+
+    checkBookmarkStatus();
+  }, [authSession, profileId, contentType]);
 
   return (
     <button
