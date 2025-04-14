@@ -20,11 +20,11 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     const { sessionId, senderId, customMessage } = await req.json();
 
-    if (!sessionId) {
+    if (!sessionId || !senderId) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Missing session ID",
+          error: "Missing required parameters",
         }),
         {
           status: 400,
@@ -43,9 +43,7 @@ serve(async (req) => {
         mentee_id,
         mentor:profiles!mentor_sessions_mentor_id_fkey(id, full_name, email),
         mentee:profiles!mentor_sessions_mentee_id_fkey(id, full_name, email),
-        session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration),
-        meeting_link,
-        meeting_platform
+        session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(type, duration)
       `)
       .eq('id', sessionId)
       .single();
@@ -64,7 +62,21 @@ serve(async (req) => {
       );
     }
 
-    // Create in-app notifications
+    // Verify sender is the mentor
+    if (session.mentor_id !== senderId) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Only the mentor can send session reminders",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Create in-app notification for mentee
     const sessionTime = new Date(session.scheduled_at);
     const mentorName = session.mentor.full_name;
     const menteeName = session.mentee.full_name;
@@ -78,46 +90,27 @@ serve(async (req) => {
       hour12: true
     });
 
-    // Add meeting link info if available
-    const meetingInfo = session.meeting_link 
-      ? `\n\nJoin here: ${session.meeting_link}` 
-      : session.meeting_platform 
-        ? `\n\nPlatform: ${session.meeting_platform}` 
-        : '';
+    const notificationMessage = `Reminder: You have a "${sessionType}" session with ${mentorName} scheduled for ${formattedTime}. ${customMessage || ''}`;
 
-    // Create notification messages with custom message included
-    const mentorMessage = `Reminder: Your "${sessionType}" session with ${menteeName} is scheduled for ${formattedTime}. ${customMessage || ''}${meetingInfo}`;
-    const menteeMessage = `Reminder: Your "${sessionType}" session with ${mentorName} is scheduled for ${formattedTime}. ${customMessage || ''}${meetingInfo}`;
-
-    // Insert in-app notifications for both mentor and mentee
-    const notifications = [
-      {
-        profile_id: session.mentor_id,
-        title: "Session Reminder",
-        message: mentorMessage,
-        type: "session_reminder",
-        category: "mentorship",
-        action_url: `/profile?tab=calendar`
-      },
-      {
-        profile_id: session.mentee_id,
-        title: "Session Reminder",
-        message: menteeMessage,
-        type: "session_reminder",
-        category: "mentorship",
-        action_url: `/profile?tab=calendar`
-      }
-    ];
+    // Insert in-app notification
+    const notification = {
+      profile_id: session.mentee_id,
+      title: "Session Reminder",
+      message: notificationMessage,
+      type: "session_reminder",
+      category: "mentorship",
+      action_url: `/profile?tab=calendar`
+    };
 
     const { error: notificationError } = await supabase
       .from("notifications")
-      .insert(notifications);
+      .insert(notification);
 
     if (notificationError) {
-      console.error("Error creating notifications:", notificationError);
+      console.error("Error creating notification:", notificationError);
     }
 
-    // Send email reminders
+    // Send email reminder
     await supabase.functions.invoke('send-session-email', {
       body: { 
         sessionId,
@@ -129,7 +122,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Reminders sent successfully",
+        message: "Reminder sent successfully",
       }),
       {
         status: 200,

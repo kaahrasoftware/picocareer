@@ -9,12 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckIcon, Info, Plus, Trash } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "react-toastify";
-
 interface SessionSectionProps {
   profileId: string;
 }
-
 interface SessionSettings {
   defaultSessionDuration: number;
   reminderTimes: Array<15 | 30 | 60 | 1440>;
@@ -25,7 +22,6 @@ interface SessionSettings {
   allowCancellation: boolean;
   cancellationTimeLimit: number;
 }
-
 const defaultSessionSettings: SessionSettings = {
   defaultSessionDuration: 30,
   reminderTimes: [30],
@@ -36,7 +32,6 @@ const defaultSessionSettings: SessionSettings = {
   allowCancellation: true,
   cancellationTimeLimit: 24
 };
-
 export function SessionSection({
   profileId
 }: SessionSectionProps) {
@@ -48,7 +43,6 @@ export function SessionSection({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newReminderTime, setNewReminderTime] = useState<15 | 30 | 60 | 1440>(30);
-
   useEffect(() => {
     const sessionSettings = getSetting('session_settings');
     if (sessionSettings) {
@@ -56,37 +50,32 @@ export function SessionSection({
         const parsedSettings = JSON.parse(sessionSettings);
         setSettings(prevSettings => ({
           ...defaultSessionSettings,
-          ...parsedSettings,
-          reminderTimes: parsedSettings.reminderTimes && Array.isArray(parsedSettings.reminderTimes) 
-            ? parsedSettings.reminderTimes 
-            : defaultSessionSettings.reminderTimes
+          ...parsedSettings
         }));
       } catch (e) {
         console.error('Error parsing session settings:', e);
       }
     }
   }, [getSetting]);
-
   const handleToggle = (key: keyof SessionSettings, value: boolean) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
   const handleInputChange = (key: keyof SessionSettings, value: string | number) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
   const addReminderTime = () => {
     if (settings.reminderTimes.length >= 5) {
       setErrorMessage("Maximum of 5 reminder times allowed");
       return;
     }
 
+    // Don't add duplicate times
     if (!settings.reminderTimes.includes(newReminderTime)) {
       setSettings(prev => ({
         ...prev,
@@ -97,7 +86,6 @@ export function SessionSection({
       setErrorMessage("This reminder time is already added");
     }
   };
-
   const removeReminderTime = (time: number) => {
     if (settings.reminderTimes.length <= 1) {
       setErrorMessage("At least one reminder time is required");
@@ -109,7 +97,6 @@ export function SessionSection({
     }));
     setErrorMessage(null);
   };
-
   const saveSettings = async () => {
     setSaveStatus('saving');
     setErrorMessage(null);
@@ -119,15 +106,6 @@ export function SessionSection({
         value: JSON.stringify(settings)
       });
       setSaveStatus('saved');
-      
-      toast({
-        title: "Session settings saved",
-        description: `Your session reminder times have been updated. You and your mentees will receive reminders ${settings.reminderTimes
-          .sort((a, b) => a - b)
-          .map(t => t === 1440 ? "1 day" : `${t} minutes`)
-          .join(", ")} before each session.`,
-      });
-      
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Error saving session settings:', error);
@@ -136,7 +114,6 @@ export function SessionSection({
       setTimeout(() => setSaveStatus('idle'), 5000);
     }
   };
-
   return <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold mb-2">Session Settings</h3>
@@ -175,7 +152,7 @@ export function SessionSection({
                         <Info className="h-4 w-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="w-80">You and your mentees will receive email and in-app notifications at these times before sessions. These reminders are sent automatically.</p>
+                        <p className="w-80">You and your mentees will receive notifications at these times before sessions. You can add up to 5 reminder times.</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -247,6 +224,8 @@ export function SessionSection({
                 <Input id="customMeetingPlatform" type="text" value={settings.customMeetingPlatform} onChange={e => handleInputChange('customMeetingPlatform', e.target.value)} placeholder="Enter platform name" />
               </div>}
           </div>
+
+          
 
           {settings.allowRescheduling}
 
