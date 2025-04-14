@@ -9,9 +9,14 @@ import { useQueryClient } from "@tanstack/react-query";
 interface BookmarkButtonProps {
   profileId: string;
   session: any;
+  contentType?: "mentor" | "career" | "major" | "scholarship";
 }
 
-export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
+export function BookmarkButton({ 
+  profileId, 
+  session, 
+  contentType = "mentor" 
+}: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
   const { session: authSession } = useAuthSession();
@@ -40,39 +45,43 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
           .delete()
           .match({
             profile_id: authSession.user.id,
-            content_type: "mentor",
+            content_type: contentType,
             content_id: profileId,
           });
 
         if (error) throw error;
 
         setIsBookmarked(false);
-        // Invalidate the bookmarks query to trigger a refetch
-        // Using wildcard to invalidate all pages
-        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+        
+        // Invalidate all bookmark-related queries to trigger refetch
+        queryClient.invalidateQueries({ 
+          queryKey: [`bookmarked-${contentType}s`] 
+        });
         
         toast({
           title: "Bookmark removed",
-          description: "Profile has been removed from your bookmarks",
+          description: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} has been removed from your bookmarks`,
         });
       } else {
         // Add bookmark
         const { error } = await supabase.from("user_bookmarks").insert({
           profile_id: authSession.user.id,
-          content_type: "mentor",
+          content_type: contentType,
           content_id: profileId,
         });
 
         if (error) throw error;
 
         setIsBookmarked(true);
-        // Invalidate the bookmarks query to trigger a refetch
-        // Using wildcard to invalidate all pages
-        queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
+        
+        // Invalidate all bookmark-related queries to trigger refetch
+        queryClient.invalidateQueries({ 
+          queryKey: [`bookmarked-${contentType}s`] 
+        });
         
         toast({
-          title: "Profile bookmarked",
-          description: "Profile has been added to your bookmarks",
+          title: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} bookmarked`,
+          description: `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} has been added to your bookmarks`,
         });
       }
     } catch (error) {
@@ -96,7 +105,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
           .select()
           .match({
             profile_id: authSession.user.id,
-            content_type: "mentor",
+            content_type: contentType,
             content_id: profileId,
           })
           .maybeSingle();
@@ -109,7 +118,7 @@ export function BookmarkButton({ profileId, session }: BookmarkButtonProps) {
     };
 
     checkBookmarkStatus();
-  }, [authSession, profileId]);
+  }, [authSession, profileId, contentType]);
 
   return (
     <button
