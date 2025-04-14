@@ -1,64 +1,27 @@
 
-import { useState } from "react";
-import { User } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';  // Explicitly import React
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useAuthState } from "@/hooks/useAuthState";
-import { MentorProfile } from "./types";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
+import { User } from "lucide-react";
+import { MentorProfile } from "./types";
 
-interface MentorBookmarksProps {
-  activePage: string;
-  onViewMentorProfile: (mentorId: string) => void;
-}
+export function MentorBookmarks() {
+  const { session } = useAuthSession();
+  const userId = session?.user?.id;
 
-export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookmarksProps) {
-  const { user } = useAuthState();
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 6;
-
-  // Fetch bookmarked mentors with pagination
-  const mentorBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-mentors", user?.id, currentPage],
+  const { data, isLoading } = useQuery({
+    queryKey: ['bookmarked-mentors', userId],
     queryFn: async () => {
-      if (!user) return {
-        data: [],
-        count: 0
-      };
-
-      // First query for total count
-      const {
-        count,
-        error: countError
-      } = await supabase.from("user_bookmarks").select('*', {
-        count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "mentor");
-      if (countError) throw countError;
-
-      // Get paginated data with proper join
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end = start + PAGE_SIZE - 1;
-      const {
-        data,
-        error
-      } = await supabase.from("user_bookmarks").select(`
-          content_id
-        `).eq("profile_id", user.id).eq("content_type", "mentor").range(start, end);
-      if (error) {
-        console.error("Error fetching mentor bookmarks:", error);
-        throw error;
-      }
-
-      // Now fetch the actual mentor profiles
-      if (data && data.length > 0) {
-        const mentorIds = data.map(bookmark => bookmark.content_id);
-        const {
-          data: mentorProfiles,
-          error: mentorError
-        } = await supabase.from("profiles").select(`
+      if (!userId) return { bookmarks: [], totalPages: 0 };
+      
+      const { data: bookmarks, error } = await supabase
+        .from('user_bookmarks')
+        .select(`
+          id,
+          content_id,
+          profiles!inner(
             id,
             full_name,
             avatar_url,
@@ -66,111 +29,92 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
             position,
             bio,
             company_id,
+            company:companies(name),
             location,
             skills,
             top_mentor
-          `).in("id", mentorIds);
-        if (mentorError) {
-          console.error("Error fetching mentor profiles:", mentorError);
-          throw mentorError;
-        }
+          )
+        `)
+        .eq('profile_id', userId)
+        .eq('content_type', 'mentor')
+        .order('created_at', { ascending: false });
 
-        // Fetch company names if needed
-        const companyIds = mentorProfiles.filter(profile => profile.company_id).map(profile => profile.company_id);
-        let companiesData = {};
-        if (companyIds.length > 0) {
-          const {
-            data: companies,
-            error: companiesError
-          } = await supabase.from("companies").select("id, name").in("id", companyIds);
-          if (companiesError) {
-            console.error("Error fetching companies:", companiesError);
-          } else if (companies) {
-            companiesData = companies.reduce((acc, company) => {
-              acc[company.id] = company.name;
-              return acc;
-            }, {});
-          }
-        }
+      if (error) throw error;
+      
+      const formattedBookmarks = bookmarks.map(bookmark => ({
+        id: bookmark.content_id,
+        full_name: bookmark.profiles.full_name,
+        avatar_url: bookmark.profiles.avatar_url,
+        user_type: bookmark.profiles.user_type,
+        position: bookmark.profiles.position,
+        bio: bookmark.profiles.bio,
+        company_id: bookmark.profiles.company_id,
+        location: bookmark.profiles.location,
+        skills: bookmark.profiles.skills,
+        top_mentor: bookmark.profiles.top_mentor,
+        company_name: bookmark.profiles.company?.name
+      }));
 
-        // Fetch career titles for positions
-        const careerIds = mentorProfiles.filter(profile => profile.position).map(profile => profile.position);
-        let careersData = {};
-        if (careerIds.length > 0) {
-          const {
-            data: careers,
-            error: careersError
-          } = await supabase.from("careers").select("id, title").in("id", careerIds);
-          if (careersError) {
-            console.error("Error fetching careers:", careersError);
-          } else if (careers) {
-            careersData = careers.reduce((acc, career) => {
-              acc[career.id] = career.title;
-              return acc;
-            }, {});
-          }
-        }
-
-        // Enrich mentor profiles with company names and career titles
-        const enrichedProfiles = mentorProfiles.map(profile => ({
-          ...profile,
-          company_name: profile.company_id ? companiesData[profile.company_id] : null,
-          career_title: profile.position ? careersData[profile.position] : null
-        }));
-        return {
-          data: enrichedProfiles,
-          count: count || 0
-        };
-      }
-      return {
-        data: [],
-        count: count || 0
+      return { 
+        bookmarks: formattedBookmarks,
+        totalPages: Math.ceil(formattedBookmarks.length / 10)
       };
     },
-    enabled: !!user && activePage === "mentors"
+    enabled: !!userId,
   });
 
-  const mentorBookmarks = mentorBookmarksQuery.data?.data || [];
-  const totalCount = mentorBookmarksQuery.data?.count || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const bookmarks = data?.bookmarks || [];
+  const totalPages = data?.totalPages || 1;
 
-  const renderMentorCard = (mentor: MentorProfile, handleView: (mentor: MentorProfile) => void) => (
-    <Card key={mentor.id} className="hover:shadow transition-all">
-      <CardHeader className="flex flex-row items-center gap-3 pb-2">
-        <ProfileAvatar avatarUrl={mentor.avatar_url} imageAlt={mentor.full_name || "Mentor"} size="md" />
-        <div>
-          <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {mentor.career_title || "Mentor"} {mentor.company_name ? `at ${mentor.company_name}` : ""}
+  const handleViewMentor = (mentor: MentorProfile) => {
+    // Open the mentor profile dialog
+    window.history.pushState({}, '', `/mentor?dialog=true&profileId=${mentor.id}`);
+    // Dispatch a custom event to open the mentor profile dialog
+    window.dispatchEvent(new CustomEvent('openMentorProfile', { detail: mentor.id }));
+  };
+
+  const renderMentorCard = (mentor: MentorProfile, onView: (mentor: MentorProfile) => void) => (
+    <div
+      key={mentor.id}
+      className="cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
+      onClick={() => onView(mentor)}
+    >
+      <div className="flex p-4 items-center gap-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          {mentor.avatar_url ? (
+            <img src={mentor.avatar_url} alt={mentor.full_name} className="w-12 h-12 rounded-full object-cover" />
+          ) : (
+            <User className="h-6 w-6 text-primary" />
+          )}
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <h3 className="font-semibold text-base truncate">{mentor.full_name}</h3>
+          <p className="text-sm text-muted-foreground truncate">
+            {mentor.position}
+            {mentor.company_name && ` at ${mentor.company_name}`}
           </p>
+          {mentor.location && (
+            <p className="text-xs text-muted-foreground truncate">{mentor.location}</p>
+          )}
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="line-clamp-3 text-sm">
-          {mentor.bio || "No bio available"}
-        </p>
-        <div className="mt-4">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => handleView(mentor)}>
-            View Profile
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 
   return (
     <BookmarksList
-      bookmarks={mentorBookmarks}
-      isLoading={mentorBookmarksQuery.isLoading}
+      bookmarks={bookmarks}
+      isLoading={isLoading}
       emptyStateProps={{
-        icon: <User className="h-8 w-8 text-primary" />,
+        icon: <User className="h-6 w-6 text-primary" />,
         linkPath: "/mentor",
         type: "mentors"
       }}
       totalPages={totalPages}
       currentPage={currentPage}
       setPage={setCurrentPage}
-      onViewDetails={(mentor) => onViewMentorProfile(mentor.id)}
+      onViewDetails={handleViewMentor}
       renderCard={renderMentorCard}
       bookmarkType="mentor"
     />

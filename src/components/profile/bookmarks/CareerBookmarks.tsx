@@ -1,157 +1,116 @@
 
-import { useState } from "react";
-import { Briefcase } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';  // Explicitly import React
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthState } from "@/hooks/useAuthState";
-import { User } from "lucide-react";
-import { CareerProfile } from "./types";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
+import { Briefcase } from "lucide-react";
+import { CareerProfile } from "./types";
 
-interface CareerBookmarksProps {
-  activePage: string;
-  onViewCareerDetails: (careerId: string) => void;
-}
+export function CareerBookmarks() {
+  const { session } = useAuthSession();
+  const userId = session?.user?.id;
 
-export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookmarksProps) {
-  const { user } = useAuthState();
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 6;
-
-  // Fetch bookmarked careers with pagination
-  const careerBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-careers", user?.id, currentPage],
+  const { data, isLoading } = useQuery({
+    queryKey: ['bookmarked-careers', userId],
     queryFn: async () => {
-      if (!user) return {
-        data: [],
-        count: 0
-      };
-
-      console.log("Fetching career bookmarks for user:", user.id);
-
-      // Get total count first 
-      const {
-        count,
-        error: countError
-      } = await supabase.from("user_bookmarks").select('*', {
-        count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "career");
+      if (!userId) return { bookmarks: [], totalPages: 0 };
       
-      if (countError) {
-        console.error("Error counting career bookmarks:", countError);
-        throw countError;
-      }
-
-      // Calculate pagination offsets
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end = start + PAGE_SIZE - 1;
-
-      // First get bookmark IDs
-      const {
-        data: bookmarks,
-        error: bookmarksError
-      } = await supabase.from("user_bookmarks")
-        .select("content_id")
-        .eq("profile_id", user.id)
-        .eq("content_type", "career")
-        .range(start, end);
-        
-      if (bookmarksError) {
-        console.error("Error fetching career bookmarks:", bookmarksError);
-        throw bookmarksError;
-      }
-      
-      if (!bookmarks || bookmarks.length === 0) {
-        console.log("No career bookmarks found");
-        return {
-          data: [],
-          count: count || 0
-        };
-      }
-
-      // Log the bookmarks we found
-      console.log("Career bookmark IDs found:", bookmarks.map(b => b.content_id));
-
-      // Get the actual career data using the bookmark IDs
-      const careerIds = bookmarks.map(bookmark => bookmark.content_id);
-      const {
-        data: careers,
-        error: careersError
-      } = await supabase.from("careers").select(`
+      const { data: bookmarks, error } = await supabase
+        .from('user_bookmarks')
+        .select(`
           id,
-          title,
-          description,
-          salary_range,
-          image_url,
-          industry,
-          profiles_count
-        `).in("id", careerIds);
-        
-      if (careersError) {
-        console.error("Error fetching careers data:", careersError);
-        throw careersError;
-      }
+          content_id,
+          careers!inner(
+            id,
+            title,
+            description,
+            salary_range,
+            image_url,
+            industry,
+            profiles_count
+          )
+        `)
+        .eq('profile_id', userId)
+        .eq('content_type', 'career')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
-      console.log("Career data fetched:", careers);
-      
-      return {
-        data: careers || [],
-        count: count || 0
+      const formattedBookmarks = bookmarks.map(bookmark => ({
+        id: bookmark.content_id,
+        title: bookmark.careers.title,
+        description: bookmark.careers.description,
+        salary_range: bookmark.careers.salary_range,
+        image_url: bookmark.careers.image_url,
+        industry: bookmark.careers.industry,
+        profiles_count: bookmark.careers.profiles_count
+      }));
+
+      return { 
+        bookmarks: formattedBookmarks,
+        totalPages: Math.ceil(formattedBookmarks.length / 10)
       };
     },
-    enabled: !!user && activePage === "careers"
+    enabled: !!userId,
   });
 
-  const careerBookmarks = careerBookmarksQuery.data?.data || [];
-  const totalCount = careerBookmarksQuery.data?.count || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const bookmarks = data?.bookmarks || [];
+  const totalPages = data?.totalPages || 1;
 
-  const renderCareerCard = (career: CareerProfile, handleView: (career: CareerProfile) => void) => (
-    <Card key={career.id} className="hover:shadow transition-all overflow-hidden group">
-      <div className="h-40 bg-gradient-to-br from-blue-50 to-indigo-100 relative">
-        {career.image_url && <img src={career.image_url} alt={career.title} className="w-full h-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end">
-          <div className="p-3 text-white">
-            <h3 className="font-semibold text-lg drop-shadow-md">{career.title}</h3>
-            {career.industry && <p className="text-sm opacity-90">{career.industry}</p>}
+  const handleViewCareer = (career: CareerProfile) => {
+    // Open the career details dialog
+    window.history.pushState({}, '', `/career?dialog=true&careerId=${career.id}`);
+    // Dispatch a custom event to open the career details dialog
+    window.dispatchEvent(new CustomEvent('openCareerDetails', { detail: career.id }));
+  };
+
+  const renderCareerCard = (career: CareerProfile, onView: (career: CareerProfile) => void) => (
+    <div
+      key={career.id}
+      className="cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
+      onClick={() => onView(career)}
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+            <Briefcase className="h-5 w-5 text-primary" />
           </div>
+          <h3 className="font-semibold text-base">{career.title}</h3>
+        </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          {career.salary_range && (
+            <div className="text-sm">
+              <span className="font-medium">Salary Range:</span>{" "}
+              <span className="text-muted-foreground">{career.salary_range}</span>
+            </div>
+          )}
+          {career.industry && (
+            <div className="text-sm">
+              <span className="font-medium">Industry:</span>{" "}
+              <span className="text-muted-foreground">{career.industry}</span>
+            </div>
+          )}
         </div>
       </div>
-      <CardContent className="pt-4">
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {career.description}
-        </p>
-        <div className="flex items-center justify-between mb-3">
-          {career.salary_range && <span className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block">
-              {career.salary_range}
-            </span>}
-          {career.profiles_count > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {career.profiles_count} {career.profiles_count === 1 ? 'Mentor' : 'Mentors'}
-            </span>}
-        </div>
-        <Button onClick={() => handleView(career)} variant="outline" size="sm" className="w-full mt-2">
-          View Details
-        </Button>
-      </CardContent>
-    </Card>
+    </div>
   );
 
   return (
     <BookmarksList
-      bookmarks={careerBookmarks}
-      isLoading={careerBookmarksQuery.isLoading}
+      bookmarks={bookmarks}
+      isLoading={isLoading}
       emptyStateProps={{
-        icon: <Briefcase className="h-8 w-8 text-primary" />,
+        icon: <Briefcase className="h-6 w-6 text-primary" />,
         linkPath: "/career",
         type: "careers"
       }}
       totalPages={totalPages}
       currentPage={currentPage}
       setPage={setCurrentPage}
-      onViewDetails={(career) => onViewCareerDetails(career.id)}
+      onViewDetails={handleViewCareer}
       renderCard={renderCareerCard}
       bookmarkType="career"
     />

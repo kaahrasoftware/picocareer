@@ -1,66 +1,27 @@
 
-import { useState } from "react";
-import { BookOpen } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React from 'react';  // Explicitly import React
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthState } from "@/hooks/useAuthState";
-import { MajorProfile } from "./types";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { BookmarksList } from "./BookmarksList";
+import { GraduationCap } from "lucide-react";
+import { MajorProfile } from "./types";
 
-interface MajorBookmarksProps {
-  activePage: string;
-  onViewMajorDetails: (major: MajorProfile) => void;
-}
+export function MajorBookmarks() {
+  const { session } = useAuthSession();
+  const userId = session?.user?.id;
 
-export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmarksProps) {
-  const { user } = useAuthState();
-  const [currentPage, setCurrentPage] = useState(1);
-  const PAGE_SIZE = 6;
-
-  // Fetch bookmarked academic majors with pagination
-  const majorBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-majors", user?.id, currentPage],
+  const { data, isLoading } = useQuery({
+    queryKey: ['bookmarked-majors', userId],
     queryFn: async () => {
-      if (!user) return {
-        data: [],
-        count: 0
-      };
-
-      // Get total count first
-      const {
-        count,
-        error: countError
-      } = await supabase.from("user_bookmarks").select('*', {
-        count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "major");
-      if (countError) {
-        console.error("Error counting major bookmarks:", countError);
-        throw countError;
-      }
-
-      // Get paginated data with proper join
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end = start + PAGE_SIZE - 1;
-      const {
-        data,
-        error
-      } = await supabase.from("user_bookmarks").select(`
-          content_id
-        `).eq("profile_id", user.id).eq("content_type", "major").range(start, end);
-      if (error) {
-        console.error("Error fetching major bookmarks:", error);
-        throw error;
-      }
-
-      // Now fetch the actual major profiles
-      if (data && data.length > 0) {
-        const majorIds = data.map(bookmark => bookmark.content_id);
-        const {
-          data: majors,
-          error: majorsError
-        } = await supabase.from("majors").select(`
+      if (!userId) return { bookmarks: [], totalPages: 0 };
+      
+      const { data: bookmarks, error } = await supabase
+        .from('user_bookmarks')
+        .select(`
+          id,
+          content_id,
+          majors!inner(
             id,
             title,
             description,
@@ -70,92 +31,92 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
             skill_match,
             tools_knowledge,
             common_courses,
-            profiles_count,
-            learning_objectives,
-            interdisciplinary_connections,
-            job_prospects,
-            certifications_to_consider,
-            affiliated_programs,
-            gpa_expectations,
-            transferable_skills,
-            passion_for_subject,
-            professional_associations,
-            global_applicability,
-            common_difficulties,
-            career_opportunities,
-            intensity,
-            stress_level,
-            dropout_rates,
-            majors_to_consider_switching_to,
-            created_at,
-            updated_at
-          `).in("id", majorIds);
-        if (majorsError) {
-          console.error("Error fetching majors data:", majorsError);
-          throw majorsError;
-        }
-        return {
-          data: majors || [],
-          count: count || 0
-        };
-      }
-      return {
-        data: [],
-        count: count || 0
+            profiles_count
+          )
+        `)
+        .eq('profile_id', userId)
+        .eq('content_type', 'major')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedBookmarks = bookmarks.map(bookmark => ({
+        id: bookmark.content_id,
+        title: bookmark.majors.title,
+        description: bookmark.majors.description,
+        degree_levels: bookmark.majors.degree_levels,
+        featured: bookmark.majors.featured,
+        potential_salary: bookmark.majors.potential_salary,
+        skill_match: bookmark.majors.skill_match,
+        tools_knowledge: bookmark.majors.tools_knowledge,
+        common_courses: bookmark.majors.common_courses,
+        profiles_count: bookmark.majors.profiles_count
+      }));
+
+      return { 
+        bookmarks: formattedBookmarks,
+        totalPages: Math.ceil(formattedBookmarks.length / 10)
       };
     },
-    enabled: !!user && activePage === "majors"
+    enabled: !!userId,
   });
 
-  const majorBookmarks = majorBookmarksQuery.data?.data || [];
-  const totalCount = majorBookmarksQuery.data?.count || 0;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const bookmarks = data?.bookmarks || [];
+  const totalPages = data?.totalPages || 1;
 
-  const renderMajorCard = (major: MajorProfile, handleView: (major: MajorProfile) => void) => (
-    <Card key={major.id} className="hover:shadow transition-all">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-primary" />
-          {major.title}
-        </CardTitle>
-        {major.featured && 
-          <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Featured</span>
-        }
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-          {major.description}
-        </p>
-        {major.degree_levels && <div className="flex flex-wrap gap-1 mb-3">
-            {Array.isArray(major.degree_levels) && major.degree_levels.slice(0, 3).map((degree, index) => <span key={index} className="bg-blue-50 text-blue-700 text-xs rounded-full px-2 py-0.5">
-                {degree}
-              </span>)}
-          </div>}
-        <Button 
-          onClick={() => handleView(major)} 
-          variant="outline" 
-          size="sm" 
-          className="w-full mt-2"
-        >
-          View Details
-        </Button>
-      </CardContent>
-    </Card>
+  const handleViewMajor = (major: MajorProfile) => {
+    // Open the major details dialog
+    window.history.pushState({}, '', `/program?dialog=true&majorId=${major.id}`);
+    // Dispatch a custom event to open the major details dialog
+    window.dispatchEvent(new CustomEvent('openMajorDetails', { detail: major.id }));
+  };
+
+  const renderMajorCard = (major: MajorProfile, onView: (major: MajorProfile) => void) => (
+    <div
+      key={major.id}
+      className="cursor-pointer rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow"
+      onClick={() => onView(major)}
+    >
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+            <GraduationCap className="h-5 w-5 text-primary" />
+          </div>
+          <h3 className="font-semibold text-base">{major.title}</h3>
+        </div>
+        
+        <div className="flex flex-col gap-2 mt-4">
+          {major.potential_salary && (
+            <div className="text-sm">
+              <span className="font-medium">Potential Salary:</span>{" "}
+              <span className="text-muted-foreground">{major.potential_salary}</span>
+            </div>
+          )}
+          {major.degree_levels && major.degree_levels.length > 0 && (
+            <div className="text-sm">
+              <span className="font-medium">Degree Levels:</span>{" "}
+              <span className="text-muted-foreground">{major.degree_levels.join(', ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
   return (
     <BookmarksList
-      bookmarks={majorBookmarks}
-      isLoading={majorBookmarksQuery.isLoading}
+      bookmarks={bookmarks}
+      isLoading={isLoading}
       emptyStateProps={{
-        icon: <BookOpen className="h-8 w-8 text-primary" />,
-        linkPath: "/majors",
-        type: "academic majors"
+        icon: <GraduationCap className="h-6 w-6 text-primary" />,
+        linkPath: "/program",
+        type: "majors"
       }}
       totalPages={totalPages}
       currentPage={currentPage}
       setPage={setCurrentPage}
-      onViewDetails={onViewMajorDetails}
+      onViewDetails={handleViewMajor}
       renderCard={renderMajorCard}
       bookmarkType="major"
     />
