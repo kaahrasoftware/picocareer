@@ -82,6 +82,13 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", ...fontFamily.sans],
+        serif: ["Georgia", "Times New Roman", "serif"],
+        mono: ["Consolas", "Monaco", "Courier New", "monospace"],
+        dyslexic: ["OpenDyslexic", "Comic Sans MS", "sans-serif"],
+        rounded: ["system-ui", "-apple-system", "sans-serif"],
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -126,9 +133,6 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 3s ease-in-out infinite",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
       },
     },
   },
