@@ -63,6 +63,30 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
         throw new Error(`Error fetching opportunities: ${error.message}`);
       }
 
+      // Fetch analytics data for all opportunities
+      const opportunityIds = data.map(opp => opp.id);
+      
+      if (opportunityIds.length > 0) {
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('opportunity_analytics')
+          .select('*')
+          .in('opportunity_id', opportunityIds);
+        
+        if (!analyticsError && analyticsData) {
+          // Merge analytics data with opportunities
+          const analyticsMap = analyticsData.reduce((acc, item) => {
+            acc[item.opportunity_id] = item;
+            return acc;
+          }, {} as Record<string, any>);
+          
+          data.forEach(opp => {
+            if (analyticsMap[opp.id]) {
+              (opp as any).analytics = analyticsMap[opp.id];
+            }
+          });
+        }
+      }
+
       return data as OpportunityWithAuthor[];
     },
   });

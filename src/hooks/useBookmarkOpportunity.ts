@@ -1,179 +1,144 @@
 
-import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useToast } from "@/hooks/use-toast";
 
 export function useBookmarkOpportunity(opportunityId?: string) {
   const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Check if the opportunity is bookmarked
-  const { data: bookmark, isLoading: checkingBookmark } = useQuery({
-    queryKey: ['bookmark', opportunityId, profile?.id],
+  // Check if already bookmarked
+  const { data: isBookmarked, refetch } = useQuery({
+    queryKey: ['opportunity-bookmark', opportunityId, session?.user?.id],
     queryFn: async () => {
-      if (!opportunityId || !profile?.id) return null;
+      if (!opportunityId || !session?.user?.id) return false;
 
       const { data, error } = await supabase
         .from('user_bookmarks')
-        .select('*')
+        .select('id')
         .eq('content_id', opportunityId)
-        .eq('profile_id', profile.id)
         .eq('content_type', 'opportunity')
-        .maybeSingle();
+        .eq('profile_id', session.user.id)
+        .single();
 
-      if (error) {
-        console.error('Error checking bookmark:', error);
-        return null;
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error checking bookmark:", error);
       }
 
-      return data;
+      return !!data;
     },
-    enabled: !!opportunityId && !!profile?.id,
+    enabled: !!opportunityId && !!session?.user?.id,
   });
 
-  useEffect(() => {
-    setIsBookmarked(!!bookmark);
-  }, [bookmark]);
+  const toggleMutation = useMutation({
+    mutationFn: async () => {
+      if (!opportunityId || !session?.user?.id) {
+        throw new Error("You must be logged in to bookmark opportunities");
+      }
 
-  const addBookmark = async () => {
-    if (!opportunityId || !profile?.id) {
-      throw new Error('User or opportunity not found');
-    }
+      setIsLoading(true);
 
+      try {
+        if (isBookmarked) {
+          // Remove bookmark
+          const { error } = await supabase
+            .from('user_bookmarks')
+            .delete()
+            .eq('content_id', opportunityId)
+            .eq('content_type', 'opportunity')
+            .eq('profile_id', session.user.id);
+
+          if (error) throw error;
+
+          // Decrement bookmark count in analytics
+          await updateBookmarkCount(opportunityId, -1);
+
+          return { action: 'removed' };
+        } else {
+          // Add bookmark
+          const { error } = await supabase
+            .from('user_bookmarks')
+            .insert({
+              content_id: opportunityId,
+              content_type: 'opportunity',
+              profile_id: session.user.id
+            });
+
+          if (error) throw error;
+
+          // Increment bookmark count in analytics
+          await updateBookmarkCount(opportunityId, 1);
+
+          return { action: 'added' };
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onSuccess: (data) => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['opportunity', opportunityId] });
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+      
+      toast({
+        title: data.action === 'added' ? 'Bookmarked' : 'Bookmark removed',
+        description: data.action === 'added' 
+          ? 'Opportunity added to your bookmarks' 
+          : 'Opportunity removed from your bookmarks',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Helper function to update bookmark count
+  const updateBookmarkCount = async (id: string, change: number) => {
+    // First get the analytics record
     const { data, error } = await supabase
-      .from('user_bookmarks')
-      .insert({
-        content_id: opportunityId,
-        profile_id: profile.id,
-        content_type: 'opportunity',
-      })
-      .select()
+      .from('opportunity_analytics')
+      .select('id, bookmarks_count')
+      .eq('opportunity_id', id)
       .single();
 
     if (error) {
-      throw new Error(`Error adding bookmark: ${error.message}`);
-    }
-
-    // Update the bookmarks count for the opportunity
-    try {
-      const { data: opportunity } = await supabase
-        .from('opportunities')
-        .select('bookmarks_count')
-        .eq('id', opportunityId)
-        .single();
-
-      await supabase
-        .from('opportunities')
-        .update({ bookmarks_count: (opportunity.bookmarks_count || 0) + 1 })
-        .eq('id', opportunityId);
-    } catch (updateError) {
-      console.error('Failed to update bookmarks count:', updateError);
-    }
-
-    return data;
-  };
-
-  const removeBookmark = async () => {
-    if (!opportunityId || !profile?.id) {
-      throw new Error('User or opportunity not found');
-    }
-
-    const { error } = await supabase
-      .from('user_bookmarks')
-      .delete()
-      .eq('content_id', opportunityId)
-      .eq('profile_id', profile.id)
-      .eq('content_type', 'opportunity');
-
-    if (error) {
-      throw new Error(`Error removing bookmark: ${error.message}`);
-    }
-
-    // Update the bookmarks count for the opportunity
-    try {
-      const { data: opportunity } = await supabase
-        .from('opportunities')
-        .select('bookmarks_count')
-        .eq('id', opportunityId)
-        .single();
-
-      await supabase
-        .from('opportunities')
-        .update({
-          bookmarks_count: Math.max((opportunity.bookmarks_count || 0) - 1, 0),
-        })
-        .eq('id', opportunityId);
-    } catch (updateError) {
-      console.error('Failed to update bookmarks count:', updateError);
-    }
-
-    return true;
-  };
-
-  const addMutation = useMutation({
-    mutationFn: addBookmark,
-    onSuccess: () => {
-      setIsBookmarked(true);
-      queryClient.invalidateQueries({ queryKey: ['bookmark', opportunityId, profile?.id] });
-      toast({
-        title: 'Bookmark Added',
-        description: 'Opportunity added to your bookmarks',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const removeMutation = useMutation({
-    mutationFn: removeBookmark,
-    onSuccess: () => {
-      setIsBookmarked(false);
-      queryClient.invalidateQueries({ queryKey: ['bookmark', opportunityId, profile?.id] });
-      toast({
-        title: 'Bookmark Removed',
-        description: 'Opportunity removed from your bookmarks',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const toggleBookmark = () => {
-    if (!session) {
-      toast({
-        title: 'Authentication Required',
-        description: 'Please sign in to bookmark this opportunity',
-        variant: 'destructive',
-      });
+      console.error("Error fetching analytics for bookmark update:", error);
       return;
     }
 
-    if (isBookmarked) {
-      removeMutation.mutate();
+    // Update the count
+    if (data) {
+      const newCount = Math.max(0, (data.bookmarks_count || 0) + change);
+      await supabase
+        .from('opportunity_analytics')
+        .update({ bookmarks_count: newCount })
+        .eq('id', data.id);
     } else {
-      addMutation.mutate();
+      // Create analytics record if it doesn't exist
+      await supabase
+        .from('opportunity_analytics')
+        .insert({
+          opportunity_id: id,
+          bookmarks_count: Math.max(0, change),
+          views_count: 0,
+          applications_count: 0
+        });
     }
   };
 
+  const toggleBookmark = () => toggleMutation.mutate();
+
   return {
-    isBookmarked,
+    isBookmarked: !!isBookmarked,
     toggleBookmark,
-    isLoading: addMutation.isPending || removeMutation.isPending || checkingBookmark,
+    isLoading,
   };
 }

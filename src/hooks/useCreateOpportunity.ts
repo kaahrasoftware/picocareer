@@ -8,6 +8,7 @@ export function useCreateOpportunity() {
   const { toast } = useToast();
 
   const createOpportunity = async (opportunityData: any) => {
+    // Insert opportunity
     const { data, error } = await supabase
       .from('opportunities')
       .insert(opportunityData)
@@ -16,6 +17,20 @@ export function useCreateOpportunity() {
 
     if (error) {
       throw new Error(`Error creating opportunity: ${error.message}`);
+    }
+
+    // Create analytics record
+    const { error: analyticsError } = await supabase
+      .from('opportunity_analytics')
+      .insert({
+        opportunity_id: data.id,
+        views_count: 0,
+        applications_count: 0,
+        bookmarks_count: 0
+      });
+
+    if (analyticsError) {
+      console.error("Error creating analytics record:", analyticsError);
     }
 
     return data;

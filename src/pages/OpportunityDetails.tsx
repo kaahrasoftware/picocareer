@@ -98,6 +98,13 @@ export default function OpportunityDetails() {
     return format(new Date(dateString), "MMMM d, yyyy");
   };
 
+  // Get analytics data (with fallbacks)
+  const analytics = (opportunity as any).analytics || {
+    views_count: 0,
+    applications_count: 0,
+    bookmarks_count: 0
+  };
+
   return (
     <div className="container px-4 py-8 mx-auto">
       <Button 
@@ -151,39 +158,6 @@ export default function OpportunityDetails() {
             <div dangerouslySetInnerHTML={{ __html: opportunity.description }} />
           </div>
 
-          {opportunity.requirements && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-3">Requirements</h2>
-              <ul className="list-disc list-inside">
-                {Object.entries(opportunity.requirements as Record<string, string>).map(([key, value]) => (
-                  <li key={key} className="mb-1">{value}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {opportunity.benefits && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-3">Benefits</h2>
-              <ul className="list-disc list-inside">
-                {Object.entries(opportunity.benefits as Record<string, string>).map(([key, value]) => (
-                  <li key={key} className="mb-1">{value}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {opportunity.eligibility && (
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-3">Eligibility</h2>
-              <ul className="list-disc list-inside">
-                {Object.entries(opportunity.eligibility as Record<string, string>).map(([key, value]) => (
-                  <li key={key} className="mb-1">{value}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {opportunity.categories && opportunity.categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {opportunity.categories.map((category) => (
@@ -199,6 +173,12 @@ export default function OpportunityDetails() {
               ))}
             </div>
           )}
+          
+          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+            <div>{analytics.views_count || 0} views</div>
+            <div>{analytics.applications_count || 0} applications</div>
+            <div>{analytics.bookmarks_count || 0} bookmarks</div>
+          </div>
         </div>
 
         <div className="md:col-span-1">

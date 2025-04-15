@@ -16,17 +16,10 @@ export interface Opportunity {
   updated_at: string;
   status: OpportunityStatus;
   author_id: string | null;
-  requirements: Json | null;
-  benefits: Json | null;
-  eligibility: Json | null;
   application_url: string | null;
   tags: string[] | null;
   categories: string[] | null;
   featured: boolean | null;
-  views_count: number | null;
-  applications_count: number | null;
-  bookmarks_count: number | null;
-  cover_image_url: string | null;
 }
 
 export interface OpportunityWithAuthor extends Opportunity {
@@ -36,6 +29,20 @@ export interface OpportunityWithAuthor extends Opportunity {
     avatar_url: string | null;
     email: string;
   };
+}
+
+export interface OpportunityAnalytics {
+  id: string;
+  opportunity_id: string;
+  views_count: number;
+  applications_count: number;
+  bookmarks_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OpportunityWithAnalytics extends Opportunity {
+  analytics?: OpportunityAnalytics;
 }
 
 export interface OpportunityApplication {

@@ -2263,81 +2263,60 @@ export type Database = {
       opportunities: {
         Row: {
           application_url: string | null
-          applications_count: number | null
           author_id: string | null
-          benefits: Json | null
-          bookmarks_count: number | null
           categories: string[] | null
           compensation: string | null
-          cover_image_url: string | null
           created_at: string
           deadline: string | null
           description: string
-          eligibility: Json | null
           featured: boolean | null
           id: string
           location: string | null
           opportunity_type: Database["public"]["Enums"]["opportunity_type"]
           provider_name: string
           remote: boolean | null
-          requirements: Json | null
           status: Database["public"]["Enums"]["opportunity_status"]
           tags: string[] | null
           title: string
           updated_at: string
-          views_count: number | null
         }
         Insert: {
           application_url?: string | null
-          applications_count?: number | null
           author_id?: string | null
-          benefits?: Json | null
-          bookmarks_count?: number | null
           categories?: string[] | null
           compensation?: string | null
-          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description: string
-          eligibility?: Json | null
           featured?: boolean | null
           id?: string
           location?: string | null
           opportunity_type: Database["public"]["Enums"]["opportunity_type"]
           provider_name: string
           remote?: boolean | null
-          requirements?: Json | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           tags?: string[] | null
           title: string
           updated_at?: string
-          views_count?: number | null
         }
         Update: {
           application_url?: string | null
-          applications_count?: number | null
           author_id?: string | null
-          benefits?: Json | null
-          bookmarks_count?: number | null
           categories?: string[] | null
           compensation?: string | null
-          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description?: string
-          eligibility?: Json | null
           featured?: boolean | null
           id?: string
           location?: string | null
           opportunity_type?: Database["public"]["Enums"]["opportunity_type"]
           provider_name?: string
           remote?: boolean | null
-          requirements?: Json | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           tags?: string[] | null
           title?: string
           updated_at?: string
-          views_count?: number | null
         }
         Relationships: [
           {
@@ -2345,6 +2324,44 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_analytics: {
+        Row: {
+          applications_count: number | null
+          bookmarks_count: number | null
+          created_at: string | null
+          id: string
+          opportunity_id: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          applications_count?: number | null
+          bookmarks_count?: number | null
+          created_at?: string | null
+          id?: string
+          opportunity_id: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          applications_count?: number | null
+          bookmarks_count?: number | null
+          created_at?: string | null
+          id?: string
+          opportunity_id?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_analytics_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]
