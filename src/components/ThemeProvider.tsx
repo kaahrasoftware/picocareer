@@ -54,6 +54,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       // Apply font family
       let fontFamily = '';
       switch (settings.fontFamily) {
+        // System & standard fonts
         case 'serif':
           fontFamily = 'Georgia, Times New Roman, serif';
           break;
@@ -66,6 +67,25 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
         case 'monospace':
           fontFamily = 'Consolas, Monaco, "Courier New", monospace';
           break;
+          
+        // Modern web fonts
+        case 'inter':
+          fontFamily = '"Inter", system-ui, sans-serif';
+          break;
+        case 'roboto':
+          fontFamily = '"Roboto", Arial, sans-serif';
+          break;
+        case 'poppins':
+          fontFamily = '"Poppins", system-ui, sans-serif';
+          break;
+        case 'comic':
+          fontFamily = '"Comic Sans MS", "Comic Sans", cursive';
+          break;
+        case 'open-dyslexic':
+          fontFamily = '"OpenDyslexic", "Comic Sans MS", sans-serif';
+          break;
+          
+        // Default system font
         default:
           fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
       }

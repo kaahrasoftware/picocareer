@@ -88,6 +88,11 @@ const config = {
         mono: ["Consolas", "Monaco", "Courier New", "monospace"],
         dyslexic: ["OpenDyslexic", "Comic Sans MS", "sans-serif"],
         rounded: ["system-ui", "-apple-system", "sans-serif"],
+        // Add new font families
+        inter: ["Inter", "system-ui", "sans-serif"],
+        roboto: ["Roboto", "Arial", "sans-serif"],
+        poppins: ["Poppins", "system-ui", "sans-serif"],
+        comic: ["Comic Sans MS", "Comic Sans", "cursive"],
       },
       keyframes: {
         "accordion-down": {
