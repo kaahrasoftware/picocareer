@@ -242,7 +242,7 @@ export function ScholarshipCard({
         <CardHeader className="relative pt-6 pb-3">
           <div className="flex flex-col gap-1">
             <div className="flex items-start justify-between">
-              <h3 className="text-xl font-semibold pr-8 group-hover:text-primary transition-colors duration-300">
+              <h3 className="font-semibold pr-8 group-hover:text-primary transition-colors duration-300 text-base">
                 {scholarship.title}
               </h3>
               <TooltipProvider>
