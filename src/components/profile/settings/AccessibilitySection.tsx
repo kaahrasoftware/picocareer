@@ -143,25 +143,9 @@ export function AccessibilitySection({
 
           
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="reducedMotion">Reduced Motion</Label>
-              <p className="text-sm text-muted-foreground">
-                Minimize animations and transitions
-              </p>
-            </div>
-            <Switch id="reducedMotion" checked={settings.reducedMotion} onCheckedChange={value => handleToggle('reducedMotion', value)} />
-          </div>
+          
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="keyboardNavigation">Enhanced Keyboard Navigation</Label>
-              <p className="text-sm text-muted-foreground">
-                Improve keyboard focus indicators
-              </p>
-            </div>
-            <Switch id="keyboardNavigation" checked={settings.keyboardNavigation} onCheckedChange={value => handleToggle('keyboardNavigation', value)} />
-          </div>
+          
 
           <div className="space-y-2">
             <Label htmlFor="fontType">Font Type</Label>
