@@ -31,7 +31,7 @@ export function SettingsContainer({
         <Tabs defaultValue="interface" className="w-full">
           <TabsList className="grid grid-cols-3 sm:grid-cols-5 mb-4">
             <TabsTrigger value="interface">Interface</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            
             
             
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
