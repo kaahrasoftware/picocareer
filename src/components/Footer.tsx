@@ -1,10 +1,12 @@
 
 import { useNavigate } from "react-router-dom";
-import { Mail, Phone, Facebook, Instagram, Linkedin, Youtube, Twitter, ExternalLink, MapPin, ChevronUp } from "lucide-react";
+import { Mail, Phone, Facebook, Instagram, Linkedin, Youtube, Twitter, ExternalLink, MapPin, ChevronUp, ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export function Footer() {
   const navigate = useNavigate();
@@ -38,34 +40,40 @@ export function Footer() {
     { 
       icon: <Instagram className="w-5 h-5" />, 
       href: "https://instagram.com/picocareer",
-      label: "Instagram"
+      label: "Instagram",
+      color: "group-hover:text-pink-500 dark:group-hover:text-pink-400"
     },
     { 
       icon: <Facebook className="w-5 h-5" />, 
       href: "https://facebook.com/picocareer",
-      label: "Facebook"
+      label: "Facebook",
+      color: "group-hover:text-blue-600 dark:group-hover:text-blue-400"
     },
     { 
       icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.88 2.89 2.89 0 0 1-2.88-2.88 2.89 2.89 0 0 1 2.88-2.88c.28 0 .54.04.79.12v-3.46a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3 16a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.33c.98.69 2.15 1.1 3.41 1.1v-3.44a4.85 4.85 0 0 1-1.5.7Z"/>
       </svg>, 
       href: "https://tiktok.com/@picocareer",
-      label: "TikTok"
+      label: "TikTok",
+      color: "group-hover:text-slate-800 dark:group-hover:text-white"
     },
     { 
       icon: <Linkedin className="w-5 h-5" />, 
       href: "https://linkedin.com/company/picocareer",
-      label: "LinkedIn"
+      label: "LinkedIn",
+      color: "group-hover:text-blue-700 dark:group-hover:text-blue-400"
     },
     { 
       icon: <Twitter className="w-5 h-5" />, 
       href: "https://x.com/pico_career",
-      label: "X (Twitter)"
+      label: "X (Twitter)",
+      color: "group-hover:text-sky-500 dark:group-hover:text-sky-400"
     },
     { 
       icon: <Youtube className="w-5 h-5" />, 
       href: "https://youtube.com/@picocareer",
-      label: "YouTube"
+      label: "YouTube",
+      color: "group-hover:text-red-600 dark:group-hover:text-red-500"
     }
   ];
 
@@ -257,38 +265,77 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Footer Bottom */}
-        <div className="pt-8 border-t border-border">
+        {/* Footer Bottom - Redesigned Section */}
+        <div className="pt-8">
+          {/* Decorative Separator with gradient */}
+          <Separator className="mb-8 bg-gradient-to-r from-transparent via-border to-transparent" />
+          
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Social Links */}
-            <div className="flex gap-4">
-              {socialLinks.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-full"
-                  aria-label={link.label}
-                >
-                  {link.icon}
-                </a>
-              ))}
+            {/* Social Links - Enhanced with tooltips and hover effects */}
+            <div className="flex flex-wrap justify-center gap-3">
+              <TooltipProvider delayDuration={300}>
+                {socialLinks.map((link, index) => (
+                  <Tooltip key={index}>
+                    <TooltipTrigger asChild>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`group text-muted-foreground transition-all duration-300 p-2.5 hover:bg-muted/80 rounded-full hover:scale-110 ${link.color}`}
+                        aria-label={link.label}
+                      >
+                        {link.icon}
+                        
+                        {/* Subtle animated ring effect on hover */}
+                        <span className="absolute inset-0 rounded-full bg-transparent border border-transparent group-hover:border-muted-foreground/20 group-hover:scale-110 transition-all duration-300"></span>
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs font-medium">
+                      {link.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
             </div>
             
-            {/* Copyright and Product Info */}
-            <div className="text-sm text-muted-foreground">
-              <div className="flex flex-wrap items-center justify-center md:justify-end gap-2">
-                <p>© {new Date().getFullYear()} PicoCareer. All rights reserved.</p>
+            {/* Copyright and Product Info - Improved layout */}
+            <div className="text-center md:text-right mt-4 md:mt-0">
+              <div className="flex flex-col md:flex-row items-center justify-center md:justify-end gap-2 text-sm text-muted-foreground">
+                <p className="font-medium">&copy; {new Date().getFullYear()} PicoCareer</p>
                 <span className="hidden md:inline-block mx-2">•</span>
-                <p>A product of <a href="https://kaahra.com" target="_blank" rel="noopener noreferrer" className="font-bold hover:text-foreground transition-colors hover:underline inline-flex items-center">
-                  Kaahra <ExternalLink className="h-3 w-3 ml-1" />
-                </a></p>
+                <p>All rights reserved</p>
+              </div>
+              
+              <div className="mt-2 md:mt-1">
+                <a 
+                  href="https://kaahra.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors gap-1 group"
+                >
+                  A product of 
+                  <span className="font-bold underline-offset-4 group-hover:underline ml-1">Kaahra</span>
+                  <ExternalLink className="h-3 w-3 ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </a>
               </div>
             </div>
+          </div>
+          
+          {/* Back to Top Button - Mobile Only */}
+          <div className="flex justify-center mt-8 md:hidden">
+            <Button
+              onClick={scrollToTop}
+              size="icon"
+              variant="outline"
+              className="rounded-full h-10 w-10 border-muted-foreground/30 hover:border-muted-foreground/60 hover:bg-muted/50 transition-all duration-300"
+              aria-label="Back to top"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
     </footer>
   );
 }
+
