@@ -115,20 +115,7 @@ export function AccessibilitySection({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="colorBlindMode">Color Blind Mode</Label>
-            <Select value={settings.colorBlindMode} onValueChange={value => handleSelectChange('colorBlindMode', value as 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia')}>
-              <SelectTrigger id="colorBlindMode">
-                <SelectValue placeholder="Select color blind mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                <SelectItem value="protanopia">Protanopia (Red-Blind)</SelectItem>
-                <SelectItem value="deuteranopia">Deuteranopia (Green-Blind)</SelectItem>
-                <SelectItem value="tritanopia">Tritanopia (Blue-Blind)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          
 
           
         </CardContent>
