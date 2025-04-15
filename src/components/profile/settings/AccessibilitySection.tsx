@@ -7,11 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckIcon } from "lucide-react";
-
 interface AccessibilitySectionProps {
   profileId: string;
 }
-
 interface AccessibilitySettings {
   screenReaderOptimized: boolean;
   highContrast: boolean;
@@ -24,7 +22,6 @@ interface AccessibilitySettings {
   fontSize: 'default' | 'large' | 'larger';
   fontFamily: 'system' | 'serif' | 'sans-serif' | 'rounded' | 'monospace';
 }
-
 const defaultAccessibilitySettings: AccessibilitySettings = {
   screenReaderOptimized: false,
   highContrast: false,
@@ -37,7 +34,6 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
   fontSize: 'default',
   fontFamily: 'system'
 };
-
 export function AccessibilitySection({
   profileId
 }: AccessibilitySectionProps) {
@@ -47,7 +43,6 @@ export function AccessibilitySection({
   } = useUserSettings(profileId);
   const [settings, setSettings] = useState<AccessibilitySettings>(defaultAccessibilitySettings);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving'>('idle');
-
   useEffect(() => {
     const accessibilitySettings = getSetting('accessibility_settings');
     if (accessibilitySettings) {
@@ -58,28 +53,24 @@ export function AccessibilitySection({
       }
     }
   }, [getSetting]);
-
   const handleToggle = (key: keyof AccessibilitySettings, value: boolean) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
   const handleSelectChange = (key: keyof AccessibilitySettings, value: string) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
   const handleSliderChange = (value: number[]) => {
     setSettings(prev => ({
       ...prev,
       zoomLevel: value[0]
     }));
   };
-
   const saveSettings = async () => {
     setSaveStatus('saving');
     try {
@@ -89,17 +80,14 @@ export function AccessibilitySection({
       });
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
-      
       applyFontSettings(settings);
     } catch (error) {
       console.error('Error saving accessibility settings:', error);
       setSaveStatus('idle');
     }
   };
-
   const applyFontSettings = (settings: AccessibilitySettings) => {
     const root = document.documentElement;
-    
     let fontFamily = '';
     switch (settings.fontFamily) {
       case 'serif':
@@ -117,7 +105,6 @@ export function AccessibilitySection({
       default:
         fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
     }
-    
     let fontSize = '1';
     switch (settings.fontSize) {
       case 'large':
@@ -129,23 +116,19 @@ export function AccessibilitySection({
       default:
         fontSize = '1';
     }
-    
     root.style.setProperty('--font-family-override', fontFamily);
     root.style.setProperty('--font-size-scale', fontSize);
-    
     if (settings.highContrast) {
       document.body.classList.add('high-contrast');
     } else {
       document.body.classList.remove('high-contrast');
     }
-    
     if (settings.reducedMotion) {
       document.body.classList.add('reduced-motion');
     } else {
       document.body.classList.remove('reduced-motion');
     }
   };
-
   return <div className="space-y-4">
       <div>
         <h3 className="text-lg font-semibold mb-2">Accessibility Settings</h3>
@@ -163,11 +146,7 @@ export function AccessibilitySection({
                 Optimize the interface for screen readers
               </p>
             </div>
-            <Switch
-              id="screenReader"
-              checked={settings.screenReaderOptimized}
-              onCheckedChange={(value) => handleToggle('screenReaderOptimized', value)}
-            />
+            <Switch id="screenReader" checked={settings.screenReaderOptimized} onCheckedChange={value => handleToggle('screenReaderOptimized', value)} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -177,11 +156,7 @@ export function AccessibilitySection({
                 Increase contrast for better visibility
               </p>
             </div>
-            <Switch
-              id="highContrast"
-              checked={settings.highContrast}
-              onCheckedChange={(value) => handleToggle('highContrast', value)}
-            />
+            <Switch id="highContrast" checked={settings.highContrast} onCheckedChange={value => handleToggle('highContrast', value)} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -191,11 +166,7 @@ export function AccessibilitySection({
                 Minimize animations and transitions
               </p>
             </div>
-            <Switch
-              id="reducedMotion"
-              checked={settings.reducedMotion}
-              onCheckedChange={(value) => handleToggle('reducedMotion', value)}
-            />
+            <Switch id="reducedMotion" checked={settings.reducedMotion} onCheckedChange={value => handleToggle('reducedMotion', value)} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -205,11 +176,7 @@ export function AccessibilitySection({
                 Improve keyboard focus indicators
               </p>
             </div>
-            <Switch
-              id="keyboardNavigation"
-              checked={settings.keyboardNavigation}
-              onCheckedChange={(value) => handleToggle('keyboardNavigation', value)}
-            />
+            <Switch id="keyboardNavigation" checked={settings.keyboardNavigation} onCheckedChange={value => handleToggle('keyboardNavigation', value)} />
           </div>
 
           <div className="space-y-2">
@@ -228,10 +195,7 @@ export function AccessibilitySection({
 
           <div className="space-y-2">
             <Label htmlFor="colorBlindMode">Color Blind Mode</Label>
-            <Select 
-              value={settings.colorBlindMode} 
-              onValueChange={value => handleSelectChange('colorBlindMode', value as 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia')}
-            >
+            <Select value={settings.colorBlindMode} onValueChange={value => handleSelectChange('colorBlindMode', value as 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia')}>
               <SelectTrigger id="colorBlindMode">
                 <SelectValue placeholder="Select color blind mode" />
               </SelectTrigger>
@@ -244,27 +208,11 @@ export function AccessibilitySection({
             </Select>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="zoomLevel">Zoom Level: {settings.zoomLevel}%</Label>
-            </div>
-            <Slider 
-              id="zoomLevel"
-              min={75}
-              max={150}
-              step={5}
-              value={[settings.zoomLevel]} 
-              onValueChange={handleSliderChange}
-              className="w-full"
-            />
-          </div>
+          
 
           <div className="space-y-2">
             <Label htmlFor="fontFamily">Font Family</Label>
-            <Select 
-              value={settings.fontFamily} 
-              onValueChange={value => handleSelectChange('fontFamily', value as 'system' | 'serif' | 'sans-serif' | 'rounded' | 'monospace')}
-            >
+            <Select value={settings.fontFamily} onValueChange={value => handleSelectChange('fontFamily', value as 'system' | 'serif' | 'sans-serif' | 'rounded' | 'monospace')}>
               <SelectTrigger id="fontFamily">
                 <SelectValue placeholder="Select font family" />
               </SelectTrigger>
@@ -280,10 +228,7 @@ export function AccessibilitySection({
 
           <div className="space-y-2">
             <Label htmlFor="fontSize">Font Size</Label>
-            <Select 
-              value={settings.fontSize} 
-              onValueChange={value => handleSelectChange('fontSize', value as 'default' | 'large' | 'larger')}
-            >
+            <Select value={settings.fontSize} onValueChange={value => handleSelectChange('fontSize', value as 'default' | 'large' | 'larger')}>
               <SelectTrigger id="fontSize">
                 <SelectValue placeholder="Select font size" />
               </SelectTrigger>
