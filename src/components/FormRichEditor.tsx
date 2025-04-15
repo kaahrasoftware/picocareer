@@ -56,6 +56,7 @@ const BACKGROUND_COLORS = [
 export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("formatting");
   const [selection, setSelection] = useState<Range | null>(null);
@@ -331,13 +332,19 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   };
   
   // Handle font family selection
-  const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    execCommand('fontName', e.target.value);
+  const handleFontFamilyChange = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const value = e.currentTarget.getAttribute('data-value');
+    if (value) {
+      execCommand('fontName', value);
+    }
   };
   
   // Handle font size selection
-  const handleFontSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    execCommand('fontSize', e.target.value);
+  const handleFontSizeChange = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const value = e.currentTarget.getAttribute('data-value');
+    if (value) {
+      execCommand('fontSize', value);
+    }
   };
 
   // Track selection on mouseup, keyup and focus events
@@ -405,15 +412,90 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   }, [saveSelection]);
   
   // Handle blur events
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-    handleInput();
+  const handleBlur = useCallback((e: React.FocusEvent) => {
+    // Only blur if the focus is leaving the editor container completely
+    if (editorContainerRef.current && !editorContainerRef.current.contains(e.relatedTarget as Node)) {
+      setIsFocused(false);
+      handleInput();
+    }
   }, []);
+
+  // Handle click on formatting toolbar without losing focus
+  const handleToolbarMouseDown = (e: React.MouseEvent) => {
+    // Prevent default to avoid losing focus
+    e.preventDefault();
+  };
+  
+  // Create a dropdown for font family selection
+  const FontFamilyDropdown = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="h-8 px-2 py-1 text-xs justify-between min-w-32"
+        >
+          {activeFormats.fontFamily || "Font Family"}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-60 overflow-y-auto">
+        {FONT_FAMILIES.map((font) => (
+          <DropdownMenuItem
+            key={font}
+            onClick={handleFontFamilyChange}
+            data-value={font}
+            style={{ fontFamily: font }}
+          >
+            {font}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  // Create a dropdown for font size selection
+  const FontSizeDropdown = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="h-8 px-2 py-1 text-xs justify-between ml-1 min-w-16"
+        >
+          {activeFormats.fontSize || "Size"}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        {FONT_SIZES.map((size) => (
+          <DropdownMenuItem
+            key={size}
+            onClick={handleFontSizeChange}
+            data-value={size}
+          >
+            {size}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
   
   return (
-    <div className="border border-input rounded-md">
+    <div 
+      ref={editorContainerRef}
+      className="border border-input rounded-md"
+      onMouseDown={(e) => {
+        // If clicking anywhere in the container, ensure we maintain focus
+        if (editorRef.current && document.activeElement !== editorRef.current) {
+          // Don't focus immediately to avoid conflict with button clicks
+          setTimeout(() => {
+            if (editorRef.current) editorRef.current.focus();
+          }, 0);
+        }
+      }}
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full bg-muted justify-start h-auto flex-wrap border-b rounded-none">
+        <TabsList 
+          className="w-full bg-muted justify-start h-auto flex-wrap border-b rounded-none" 
+          onMouseDown={handleToolbarMouseDown}
+        >
           <TabsTrigger value="formatting" className="py-1 px-2 h-auto data-[state=active]:bg-background">
             <Type size={14} className="mr-1" />
             <span className="text-xs">Formatting</span>
@@ -432,36 +514,15 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="formatting" className="p-1 space-y-1 border-b">
+        <TabsContent 
+          value="formatting" 
+          className="p-1 space-y-1 border-b"
+          onMouseDown={handleToolbarMouseDown}
+        >
           <div className="flex flex-wrap items-center gap-1">
             <div className="flex items-center mr-2 border-r pr-2">
-              <select 
-                className="h-8 bg-background border border-input rounded px-2 py-1 text-xs"
-                onChange={handleFontFamilyChange}
-                onClick={() => focusEditor()}
-                value={activeFormats.fontFamily}
-              >
-                <option value="">Font Family</option>
-                {FONT_FAMILIES.map((font) => (
-                  <option key={font} value={font} style={{ fontFamily: font }}>
-                    {font}
-                  </option>
-                ))}
-              </select>
-              
-              <select 
-                className="h-8 ml-1 bg-background border border-input rounded px-2 py-1 text-xs"
-                onChange={handleFontSizeChange}
-                onClick={() => focusEditor()}
-                value={activeFormats.fontSize}
-              >
-                <option value="">Size</option>
-                {FONT_SIZES.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
+              <FontFamilyDropdown />
+              <FontSizeDropdown />
             </div>
             
             <div className="flex items-center mr-2 border-r pr-2">
@@ -547,7 +608,11 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           </div>
         </TabsContent>
         
-        <TabsContent value="alignment" className="p-1 space-y-1 border-b">
+        <TabsContent 
+          value="alignment" 
+          className="p-1 space-y-1 border-b"
+          onMouseDown={handleToolbarMouseDown}
+        >
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -584,7 +649,11 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           </div>
         </TabsContent>
         
-        <TabsContent value="colors" className="p-1 space-y-1 border-b">
+        <TabsContent 
+          value="colors" 
+          className="p-1 space-y-1 border-b"
+          onMouseDown={handleToolbarMouseDown}
+        >
           <div className="space-y-2">
             <div>
               <p className="text-xs font-medium mb-1">Text Color</p>
@@ -620,7 +689,11 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           </div>
         </TabsContent>
         
-        <TabsContent value="advanced" className="p-1 space-y-1 border-b">
+        <TabsContent 
+          value="advanced" 
+          className="p-1 space-y-1 border-b"
+          onMouseDown={handleToolbarMouseDown}
+        >
           <div className="flex flex-wrap items-center gap-1">
             <div className="flex items-center mr-2 border-r pr-2">
               <button
