@@ -33,7 +33,7 @@ export function SettingsContainer({
             <TabsTrigger value="interface">Interface</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             
-            <TabsTrigger value="display">Display</TabsTrigger>
+            
             <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
           </TabsList>
           
