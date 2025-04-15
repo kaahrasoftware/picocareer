@@ -4,12 +4,12 @@ import { useState } from "react";
 import { BlogPostDialog } from "./BlogPostDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
-
 interface BlogCardProps {
   blog: BlogWithAuthor;
 }
-
-export function BlogCard({ blog }: BlogCardProps) {
+export function BlogCard({
+  blog
+}: BlogCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Get the first 2 categories and subcategories
@@ -17,25 +17,13 @@ export function BlogCard({ blog }: BlogCardProps) {
   const displayedSubcategories = blog.subcategories?.slice(0, 2) || [];
   const hasMoreCategories = (blog.categories?.length || 0) > 2;
   const hasMoreSubcategories = (blog.subcategories?.length || 0) > 2;
-
-  return (
-    <>
-      <Card 
-        key={blog.id} 
-        className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 border border-border/50"
-        onClick={() => setIsDialogOpen(true)}
-      >
+  return <>
+      <Card key={blog.id} className="group overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 border border-border/50" onClick={() => setIsDialogOpen(true)}>
         <div className="relative h-48 w-full overflow-hidden">
-          <img
-            src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/800/400`}
-            alt={blog.title}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          {blog.is_recent && (
-            <span className="absolute top-2 right-2 text-xs px-2 py-1 bg-green-500 text-white rounded-full font-medium">
+          <img src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/800/400`} alt={blog.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          {blog.is_recent && <span className="absolute top-2 right-2 text-xs px-2 py-1 bg-green-500 text-white rounded-full font-medium">
               New
-            </span>
-          )}
+            </span>}
         </div>
 
         <CardHeader className="space-y-2">
@@ -63,32 +51,18 @@ export function BlogCard({ blog }: BlogCardProps) {
 
         <CardContent>
           <div className="flex flex-wrap gap-1.5">
-            {displayedCategories.map((category) => (
-              <span 
-                key={category} 
-                className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium"
-              >
+            {displayedCategories.map(category => <span key={category} className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium">
                 {category}
-              </span>
-            ))}
-            {hasMoreCategories && (
-              <span className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium">
+              </span>)}
+            {hasMoreCategories && <span className="text-[10px] px-2 py-1 bg-[#9b87f5] text-white rounded-full font-medium">
                 +{(blog.categories?.length || 0) - 2}
-              </span>
-            )}
-            {displayedSubcategories.map((subcategory) => (
-              <span 
-                key={subcategory} 
-                className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium"
-              >
+              </span>}
+            {displayedSubcategories.map(subcategory => <span key={subcategory} className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 rounded-full font-medium text-black">
                 {subcategory}
-              </span>
-            ))}
-            {hasMoreSubcategories && (
-              <span className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium">
+              </span>)}
+            {hasMoreSubcategories && <span className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium">
                 +{(blog.subcategories?.length || 0) - 2}
-              </span>
-            )}
+              </span>}
           </div>
         </CardContent>
 
@@ -102,11 +76,6 @@ export function BlogCard({ blog }: BlogCardProps) {
         </CardFooter>
       </Card>
 
-      <BlogPostDialog 
-        blog={blog} 
-        isOpen={isDialogOpen} 
-        onClose={() => setIsDialogOpen(false)} 
-      />
-    </>
-  );
+      <BlogPostDialog blog={blog} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+    </>;
 }
