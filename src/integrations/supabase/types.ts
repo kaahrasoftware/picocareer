@@ -3750,6 +3750,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      increment_opportunity_applications_count: {
+        Args: { opportunity_id: string }
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
