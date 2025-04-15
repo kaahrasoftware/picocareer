@@ -14,11 +14,15 @@ import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { getSetting } = useUserSettings(profileId);
+  
+  // Form state with default values that will be updated
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
       type: undefined as unknown as SessionTypeEnum,
@@ -31,6 +35,40 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       custom_type_name: "",
     }
   });
+  
+  // Get mentor's default settings on component mount
+  useEffect(() => {
+    const loadDefaultSettings = async () => {
+      try {
+        const sessionSettingsStr = getSetting('session_settings');
+        
+        if (sessionSettingsStr) {
+          const sessionSettings = JSON.parse(sessionSettingsStr);
+          
+          // Update form with mentor's default settings
+          methods.setValue('duration', sessionSettings.defaultSessionDuration || 30);
+          
+          // Set default meeting platform from mentor settings
+          if (sessionSettings.defaultMeetingPlatform) {
+            methods.setValue('meeting_platform', [sessionSettings.defaultMeetingPlatform]);
+            
+            // Set default contact information based on platform
+            if (sessionSettings.defaultMeetingPlatform === 'Telegram' && sessionSettings.customMeetingPlatform) {
+              methods.setValue('telegram_username', sessionSettings.customMeetingPlatform);
+            } else if ((sessionSettings.defaultMeetingPlatform === 'WhatsApp' || 
+                      sessionSettings.defaultMeetingPlatform === 'Phone Call') && 
+                      sessionSettings.customMeetingPlatform) {
+              methods.setValue('phone_number', sessionSettings.customMeetingPlatform);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading default session settings:', error);
+      }
+    };
+    
+    loadDefaultSettings();
+  }, [getSetting, methods]);
 
   const selectedPlatforms = methods.watch("meeting_platform") || [];
   const selectedType = methods.watch("type");
