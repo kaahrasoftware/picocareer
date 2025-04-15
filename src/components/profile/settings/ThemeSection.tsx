@@ -48,17 +48,5 @@ export function ThemeSection({
     });
     setCompactMode(checked);
   };
-  return <div className="space-y-4">
-      <h3 className="text-lg font-medium">Theme Settings</h3>
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <Label htmlFor="dark-mode">Dark Mode</Label>
-          <p className="text-sm text-muted-foreground">
-            Toggle dark/light theme
-          </p>
-        </div>
-        <Switch id="dark-mode" checked={darkMode} onCheckedChange={handleThemeChange} />
-      </div>
-      
-    </div>;
+  return;
 }
