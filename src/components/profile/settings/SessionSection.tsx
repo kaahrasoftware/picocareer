@@ -18,7 +18,7 @@ interface SessionSectionProps {
 
 interface SessionSettings {
   defaultSessionDuration: number;
-  defaultMeetingPlatform: 'Google Meet' | 'Zoom' | 'Microsoft Teams' | 'Other';
+  defaultMeetingPlatform: 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';
   customMeetingPlatform: string;
   allowRescheduling: boolean;
   rescheduleTimeLimit: number;
@@ -252,17 +252,42 @@ export function SessionSection({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Google Meet">Google Meet</SelectItem>
-                  <SelectItem value="Zoom">Zoom</SelectItem>
-                  <SelectItem value="Microsoft Teams">Microsoft Teams</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                  <SelectItem value="Telegram">Telegram</SelectItem>
+                  <SelectItem value="Phone Call">Phone Call</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {settings.defaultMeetingPlatform === 'Other' && <div className="space-y-2">
-                <Label htmlFor="customMeetingPlatform">Custom Meeting Platform</Label>
-                <Input id="customMeetingPlatform" type="text" value={settings.customMeetingPlatform} onChange={e => handleInputChange('customMeetingPlatform', e.target.value)} placeholder="Enter platform name" />
-              </div>}
+            {settings.defaultMeetingPlatform === 'WhatsApp' || settings.defaultMeetingPlatform === 'Phone Call' ? (
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
+                <Input 
+                  id="phoneNumber" 
+                  type="tel" 
+                  placeholder="+1234567890"
+                  value={settings.customMeetingPlatform}
+                  onChange={e => handleInputChange('customMeetingPlatform', e.target.value)}
+                />
+              </div>
+            ) : settings.defaultMeetingPlatform === 'Telegram' ? (
+              <div className="space-y-2">
+                <Label htmlFor="telegramUsername">Telegram Username</Label>
+                <Input 
+                  id="telegramUsername" 
+                  type="text" 
+                  placeholder="@username"
+                  value={settings.customMeetingPlatform}
+                  onChange={e => {
+                    let username = e.target.value;
+                    if (!username.startsWith('@') && username !== '') {
+                      username = '@' + username;
+                    }
+                    handleInputChange('customMeetingPlatform', username);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="flex items-center justify-between">
