@@ -99,15 +99,7 @@ export function AccessibilitySection({
 
           
 
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="keyboardNavigation" className="font-medium">Enhanced Keyboard Navigation</Label>
-              <p className="text-sm text-muted-foreground">
-                Improve keyboard navigation throughout the site
-              </p>
-            </div>
-            <Switch id="keyboardNavigation" checked={settings.keyboardNavigation} onCheckedChange={value => handleToggle('keyboardNavigation', value)} />
-          </div>
+          
 
           <div className="space-y-2">
             <Label htmlFor="fontType">Font Type</Label>
