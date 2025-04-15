@@ -60,7 +60,7 @@ export function BlogCard({
             {displayedSubcategories.map(subcategory => <span key={subcategory} className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 rounded-full font-medium text-black">
                 {subcategory}
               </span>)}
-            {hasMoreSubcategories && <span className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 text-[#7E69AB] rounded-full font-medium">
+            {hasMoreSubcategories && <span className="text-[10px] px-2 py-1 bg-[#7E69AB]/20 rounded-full font-medium text-black">
                 +{(blog.subcategories?.length || 0) - 2}
               </span>}
           </div>
