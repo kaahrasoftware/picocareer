@@ -1,4 +1,6 @@
 
+import { useState, useEffect } from "react";
+
 interface FormRichEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -6,6 +8,8 @@ interface FormRichEditorProps {
 }
 
 export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  
   return (
     <div className="border border-input rounded-md">
       <div className="bg-muted px-3 py-2 border-b flex items-center gap-1">
@@ -46,12 +50,28 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
         </button>
       </div>
       <div 
-        contentEditable
         className="min-h-32 p-3 focus:outline-none"
-        placeholder={placeholder}
+        contentEditable
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onInput={(e) => onChange(e.currentTarget.innerHTML)}
         dangerouslySetInnerHTML={{ __html: value }}
+        aria-placeholder={placeholder}
+        data-placeholder={placeholder}
+        style={{
+          position: 'relative',
+        }}
       />
+      {!value && !isFocused && (
+        <div 
+          className="absolute pointer-events-none text-muted-foreground p-3"
+          style={{ 
+            marginTop: '-8rem',
+          }}
+        >
+          {placeholder}
+        </div>
+      )}
     </div>
   );
 }
