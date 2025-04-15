@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bold, Italic, Heading, Link, List, Type, AlignLeft, AlignCenter, AlignRight, Underline } from "lucide-react";
 
 interface FormRichEditorProps {
@@ -10,17 +10,27 @@ interface FormRichEditorProps {
 
 export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  
+  // Sync the HTML content with the editable div
+  useEffect(() => {
+    if (editorRef.current && !isFocused) {
+      editorRef.current.innerHTML = value;
+    }
+  }, [value, isFocused]);
   
   const execCommand = (command: string, value?: string) => {
+    // Save selection state
     document.execCommand(command, false, value);
-    const selection = document.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const editorDiv = document.querySelector('[contenteditable="true"]');
-      if (editorDiv) {
-        onChange(editorDiv.innerHTML);
-      }
+    
+    // Update the value after command execution
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
     }
+  };
+  
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    onChange(e.currentTarget.innerHTML);
   };
   
   return (
@@ -140,17 +150,15 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
       </div>
       
       <div 
+        ref={editorRef}
         className="min-h-32 p-3 focus:outline-none"
         contentEditable
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        onInput={(e) => onChange(e.currentTarget.innerHTML)}
+        onInput={handleInput}
         dangerouslySetInnerHTML={{ __html: value }}
         aria-placeholder={placeholder}
         data-placeholder={placeholder}
-        style={{
-          position: 'relative',
-        }}
       />
       
       {!value && !isFocused && (
