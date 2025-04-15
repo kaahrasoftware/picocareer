@@ -311,7 +311,7 @@ export function ScholarshipCard({
           {scholarship.eligibility_criteria && <div className="mt-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1 mb-1">
                 <CheckCircle className="h-3 w-3 text-green-600" />
-                <span className="font-medium">Eligibility highlights:</span>
+                <span className="font-medium text-base text-left">Eligibility highlights:</span>
               </div>
               <ul className="list-disc list-inside space-y-0.5 pl-1">
                 {scholarship.eligibility_criteria.gpa_requirement && <li>GPA: {scholarship.eligibility_criteria.gpa_requirement}+</li>}
