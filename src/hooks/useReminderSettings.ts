@@ -104,6 +104,11 @@ export function useReminderSettings(profileId?: string) {
 
   const deleteReminderSetting = useMutation({
     mutationFn: async (id: string) => {
+      // Check if this is the last reminder setting
+      if (reminderSettings.length <= 1) {
+        throw new Error("You must have at least one reminder setting");
+      }
+      
       const { error } = await supabase
         .from('mentor_reminder_settings')
         .delete()
@@ -124,7 +129,7 @@ export function useReminderSettings(profileId?: string) {
       console.error('Error deleting reminder setting:', error);
       toast({
         title: "Error removing reminder",
-        description: "There was a problem removing the reminder. Please try again.",
+        description: error.message || "There was a problem removing the reminder. Please try again.",
         variant: "destructive",
       });
     },
