@@ -4181,6 +4181,7 @@ export type Database = {
         | "competition"
         | "event"
         | "other"
+        | "volunteer"
       personality_question_type:
         | "multiple_choice"
         | "likert_scale"
@@ -4893,6 +4894,7 @@ export const Constants = {
         "competition",
         "event",
         "other",
+        "volunteer",
       ],
       personality_question_type: [
         "multiple_choice",

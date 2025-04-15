@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { OpportunityType } from "@/types/database/enums";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { FormRichEditor } from "../FormRichEditor";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useResponsive } from "@/hooks/useResponsive";
 
 interface OpportunityFormProps {
   initialData?: any;
@@ -36,11 +37,16 @@ const CATEGORIES = [
   "Research",
   "Non-profit",
   "Government",
+  "Community Service",
+  "Social Impact",
+  "Environment",
+  "Arts & Culture",
 ];
 
 export function OpportunityForm({ initialData, onSubmit, isSubmitting }: OpportunityFormProps) {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
+  const { isMobile } = useResponsive();
   const [description, setDescription] = useState(initialData?.description || "");
   
   const form = useForm({
@@ -60,6 +66,9 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
       eligibility: initialData?.eligibility || {},
     },
   });
+
+  // Watch the opportunity type to conditionally render fields
+  const opportunityType = form.watch("opportunity_type");
 
   const handleSubmit = (data: any) => {
     if (!description.trim()) {
@@ -83,8 +92,62 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
     { value: "grant", label: "Grant" },
     { value: "competition", label: "Competition" },
     { value: "event", label: "Event" },
+    { value: "volunteer", label: "Volunteer Opportunity" },
     { value: "other", label: "Other" },
   ];
+
+  // Helper function to determine if a field should be shown based on opportunity type
+  const shouldShowField = (field: string): boolean => {
+    switch (field) {
+      case "compensation":
+        return ["job", "internship", "fellowship"].includes(opportunityType);
+      case "deadline":
+        return ["scholarship", "fellowship", "grant", "competition", "event", "volunteer"].includes(opportunityType);
+      case "requirements":
+        return ["job", "internship", "fellowship", "volunteer"].includes(opportunityType);
+      case "benefits":
+        return ["job", "internship", "fellowship", "volunteer"].includes(opportunityType);
+      case "eligibility":
+        return ["scholarship", "fellowship", "grant", "competition"].includes(opportunityType);
+      default:
+        return true;
+    }
+  };
+
+  // Get placeholder text based on opportunity type
+  const getPlaceholderText = (field: string): string => {
+    switch (field) {
+      case "compensation":
+        if (opportunityType === "job") return "E.g., $50,000 - $70,000 per year";
+        if (opportunityType === "internship") return "E.g., $20/hour or Unpaid";
+        if (opportunityType === "fellowship") return "E.g., $25,000 stipend for program duration";
+        return "";
+      case "location":
+        if (opportunityType === "event") return "Event location (city, venue, etc.)";
+        return "E.g., New York, NY";
+      case "application_url":
+        if (opportunityType === "event") return "Registration link";
+        return "https://example.com/apply";
+      default:
+        return "";
+    }
+  };
+
+  // Get label text based on opportunity type
+  const getLabelText = (field: string): string => {
+    switch (field) {
+      case "compensation":
+        if (opportunityType === "job") return "Salary/Compensation";
+        if (opportunityType === "internship") return "Stipend/Compensation";
+        if (opportunityType === "fellowship") return "Fellowship Amount";
+        return "Compensation";
+      case "application_url":
+        if (opportunityType === "event") return "Registration URL";
+        return "Application URL";
+      default:
+        return field.charAt(0).toUpperCase() + field.slice(1);
+    }
+  };
 
   return (
     <Form {...form}>
@@ -131,7 +194,7 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
               <FormLabel>Opportunity Type</FormLabel>
               <Select
                 onValueChange={field.onChange}
-                defaultValue={field.value}
+                value={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -156,7 +219,7 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
           <FormRichEditor
             value={description}
             onChange={setDescription}
-            placeholder="Enter a detailed description of the opportunity..."
+            placeholder={`Enter a detailed description of the ${opportunityType}`}
           />
           {!description.trim() && (
             <p className="text-sm text-destructive">Description is required</p>
@@ -171,7 +234,10 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
               <FormItem>
                 <FormLabel>Location (Optional)</FormLabel>
                 <FormControl>
-                  <Input placeholder="E.g., New York, NY" {...field} />
+                  <Input 
+                    placeholder={getPlaceholderText("location")} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -189,82 +255,92 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
                     onCheckedChange={field.onChange}
                   />
                 </FormControl>
-                <FormLabel>Remote available</FormLabel>
+                <FormLabel>Remote {opportunityType === "event" ? "participation" : "available"}</FormLabel>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="compensation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Compensation (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="E.g., $50,000 - $70,000 per year" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {shouldShowField("compensation") && (
+          <FormField
+            control={form.control}
+            name="compensation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{getLabelText("compensation")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={getPlaceholderText("compensation")} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
-        <FormField
-          control={form.control}
-          name="deadline"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Application Deadline (Optional)</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>No deadline</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {shouldShowField("deadline") && (
+          <FormField
+            control={form.control}
+            name="deadline"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>
+                  {opportunityType === "event" ? "Event Date" : "Application Deadline"}
+                </FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>
+                            {opportunityType === "event" ? "Select event date" : "No deadline"}
+                          </span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
           name="application_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Application URL (Optional)</FormLabel>
+              <FormLabel>{getLabelText("application_url")} (Optional)</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="https://example.com/apply" 
+                  placeholder={getPlaceholderText("application_url")} 
                   type="url" 
                   {...field} 
                 />
               </FormControl>
               <FormDescription>
-                If provided, applicants will be directed to this URL to apply
+                {opportunityType === "event" 
+                  ? "If provided, attendees will be directed to this URL to register" 
+                  : "If provided, applicants will be directed to this URL to apply"}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -278,7 +354,7 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Categories (Select up to 3)</FormLabel>
-                <div className="space-y-2 border rounded-md p-4 h-60 overflow-y-auto">
+                <div className={`space-y-2 border rounded-md p-4 ${isMobile ? 'h-44' : 'h-60'} overflow-y-auto`}>
                   {CATEGORIES.map((category) => (
                     <div key={category} className="flex items-center space-x-2">
                       <Checkbox
@@ -317,7 +393,7 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
                 <FormLabel>Tags (Optional)</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="E.g., remote, entry-level, tech" 
+                    placeholder={`E.g., ${opportunityType === "volunteer" ? "community, social-impact, weekend" : opportunityType === "job" ? "remote, entry-level, tech" : "paid, summer, international"}`} 
                     onChange={(e) => {
                       const value = e.target.value;
                       field.onChange(
@@ -343,61 +419,67 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
           </div>
 
           {/* Requirements */}
-          <div className="mb-6">
-            <Label className="mb-2 block">Requirements</Label>
-            <div className="space-y-2" id="requirements-container">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Input
-                  key={`requirement-${index}`}
-                  placeholder={`Requirement #${index + 1}`}
-                  value={form.watch(`requirements.${index}`) || ""}
-                  onChange={(e) => {
-                    const requirements = { ...form.watch("requirements") };
-                    requirements[index] = e.target.value;
-                    form.setValue("requirements", requirements);
-                  }}
-                />
-              ))}
+          {shouldShowField("requirements") && (
+            <div className="mb-6">
+              <Label className="mb-2 block">Requirements</Label>
+              <div className="space-y-2" id="requirements-container">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Input
+                    key={`requirement-${index}`}
+                    placeholder={`Requirement #${index + 1}`}
+                    value={form.watch(`requirements.${index}`) || ""}
+                    onChange={(e) => {
+                      const requirements = { ...form.watch("requirements") };
+                      requirements[index] = e.target.value;
+                      form.setValue("requirements", requirements);
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Benefits */}
-          <div className="mb-6">
-            <Label className="mb-2 block">Benefits</Label>
-            <div className="space-y-2" id="benefits-container">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Input
-                  key={`benefit-${index}`}
-                  placeholder={`Benefit #${index + 1}`}
-                  value={form.watch(`benefits.${index}`) || ""}
-                  onChange={(e) => {
-                    const benefits = { ...form.watch("benefits") };
-                    benefits[index] = e.target.value;
-                    form.setValue("benefits", benefits);
-                  }}
-                />
-              ))}
+          {shouldShowField("benefits") && (
+            <div className="mb-6">
+              <Label className="mb-2 block">Benefits</Label>
+              <div className="space-y-2" id="benefits-container">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Input
+                    key={`benefit-${index}`}
+                    placeholder={`Benefit #${index + 1}`}
+                    value={form.watch(`benefits.${index}`) || ""}
+                    onChange={(e) => {
+                      const benefits = { ...form.watch("benefits") };
+                      benefits[index] = e.target.value;
+                      form.setValue("benefits", benefits);
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Eligibility */}
-          <div>
-            <Label className="mb-2 block">Eligibility Criteria</Label>
-            <div className="space-y-2" id="eligibility-container">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Input
-                  key={`eligibility-${index}`}
-                  placeholder={`Eligibility Requirement #${index + 1}`}
-                  value={form.watch(`eligibility.${index}`) || ""}
-                  onChange={(e) => {
-                    const eligibility = { ...form.watch("eligibility") };
-                    eligibility[index] = e.target.value;
-                    form.setValue("eligibility", eligibility);
-                  }}
-                />
-              ))}
+          {shouldShowField("eligibility") && (
+            <div>
+              <Label className="mb-2 block">Eligibility Criteria</Label>
+              <div className="space-y-2" id="eligibility-container">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Input
+                    key={`eligibility-${index}`}
+                    placeholder={`Eligibility Requirement #${index + 1}`}
+                    value={form.watch(`eligibility.${index}`) || ""}
+                    onChange={(e) => {
+                      const eligibility = { ...form.watch("eligibility") };
+                      eligibility[index] = e.target.value;
+                      form.setValue("eligibility", eligibility);
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex justify-end">
