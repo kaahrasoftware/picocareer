@@ -5,12 +5,12 @@ import * as React from "react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 import { useEffect } from "react";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useAuth } from "@/context/AuthContext";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
-  const { session } = useAuthSession();
+  const { session } = useAuth();
   const { data: profile } = useUserProfile(session);
   const { getSetting } = profile?.id ? useUserSettings(profile?.id) : { getSetting: () => "" };
   

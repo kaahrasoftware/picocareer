@@ -21,15 +21,15 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="light" storageKey="picocareer-theme">
-          <Router>
+      <Router>
+        <AuthProvider>
+          <ThemeProvider defaultTheme="light" storageKey="picocareer-theme">
             <SessionTimeoutHandler />
             <AppRoutes />
             <Toaster />
-          </Router>
-        </ThemeProvider>
-      </AuthProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }
