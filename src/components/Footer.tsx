@@ -1,5 +1,5 @@
 
-import { Mail, Phone, Facebook, Instagram, Linkedin, Youtube, Twitter } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { FooterNewsletter } from "./footer/FooterNewsletter";
 import { FooterLinkSection, useFooterLinks } from "./footer/FooterLinkSection";
 import { FooterAbout } from "./footer/FooterAbout";

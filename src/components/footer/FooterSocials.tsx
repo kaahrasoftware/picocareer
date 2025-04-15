@@ -1,5 +1,5 @@
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Instagram, Facebook, Linkedin, Youtube, Twitter } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
