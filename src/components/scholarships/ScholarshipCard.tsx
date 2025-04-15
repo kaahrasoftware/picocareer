@@ -282,7 +282,7 @@ export function ScholarshipCard({
               <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full mr-2">
                 <Award className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="font-bold text-picocareer-success">
+              <span className="font-bold text-blue-500">
                 {scholarship.amount ? `$${scholarship.amount.toLocaleString()}` : "Amount varies"}
               </span>
             </div>
