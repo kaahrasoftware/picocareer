@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Switch } from "@/components/ui/switch";
@@ -91,7 +90,6 @@ export function AccessibilitySection({
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
       
-      // Apply font settings immediately
       applyFontSettings(settings);
     } catch (error) {
       console.error('Error saving accessibility settings:', error);
@@ -102,7 +100,6 @@ export function AccessibilitySection({
   const applyFontSettings = (settings: AccessibilitySettings) => {
     const root = document.documentElement;
     
-    // Apply font family
     let fontFamily = '';
     switch (settings.fontFamily) {
       case 'serif':
@@ -121,7 +118,6 @@ export function AccessibilitySection({
         fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
     }
     
-    // Apply font size
     let fontSize = '1';
     switch (settings.fontSize) {
       case 'large':
@@ -134,18 +130,15 @@ export function AccessibilitySection({
         fontSize = '1';
     }
     
-    // Set CSS variables
     root.style.setProperty('--font-family-override', fontFamily);
     root.style.setProperty('--font-size-scale', fontSize);
     
-    // Set high contrast if enabled
     if (settings.highContrast) {
       document.body.classList.add('high-contrast');
     } else {
       document.body.classList.remove('high-contrast');
     }
     
-    // Set reduced motion if enabled
     if (settings.reducedMotion) {
       document.body.classList.add('reduced-motion');
     } else {

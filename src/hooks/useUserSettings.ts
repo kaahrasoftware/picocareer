@@ -55,7 +55,19 @@ export interface UISettingType {
 }
 
 export function useUserSettings(profileId?: string) {
-  const { toast } = useToast();
+  // Get toast only if we're in a component tree with a toast provider
+  let toast;
+  try {
+    toast = useToast();
+  } catch (e) {
+    // If useToast throws, we're being called outside a toast provider
+    toast = {
+      toast: () => {
+        console.log("Toast attempted outside provider");
+      }
+    };
+  }
+  
   const queryClient = useQueryClient();
   const [cachedSettings, setCachedSettings] = useState<Record<string, string>>({});
 
@@ -140,18 +152,22 @@ export function useUserSettings(profileId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-settings', profileId] });
-      toast({
-        title: "Settings updated",
-        description: "Your settings have been saved successfully.",
-      });
+      if (toast.toast) {
+        toast.toast({
+          title: "Settings updated",
+          description: "Your settings have been saved successfully.",
+        });
+      }
     },
     onError: (error) => {
       console.error('Error updating setting:', error);
-      toast({
-        title: "Error updating settings",
-        description: "There was a problem saving your settings. Please try again.",
-        variant: "destructive",
-      });
+      if (toast.toast) {
+        toast.toast({
+          title: "Error updating settings",
+          description: "There was a problem saving your settings. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
   });
 

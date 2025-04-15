@@ -6,23 +6,49 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 import { useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useUserSettings } from "@/hooks/useUserSettings";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   const { session } = useAuth();
   const { data: profile } = useUserProfile(session);
-  const { getSetting } = profile?.id ? useUserSettings(profile?.id) : { getSetting: () => "" };
+  const [accessibilitySettings, setAccessibilitySettings] = React.useState<any>(null);
   
-  // Apply font and accessibility settings
+  // Fetch settings directly without using useUserSettings to avoid hook dependencies
   useEffect(() => {
     if (!profile?.id) return;
     
-    const accessibilitySettingsStr = getSetting('accessibility_settings');
-    if (!accessibilitySettingsStr) return;
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('setting_value')
+          .eq('profile_id', profile.id)
+          .eq('setting_type', 'accessibility_settings')
+          .single();
+        
+        if (error) {
+          console.error('Error fetching accessibility settings:', error);
+          return;
+        }
+        
+        if (data?.setting_value) {
+          setAccessibilitySettings(JSON.parse(data.setting_value));
+        }
+      } catch (e) {
+        console.error('Error parsing accessibility settings:', e);
+      }
+    };
+    
+    fetchSettings();
+  }, [profile?.id]);
+  
+  // Apply font and accessibility settings
+  useEffect(() => {
+    if (!accessibilitySettings) return;
     
     try {
-      const settings = JSON.parse(accessibilitySettingsStr);
+      const settings = accessibilitySettings;
       const root = document.documentElement;
       
       // Apply font family
@@ -77,7 +103,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     } catch (e) {
       console.error('Error applying accessibility settings:', e);
     }
-  }, [profile?.id, getSetting]);
+  }, [accessibilitySettings]);
   
   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
