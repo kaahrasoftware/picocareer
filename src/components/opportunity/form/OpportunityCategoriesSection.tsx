@@ -26,6 +26,22 @@ const CATEGORIES = [
   "Social Impact",
   "Environment",
   "Arts & Culture",
+  "Science",
+  "Business",
+  "Media",
+  "Sports",
+  "Agriculture",
+  "International Relations",
+  "Law",
+  "Construction",
+  "Manufacturing",
+  "Hospitality",
+  "Transportation",
+  "Real Estate",
+  "Cybersecurity",
+  "Data Science",
+  "Renewable Energy",
+  "Entertainment",
 ];
 
 export function OpportunityCategoriesSection({ 
