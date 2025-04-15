@@ -21,7 +21,7 @@ export default function TeamSection() {
     {
       name: "Francis Kangure",
       role: "PicoCareer Ambassador, Kenya",
-      imageUrl: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+      imageUrl: "/lovable-uploads/8d42ed42-79dc-4007-9b51-cabbacea7527.png",
       linkedin: "https://www.linkedin.com/in/francis-kangure",
       twitter: "https://x.com/francis_kangure"
     },
