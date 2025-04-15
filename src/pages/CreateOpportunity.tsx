@@ -10,21 +10,25 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function CreateOpportunity() {
   const navigate = useNavigate();
-  const { session } = useAuthSession();
+  const { session, loading } = useAuthSession('required');
   const { createOpportunity, isLoading } = useCreateOpportunity();
   const { toast } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Redirect to login if not authenticated
-  if (!session) {
-    toast({
-      title: "Authentication required",
-      description: "You must be signed in to create an opportunity",
-      variant: "destructive",
-    });
-    navigate("/auth");
-    return null;
+  // Show loading state while authentication is being checked
+  if (loading) {
+    return (
+      <div className="container px-4 py-8 mx-auto flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
   }
+
+  // If session is null after loading is done, the user will be redirected automatically
+  // by the useAuthSession hook with 'required' parameter
 
   const handleSubmit = async (data: any) => {
     try {
@@ -33,7 +37,7 @@ export default function CreateOpportunity() {
       // Ensure author_id is set to the current user's ID
       const opportunityData = {
         ...data,
-        author_id: session.user.id,
+        author_id: session!.user.id,
         // Set default status to 'Pending' when creating
         status: 'Pending'
       };
