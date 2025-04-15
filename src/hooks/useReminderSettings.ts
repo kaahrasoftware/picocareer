@@ -13,6 +13,8 @@ export interface ReminderSetting {
   updated_at: string;
 }
 
+export type ReminderTimeOption = 10 | 15 | 30 | 60 | 120 | 180 | 300 | 1440 | 2880 | 4320;
+
 export function useReminderSettings(profileId?: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();

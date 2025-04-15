@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useReminderSettings, ReminderSetting } from "@/hooks/useReminderSettings";
+import { useReminderSettings, ReminderSetting, ReminderTimeOption } from "@/hooks/useReminderSettings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,6 @@ const defaultSessionSettings: SessionSettings = {
   allowCancellation: true,
   cancellationTimeLimit: 24
 };
-
-type ReminderTimeOption = 15 | 30 | 60 | 1440;
 
 export function SessionSection({
   profileId
@@ -137,7 +135,15 @@ export function SessionSection({
   };
 
   const formatReminderTime = (minutes: number): string => {
-    return minutes === 1440 ? "1 day" : `${minutes} minutes`;
+    if (minutes >= 1440) {
+      const days = minutes / 1440;
+      return `${days} ${days === 1 ? 'day' : 'days'}`;
+    } else if (minutes >= 60) {
+      const hours = minutes / 60;
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+    } else {
+      return `${minutes} minutes`;
+    }
   };
 
   return <div className="space-y-4">
@@ -206,10 +212,16 @@ export function SessionSection({
                     <SelectValue placeholder="Select time" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="10">10 minutes before</SelectItem>
                     <SelectItem value="15">15 minutes before</SelectItem>
                     <SelectItem value="30">30 minutes before</SelectItem>
                     <SelectItem value="60">1 hour before</SelectItem>
+                    <SelectItem value="120">2 hours before</SelectItem>
+                    <SelectItem value="180">3 hours before</SelectItem>
+                    <SelectItem value="300">5 hours before</SelectItem>
                     <SelectItem value="1440">1 day before</SelectItem>
+                    <SelectItem value="2880">2 days before</SelectItem>
+                    <SelectItem value="4320">3 days before</SelectItem>
                   </SelectContent>
                 </Select>
                 
