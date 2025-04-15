@@ -9,6 +9,8 @@ import EmojiPicker, { Theme, EmojiClickData } from "emoji-picker-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 
 interface FormRichEditorProps {
   value: string;
@@ -57,15 +59,63 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("formatting");
   const [selection, setSelection] = useState<Range | null>(null);
+  const [isTextSelected, setIsTextSelected] = useState(false);
+  const [activeFormats, setActiveFormats] = useState<{
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    strikethrough: boolean;
+    fontFamily: string;
+    fontSize: string;
+    textColor: string;
+    backgroundColor: string;
+    alignment: string;
+  }>({
+    bold: false,
+    italic: false,
+    underline: false, 
+    strikethrough: false,
+    fontFamily: "",
+    fontSize: "",
+    textColor: "",
+    backgroundColor: "",
+    alignment: "left"
+  });
   
   // Save selection when editor is focused or content is selected
   const saveSelection = useCallback(() => {
     if (window.getSelection && document.createRange) {
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
-        setSelection(sel.getRangeAt(0).cloneRange());
+        const range = sel.getRangeAt(0);
+        setSelection(range.cloneRange());
+        setIsTextSelected(!range.collapsed);
+
+        // Check active formatting for the current selection
+        checkActiveFormats(sel);
       }
     }
+  }, []);
+  
+  // Check which formatting options are active for the current selection
+  const checkActiveFormats = useCallback((selection: Selection) => {
+    if (!selection || selection.rangeCount === 0) return;
+    
+    // Query command state for various formatting options
+    setActiveFormats({
+      bold: document.queryCommandState('bold'),
+      italic: document.queryCommandState('italic'),
+      underline: document.queryCommandState('underline'),
+      strikethrough: document.queryCommandState('strikeThrough'),
+      fontFamily: document.queryCommandValue('fontName') || "",
+      fontSize: document.queryCommandValue('fontSize') || "",
+      textColor: document.queryCommandValue('foreColor') || "",
+      backgroundColor: document.queryCommandValue('hiliteColor') || "",
+      alignment: document.queryCommandState('justifyLeft') ? "left" :
+                document.queryCommandState('justifyCenter') ? "center" :
+                document.queryCommandState('justifyRight') ? "right" :
+                document.queryCommandState('justifyFull') ? "justify" : "left"
+    });
   }, []);
   
   // Restore selection before executing commands
@@ -99,6 +149,37 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
     }
   }, [onChange, restoreSelection, saveSelection]);
   
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Handle common keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'b':
+          e.preventDefault();
+          execCommand('bold');
+          break;
+        case 'i':
+          e.preventDefault();
+          execCommand('italic');
+          break;
+        case 'u':
+          e.preventDefault();
+          execCommand('underline');
+          break;
+        case 'z':
+          e.preventDefault();
+          execCommand('undo');
+          break;
+        case 'y':
+          e.preventDefault();
+          execCommand('redo');
+          break;
+      }
+    }
+    
+    saveSelection();
+  }, [execCommand, saveSelection]);
+  
   const handleInput = () => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
@@ -125,6 +206,20 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     execCommand('fontSize', e.target.value);
   };
+
+  // Track selection on mouseup, keyup and focus events
+  const handleSelectionChange = useCallback(() => {
+    saveSelection();
+  }, [saveSelection]);
+
+  // Add document-wide listener for selection changes
+  useEffect(() => {
+    document.addEventListener('selectionchange', handleSelectionChange);
+    
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [handleSelectionChange]);
   
   return (
     <div className="border border-input rounded-md">
@@ -154,7 +249,8 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
               <select 
                 className="h-8 bg-background border border-input rounded px-2 py-1 text-xs"
                 onChange={handleFontFamilyChange}
-                onClick={() => saveSelection()}
+                onClick={() => restoreSelection()}
+                value={activeFormats.fontFamily}
               >
                 <option value="">Font Family</option>
                 {FONT_FAMILIES.map((font) => (
@@ -167,7 +263,8 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
               <select 
                 className="h-8 ml-1 bg-background border border-input rounded px-2 py-1 text-xs"
                 onChange={handleFontSizeChange}
-                onClick={() => saveSelection()}
+                onClick={() => restoreSelection()}
+                value={activeFormats.fontSize}
               >
                 <option value="">Size</option>
                 {FONT_SIZES.map((size) => (
@@ -208,31 +305,31 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
             <div className="flex items-center mr-2 border-r pr-2">
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded ${activeFormats.bold ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
                 onClick={() => execCommand('bold')}
-                title="Bold"
+                title="Bold (Ctrl+B)"
               >
                 <Bold size={16} />
               </button>
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded ${activeFormats.italic ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
                 onClick={() => execCommand('italic')}
-                title="Italic"
+                title="Italic (Ctrl+I)"
               >
                 <Italic size={16} />
               </button>
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded ${activeFormats.underline ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
                 onClick={() => execCommand('underline')}
-                title="Underline"
+                title="Underline (Ctrl+U)"
               >
                 <Underline size={16} />
               </button>
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded ${activeFormats.strikethrough ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
                 onClick={() => execCommand('strikeThrough')}
                 title="Strikethrough"
               >
@@ -265,7 +362,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           <div className="flex items-center gap-1">
             <button
               type="button"
-              className="p-1 hover:bg-muted-foreground/10 rounded"
+              className={`p-1 rounded ${activeFormats.alignment === 'left' ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
               onClick={() => execCommand('justifyLeft')}
               title="Align Left"
             >
@@ -273,7 +370,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
             </button>
             <button
               type="button"
-              className="p-1 hover:bg-muted-foreground/10 rounded"
+              className={`p-1 rounded ${activeFormats.alignment === 'center' ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
               onClick={() => execCommand('justifyCenter')}
               title="Align Center"
             >
@@ -281,7 +378,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
             </button>
             <button
               type="button"
-              className="p-1 hover:bg-muted-foreground/10 rounded"
+              className={`p-1 rounded ${activeFormats.alignment === 'right' ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
               onClick={() => execCommand('justifyRight')}
               title="Align Right"
             >
@@ -289,7 +386,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
             </button>
             <button
               type="button"
-              className="p-1 hover:bg-muted-foreground/10 rounded"
+              className={`p-1 rounded ${activeFormats.alignment === 'justify' ? 'bg-muted-foreground/20' : 'hover:bg-muted-foreground/10'}`}
               onClick={() => execCommand('justifyFull')}
               title="Justify"
             >
@@ -307,7 +404,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                   <button
                     key={color}
                     type="button"
-                    className="w-6 h-6 rounded-full border border-input flex items-center justify-center hover:scale-110 transition-transform"
+                    className={`w-6 h-6 rounded-full border flex items-center justify-center hover:scale-110 transition-transform ${activeFormats.textColor === color ? 'ring-2 ring-offset-1 ring-primary' : 'border-input'}`}
                     style={{ backgroundColor: color }}
                     onClick={() => execCommand('foreColor', color)}
                     title={`Text color: ${color}`}
@@ -323,7 +420,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                   <button
                     key={color}
                     type="button"
-                    className="w-6 h-6 rounded-full border border-input flex items-center justify-center hover:scale-110 transition-transform"
+                    className={`w-6 h-6 rounded-full border flex items-center justify-center hover:scale-110 transition-transform ${activeFormats.backgroundColor === color ? 'ring-2 ring-offset-1 ring-primary' : 'border-input'}`}
                     style={{ backgroundColor: color }}
                     onClick={() => execCommand('hiliteColor', color)}
                     title={`Background color: ${color}`}
@@ -339,7 +436,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
             <div className="flex items-center mr-2 border-r pr-2">
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded hover:bg-muted-foreground/10`}
                 onClick={() => execCommand('superscript')}
                 title="Superscript"
               >
@@ -347,7 +444,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
               </button>
               <button
                 type="button"
-                className="p-1 hover:bg-muted-foreground/10 rounded"
+                className={`p-1 rounded hover:bg-muted-foreground/10`}
                 onClick={() => execCommand('subscript')}
                 title="Subscript"
               >
@@ -360,6 +457,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                 type="button"
                 className="p-1 hover:bg-muted-foreground/10 rounded"
                 onClick={() => {
+                  restoreSelection();
                   const url = prompt('Enter URL:');
                   if (url) execCommand('createLink', url);
                 }}
@@ -395,7 +493,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                 type="button"
                 className="p-1 hover:bg-muted-foreground/10 rounded"
                 onClick={() => execCommand('undo')}
-                title="Undo"
+                title="Undo (Ctrl+Z)"
               >
                 <Undo size={16} />
               </button>
@@ -403,7 +501,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                 type="button"
                 className="p-1 hover:bg-muted-foreground/10 rounded"
                 onClick={() => execCommand('redo')}
-                title="Redo"
+                title="Redo (Ctrl+Y)"
               >
                 <Redo size={16} />
               </button>
@@ -433,8 +531,9 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
           handleInput();
         }}
         onInput={handleInput}
-        onMouseUp={saveSelection}
-        onKeyUp={saveSelection}
+        onMouseUp={handleSelectionChange}
+        onKeyUp={handleKeyDown}
+        onSelect={handleSelectionChange}
         aria-placeholder={placeholder}
         data-placeholder={placeholder}
       />
@@ -450,17 +549,20 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
         </div>
       )}
 
-      <style jsx global>{`
-        [contenteditable] {
-          outline: none;
-        }
-        
-        [data-placeholder]:empty:before {
-          content: attr(data-placeholder);
-          color: #a9a9a9;
-          font-style: italic;
-        }
-      `}</style>
+      <style jsx global>
+        {`
+          [contenteditable] {
+            outline: none;
+          }
+          
+          [data-placeholder]:empty:before {
+            content: attr(data-placeholder);
+            color: #a9a9a9;
+            font-style: italic;
+          }
+        `}
+      </style>
     </div>
   );
 }
+
