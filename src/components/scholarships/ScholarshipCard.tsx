@@ -259,7 +259,7 @@ export function ScholarshipCard({
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <p className="text-[picocareer-gray-light] text-sky-500">{scholarship.provider_name}</p>
+            <p className="font-thin text-picocareer-black text-sm text-left">{scholarship.provider_name}</p>
           </div>
           
           <div className="flex flex-wrap gap-1 mt-2">
