@@ -35,6 +35,9 @@ import HubInviteResponse from "../pages/HubInviteResponse";
 import CareerChat from "../pages/CareerChat";
 import Scholarships from "@/pages/Scholarships";
 import ScholarshipAdd from "@/pages/ScholarshipAdd";
+import Opportunities from "@/pages/Opportunities";
+import OpportunityDetails from "@/pages/OpportunityDetails";
+import CreateOpportunity from "@/pages/CreateOpportunity";
 
 export const router = createBrowserRouter([
   {
@@ -201,6 +204,18 @@ export const router = createBrowserRouter([
       {
         path: "/scholarships/add",
         element: <ScholarshipAdd />
+      },
+      {
+        path: "/opportunities",
+        element: <Opportunities />,
+      },
+      {
+        path: "/opportunities/:id",
+        element: <OpportunityDetails />,
+      },
+      {
+        path: "/opportunities/create",
+        element: <CreateOpportunity />,
       },
     ],
   },

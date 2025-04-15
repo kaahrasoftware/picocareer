@@ -271,6 +271,144 @@ export interface Database {
           }
         ]
       }
+      opportunities: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          opportunity_type: OpportunityType
+          provider_name: string
+          location: string | null
+          remote: boolean | null
+          compensation: string | null
+          deadline: string | null
+          created_at: string
+          updated_at: string
+          status: OpportunityStatus
+          author_id: string | null
+          requirements: Json | null
+          benefits: Json | null
+          eligibility: Json | null
+          application_url: string | null
+          tags: string[] | null
+          categories: string[] | null
+          featured: boolean | null
+          views_count: number | null
+          applications_count: number | null
+          bookmarks_count: number | null
+          cover_image_url: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          opportunity_type: OpportunityType
+          provider_name: string
+          location?: string | null
+          remote?: boolean | null
+          compensation?: string | null
+          deadline?: string | null
+          created_at?: string
+          updated_at?: string
+          status?: OpportunityStatus
+          author_id?: string | null
+          requirements?: Json | null
+          benefits?: Json | null
+          eligibility?: Json | null
+          application_url?: string | null
+          tags?: string[] | null
+          categories?: string[] | null
+          featured?: boolean | null
+          views_count?: number | null
+          applications_count?: number | null
+          bookmarks_count?: number | null
+          cover_image_url?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          opportunity_type?: OpportunityType
+          provider_name?: string
+          location?: string | null
+          remote?: boolean | null
+          compensation?: string | null
+          deadline?: string | null
+          created_at?: string
+          updated_at?: string
+          status?: OpportunityStatus
+          author_id?: string | null
+          requirements?: Json | null
+          benefits?: Json | null
+          eligibility?: Json | null
+          application_url?: string | null
+          tags?: string[] | null
+          categories?: string[] | null
+          featured?: boolean | null
+          views_count?: number | null
+          applications_count?: number | null
+          bookmarks_count?: number | null
+          cover_image_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      
+      opportunity_applications: {
+        Row: {
+          id: string
+          opportunity_id: string
+          profile_id: string
+          status: ApplicationStatus
+          applied_at: string
+          updated_at: string
+          notes: string | null
+          application_data: Json | null
+        }
+        Insert: {
+          id?: string
+          opportunity_id: string
+          profile_id: string
+          status?: ApplicationStatus
+          applied_at?: string
+          updated_at?: string
+          notes?: string | null
+          application_data?: Json | null
+        }
+        Update: {
+          id?: string
+          opportunity_id?: string
+          profile_id?: string
+          status?: ApplicationStatus
+          applied_at?: string
+          updated_at?: string
+          notes?: string | null
+          application_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -320,6 +458,9 @@ export interface Database {
       setting_type: SettingType
       status: Status
       user_type: UserType
+      opportunity_type: OpportunityType
+      opportunity_status: OpportunityStatus
+      application_status: ApplicationStatus
     }
     CompositeTypes: {
       [_ in never]: never

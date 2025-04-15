@@ -2260,6 +2260,143 @@ export type Database = {
           },
         ]
       }
+      opportunities: {
+        Row: {
+          application_url: string | null
+          applications_count: number | null
+          author_id: string | null
+          benefits: Json | null
+          bookmarks_count: number | null
+          categories: string[] | null
+          compensation: string | null
+          cover_image_url: string | null
+          created_at: string
+          deadline: string | null
+          description: string
+          eligibility: Json | null
+          featured: boolean | null
+          id: string
+          location: string | null
+          opportunity_type: Database["public"]["Enums"]["opportunity_type"]
+          provider_name: string
+          remote: boolean | null
+          requirements: Json | null
+          status: Database["public"]["Enums"]["opportunity_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+          views_count: number | null
+        }
+        Insert: {
+          application_url?: string | null
+          applications_count?: number | null
+          author_id?: string | null
+          benefits?: Json | null
+          bookmarks_count?: number | null
+          categories?: string[] | null
+          compensation?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          eligibility?: Json | null
+          featured?: boolean | null
+          id?: string
+          location?: string | null
+          opportunity_type: Database["public"]["Enums"]["opportunity_type"]
+          provider_name: string
+          remote?: boolean | null
+          requirements?: Json | null
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Update: {
+          application_url?: string | null
+          applications_count?: number | null
+          author_id?: string | null
+          benefits?: Json | null
+          bookmarks_count?: number | null
+          categories?: string[] | null
+          compensation?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          eligibility?: Json | null
+          featured?: boolean | null
+          id?: string
+          location?: string | null
+          opportunity_type?: Database["public"]["Enums"]["opportunity_type"]
+          provider_name?: string
+          remote?: boolean | null
+          requirements?: Json | null
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_applications: {
+        Row: {
+          application_data: Json | null
+          applied_at: string
+          id: string
+          notes: string | null
+          opportunity_id: string
+          profile_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          application_data?: Json | null
+          applied_at?: string
+          id?: string
+          notes?: string | null
+          opportunity_id: string
+          profile_id: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          application_data?: Json | null
+          applied_at?: string
+          id?: string
+          notes?: string | null
+          opportunity_id?: string
+          profile_id?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personality_answer_weights: {
         Row: {
           answer_value: string
@@ -3679,6 +3816,13 @@ export type Database = {
     }
     Enums: {
       announcement_category: "event" | "news" | "alert" | "general"
+      application_status:
+        | "Not Applied"
+        | "Applied"
+        | "In Progress"
+        | "Accepted"
+        | "Rejected"
+        | "Withdrawn"
       audit_action:
         | "member_added"
         | "member_removed"
@@ -4021,6 +4165,22 @@ export type Database = {
         | "Consent Signed"
         | "Approved"
         | "Rejected"
+      opportunity_status:
+        | "Active"
+        | "Pending"
+        | "Closed"
+        | "Expired"
+        | "Draft"
+        | "Rejected"
+      opportunity_type:
+        | "job"
+        | "internship"
+        | "scholarship"
+        | "fellowship"
+        | "grant"
+        | "competition"
+        | "event"
+        | "other"
       personality_question_type:
         | "multiple_choice"
         | "likert_scale"
@@ -4360,6 +4520,14 @@ export const Constants = {
   public: {
     Enums: {
       announcement_category: ["event", "news", "alert", "general"],
+      application_status: [
+        "Not Applied",
+        "Applied",
+        "In Progress",
+        "Accepted",
+        "Rejected",
+        "Withdrawn",
+      ],
       audit_action: [
         "member_added",
         "member_removed",
@@ -4707,6 +4875,24 @@ export const Constants = {
         "Consent Signed",
         "Approved",
         "Rejected",
+      ],
+      opportunity_status: [
+        "Active",
+        "Pending",
+        "Closed",
+        "Expired",
+        "Draft",
+        "Rejected",
+      ],
+      opportunity_type: [
+        "job",
+        "internship",
+        "scholarship",
+        "fellowship",
+        "grant",
+        "competition",
+        "event",
+        "other",
       ],
       personality_question_type: [
         "multiple_choice",

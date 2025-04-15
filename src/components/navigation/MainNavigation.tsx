@@ -25,6 +25,7 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
+    { path: "/opportunities", label: "Opportunities" },
     { path: "/about", label: "About" },
   ];
 

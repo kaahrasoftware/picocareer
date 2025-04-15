@@ -135,3 +135,29 @@ export type SettingType =
 export type Status = "Approved" | "Pending" | "Rejected";
 
 export type UserType = "mentor" | "mentee" | "admin" | "editor";
+
+export type OpportunityType =
+  | "job"
+  | "internship"
+  | "scholarship"
+  | "fellowship"
+  | "grant"
+  | "competition"
+  | "event"
+  | "other";
+
+export type OpportunityStatus =
+  | "Active"
+  | "Pending"
+  | "Closed"
+  | "Expired"
+  | "Draft"
+  | "Rejected";
+
+export type ApplicationStatus =
+  | "Not Applied"
+  | "Applied"
+  | "In Progress"
+  | "Accepted"
+  | "Rejected"
+  | "Withdrawn";
