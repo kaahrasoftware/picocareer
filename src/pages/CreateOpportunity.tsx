@@ -29,7 +29,14 @@ export default function CreateOpportunity() {
   const handleSubmit = async (data: any) => {
     try {
       setFormError(null);
-      const result = await createOpportunity(data);
+      
+      // Add author_id from the current user's session
+      const opportunityData = {
+        ...data,
+        author_id: session.user.id
+      };
+      
+      const result = await createOpportunity(opportunityData);
       
       if (result?.id) {
         toast({
