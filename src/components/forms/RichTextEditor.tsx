@@ -40,14 +40,36 @@ const formats = [
 
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
-    <>
-      <style>
-        {`
-          .ql-editor {
-            min-height: 200px;
-          }
-        `}
-      </style>
+    <div className="rich-text-editor">
+      <style jsx global>{`
+        .rich-text-editor .ql-editor {
+          min-height: 200px;
+          background-color: white;
+          border-radius: 0.375rem;
+        }
+        
+        .rich-text-editor .ql-container {
+          border-bottom-left-radius: 0.375rem;
+          border-bottom-right-radius: 0.375rem;
+          background-color: white;
+        }
+        
+        .rich-text-editor .ql-toolbar {
+          border-top-left-radius: 0.375rem;
+          border-top-right-radius: 0.375rem;
+          background-color: #f9fafb;
+          border-color: hsl(var(--input));
+        }
+        
+        .rich-text-editor .ql-container {
+          border-color: hsl(var(--input));
+        }
+        
+        .rich-text-editor .ql-editor.ql-blank::before {
+          color: #9ca3af;
+          font-style: italic;
+        }
+      `}</style>
       <ReactQuill
         theme="snow"
         value={value}
@@ -55,8 +77,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         modules={modules}
         formats={formats}
         placeholder={placeholder}
-        className="min-h-[200px] bg-gray-50 rounded-md"
       />
-    </>
+    </div>
   );
 }

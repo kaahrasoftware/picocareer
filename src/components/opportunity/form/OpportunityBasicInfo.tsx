@@ -1,6 +1,6 @@
 
 import { Input } from "@/components/ui/input";
-import { FormRichEditor } from "@/components/FormRichEditor";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { OpportunityType } from "@/types/database/enums";
@@ -72,7 +72,7 @@ export function OpportunityBasicInfo({ form, description, setDescription }: Oppo
 
       <div className="space-y-2">
         <FormLabel htmlFor="description">Description</FormLabel>
-        <FormRichEditor
+        <RichTextEditor
           value={description}
           onChange={setDescription}
           placeholder="Enter a detailed description of the opportunity"
