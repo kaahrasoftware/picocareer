@@ -30,10 +30,12 @@ export default function CreateOpportunity() {
     try {
       setFormError(null);
       
-      // Add author_id from the current user's session
+      // Ensure author_id is set to the current user's ID
       const opportunityData = {
         ...data,
-        author_id: session.user.id
+        author_id: session.user.id,
+        // Set default status to 'Pending' when creating
+        status: 'Pending'
       };
       
       const result = await createOpportunity(opportunityData);
