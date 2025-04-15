@@ -25,13 +25,13 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
-    { path: "/opportunities", label: "Opportunities" },
     { path: "/about", label: "About" },
   ];
 
   const resourceItems = [
     { path: "/career-chat", label: "AI Career Guide" },
     { path: "/scholarships", label: "Scholarships" },
+    { path: "/opportunities", label: "Opportunities" },
     { path: "/event", label: "Events" },
     { path: "/blog", label: "Blog" },
   ];
@@ -77,7 +77,7 @@ export function MainNavigation() {
             <DropdownMenu>
               <DropdownMenuTrigger className={cn(
                 "px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1",
-                isActive("/career-chat") || isActive("/event") || isActive("/blog") || isActive("/scholarships")
+                isActive("/career-chat") || isActive("/event") || isActive("/blog") || isActive("/scholarships") || isActive("/opportunities")
                   ? "bg-primary/20 text-primary" 
                   : ""
               )}>
