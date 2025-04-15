@@ -60,6 +60,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   const [activeTab, setActiveTab] = useState<string>("formatting");
   const [selection, setSelection] = useState<Range | null>(null);
   const [isTextSelected, setIsTextSelected] = useState(false);
+  const selectionRef = useRef<Range | null>(null);
   const [activeFormats, setActiveFormats] = useState<{
     bold: boolean;
     italic: boolean;
@@ -82,19 +83,25 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
     alignment: "left"
   });
   
-  // Save selection when editor is focused or content is selected
+  // Function to safely save the current selection
   const saveSelection = useCallback(() => {
     if (window.getSelection && document.createRange) {
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
         const range = sel.getRangeAt(0);
-        setSelection(range.cloneRange());
-        setIsTextSelected(!range.collapsed);
+        if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+          const savedRange = range.cloneRange();
+          setSelection(savedRange);
+          selectionRef.current = savedRange;
+          setIsTextSelected(!range.collapsed);
 
-        // Check active formatting for the current selection
-        checkActiveFormats(sel);
+          // Check active formatting for the current selection
+          checkActiveFormats(sel);
+          return savedRange;
+        }
       }
     }
+    return null;
   }, []);
   
   // Check which formatting options are active for the current selection
@@ -120,15 +127,34 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   
   // Restore selection before executing commands
   const restoreSelection = useCallback(() => {
-    if (selection && window.getSelection) {
+    const rangeToRestore = selectionRef.current || selection;
+    
+    if (rangeToRestore && window.getSelection && editorRef.current) {
+      // Focus the editor element first to ensure it can receive the selection
+      editorRef.current.focus();
+      
       const sel = window.getSelection();
       if (sel) {
-        sel.removeAllRanges();
-        sel.addRange(selection);
+        try {
+          sel.removeAllRanges();
+          sel.addRange(rangeToRestore.cloneRange());
+          return true;
+        } catch (e) {
+          console.error("Error restoring selection:", e);
+          return false;
+        }
       }
     }
+    return false;
   }, [selection]);
   
+  // Ensure editorRef is focused when needed
+  const focusEditor = useCallback(() => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+  }, []);
+
   // Handle initial content and external value changes
   useEffect(() => {
     if (editorRef.current && !isFocused) {
@@ -139,15 +165,41 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
 
   // Execute rich text commands
   const execCommand = useCallback((command: string, value?: string) => {
-    restoreSelection();
-    document.execCommand(command, false, value);
+    // Focus the editor first to ensure it's active
+    focusEditor();
     
-    // Update the value after command execution
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      saveSelection();
+    // Restore the selection to where the user was working
+    const selectionRestored = restoreSelection();
+    
+    // Only proceed if we successfully restored selection or if we're dealing with a command
+    // that doesn't require selection like undo/redo
+    if (selectionRestored || ['undo', 'redo', 'removeFormat'].includes(command)) {
+      document.execCommand(command, false, value);
+      
+      // Save the updated content
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML);
+        
+        // Give a small delay before attempting to save the new selection
+        // This helps ensure the browser has fully processed the command
+        setTimeout(() => {
+          saveSelection();
+        }, 10);
+      }
+    } else {
+      // If we couldn't restore the selection, try to focus and retry once
+      focusEditor();
+      setTimeout(() => {
+        if (restoreSelection()) {
+          document.execCommand(command, false, value);
+          if (editorRef.current) {
+            onChange(editorRef.current.innerHTML);
+            saveSelection();
+          }
+        }
+      }, 10);
     }
-  }, [onChange, restoreSelection, saveSelection]);
+  }, [onChange, restoreSelection, saveSelection, focusEditor]);
   
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -177,23 +229,27 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
       }
     }
     
-    saveSelection();
-  }, [execCommand, saveSelection]);
+    // Don't save selection during key events as it might interfere with typing
+    // We'll save it after input events instead
+  }, [execCommand]);
   
   const handleInput = () => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
-      saveSelection();
+      // We should save selection after content is edited
+      setTimeout(saveSelection, 0);
     }
   };
   
   const insertEmoji = (emojiData: EmojiClickData) => {
+    focusEditor();
     restoreSelection();
     document.execCommand('insertText', false, emojiData.emoji);
     
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
-      saveSelection();
+      // Give a short delay to ensure the emoji is fully inserted before saving selection
+      setTimeout(saveSelection, 10);
     }
     
     setShowEmojiPicker(false);
@@ -209,7 +265,9 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
 
   // Track selection on mouseup, keyup and focus events
   const handleSelectionChange = useCallback(() => {
-    saveSelection();
+    if (editorRef.current && document.activeElement === editorRef.current) {
+      saveSelection();
+    }
   }, [saveSelection]);
 
   // Add document-wide listener for selection changes
@@ -220,6 +278,25 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [handleSelectionChange]);
+
+  // Handle mouseup events inside the editor
+  const handleMouseUp = useCallback(() => {
+    // We need to use setTimeout to ensure browser has finished its selection process
+    setTimeout(saveSelection, 0);
+  }, [saveSelection]);
+  
+  // Handle focus events
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    // Give browser time to establish selection
+    setTimeout(saveSelection, 0);
+  }, [saveSelection]);
+  
+  // Handle blur events
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    handleInput();
+  }, []);
   
   return (
     <div className="border border-input rounded-md">
@@ -249,7 +326,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
               <select 
                 className="h-8 bg-background border border-input rounded px-2 py-1 text-xs"
                 onChange={handleFontFamilyChange}
-                onClick={() => restoreSelection()}
+                onClick={() => focusEditor()}
                 value={activeFormats.fontFamily}
               >
                 <option value="">Font Family</option>
@@ -263,7 +340,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
               <select 
                 className="h-8 ml-1 bg-background border border-input rounded px-2 py-1 text-xs"
                 onChange={handleFontSizeChange}
-                onClick={() => restoreSelection()}
+                onClick={() => focusEditor()}
                 value={activeFormats.fontSize}
               >
                 <option value="">Size</option>
@@ -457,6 +534,7 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
                 type="button"
                 className="p-1 hover:bg-muted-foreground/10 rounded"
                 onClick={() => {
+                  focusEditor();
                   restoreSelection();
                   const url = prompt('Enter URL:');
                   if (url) execCommand('createLink', url);
@@ -522,18 +600,12 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
         ref={editorRef}
         className="min-h-32 p-3 focus:outline-none"
         contentEditable
-        onFocus={() => {
-          setIsFocused(true);
-          saveSelection();
-        }}
-        onBlur={() => {
-          setIsFocused(false);
-          handleInput();
-        }}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onInput={handleInput}
-        onMouseUp={handleSelectionChange}
-        onKeyUp={handleKeyDown}
-        onSelect={handleSelectionChange}
+        onMouseUp={handleMouseUp}
+        onKeyUp={() => setTimeout(saveSelection, 0)}
+        onKeyDown={handleKeyDown}
         aria-placeholder={placeholder}
         data-placeholder={placeholder}
       />
@@ -549,20 +621,17 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
         </div>
       )}
 
-      <style jsx global>
-        {`
-          [contenteditable] {
-            outline: none;
-          }
-          
-          [data-placeholder]:empty:before {
-            content: attr(data-placeholder);
-            color: #a9a9a9;
-            font-style: italic;
-          }
-        `}
-      </style>
+      <style jsx>{`
+        [contenteditable] {
+          outline: none;
+        }
+        
+        [data-placeholder]:empty:before {
+          content: attr(data-placeholder);
+          color: #a9a9a9;
+          font-style: italic;
+        }
+      `}</style>
     </div>
   );
 }
-
