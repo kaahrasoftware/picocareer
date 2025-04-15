@@ -141,15 +141,7 @@ export function AccessibilitySection({
         <CardContent className="pt-6 space-y-6">
           
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="highContrast">High Contrast Mode</Label>
-              <p className="text-sm text-muted-foreground">
-                Increase contrast for better visibility
-              </p>
-            </div>
-            <Switch id="highContrast" checked={settings.highContrast} onCheckedChange={value => handleToggle('highContrast', value)} />
-          </div>
+          
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
