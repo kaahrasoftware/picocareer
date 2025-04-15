@@ -12,15 +12,15 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
   const [isFocused, setIsFocused] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   
-  // Sync the HTML content with the editable div
+  // Handle initial content and external value changes
   useEffect(() => {
     if (editorRef.current && !isFocused) {
+      // Only update the innerHTML when not focused to avoid cursor jumping
       editorRef.current.innerHTML = value;
     }
   }, [value, isFocused]);
   
   const execCommand = (command: string, value?: string) => {
-    // Save selection state
     document.execCommand(command, false, value);
     
     // Update the value after command execution
@@ -29,8 +29,10 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
     }
   };
   
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    onChange(e.currentTarget.innerHTML);
+  const handleInput = () => {
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+    }
   };
   
   return (
@@ -154,9 +156,11 @@ export function FormRichEditor({ value, onChange, placeholder }: FormRichEditorP
         className="min-h-32 p-3 focus:outline-none"
         contentEditable
         onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onBlur={() => {
+          setIsFocused(false);
+          handleInput(); // Ensure content is saved on blur
+        }}
         onInput={handleInput}
-        dangerouslySetInnerHTML={{ __html: value }}
         aria-placeholder={placeholder}
         data-placeholder={placeholder}
       />
