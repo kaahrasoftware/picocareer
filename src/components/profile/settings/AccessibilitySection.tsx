@@ -139,15 +139,7 @@ export function AccessibilitySection({
 
       <Card>
         <CardContent className="pt-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="screenReader">Screen Reader Optimization</Label>
-              <p className="text-sm text-muted-foreground">
-                Optimize the interface for screen readers
-              </p>
-            </div>
-            <Switch id="screenReader" checked={settings.screenReaderOptimized} onCheckedChange={value => handleToggle('screenReaderOptimized', value)} />
-          </div>
+          
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
