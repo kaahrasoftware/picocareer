@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "@/router/layouts";
 
 // Pages
-import Home from "@/pages/Home";
+import Index from "@/pages/Index";
 import Opportunities from "@/pages/Opportunities";
 import OpportunityDetail from "@/pages/OpportunityDetail";
 import CreateOpportunity from "@/pages/CreateOpportunity";
@@ -18,7 +18,7 @@ function App() {
     <>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
+          <Route index element={<Index />} />
           <Route path="opportunities" element={<Opportunities />} />
           <Route path="opportunities/:id" element={<OpportunityDetail />} />
           <Route path="opportunities/create" element={<CreateOpportunity />} />
