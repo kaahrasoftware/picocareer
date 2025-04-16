@@ -1,43 +1,41 @@
 
-import { Button } from "@/components/ui/button";
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Categories } from "@/types/database/enums";
+import { Button } from "@/components/ui/button";
 import { OpportunityFilters as IOpportunityFilters } from "@/types/opportunity/types";
-import { MapPin, Calendar, Globe, DollarSign, Award } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, X } from "lucide-react";
+import { useState } from "react";
+
+const categories = [
+  "Technology",
+  "Healthcare",
+  "Education",
+  "Finance",
+  "Engineering",
+  "Marketing",
+  "Design",
+  "Research",
+  "Non-profit",
+  "Government",
+];
 
 interface OpportunityFiltersProps {
   filters: IOpportunityFilters;
   onFilterChange: (filters: Partial<IOpportunityFilters>) => void;
 }
 
-const categories: Categories[] = [
-  "Technology",
-  "STEM Education",
-  "STEM Careers",
-  "Entrepreneurship",
-  "Financial Literacy",
-  "Leadership Development",
-  "Internship and Job Search",
-  "Diversity and Inclusion",
-  "University Admissions",
-  "Career Guidance",
-];
-
 export function OpportunityFilters({ filters, onFilterChange }: OpportunityFiltersProps) {
-  const handleCategoryChange = (category: string) => {
-    onFilterChange({ category: category === filters.category ? undefined : category });
-  };
+  const [date, setDate] = useState<Date | undefined>(
+    filters.deadline ? new Date(filters.deadline) : undefined
+  );
 
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFilterChange({ location: e.target.value });
+  const handleLocationChange = (location: string) => {
+    onFilterChange({ location: location || undefined });
   };
 
   const handleRemoteChange = (checked: boolean) => {
@@ -48,126 +46,119 @@ export function OpportunityFilters({ filters, onFilterChange }: OpportunityFilte
     onFilterChange({ featured: checked });
   };
 
-  const resetFilters = () => {
+  const handleCategoryChange = (category: string) => {
+    onFilterChange({ category });
+  };
+
+  const handleDateChange = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    if (selectedDate) {
+      onFilterChange({ deadline: selectedDate.toISOString() });
+    } else {
+      onFilterChange({ deadline: undefined });
+    }
+  };
+
+  const clearFilters = () => {
+    setDate(undefined);
     onFilterChange({
-      type: "all",
-      search: "",
-      category: undefined,
-      featured: undefined,
-      remote: undefined,
       location: undefined,
+      remote: undefined,
+      featured: undefined,
+      category: undefined,
+      deadline: undefined,
     });
   };
 
-  const hasActiveFilters = () => {
-    return (
-      filters.category !== undefined ||
-      filters.featured !== undefined ||
-      filters.remote !== undefined ||
-      filters.location !== undefined
-    );
-  };
-
   return (
-    <div className="border rounded-lg p-5 space-y-6 bg-card">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Filters</h3>
-        {hasActiveFilters() && (
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-xs">
-            Reset
-          </Button>
-        )}
+    <div className="bg-muted/40 p-6 rounded-lg">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="font-semibold text-lg">Filters</h3>
+        <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 px-2">
+          <X className="mr-1 h-3 w-3" />
+          Clear
+        </Button>
       </div>
 
-      <Accordion type="multiple" className="w-full" defaultValue={["category", "location", "features"]}>
-        <AccordionItem value="category" className="border-b">
-          <AccordionTrigger className="text-base hover:no-underline">
-            <span className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              Categories
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-2 pt-2">
-              {categories.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`category-${category}`}
-                    checked={filters.category === category}
-                    onCheckedChange={() => handleCategoryChange(category)}
-                  />
-                  <Label 
-                    htmlFor={`category-${category}`}
-                    className="text-sm cursor-pointer"
-                  >
-                    {category}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+      <div className="space-y-6">
+        {/* Location filter */}
+        <div>
+          <Label className="mb-2 block">Location</Label>
+          <Input
+            placeholder="Any location"
+            value={filters.location || ""}
+            onChange={(e) => handleLocationChange(e.target.value)}
+            className="bg-background"
+          />
+        </div>
 
-        <AccordionItem value="location" className="border-b">
-          <AccordionTrigger className="text-base hover:no-underline">
-            <span className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Location
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="Enter city, state, or country"
-                  value={filters.location || ""}
-                  onChange={handleLocationChange}
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="remote"
-                  checked={filters.remote === true}
-                  onCheckedChange={(checked) => handleRemoteChange(!!checked)}
-                />
-                <Label htmlFor="remote" className="text-sm cursor-pointer flex items-center gap-1">
-                  <Globe className="h-4 w-4" /> Remote opportunities
-                </Label>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
+        {/* Remote filter */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="remote"
+            checked={filters.remote || false}
+            onCheckedChange={(checked) => handleRemoteChange(checked as boolean)}
+          />
+          <Label htmlFor="remote">Remote options</Label>
+        </div>
 
-        <AccordionItem value="features" className="border-b">
-          <AccordionTrigger className="text-base hover:no-underline">
-            <span className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
-              Features
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="featured"
-                  checked={filters.featured === true}
-                  onCheckedChange={(checked) => handleFeaturedChange(!!checked)}
-                />
-                <Label htmlFor="featured" className="text-sm cursor-pointer">
-                  Featured opportunities
-                </Label>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        {/* Featured filter */}
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="featured"
+            checked={filters.featured || false}
+            onCheckedChange={(checked) => handleFeaturedChange(checked as boolean)}
+          />
+          <Label htmlFor="featured">Featured only</Label>
+        </div>
 
-      <Button className="w-full" onClick={() => onFilterChange({ ...filters })}>
-        Apply Filters
-      </Button>
+        {/* Deadline filter */}
+        <div>
+          <Label className="mb-2 block">Deadline</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal bg-background",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>No deadline</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={handleDateChange}
+                disabled={(date) => date < new Date()}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Categories filter */}
+        <div>
+          <Label className="mb-2 block">Categories</Label>
+          <div className="space-y-2">
+            {categories.map((category) => (
+              <div key={category} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`category-${category}`}
+                  checked={filters.category === category}
+                  onCheckedChange={() => handleCategoryChange(
+                    filters.category === category ? undefined : category
+                  )}
+                />
+                <Label htmlFor={`category-${category}`}>{category}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

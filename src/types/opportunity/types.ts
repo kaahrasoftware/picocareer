@@ -54,6 +54,13 @@ export interface OpportunityApplication {
   updated_at: string;
   notes: string | null;
   application_data: Json | null;
+  opportunities?: {
+    id: string;
+    title: string;
+    provider_name: string;
+    opportunity_type: OpportunityType;
+    deadline: string | null;
+  };
 }
 
 export interface OpportunityFilters {
