@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -129,7 +128,6 @@ export default function OpportunityDetails() {
     return format(new Date(dateString), "MMMM d, yyyy");
   };
 
-  // Get style based on opportunity type
   const typeStyles = getOpportunityTypeStyles(opportunity.opportunity_type);
 
   const analytics = (opportunity as any).analytics || {
@@ -138,7 +136,6 @@ export default function OpportunityDetails() {
     bookmarks_count: 0
   };
 
-  // Date for "posted on" display
   const postedDate = format(new Date(opportunity.created_at), "MMM d, yyyy");
 
   return (
@@ -254,12 +251,12 @@ export default function OpportunityDetails() {
             
             <div className="flex items-center gap-4 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
-                <span>{analytics.views_count || 0} views</span>
+                <Users className="h-4 w-4" />
+                <span>{analytics.applications_count || 0} checked out</span>
               </div>
               <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span>{analytics.applications_count || 0} applications</span>
+                <Eye className="h-4 w-4" />
+                <span>{analytics.views_count || 0} views</span>
               </div>
               <div className="flex items-center gap-1">
                 <Bookmark className="h-4 w-4" />

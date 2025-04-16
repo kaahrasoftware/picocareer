@@ -2506,13 +2506,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "personality_dimension_scores_test_result_id_fkey"
-            columns: ["test_result_id"]
-            isOneToOne: false
-            referencedRelation: "personality_test_results"
-            referencedColumns: ["id"]
-          },
         ]
       }
       personality_test_answer_mappings: {
@@ -2624,50 +2617,6 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "personality_test_questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      personality_test_results: {
-        Row: {
-          career_matches: Json
-          created_at: string
-          id: string
-          major_matches: Json
-          personality_traits: Json
-          profile_id: string
-          raw_analysis: string | null
-          skill_development: Json | null
-          updated_at: string
-        }
-        Insert: {
-          career_matches: Json
-          created_at?: string
-          id?: string
-          major_matches: Json
-          personality_traits: Json
-          profile_id: string
-          raw_analysis?: string | null
-          skill_development?: Json | null
-          updated_at?: string
-        }
-        Update: {
-          career_matches?: Json
-          created_at?: string
-          id?: string
-          major_matches?: Json
-          personality_traits?: Json
-          profile_id?: string
-          raw_analysis?: string | null
-          skill_development?: Json | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "personality_test_results_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
