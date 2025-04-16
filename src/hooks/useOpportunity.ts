@@ -51,7 +51,7 @@ export function useOpportunity(id: string) {
             .insert({
               opportunity_id: id,
               views_count: 1,
-              applications_count: 0,
+              checked_out_count: 0,
               bookmarks_count: 0
             });
         }

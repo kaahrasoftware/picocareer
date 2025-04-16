@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function OpportunityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -96,6 +98,39 @@ export default function OpportunityDetails() {
     setApplyDialogOpen(true);
   };
 
+  const handleExternalClick = async () => {
+    if (!session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to check out this opportunity",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      // Record the click using our new database function
+      const { data, error } = await supabase
+        .rpc('handle_opportunity_click', { p_opportunity_id: id })
+        .single();
+
+      if (error) throw error;
+
+      // Open the external link
+      if (opportunity.application_url) {
+        window.open(opportunity.application_url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error("Error recording click:", error);
+      
+      // Still open the link even if tracking fails
+      if (opportunity.application_url) {
+        window.open(opportunity.application_url, '_blank', 'noopener,noreferrer');
+      }
+    }
+  };
+
   const handleShare = async () => {
     const shareUrl = window.location.href;
     const shareText = `Check out this opportunity: ${opportunity.title}`;
@@ -132,7 +167,7 @@ export default function OpportunityDetails() {
 
   const analytics = (opportunity as any).analytics || {
     views_count: 0,
-    applications_count: 0,
+    checked_out_count: 0,
     bookmarks_count: 0
   };
 
@@ -252,7 +287,7 @@ export default function OpportunityDetails() {
             <div className="flex items-center gap-4 pt-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Users className="h-4 w-4" />
-                <span>{analytics.applications_count || 0} checked out</span>
+                <span>{analytics.checked_out_count || 0} checked out</span>
               </div>
               <div className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
@@ -288,11 +323,15 @@ export default function OpportunityDetails() {
 
               <div className="flex flex-col gap-3">
                 {opportunity.application_url ? (
-                  <Button asChild className="w-full gap-2">
+                  <Button asChild className="w-full gap-2" onClick={handleExternalClick}>
                     <a 
                       href={opportunity.application_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleExternalClick();
+                      }}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Check it out

@@ -2330,8 +2330,8 @@ export type Database = {
       }
       opportunity_analytics: {
         Row: {
-          applications_count: number | null
           bookmarks_count: number | null
+          checked_out_count: number | null
           created_at: string | null
           id: string
           opportunity_id: string
@@ -2339,8 +2339,8 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
-          applications_count?: number | null
           bookmarks_count?: number | null
+          checked_out_count?: number | null
           created_at?: string | null
           id?: string
           opportunity_id: string
@@ -2348,8 +2348,8 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
-          applications_count?: number | null
           bookmarks_count?: number | null
+          checked_out_count?: number | null
           created_at?: string | null
           id?: string
           opportunity_id?: string
@@ -2407,6 +2407,42 @@ export type Database = {
           },
           {
             foreignKeyName: "opportunity_applications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_user_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          opportunity_id: string
+          profile_id: string
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          opportunity_id: string
+          profile_id: string
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          opportunity_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_user_clicks_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_user_clicks_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -3699,7 +3735,15 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      handle_opportunity_click: {
+        Args: { p_opportunity_id: string }
+        Returns: Json
+      }
       increment_opportunity_applications_count: {
+        Args: { opportunity_id: string }
+        Returns: undefined
+      }
+      increment_opportunity_checked_out_count: {
         Args: { opportunity_id: string }
         Returns: undefined
       }
