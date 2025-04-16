@@ -2330,8 +2330,8 @@ export type Database = {
       }
       opportunity_analytics: {
         Row: {
+          applications_count: number | null
           bookmarks_count: number | null
-          checked_out_count: number | null
           created_at: string | null
           id: string
           opportunity_id: string
@@ -2339,8 +2339,8 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          applications_count?: number | null
           bookmarks_count?: number | null
-          checked_out_count?: number | null
           created_at?: string | null
           id?: string
           opportunity_id: string
@@ -2348,8 +2348,8 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          applications_count?: number | null
           bookmarks_count?: number | null
-          checked_out_count?: number | null
           created_at?: string | null
           id?: string
           opportunity_id?: string
@@ -2366,35 +2366,47 @@ export type Database = {
           },
         ]
       }
-      opportunity_user_clicks: {
+      opportunity_applications: {
         Row: {
-          clicked_at: string
+          application_data: Json | null
+          applied_at: string
           id: string
+          notes: string | null
           opportunity_id: string
           profile_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
         }
         Insert: {
-          clicked_at?: string
+          application_data?: Json | null
+          applied_at?: string
           id?: string
+          notes?: string | null
           opportunity_id: string
           profile_id: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
         }
         Update: {
-          clicked_at?: string
+          application_data?: Json | null
+          applied_at?: string
           id?: string
+          notes?: string | null
           opportunity_id?: string
           profile_id?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "opportunity_user_clicks_opportunity_id_fkey"
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "opportunity_user_clicks_profile_id_fkey"
+            foreignKeyName: "opportunity_applications_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2566,6 +2578,48 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      personality_test_responses: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          profile_id: string
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          profile_id: string
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          profile_id?: string
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_test_responses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_test_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personality_test_questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personality_types: {
         Row: {
@@ -3645,15 +3699,7 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
-      handle_opportunity_click: {
-        Args: { p_opportunity_id: string }
-        Returns: Json
-      }
       increment_opportunity_applications_count: {
-        Args: { opportunity_id: string }
-        Returns: undefined
-      }
-      increment_opportunity_checked_out_count: {
         Args: { opportunity_id: string }
         Returns: undefined
       }

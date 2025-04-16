@@ -35,7 +35,7 @@ export interface OpportunityAnalytics {
   id: string;
   opportunity_id: string;
   views_count: number;
-  checked_out_count: number;
+  applications_count: number;
   bookmarks_count: number;
   created_at: string;
   updated_at: string;
