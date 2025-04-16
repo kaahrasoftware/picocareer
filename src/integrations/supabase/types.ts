@@ -2615,48 +2615,6 @@ export type Database = {
         }
         Relationships: []
       }
-      personality_test_responses: {
-        Row: {
-          answer: string
-          created_at: string
-          id: string
-          profile_id: string
-          question_id: string
-          updated_at: string
-        }
-        Insert: {
-          answer: string
-          created_at?: string
-          id?: string
-          profile_id: string
-          question_id: string
-          updated_at?: string
-        }
-        Update: {
-          answer?: string
-          created_at?: string
-          id?: string
-          profile_id?: string
-          question_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "personality_test_responses_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "personality_test_responses_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "personality_test_questions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       personality_types: {
         Row: {
           created_at: string
