@@ -2366,54 +2366,6 @@ export type Database = {
           },
         ]
       }
-      opportunity_applications: {
-        Row: {
-          application_data: Json | null
-          applied_at: string
-          id: string
-          notes: string | null
-          opportunity_id: string
-          profile_id: string
-          status: Database["public"]["Enums"]["application_status"]
-          updated_at: string
-        }
-        Insert: {
-          application_data?: Json | null
-          applied_at?: string
-          id?: string
-          notes?: string | null
-          opportunity_id: string
-          profile_id: string
-          status?: Database["public"]["Enums"]["application_status"]
-          updated_at?: string
-        }
-        Update: {
-          application_data?: Json | null
-          applied_at?: string
-          id?: string
-          notes?: string | null
-          opportunity_id?: string
-          profile_id?: string
-          status?: Database["public"]["Enums"]["application_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
-            columns: ["opportunity_id"]
-            isOneToOne: false
-            referencedRelation: "opportunities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "opportunity_applications_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       opportunity_user_clicks: {
         Row: {
           clicked_at: string
