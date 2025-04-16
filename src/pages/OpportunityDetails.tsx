@@ -32,6 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function OpportunityDetails() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,8 @@ export default function OpportunityDetails() {
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isBookmarked, toggleBookmark, isLoading: bookmarkLoading } = useBookmarkOpportunity(id);
+  const queryClient = useQueryClient();
+  const [clickLoading, setClickLoading] = useState(false);
 
   if (isLoading) {
     return (
@@ -110,24 +113,33 @@ export default function OpportunityDetails() {
     }
 
     try {
-      // Record the click using our new database function
+      setClickLoading(true);
+      
+      // Record the click using our database function
       const { data, error } = await supabase
         .rpc('handle_opportunity_click', { p_opportunity_id: id })
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error recording click:", error);
+        toast({
+          title: "Error",
+          description: "There was an issue registering your interest",
+          variant: "destructive",
+        });
+      } else {
+        // Invalidate the opportunity query to refresh the analytics data
+        queryClient.invalidateQueries({ queryKey: ['opportunity', id] });
+      }
 
-      // Open the external link
+      // Still open the link even if tracking fails
       if (opportunity.application_url) {
         window.open(opportunity.application_url, '_blank', 'noopener,noreferrer');
       }
     } catch (error) {
       console.error("Error recording click:", error);
-      
-      // Still open the link even if tracking fails
-      if (opportunity.application_url) {
-        window.open(opportunity.application_url, '_blank', 'noopener,noreferrer');
-      }
+    } finally {
+      setClickLoading(false);
     }
   };
 
@@ -323,19 +335,13 @@ export default function OpportunityDetails() {
 
               <div className="flex flex-col gap-3">
                 {opportunity.application_url ? (
-                  <Button asChild className="w-full gap-2" onClick={handleExternalClick}>
-                    <a 
-                      href={opportunity.application_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleExternalClick();
-                      }}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Check it out
-                    </a>
+                  <Button 
+                    className="w-full gap-2" 
+                    onClick={handleExternalClick}
+                    disabled={clickLoading}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {clickLoading ? 'Processing...' : 'Check it out'}
                   </Button>
                 ) : (
                   <Button 
