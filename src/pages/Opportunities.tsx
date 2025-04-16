@@ -8,17 +8,19 @@ import { OpportunityType } from "@/types/database/enums";
 import { OpportunityFilters as IOpportunityFilters } from "@/types/opportunity/types";
 import { useResponsive } from "@/hooks/useResponsive";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, FilterIcon, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function Opportunities() {
   const [filters, setFilters] = useState<IOpportunityFilters>({
     type: "all",
     search: "",
   });
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  const { data: opportunities, isLoading, error } = useOpportunities(filters);
+  const { data: opportunities, isLoading, error, refetch } = useOpportunities(filters);
   const { isMobile } = useResponsive();
   const navigate = useNavigate();
   const { session } = useAuthSession();
@@ -46,10 +48,12 @@ export default function Opportunities() {
       <div className="flex flex-col lg:flex-row gap-6 mt-8">
         {!isMobile && (
           <div className="w-full lg:w-1/4">
-            <OpportunityFilters 
-              filters={filters} 
-              onFilterChange={handleFilterChange} 
-            />
+            <div className="sticky top-4">
+              <OpportunityFilters 
+                filters={filters} 
+                onFilterChange={handleFilterChange} 
+              />
+            </div>
           </div>
         )}
 
@@ -61,21 +65,44 @@ export default function Opportunities() {
                 : `${filters.type?.charAt(0).toUpperCase()}${filters.type?.slice(1)} Opportunities`}
             </h2>
             
-            {session && (
-              <Button 
-                onClick={handleCreateOpportunity}
-                className="flex items-center gap-1"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Post Opportunity
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isMobile && (
+                <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                      <FilterIcon className="h-4 w-4" />
+                      Filters
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                    <OpportunityFilters 
+                      filters={filters} 
+                      onFilterChange={(newFilters) => {
+                        handleFilterChange(newFilters);
+                        setFilterSheetOpen(false);
+                      }} 
+                    />
+                  </SheetContent>
+                </Sheet>
+              )}
+              
+              {session && (
+                <Button 
+                  onClick={handleCreateOpportunity}
+                  className="flex items-center gap-1"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Post Opportunity
+                </Button>
+              )}
+            </div>
           </div>
 
           <OpportunityGrid 
             opportunities={opportunities || []} 
             isLoading={isLoading} 
             error={error}
+            onRetry={() => refetch()}
           />
         </div>
       </div>

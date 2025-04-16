@@ -5,6 +5,8 @@ import { Search, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { OpportunityType } from "@/types/database/enums";
 import { useResponsive } from "@/hooks/useResponsive";
+import { getOpportunityTypeStyles } from "@/utils/opportunityUtils";
+import { cn } from "@/lib/utils";
 
 interface OpportunityHeaderProps {
   onSearch: (search: string) => void;
@@ -81,17 +83,27 @@ export function OpportunityHeader({
       </form>
 
       <div className="flex justify-center flex-wrap gap-2">
-        {opportunityTypes.map((item) => (
-          <Button
-            key={item.type}
-            variant={selectedType === item.type ? "default" : "outline"}
-            size={isMobile ? "sm" : "default"}
-            className="rounded-full"
-            onClick={() => onTypeChange(item.type)}
-          >
-            {item.label}
-          </Button>
-        ))}
+        {opportunityTypes.map((item) => {
+          const typeStyles = getOpportunityTypeStyles(item.type);
+          const isSelected = selectedType === item.type;
+          
+          return (
+            <Button
+              key={item.type}
+              variant={isSelected ? "default" : "outline"}
+              size={isMobile ? "sm" : "default"}
+              className={cn(
+                "rounded-full transition-all",
+                !isSelected && typeStyles.bg,
+                !isSelected && typeStyles.text,
+                !isSelected && "hover:bg-opacity-80"
+              )}
+              onClick={() => onTypeChange(item.type)}
+            >
+              {item.label}
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
