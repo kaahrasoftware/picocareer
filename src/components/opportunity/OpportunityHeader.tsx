@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarClock, MapPin, Globe, DollarSign, Search } from "lucide-react";
@@ -23,6 +24,7 @@ export function OpportunityHeader({
   selectedType
 }: OpportunityHeaderProps) {
   if (opportunity) {
+    // Only access opportunity_type if opportunity exists
     const typeStyles = getOpportunityTypeStyles(opportunity.opportunity_type);
     const postedDate = format(new Date(opportunity.created_at), "MMM d, yyyy");
     
@@ -98,6 +100,7 @@ export function OpportunityHeader({
     );
   }
   
+  // List view rendering (when opportunity is not defined)
   return (
     <div className="space-y-6">
       <div className="space-y-2">
