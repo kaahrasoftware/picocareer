@@ -3,7 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 
 // Layout components
-import MainLayout from "@/layouts/MainLayout";
+import { MainLayout } from "@/router/layouts";
 
 // Pages
 import Home from "@/pages/Home";
