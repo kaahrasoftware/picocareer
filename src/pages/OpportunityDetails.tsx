@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -198,7 +197,7 @@ export default function OpportunityDetails() {
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    Apply Externally
+                    Check it out
                   </a>
                 </Button>
               ) : (
