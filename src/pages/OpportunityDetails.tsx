@@ -76,7 +76,6 @@ export default function OpportunityDetails() {
           url: shareUrl,
         });
       } catch (error) {
-        // Fall back to clipboard if share API fails
         navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
         toast({
           title: "Link copied",
@@ -97,7 +96,6 @@ export default function OpportunityDetails() {
     return format(new Date(dateString), "MMMM d, yyyy");
   };
 
-  // Get analytics data (with fallbacks)
   const analytics = (opportunity as any).analytics || {
     views_count: 0,
     applications_count: 0,
@@ -266,7 +264,6 @@ export default function OpportunityDetails() {
         </div>
       </div>
 
-      {/* Application Dialog */}
       <Dialog open={applyDialogOpen} onOpenChange={setApplyDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <ApplicationForm 

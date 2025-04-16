@@ -42,6 +42,15 @@ export function OpportunityCard({ opportunity }: OpportunityCardProps) {
     return `${Math.floor(diffInDays / 30)} months ago`;
   };
 
+  // Helper function to convert HTML to plain text
+  const htmlToPlainText = (html: string) => {
+    // Create a temporary element to handle the conversion
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = html;
+    // Return the text content
+    return tempElement.textContent || tempElement.innerText || '';
+  };
+
   return (
     <Card 
       key={opportunity.id} 
@@ -85,7 +94,7 @@ export function OpportunityCard({ opportunity }: OpportunityCardProps) {
 
       <CardContent className="p-5 pt-0 space-y-3">
         <p className="text-sm line-clamp-2 text-muted-foreground">
-          {opportunity.description}
+          {htmlToPlainText(opportunity.description)}
         </p>
 
         <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
