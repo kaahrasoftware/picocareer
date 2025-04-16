@@ -1,103 +1,110 @@
 
-import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, FilterIcon } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { OpportunityType } from "@/types/database/enums";
-import { OpportunityFilters } from "@/types/opportunity/types";
 import { useResponsive } from "@/hooks/useResponsive";
-import { useNavigate } from "react-router-dom";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { getOpportunityTypeStyles } from "@/utils/opportunityUtils";
+import { cn } from "@/lib/utils";
 
 interface OpportunityHeaderProps {
-  onSearch: (query: string) => void;
+  onSearch: (search: string) => void;
   onTypeChange: (type: OpportunityType | "all") => void;
-  selectedType: OpportunityType | "all";
-  showFilters?: () => void;
+  selectedType: OpportunityType | "all" | undefined;
 }
 
 export function OpportunityHeader({
   onSearch,
   onTypeChange,
-  selectedType,
-  showFilters,
+  selectedType = "all",
 }: OpportunityHeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchValue, setSearchValue] = useState("");
   const { isMobile } = useResponsive();
-  const navigate = useNavigate();
-  const { session } = useAuthSession();
 
-  const handleSearch = () => {
-    onSearch(searchQuery);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(searchValue);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+  const clearSearch = () => {
+    setSearchValue("");
+    onSearch("");
   };
+
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      onSearch(searchValue);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchValue, onSearch]);
+
+  const opportunityTypes: { type: OpportunityType | "all"; label: string }[] = [
+    { type: "all", label: "All" },
+    { type: "job", label: "Jobs" },
+    { type: "internship", label: "Internships" },
+    { type: "scholarship", label: "Scholarships" },
+    { type: "fellowship", label: "Fellowships" },
+    { type: "grant", label: "Grants" },
+    { type: "competition", label: "Competitions" },
+    { type: "event", label: "Events" },
+    { type: "other", label: "Other" },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <h1 className="text-3xl font-bold">Opportunities</h1>
-        
-        <div className="flex gap-2">
-          {session && (
-            <Button
-              variant="outline"
-              onClick={() => navigate("/applications")}
-              className="whitespace-nowrap"
-            >
-              My Applications
-            </Button>
-          )}
+      <div className="text-center max-w-3xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold mb-3">Opportunities</h1>
+        <p className="text-muted-foreground">
+          Discover jobs, internships, scholarships, and more opportunities to advance your career
+        </p>
+      </div>
+
+      <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          placeholder="Search for opportunities..."
+          className="pl-10 pr-10"
+        />
+        {searchValue && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+            onClick={clearSearch}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </form>
+
+      <div className="flex justify-center flex-wrap gap-2">
+        {opportunityTypes.map((item) => {
+          const typeStyles = getOpportunityTypeStyles(item.type);
+          const isSelected = selectedType === item.type;
           
-          {isMobile && showFilters && (
+          return (
             <Button
-              variant="outline"
-              onClick={showFilters}
-              className="flex items-center gap-1"
+              key={item.type}
+              variant={isSelected ? "default" : "outline"}
+              size={isMobile ? "sm" : "default"}
+              className={cn(
+                "rounded-full transition-all",
+                !isSelected && typeStyles.bg,
+                !isSelected && typeStyles.text,
+                !isSelected && "hover:bg-opacity-80"
+              )}
+              onClick={() => onTypeChange(item.type)}
             >
-              <FilterIcon className="h-4 w-4" />
-              Filters
+              {item.label}
             </Button>
-          )}
-        </div>
+          );
+        })}
       </div>
-
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search opportunities..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
-        <Button onClick={handleSearch}>Search</Button>
-      </div>
-
-      <Tabs
-        defaultValue="all"
-        value={selectedType}
-        onValueChange={(value) => onTypeChange(value as OpportunityType | "all")}
-      >
-        <TabsList className="w-full md:w-fit flex overflow-x-auto">
-          <TabsTrigger value="all">All Types</TabsTrigger>
-          <TabsTrigger value="job">Jobs</TabsTrigger>
-          <TabsTrigger value="internship">Internships</TabsTrigger>
-          <TabsTrigger value="scholarship">Scholarships</TabsTrigger>
-          <TabsTrigger value="fellowship">Fellowships</TabsTrigger>
-          <TabsTrigger value="grant">Grants</TabsTrigger>
-          <TabsTrigger value="competition">Competitions</TabsTrigger>
-          <TabsTrigger value="event">Events</TabsTrigger>
-          <TabsTrigger value="volunteer">Volunteer</TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   );
 }
