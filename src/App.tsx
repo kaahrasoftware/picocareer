@@ -1,33 +1,36 @@
 
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
+import { AppRoutes } from "@/router/AppRoutes";
+import { AuthProvider } from "@/context/AuthContext";
+import { SessionTimeoutHandler } from "@/components/auth/SessionTimeoutHandler";
 
-// Layout components
-import { MainLayout } from "@/router/layouts";
-
-// Pages
-import Index from "@/pages/Index";
-import Opportunities from "@/pages/Opportunities";
-import OpportunityDetail from "@/pages/OpportunityDetail";
-import CreateOpportunity from "@/pages/CreateOpportunity";
-import MyApplications from "@/pages/MyApplications";
-import NotFound from "@/pages/NotFound";
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Index />} />
-          <Route path="opportunities" element={<Opportunities />} />
-          <Route path="opportunities/:id" element={<OpportunityDetail />} />
-          <Route path="opportunities/create" element={<CreateOpportunity />} />
-          <Route path="applications" element={<MyApplications />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-      <Toaster />
-    </>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <ThemeProvider defaultTheme="light" storageKey="picocareer-theme">
+            <SessionTimeoutHandler />
+            <AppRoutes />
+            <Toaster />
+          </ThemeProvider>
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
