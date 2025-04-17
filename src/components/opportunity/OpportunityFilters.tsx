@@ -83,19 +83,7 @@ export function OpportunityFilters({
         <AccordionItem value="location" className="border-b">
           
           <AccordionContent>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm">Search by location</Label>
-                <Input id="location" placeholder="City, State, or Country" value={filters.location || ''} onChange={handleLocationChange} className="h-8" />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remote" checked={filters.remote === true} onCheckedChange={checked => handleRemoteChange(!!checked)} />
-                <Label htmlFor="remote" className="text-sm cursor-pointer">
-                  Remote opportunities only
-                </Label>
-              </div>
-            </div>
+            
           </AccordionContent>
         </AccordionItem>
 
