@@ -18,21 +18,26 @@ export async function notifyAdmins({ mentorName, menteeName, sessionType, schedu
 
     if (adminError) throw adminError;
 
-    // Create notifications for each admin
-    const notifications = adminProfiles.map(admin => ({
-      profile_id: admin.id,
-      title: "New Session Booking",
-      message: `${menteeName} booked a ${sessionType} session with ${mentorName}${scheduledAt ? ` scheduled for ${scheduledAt.toLocaleDateString()}` : ''}`,
-      type: "session_booked",
-      category: "general"
-    }));
+    if (!adminProfiles || adminProfiles.length === 0) {
+      console.log('No admin profiles found to notify');
+      return;
+    }
 
-    if (notifications.length > 0) {
+    // Create notifications for each admin
+    for (const admin of adminProfiles) {
       const { error: notifyError } = await supabase
         .from('notifications')
-        .insert(notifications);
+        .insert({
+          profile_id: admin.id,
+          title: "New Session Booking",
+          message: `${menteeName} booked a ${sessionType} session with ${mentorName}${scheduledAt ? ` scheduled for ${scheduledAt.toLocaleDateString()}` : ''}`,
+          type: "session_booked",
+          category: "general"
+        });
 
-      if (notifyError) throw notifyError;
+      if (notifyError) {
+        console.error('Error notifying admin:', notifyError);
+      }
     }
   } catch (error) {
     console.error('Error notifying admins:', error);

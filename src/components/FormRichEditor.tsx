@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
+
 interface FormRichEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
 }
+
 type FontFamily = "Arial" | "Verdana" | "Tahoma" | "Trebuchet MS" | "Times New Roman" | "Georgia" | "Courier New" | "Brush Script MT";
 const FONT_FAMILIES: FontFamily[] = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Courier New", "Brush Script MT"];
 const FONT_SIZES = ["1", "2", "3", "4", "5", "6", "7"];
 const TEXT_COLORS = ["#000000", "#333333", "#666666", "#8B5CF6", "#D946EF", "#F97316", "#0EA5E9", "#10B981", "#EF4444", "#F59E0B"];
 const BACKGROUND_COLORS = ["transparent", "#F1F0FB", "#E5DEFF", "#FFDEE2", "#FDE1D3", "#FEC6A1", "#FEF7CD", "#F2FCE2", "#D3E4FD"];
+
 export function FormRichEditor({
   value,
   onChange,
@@ -50,7 +53,6 @@ export function FormRichEditor({
     alignment: "left"
   });
 
-  // Function to safely save the current selection
   const saveSelection = useCallback(() => {
     if (window.getSelection && document.createRange) {
       const sel = window.getSelection();
@@ -62,7 +64,6 @@ export function FormRichEditor({
           selectionRef.current = savedRange;
           setIsTextSelected(!range.collapsed);
 
-          // Check active formatting for the current selection
           checkActiveFormats(sel);
           return savedRange;
         }
@@ -71,11 +72,9 @@ export function FormRichEditor({
     return null;
   }, []);
 
-  // Check which formatting options are active for the current selection
   const checkActiveFormats = useCallback((selection: Selection) => {
     if (!selection || selection.rangeCount === 0) return;
 
-    // Query command state for various formatting options
     setActiveFormats({
       bold: document.queryCommandState('bold'),
       italic: document.queryCommandState('italic'),
@@ -89,11 +88,9 @@ export function FormRichEditor({
     });
   }, []);
 
-  // Restore selection before executing commands
   const restoreSelection = useCallback(() => {
     const rangeToRestore = selectionRef.current || selection;
     if (rangeToRestore && window.getSelection && editorRef.current) {
-      // Focus the editor element first to ensure it can receive the selection
       editorRef.current.focus();
       const sel = window.getSelection();
       if (sel) {
@@ -110,46 +107,33 @@ export function FormRichEditor({
     return false;
   }, [selection]);
 
-  // Ensure editorRef is focused when needed
   const focusEditor = useCallback(() => {
     if (editorRef.current) {
       editorRef.current.focus();
     }
   }, []);
 
-  // Handle initial content and external value changes
   useEffect(() => {
     if (editorRef.current && !isFocused) {
-      // Only update the innerHTML when not focused to avoid cursor jumping
       editorRef.current.innerHTML = value;
     }
   }, [value, isFocused]);
 
-  // Execute rich text commands
   const execCommand = useCallback((command: string, value?: string) => {
-    // Focus the editor first to ensure it's active
     focusEditor();
 
-    // Restore the selection to where the user was working
     const selectionRestored = restoreSelection();
 
-    // Only proceed if we successfully restored selection or if we're dealing with a command
-    // that doesn't require selection like undo/redo
     if (selectionRestored || ['undo', 'redo', 'removeFormat'].includes(command)) {
       document.execCommand(command, false, value);
 
-      // Save the updated content
       if (editorRef.current) {
         onChange(editorRef.current.innerHTML);
-
-        // Give a small delay before attempting to save the new selection
-        // This helps ensure the browser has fully processed the command
         setTimeout(() => {
           saveSelection();
         }, 10);
       }
     } else {
-      // If we couldn't restore the selection, try to focus and retry once
       focusEditor();
       setTimeout(() => {
         if (restoreSelection()) {
@@ -163,9 +147,7 @@ export function FormRichEditor({
     }
   }, [onChange, restoreSelection, saveSelection, focusEditor]);
 
-  // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Handle common keyboard shortcuts
     if (e.ctrlKey || e.metaKey) {
       switch (e.key.toLowerCase()) {
         case 'b':
@@ -190,43 +172,40 @@ export function FormRichEditor({
           break;
       }
     }
-
-    // Don't save selection during key events as it might interfere with typing
-    // We'll save it after input events instead
   }, [execCommand]);
+
   const handleInput = () => {
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
-      // We should save selection after content is edited
       setTimeout(saveSelection, 0);
     }
   };
+
   const insertEmoji = (emojiData: EmojiClickData) => {
     focusEditor();
     restoreSelection();
     document.execCommand('insertText', false, emojiData.emoji);
     if (editorRef.current) {
       onChange(editorRef.current.innerHTML);
-      // Give a short delay to ensure the emoji is fully inserted before saving selection
       setTimeout(saveSelection, 10);
     }
     setShowEmojiPicker(false);
   };
+
   const handleFontFamilyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     execCommand('fontName', e.target.value);
   };
+
   const handleFontSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     execCommand('fontSize', e.target.value);
   };
 
-  // Track selection on mouseup, keyup and focus events
   const handleSelectionChange = useCallback(() => {
     if (editorRef.current && document.activeElement === editorRef.current) {
       saveSelection();
     }
   }, [saveSelection]);
 
-  // Add document-wide listener for selection changes
   useEffect(() => {
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => {
@@ -234,24 +213,20 @@ export function FormRichEditor({
     };
   }, [handleSelectionChange]);
 
-  // Handle mouseup events inside the editor
   const handleMouseUp = useCallback(() => {
-    // We need to use setTimeout to ensure browser has finished its selection process
     setTimeout(saveSelection, 0);
   }, [saveSelection]);
 
-  // Handle focus events
   const handleFocus = useCallback(() => {
     setIsFocused(true);
-    // Give browser time to establish selection
     setTimeout(saveSelection, 0);
   }, [saveSelection]);
 
-  // Handle blur events
   const handleBlur = useCallback(() => {
     setIsFocused(false);
     handleInput();
   }, []);
+
   return <div className="border border-input rounded-md">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full bg-muted justify-start h-auto flex-wrap border-b rounded-none">
@@ -278,14 +253,16 @@ export function FormRichEditor({
             <div className="flex items-center mr-2 border-r pr-2">
               <select className="h-8 bg-background border border-input rounded px-2 py-1 text-xs" onChange={handleFontFamilyChange} onClick={() => focusEditor()} value={activeFormats.fontFamily}>
                 <option value="">Font Family</option>
-                {FONT_FAMILIES.map(font => {})}
+                {FONT_FAMILIES.map(font => (
+                  <option key={font} value={font}>{font}</option>
+                ))}
               </select>
               
               <select className="h-8 ml-1 bg-background border border-input rounded px-2 py-1 text-xs" onChange={handleFontSizeChange} onClick={() => focusEditor()} value={activeFormats.fontSize}>
                 <option value="">Size</option>
-                {FONT_SIZES.map(size => <option key={size} value={size}>
-                    {size}
-                  </option>)}
+                {FONT_SIZES.map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
               </select>
             </div>
             

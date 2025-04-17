@@ -86,7 +86,7 @@ export function useMessageOperations(
                   ...msg, 
                   status: 'failed',
                   delivery_metadata: {
-                    ...msg.delivery_metadata,
+                    ...msg.delivery_metadata as MessageDeliveryMetadata,
                     error: error.message,
                     lastAttempt: new Date().toISOString()
                   }
@@ -103,10 +103,10 @@ export function useMessageOperations(
         prevMessages.map(msg => 
           (msg.id === completeMessage.id) 
             ? { 
-                ...data, 
+                ...(data as CareerChatMessage), 
                 status: 'sent',
                 delivery_metadata: {
-                  ...data.delivery_metadata,
+                  ...(data?.delivery_metadata as MessageDeliveryMetadata || {}),
                   receivedAt: new Date().toISOString()
                 }
               } 
@@ -119,9 +119,7 @@ export function useMessageOperations(
       // Update the total_messages counter in the session
       await supabase
         .from('career_chat_sessions')
-        .update({ 
-          total_messages: supabase.rpc('increment', { row_id: sessionId, table_name: 'career_chat_sessions', column_name: 'total_messages' }) 
-        })
+        .update({ total_messages: messages.length + 1 }) 
         .eq('id', sessionId);
       
       return data;
@@ -143,9 +141,9 @@ export function useMessageOperations(
       }
       
       // Update delivery metadata
-      const updatedDeliveryMetadata = {
-        ...failedMessage.delivery_metadata,
-        attempts: (failedMessage.delivery_metadata?.attempts || 0) + 1,
+      const updatedDeliveryMetadata: MessageDeliveryMetadata = {
+        ...(failedMessage.delivery_metadata as MessageDeliveryMetadata || {}),
+        attempts: ((failedMessage.delivery_metadata as MessageDeliveryMetadata)?.attempts || 0) + 1,
         lastAttempt: new Date().toISOString(),
         error: undefined // Clear previous error
       };
@@ -190,7 +188,7 @@ export function useMessageOperations(
                   ...msg, 
                   status: 'failed',
                   delivery_metadata: {
-                    ...msg.delivery_metadata,
+                    ...(msg.delivery_metadata as MessageDeliveryMetadata || {}),
                     error: error.message,
                     lastAttempt: new Date().toISOString()
                   }
@@ -207,10 +205,10 @@ export function useMessageOperations(
         prevMessages.map(msg => 
           msg.id === messageId 
             ? { 
-                ...data, 
+                ...(data as CareerChatMessage), 
                 status: 'sent',
                 delivery_metadata: {
-                  ...data.delivery_metadata,
+                  ...(data?.delivery_metadata as MessageDeliveryMetadata || {}),
                   receivedAt: new Date().toISOString()
                 }
               } 

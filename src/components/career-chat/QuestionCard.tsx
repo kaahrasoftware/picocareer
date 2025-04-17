@@ -116,12 +116,12 @@ export function QuestionCard({
   // Ensure progress is a number between 0-100
   const normalizeProgress = () => {
     // First check if it's a string with a percentage sign
-    if (typeof progress === 'string' && progress.includes('%')) {
-      return parseFloat(progress);
+    if (typeof progress === 'string' && progress.toString().includes('%')) {
+      return parseFloat(progress.toString());
     }
     // Then check if it's a string without a percentage sign
     if (typeof progress === 'string') {
-      return parseFloat(progress);
+      return parseFloat(progress.toString());
     }
     // Otherwise assume it's a number
     return progress;

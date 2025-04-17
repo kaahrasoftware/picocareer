@@ -13,6 +13,28 @@ import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { MentorSettingsTab } from "./MentorSettingsTab";
 
+type ExtendedProfile = {
+  id: string;
+  user_type: 'admin' | 'mentor' | 'mentee';
+  full_name?: string; 
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  location?: string;
+  onboarding_status?: string;
+  bio?: string;
+  years_of_experience?: number;
+  total_booked_sessions?: number;
+  skills?: string[];
+  tools_used?: string[];
+  linkedin_url?: string;
+  github_url?: string;
+  website_url?: string;
+  highest_degree?: string;
+  avatar_url?: string;
+  [key: string]: any;
+};
+
 interface UserProfileDetailsDialogProps {
   userId: string | null;
   open: boolean;
@@ -24,7 +46,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Reset editing state when dialog opens/closes
   useEffect(() => {
     if (!open) {
       setIsEditing(false);
@@ -53,14 +74,20 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
         throw error;
       }
 
-      // Transform data to match expected ProfileFormProps structure
-      return {
+      if (!data) return null;
+
+      const profileData: ExtendedProfile = {
         ...data,
-        company_name: data?.companies?.name,
-        school_name: data?.schools?.name,
-        academic_major: data?.majors?.title,
-        career_title: data?.careers?.title
+        company_name: data.companies?.name,
+        school_name: data.schools?.name,
+        academic_major: data.majors?.title,
+        career_title: data.careers?.title,
+        user_type: (data.user_type === 'admin' || data.user_type === 'mentor' || data.user_type === 'mentee') 
+          ? data.user_type 
+          : 'mentee'
       };
+
+      return profileData;
     },
     enabled: !!userId && open,
   });
@@ -225,7 +252,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Professional Information */}
                 {profile.user_type === 'mentor' && (
                   <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
                     <div>
@@ -259,7 +285,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Skills and Expertise */}
                 {profile.skills && profile.skills.length > 0 && (
                   <div className="p-4 bg-muted rounded-lg">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Skills</h3>
@@ -286,7 +311,6 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
                   </div>
                 )}
 
-                {/* Social Links */}
                 {(profile.linkedin_url || profile.github_url || profile.website_url) && (
                   <div className="p-4 bg-muted rounded-lg">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Links</h3>
