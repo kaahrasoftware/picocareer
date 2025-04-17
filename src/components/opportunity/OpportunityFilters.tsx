@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,12 +6,10 @@ import { Label } from "@/components/ui/label";
 import { OpportunityFilters as IOpportunityFilters } from "@/types/opportunity/types";
 import { MapPin, Calendar, Globe, DollarSign, Award } from "lucide-react";
 import { useOpportunityCategories } from "@/hooks/useOpportunityCategories";
-
 interface OpportunityFiltersProps {
   filters: IOpportunityFilters;
   onFilterChange: (filters: Partial<IOpportunityFilters>) => void;
 }
-
 export function OpportunityFilters({
   filters,
   onFilterChange
@@ -22,31 +19,26 @@ export function OpportunityFilters({
     data: allCategories,
     isLoading: loadingCategories
   } = useOpportunityCategories();
-
   const handleCategoryChange = (category: string) => {
     onFilterChange({
       category: category === filters.category ? undefined : category
     });
   };
-
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
       location: e.target.value
     });
   };
-
   const handleRemoteChange = (checked: boolean) => {
     onFilterChange({
       remote: checked
     });
   };
-
   const handleFeaturedChange = (checked: boolean) => {
     onFilterChange({
       featured: checked
     });
   };
-
   const resetFilters = () => {
     onFilterChange({
       type: "all",
@@ -57,23 +49,15 @@ export function OpportunityFilters({
       location: undefined
     });
   };
-
   const hasActiveFilters = () => {
-    return filters.category !== undefined || 
-           filters.featured !== undefined || 
-           filters.remote !== undefined || 
-           filters.location !== undefined;
+    return filters.category !== undefined || filters.featured !== undefined || filters.remote !== undefined || filters.location !== undefined;
   };
-
-  return (
-    <div className="border rounded-lg p-5 space-y-6 bg-card">
+  return <div className="border rounded-lg p-5 space-y-6 bg-card">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Filters</h3>
-        {hasActiveFilters() && (
-          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-xs">
+        {hasActiveFilters() && <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 text-xs">
             Reset
-          </Button>
-        )}
+          </Button>}
       </div>
 
       <Accordion type="multiple" className="w-full" defaultValue={["category", "location", "features"]}>
@@ -85,53 +69,28 @@ export function OpportunityFilters({
             </span>
           </AccordionTrigger>
           <AccordionContent>
-            {loadingCategories ? (
-              <div className="py-2 text-sm text-muted-foreground">Loading categories...</div>
-            ) : (
-              <div className="space-y-2 pt-2">
-                {allCategories && allCategories.map(category => (
-                  <div key={category} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`category-${category}`} 
-                      checked={filters.category === category}
-                      onCheckedChange={() => handleCategoryChange(category)}
-                    />
+            {loadingCategories ? <div className="py-2 text-sm text-muted-foreground">Loading categories...</div> : <div className="space-y-2 pt-2">
+                {allCategories && allCategories.map(category => <div key={category} className="flex items-center space-x-2">
+                    <Checkbox id={`category-${category}`} checked={filters.category === category} onCheckedChange={() => handleCategoryChange(category)} />
                     <Label htmlFor={`category-${category}`} className="text-sm cursor-pointer">
                       {category}
                     </Label>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="location" className="border-b">
-          <AccordionTrigger className="text-base hover:no-underline">
-            <span className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Location
-            </span>
-          </AccordionTrigger>
+          
           <AccordionContent>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm">Search by location</Label>
-                <Input
-                  id="location"
-                  placeholder="City, State, or Country"
-                  value={filters.location || ''}
-                  onChange={handleLocationChange}
-                  className="h-8"
-                />
+                <Input id="location" placeholder="City, State, or Country" value={filters.location || ''} onChange={handleLocationChange} className="h-8" />
               </div>
               
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="remote" 
-                  checked={filters.remote === true}
-                  onCheckedChange={checked => handleRemoteChange(!!checked)}
-                />
+                <Checkbox id="remote" checked={filters.remote === true} onCheckedChange={checked => handleRemoteChange(!!checked)} />
                 <Label htmlFor="remote" className="text-sm cursor-pointer">
                   Remote opportunities only
                 </Label>
@@ -150,11 +109,7 @@ export function OpportunityFilters({
           <AccordionContent>
             <div className="space-y-4 pt-2">
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="featured" 
-                  checked={filters.featured === true}
-                  onCheckedChange={checked => handleFeaturedChange(!!checked)}
-                />
+                <Checkbox id="featured" checked={filters.featured === true} onCheckedChange={checked => handleFeaturedChange(!!checked)} />
                 <Label htmlFor="featured" className="text-sm cursor-pointer">
                   Featured opportunities
                 </Label>
@@ -164,9 +119,10 @@ export function OpportunityFilters({
         </AccordionItem>
       </Accordion>
 
-      <Button className="w-full" onClick={() => onFilterChange({...filters})}>
+      <Button className="w-full" onClick={() => onFilterChange({
+      ...filters
+    })}>
         Apply Filters
       </Button>
-    </div>
-  );
+    </div>;
 }
