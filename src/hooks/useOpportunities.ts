@@ -20,7 +20,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
         `)
         .eq('status', 'Active');
 
-      // Apply filters
+      // Apply filters - only apply type filter if it's not "all"
       if (filters.type && filters.type !== 'all') {
         query = query.eq('opportunity_type', filters.type);
       }

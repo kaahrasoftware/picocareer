@@ -37,6 +37,16 @@ export default function Opportunities() {
     navigate("/opportunities/create");
   };
 
+  // Generate display title based on selected filter type
+  const getFilterTitle = () => {
+    if (filters.type === "all") {
+      return "All Opportunities";
+    } else {
+      const typeLabel = filters.type?.charAt(0).toUpperCase() + filters.type?.slice(1);
+      return `${typeLabel} Opportunities`;
+    }
+  };
+
   return (
     <div className="container px-4 py-8 mx-auto">
       <OpportunityHeader 
@@ -60,9 +70,7 @@ export default function Opportunities() {
         <div className="w-full lg:w-3/4">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">
-              {filters.type === "all" 
-                ? "All Opportunities" 
-                : `${filters.type?.charAt(0).toUpperCase()}${filters.type?.slice(1)} Opportunities`}
+              {getFilterTitle()}
             </h2>
             
             <div className="flex items-center gap-2">

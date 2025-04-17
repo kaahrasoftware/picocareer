@@ -41,7 +41,7 @@ export function OpportunityHeader({
   }, [searchValue, onSearch]);
 
   const opportunityTypes: { type: OpportunityType | "all"; label: string }[] = [
-    { type: "all", label: "All" },
+    { type: "all", label: "All Types" },
     { type: "job", label: "Jobs" },
     { type: "internship", label: "Internships" },
     { type: "scholarship", label: "Scholarships" },

@@ -3,7 +3,15 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CareerChatMessage } from '@/types/database/analytics';
 import { v4 as uuidv4 } from 'uuid';
-import { MessageDeliveryMetadata, MessageStatus } from './types';
+
+interface MessageDeliveryMetadata {
+  attempts: number;
+  lastAttempt: string;
+  receivedAt?: string;
+  error?: string;
+}
+
+type MessageStatus = 'sending' | 'sent' | 'failed';
 
 export function useMessageOperations(
   sessionId: string | null, 
@@ -37,7 +45,7 @@ export function useMessageOperations(
         session_id: sessionId,
         message_index: messageIndex,
         status,
-        delivery_metadata: deliveryMetadata,
+        delivery_metadata: deliveryMetadata as any,
         created_at: message.created_at || new Date().toISOString()
       };
       
@@ -70,7 +78,7 @@ export function useMessageOperations(
           metadata: completeMessage.metadata,
           message_index: completeMessage.message_index,
           status: completeMessage.status,
-          delivery_metadata: completeMessage.delivery_metadata
+          delivery_metadata: completeMessage.delivery_metadata as any
         })
         .select()
         .single();
@@ -86,10 +94,10 @@ export function useMessageOperations(
                   ...msg, 
                   status: 'failed',
                   delivery_metadata: {
-                    ...msg.delivery_metadata as MessageDeliveryMetadata,
+                    ...(msg.delivery_metadata as any),
                     error: error.message,
                     lastAttempt: new Date().toISOString()
-                  }
+                  } as any
                 } 
               : msg
           )
@@ -106,9 +114,9 @@ export function useMessageOperations(
                 ...(data as CareerChatMessage), 
                 status: 'sent',
                 delivery_metadata: {
-                  ...(data?.delivery_metadata as MessageDeliveryMetadata || {}),
+                  ...(data?.delivery_metadata as any || {}),
                   receivedAt: new Date().toISOString()
-                }
+                } as any
               } 
             : msg
         )
@@ -142,8 +150,8 @@ export function useMessageOperations(
       
       // Update delivery metadata
       const updatedDeliveryMetadata: MessageDeliveryMetadata = {
-        ...(failedMessage.delivery_metadata as MessageDeliveryMetadata || {}),
-        attempts: ((failedMessage.delivery_metadata as MessageDeliveryMetadata)?.attempts || 0) + 1,
+        ...((failedMessage.delivery_metadata as any) || {}),
+        attempts: ((failedMessage.delivery_metadata as any)?.attempts || 0) + 1,
         lastAttempt: new Date().toISOString(),
         error: undefined // Clear previous error
       };
@@ -155,7 +163,7 @@ export function useMessageOperations(
             ? { 
                 ...msg, 
                 status: 'sending',
-                delivery_metadata: updatedDeliveryMetadata
+                delivery_metadata: updatedDeliveryMetadata as any
               } 
             : msg
         )
@@ -172,7 +180,7 @@ export function useMessageOperations(
           metadata: failedMessage.metadata,
           message_index: failedMessage.message_index,
           status: 'sending',
-          delivery_metadata: updatedDeliveryMetadata
+          delivery_metadata: updatedDeliveryMetadata as any
         })
         .select()
         .single();
@@ -188,10 +196,10 @@ export function useMessageOperations(
                   ...msg, 
                   status: 'failed',
                   delivery_metadata: {
-                    ...(msg.delivery_metadata as MessageDeliveryMetadata || {}),
+                    ...((msg.delivery_metadata as any) || {}),
                     error: error.message,
                     lastAttempt: new Date().toISOString()
-                  }
+                  } as any
                 } 
               : msg
           )
@@ -208,9 +216,9 @@ export function useMessageOperations(
                 ...(data as CareerChatMessage), 
                 status: 'sent',
                 delivery_metadata: {
-                  ...(data?.delivery_metadata as MessageDeliveryMetadata || {}),
+                  ...((data?.delivery_metadata as any) || {}),
                   receivedAt: new Date().toISOString()
-                }
+                } as any
               } 
             : msg
         )
