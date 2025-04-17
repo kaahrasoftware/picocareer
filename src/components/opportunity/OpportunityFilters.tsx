@@ -64,7 +64,7 @@ export function OpportunityFilters({
         <AccordionItem value="category" className="border-b">
           <AccordionTrigger className="text-base hover:no-underline">
             <span className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
+              
               Categories
             </span>
           </AccordionTrigger>
