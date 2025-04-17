@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { 
   Accordion, 
@@ -17,30 +18,10 @@ interface OpportunityFiltersProps {
   onFilterChange: (filters: Partial<IOpportunityFilters>) => void;
 }
 
-// Predefined core categories that should always appear
-const PREDEFINED_CATEGORIES = [
-  "Technology",
-  "STEM Education",
-  "STEM Careers",
-  "Entrepreneurship",
-  "Financial Literacy",
-  "Leadership Development",
-  "Internship and Job Search",
-  "Diversity and Inclusion",
-  "University Admissions",
-  "Career Guidance",
-];
-
 export function OpportunityFilters({ filters, onFilterChange }: OpportunityFiltersProps) {
   // Fetch categories from database
-  const { data: databaseCategories, isLoading: loadingCategories } = useOpportunityCategories();
+  const { data: allCategories, isLoading: loadingCategories } = useOpportunityCategories();
   
-  // Combine predefined and database categories, remove duplicates
-  const allCategories = [...new Set([
-    ...PREDEFINED_CATEGORIES,
-    ...(databaseCategories || [])
-  ])].sort();
-
   const handleCategoryChange = (category: string) => {
     onFilterChange({ category: category === filters.category ? undefined : category });
   };
@@ -101,7 +82,7 @@ export function OpportunityFilters({ filters, onFilterChange }: OpportunityFilte
               <div className="py-2 text-sm text-muted-foreground">Loading categories...</div>
             ) : (
               <div className="space-y-2 pt-2">
-                {allCategories.map((category) => (
+                {allCategories && allCategories.map((category) => (
                   <div key={category} className="flex items-center space-x-2">
                     <Checkbox 
                       id={`category-${category}`}
