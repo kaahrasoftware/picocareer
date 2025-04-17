@@ -14,6 +14,25 @@ interface OpportunityCategoriesSectionProps {
   handleCategorySelect: (category: string) => void;
 }
 
+// Predefined category options
+const PREDEFINED_CATEGORIES = [
+  "Technology",
+  "Education",
+  "Business & Finance",
+  "Research & Development",
+  "Arts & Media",
+  "Environmental",
+  "Social Impact",
+  "Government & Policy",
+  "Data Science",
+  "Marketing & Communications",
+  "Human Resources",
+  "Legal",
+  "Consulting",
+  "Manufacturing",
+  "Retail & Commerce"
+];
+
 export function OpportunityCategoriesSection({ 
   form, 
   categories, 
@@ -22,7 +41,7 @@ export function OpportunityCategoriesSection({
   const [customCategory, setCustomCategory] = useState("");
   
   // Fetch categories from opportunities table
-  const { data: availableCategories, isLoading } = useQuery({
+  const { data: databaseCategories, isLoading } = useQuery({
     queryKey: ['opportunity-categories'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,6 +58,12 @@ export function OpportunityCategoriesSection({
     }
   });
 
+  // Merge predefined categories with database categories (removing duplicates)
+  const availableCategories = [...new Set([
+    ...PREDEFINED_CATEGORIES,
+    ...(databaseCategories || [])
+  ])].sort();
+  
   const handleAddCustomCategory = () => {
     if (customCategory.trim() && !form.watch("categories").includes(customCategory.trim())) {
       handleCategorySelect(customCategory.trim());
@@ -72,11 +97,11 @@ export function OpportunityCategoriesSection({
             ))}
           </div>
           
-          {/* Display existing categories from database */}
+          {/* Display available categories */}
           {isLoading ? (
             <div className="text-sm text-muted-foreground mb-4">Loading categories...</div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[250px] overflow-y-auto p-1 mb-4">
               {availableCategories && availableCategories.length > 0 ? (
                 availableCategories.map((category) => (
                   <Button
