@@ -82,7 +82,7 @@ export function OpportunityForm({ initialData, onSubmit, isSubmitting }: Opportu
           setDescription={setDescription} 
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[0.75fr_0.25fr] gap-6">
           <OpportunityCategoriesSection 
             form={form} 
             categories={form.watch("categories") || []} 
