@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FormField, FormItem, FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useOpportunityCategories } from "@/hooks/useOpportunityCategories";
 
 interface OpportunityCategoriesSectionProps {
   form: any;
@@ -14,7 +13,7 @@ interface OpportunityCategoriesSectionProps {
   handleCategorySelect: (category: string) => void;
 }
 
-// Predefined category options
+// Predefined category options that should always appear
 const PREDEFINED_CATEGORIES = [
   "Technology",
   "Education",
@@ -41,22 +40,7 @@ export function OpportunityCategoriesSection({
   const [customCategory, setCustomCategory] = useState("");
   
   // Fetch categories from opportunities table
-  const { data: databaseCategories, isLoading } = useQuery({
-    queryKey: ['opportunity-categories'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('categories')
-        .not('categories', 'is', null);
-      
-      if (error) throw error;
-      
-      // Extract unique categories from all opportunities
-      const allCategories = data.flatMap(item => item.categories || []);
-      const uniqueCategories = [...new Set(allCategories)];
-      return uniqueCategories.sort();
-    }
-  });
+  const { data: databaseCategories, isLoading } = useOpportunityCategories();
 
   // Merge predefined categories with database categories (removing duplicates)
   const availableCategories = [...new Set([

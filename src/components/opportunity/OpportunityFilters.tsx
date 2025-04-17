@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { 
   Accordion, 
@@ -9,16 +8,17 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Categories } from "@/types/database/enums";
 import { OpportunityFilters as IOpportunityFilters } from "@/types/opportunity/types";
 import { MapPin, Calendar, Globe, DollarSign, Award } from "lucide-react";
+import { useOpportunityCategories } from "@/hooks/useOpportunityCategories";
 
 interface OpportunityFiltersProps {
   filters: IOpportunityFilters;
   onFilterChange: (filters: Partial<IOpportunityFilters>) => void;
 }
 
-const categories: Categories[] = [
+// Predefined core categories that should always appear
+const PREDEFINED_CATEGORIES = [
   "Technology",
   "STEM Education",
   "STEM Careers",
@@ -32,6 +32,15 @@ const categories: Categories[] = [
 ];
 
 export function OpportunityFilters({ filters, onFilterChange }: OpportunityFiltersProps) {
+  // Fetch categories from database
+  const { data: databaseCategories, isLoading: loadingCategories } = useOpportunityCategories();
+  
+  // Combine predefined and database categories, remove duplicates
+  const allCategories = [...new Set([
+    ...PREDEFINED_CATEGORIES,
+    ...(databaseCategories || [])
+  ])].sort();
+
   const handleCategoryChange = (category: string) => {
     onFilterChange({ category: category === filters.category ? undefined : category });
   };
@@ -88,23 +97,27 @@ export function OpportunityFilters({ filters, onFilterChange }: OpportunityFilte
             </span>
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-2 pt-2">
-              {categories.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`category-${category}`}
-                    checked={filters.category === category}
-                    onCheckedChange={() => handleCategoryChange(category)}
-                  />
-                  <Label 
-                    htmlFor={`category-${category}`}
-                    className="text-sm cursor-pointer"
-                  >
-                    {category}
-                  </Label>
-                </div>
-              ))}
-            </div>
+            {loadingCategories ? (
+              <div className="py-2 text-sm text-muted-foreground">Loading categories...</div>
+            ) : (
+              <div className="space-y-2 pt-2">
+                {allCategories.map((category) => (
+                  <div key={category} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`category-${category}`}
+                      checked={filters.category === category}
+                      onCheckedChange={() => handleCategoryChange(category)}
+                    />
+                    <Label 
+                      htmlFor={`category-${category}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {category}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
 
