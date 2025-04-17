@@ -1,9 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FormField, FormItem, FormLabel, FormDescription, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OpportunityCategoriesSectionProps {
   form: any;
@@ -11,44 +14,38 @@ interface OpportunityCategoriesSectionProps {
   handleCategorySelect: (category: string) => void;
 }
 
-const CATEGORIES = [
-  "Technology",
-  "Healthcare",
-  "Education",
-  "Finance",
-  "Engineering",
-  "Marketing",
-  "Design",
-  "Research",
-  "Non-profit",
-  "Government",
-  "Community Service",
-  "Social Impact",
-  "Environment",
-  "Arts & Culture",
-  "Science",
-  "Business",
-  "Media",
-  "Sports",
-  "Agriculture",
-  "International Relations",
-  "Law",
-  "Construction",
-  "Manufacturing",
-  "Hospitality",
-  "Transportation",
-  "Real Estate",
-  "Cybersecurity",
-  "Data Science",
-  "Renewable Energy",
-  "Entertainment",
-];
-
 export function OpportunityCategoriesSection({ 
   form, 
   categories, 
   handleCategorySelect 
 }: OpportunityCategoriesSectionProps) {
+  const [customCategory, setCustomCategory] = useState("");
+  
+  // Fetch categories from opportunities table
+  const { data: availableCategories, isLoading } = useQuery({
+    queryKey: ['opportunity-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select('categories')
+        .not('categories', 'is', null);
+      
+      if (error) throw error;
+      
+      // Extract unique categories from all opportunities
+      const allCategories = data.flatMap(item => item.categories || []);
+      const uniqueCategories = [...new Set(allCategories)];
+      return uniqueCategories.sort();
+    }
+  });
+
+  const handleAddCustomCategory = () => {
+    if (customCategory.trim() && !form.watch("categories").includes(customCategory.trim())) {
+      handleCategorySelect(customCategory.trim());
+      setCustomCategory("");
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -74,23 +71,60 @@ export function OpportunityCategoriesSection({
               </Badge>
             ))}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1">
-            {CATEGORIES.map((category) => (
-              <Button
-                key={category}
-                type="button"
-                variant={field.value?.includes(category) ? "default" : "outline"}
-                size="sm"
-                className="justify-start"
-                onClick={() => handleCategorySelect(category)}
-                disabled={!field.value?.includes(category) && field.value?.length >= 3}
-              >
-                {category}
-              </Button>
-            ))}
+          
+          {/* Display existing categories from database */}
+          {isLoading ? (
+            <div className="text-sm text-muted-foreground mb-4">Loading categories...</div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1 mb-4">
+              {availableCategories && availableCategories.length > 0 ? (
+                availableCategories.map((category) => (
+                  <Button
+                    key={category}
+                    type="button"
+                    variant={field.value?.includes(category) ? "default" : "outline"}
+                    size="sm"
+                    className="justify-start"
+                    onClick={() => handleCategorySelect(category)}
+                    disabled={!field.value?.includes(category) && field.value?.length >= 3}
+                  >
+                    {category}
+                  </Button>
+                ))
+              ) : (
+                <div className="col-span-full text-sm text-muted-foreground">
+                  No existing categories found. Add your own below.
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Allow adding custom categories */}
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Add custom category"
+              value={customCategory}
+              onChange={(e) => setCustomCategory(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddCustomCategory();
+                }
+              }}
+              disabled={form.watch("categories")?.length >= 3}
+            />
+            <Button 
+              type="button" 
+              onClick={handleAddCustomCategory} 
+              disabled={form.watch("categories")?.length >= 3 || !customCategory.trim()}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
+          
           <FormDescription>
-            Categorize your opportunity to help people find it
+            Categorize your opportunity to help people find it. 
+            You can select from existing categories or add your own.
           </FormDescription>
           <FormMessage />
         </FormItem>
