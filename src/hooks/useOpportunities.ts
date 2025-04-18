@@ -7,6 +7,8 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
   return useQuery({
     queryKey: ['opportunities', filters],
     queryFn: async () => {
+      console.log('Fetching opportunities with filters:', filters);
+      
       let query = supabase
         .from('opportunities')
         .select(`
@@ -20,8 +22,9 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
         `)
         .eq('status', 'Active');
 
-      // Apply filters - only apply type filter if it's not "all"
+      // Only apply type filter if it's not "all" and is defined
       if (filters.type && filters.type !== 'all') {
+        console.log('Applying type filter:', filters.type);
         query = query.eq('opportunity_type', filters.type);
       }
 
@@ -60,8 +63,11 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
       const { data, error } = await query;
 
       if (error) {
+        console.error('Error fetching opportunities:', error);
         throw new Error(`Error fetching opportunities: ${error.message}`);
       }
+
+      console.log('Fetched opportunities count:', data?.length || 0);
 
       // Fetch analytics data for all opportunities
       const opportunityIds = data.map(opp => opp.id);
@@ -71,6 +77,10 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
           .from('opportunity_analytics')
           .select('*')
           .in('opportunity_id', opportunityIds);
+        
+        if (analyticsError) {
+          console.error('Error fetching analytics:', analyticsError);
+        }
         
         if (!analyticsError && analyticsData) {
           // Merge analytics data with opportunities
@@ -89,5 +99,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
 
       return data as OpportunityWithAuthor[];
     },
+    staleTime: 0, // Disable caching to ensure fresh data on type changes
+    refetchOnWindowFocus: false, // Prevent automatic refetching on window focus
   });
 }
