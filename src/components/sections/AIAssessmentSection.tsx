@@ -1,14 +1,11 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { RobotAvatar } from '@/components/career-chat/robot-avatar/RobotAvatar';
 import { Brain, ChevronRight, MessageCircle, Target } from 'lucide-react';
-
 export function AIAssessmentSection() {
-  return (
-    <div className="w-full py-16 md:py-24 relative overflow-hidden rounded-xl mx-4">
-      <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90" />
+  return <div className="w-full py-16 md:py-24 relative overflow-hidden rounded-xl mx-4">
+      
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         <div className="flex flex-col items-center text-center mb-12">
           <div className="relative mb-6">
@@ -60,11 +57,7 @@ export function AIAssessmentSection() {
         </div>
         
         <div className="flex justify-center">
-          <Button 
-            asChild 
-            size="lg" 
-            className="bg-white hover:bg-white/90 text-[#0EA5E9] font-semibold gap-2 shadow-lg transition-all group"
-          >
+          <Button asChild size="lg" className="bg-white hover:bg-white/90 text-[#0EA5E9] font-semibold gap-2 shadow-lg transition-all group">
             <Link to="/career-chat">
               Start Your Assessment
               <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -72,6 +65,5 @@ export function AIAssessmentSection() {
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
