@@ -20,7 +20,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
         `)
         .eq('status', 'Active');
 
-      // Apply filters - only apply type filter if it's not "all"
+      // Only apply opportunity_type filter when type is not 'all'
       if (filters.type && filters.type !== 'all') {
         query = query.eq('opportunity_type', filters.type);
       }
@@ -89,5 +89,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
 
       return data as OpportunityWithAuthor[];
     },
+    // Ensure the query always refetches when filters change
+    refetchOnWindowFocus: false,
   });
 }
