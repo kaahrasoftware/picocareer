@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -48,6 +47,7 @@ export function OpportunityHeader({
     { type: "fellowship", label: "Fellowships" },
     { type: "grant", label: "Grants" },
     { type: "competition", label: "Competitions" },
+    { type: "volunteer", label: "Volunteer" },
     { type: "event", label: "Events" },
     { type: "other", label: "Other" },
   ];

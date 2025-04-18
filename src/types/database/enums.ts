@@ -143,6 +143,7 @@ export type OpportunityType =
   | "fellowship"
   | "grant"
   | "competition"
+  | "volunteer"
   | "event"
   | "other";
 

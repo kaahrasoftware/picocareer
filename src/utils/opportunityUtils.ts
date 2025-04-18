@@ -57,6 +57,13 @@ export const getOpportunityTypeStyles = (type: OpportunityType | "all"): {
         border: "border-orange-200",
         hoverBg: "hover:bg-orange-200",
       };
+    case "volunteer":
+      return {
+        bg: "bg-teal-100",
+        text: "text-teal-800",
+        border: "border-teal-200",
+        hoverBg: "hover:bg-teal-200",
+      };
     case "event":
       return {
         bg: "bg-rose-100",
