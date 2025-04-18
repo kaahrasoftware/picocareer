@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { OpportunityFilters } from "@/components/opportunity/OpportunityFilters";
 import { OpportunityGrid } from "@/components/opportunity/OpportunityGrid";
@@ -7,7 +8,7 @@ import { OpportunityType } from "@/types/database/enums";
 import { OpportunityFilters as IOpportunityFilters } from "@/types/opportunity/types";
 import { useResponsive } from "@/hooks/useResponsive";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FilterIcon } from "lucide-react";
+import { PlusCircle, FilterIcon, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,30 +26,25 @@ export default function Opportunities() {
   const { session } = useAuthSession();
 
   const handleFilterChange = (newFilters: Partial<IOpportunityFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   const handleTypeChange = (type: OpportunityType | "all") => {
-    setFilters(prev => ({
-      type,
-      search: prev.search,
-    }));
-    
-    if (filterSheetOpen) {
-      setFilterSheetOpen(false);
-    }
+    setFilters((prev) => ({ ...prev, type }));
   };
 
   const handleCreateOpportunity = () => {
     navigate("/opportunities/create");
   };
 
+  // Generate display title based on selected filter type
   const getFilterTitle = () => {
     if (filters.type === "all") {
       return "All Opportunities";
+    } else {
+      const typeLabel = filters.type?.charAt(0).toUpperCase() + filters.type?.slice(1);
+      return `${typeLabel} Opportunities`;
     }
-    const typeLabel = filters.type?.charAt(0).toUpperCase() + filters.type?.slice(1);
-    return `${typeLabel} Opportunities`;
   };
 
   return (
