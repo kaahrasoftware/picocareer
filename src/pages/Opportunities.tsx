@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { OpportunityFilters } from "@/components/opportunity/OpportunityFilters";
 import { OpportunityGrid } from "@/components/opportunity/OpportunityGrid";
@@ -25,18 +25,18 @@ export default function Opportunities() {
   const { session } = useAuthSession();
 
   const handleFilterChange = (newFilters: Partial<IOpportunityFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handleTypeChange = (type: OpportunityType | "all") => {
-    setFilters((prev) => ({
-      ...prev,
+    setFilters(prev => ({
       type,
-      category: undefined,
-      featured: undefined,
-      remote: undefined,
-      location: undefined
+      search: prev.search,
     }));
+    
+    if (filterSheetOpen) {
+      setFilterSheetOpen(false);
+    }
   };
 
   const handleCreateOpportunity = () => {
@@ -46,10 +46,9 @@ export default function Opportunities() {
   const getFilterTitle = () => {
     if (filters.type === "all") {
       return "All Opportunities";
-    } else {
-      const typeLabel = filters.type?.charAt(0).toUpperCase() + filters.type?.slice(1);
-      return `${typeLabel} Opportunities`;
     }
+    const typeLabel = filters.type?.charAt(0).toUpperCase() + filters.type?.slice(1);
+    return `${typeLabel} Opportunities`;
   };
 
   return (

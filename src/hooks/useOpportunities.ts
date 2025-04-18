@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { OpportunityFilters, OpportunityWithAuthor } from "@/types/opportunity/types";
 
 export function useOpportunities(filters: OpportunityFilters = {}) {
+  const queryKey = ['opportunities', filters];
+
   return useQuery({
-    queryKey: ['opportunities', filters],
+    queryKey,
     queryFn: async () => {
       let query = supabase
         .from('opportunities')
@@ -20,11 +22,12 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
         `)
         .eq('status', 'Active');
 
-      // Only apply opportunity_type filter when type is not 'all'
+      // Apply filters based on type
       if (filters.type && filters.type !== 'all') {
         query = query.eq('opportunity_type', filters.type);
       }
 
+      // Apply other filters
       if (filters.search) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,provider_name.ilike.%${filters.search}%`);
       }
@@ -60,6 +63,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
       const { data, error } = await query;
 
       if (error) {
+        console.error('Error fetching opportunities:', error);
         throw new Error(`Error fetching opportunities: ${error.message}`);
       }
 
@@ -73,7 +77,6 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
           .in('opportunity_id', opportunityIds);
         
         if (!analyticsError && analyticsData) {
-          // Merge analytics data with opportunities
           const analyticsMap = analyticsData.reduce((acc, item) => {
             acc[item.opportunity_id] = item;
             return acc;
@@ -89,7 +92,7 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
 
       return data as OpportunityWithAuthor[];
     },
-    // Ensure the query always refetches when filters change
     refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
   });
 }
