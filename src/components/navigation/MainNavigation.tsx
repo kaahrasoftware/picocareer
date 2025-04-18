@@ -29,7 +29,7 @@ export function MainNavigation() {
   ];
 
   const resourceItems = [
-    { path: "/career-chat", label: "AI Career Guide" },
+    // Removed "/career-chat" entry
     { path: "/scholarships", label: "Scholarships" },
     { path: "/opportunities", label: "Opportunities" },
     { path: "/event", label: "Events" },
