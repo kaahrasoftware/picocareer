@@ -1,4 +1,3 @@
-
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatisticsSection } from "@/components/sections/StatisticsSection";
 import { CallToActionSection } from "@/components/sections/CallToActionSection";
@@ -16,7 +15,6 @@ const Index = () => {
   const { session } = useAuthSession();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Set dark theme by default
   useEffect(() => {
     try {
       document.documentElement.classList.add("dark");
@@ -39,11 +37,11 @@ const Index = () => {
             <HeroSection />
             <StatisticsSection />
             <AIAssessmentSection />
-            <CallToActionSection />
             <section className="mb-24">
               <Slides />
             </section>
             <ResourcesHighlightSection />
+            <CallToActionSection />
             <div className="TopRatedMentorsSection">
               <TopRatedMentorsSection />
             </div>
@@ -55,7 +53,6 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Add the welcome dialog */}
       <WelcomeDialog />
     </div>
   );

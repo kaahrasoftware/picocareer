@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { Rocket, Award, Calendar } from "lucide-react";
+import { Rocket, Award, Calendar, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ResourcesHighlightSection() {
@@ -25,6 +25,13 @@ export function ResourcesHighlightSection() {
       icon: Calendar,
       path: "/event",
       gradient: "from-emerald-500 to-emerald-700"
+    },
+    {
+      title: "Blog",
+      description: "Read articles and insights about education, careers, and personal development",
+      icon: FileText,
+      path: "/blog",
+      gradient: "from-rose-500 to-rose-700"
     }
   ];
 
@@ -38,8 +45,8 @@ export function ResourcesHighlightSection() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {resources.map((resource, index) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {resources.map((resource) => (
             <Link
               key={resource.path}
               to={resource.path}
