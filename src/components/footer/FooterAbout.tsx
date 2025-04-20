@@ -15,10 +15,10 @@ export function FooterAbout() {
           <Mail className="w-4 h-4 mr-2" />
           info@picocareer.com
         </a>
-        <a href="tel:+22897476446" 
+        <a href="tel:+19194435301" 
           className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
           <Phone className="w-4 h-4 mr-2" />
-          +228 97 47 64 46
+          +1 (919) 443-5301
         </a>
         <div className="flex items-center text-sm text-muted-foreground">
           <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
