@@ -6,9 +6,11 @@ import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSec
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { AIAssessmentSection } from "@/components/sections/AIAssessmentSection";
+import { ResourcesHighlightSection } from "@/components/sections/ResourcesHighlightSection";
 import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
+import { Slides } from "@/components/Slides";
 
 const Index = () => {
   const { session } = useAuthSession();
@@ -38,6 +40,10 @@ const Index = () => {
             <StatisticsSection />
             <AIAssessmentSection />
             <CallToActionSection />
+            <section className="mb-24">
+              <Slides />
+            </section>
+            <ResourcesHighlightSection />
             <div className="TopRatedMentorsSection">
               <TopRatedMentorsSection />
             </div>
