@@ -21,10 +21,17 @@ export function FooterBottom() {
             <p>All rights reserved</p>
           </div>
           
-          <div className="mt-2 md:mt-1 inline-flex items-center text-sm font-medium text-muted-foreground gap-1">
-            <span>A product of</span>
-            <span className="font-bold underline-offset-4 ml-1">Kaahra</span>
-            <ExternalLink className="h-3 w-3 ml-0.5" />
+          <div className="mt-2 md:mt-1">
+            <a 
+              href="https://kaahra.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors gap-1 group"
+            >
+              A product of 
+              <span className="font-bold underline-offset-4 group-hover:underline ml-1">Kaahra</span>
+              <ExternalLink className="h-3 w-3 ml-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
           </div>
         </div>
       </div>
