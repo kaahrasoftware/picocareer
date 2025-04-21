@@ -27,7 +27,7 @@ const resourceConfigs = [
     gradient: "from-purple-500 to-purple-700",
     table: "opportunities",
     statusField: "status",
-    statusValue: "Approved"
+    statusValue: "Active"    // <- CHANGED from "Approved" to "Active"
   },
   {
     key: "events",
@@ -125,3 +125,4 @@ export function ResourcesHighlightSection() {
     </section>
   );
 }
+
