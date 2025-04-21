@@ -22,7 +22,7 @@ export function FooterAbout() {
         </a>
         <div className="flex items-center text-sm text-muted-foreground">
           <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span>Lomé, Togo, West Africa</span>
+          <span>131 Continental Dr Suite 305 Newark, DE, 19713 US</span>
         </div>
       </div>
     </div>
