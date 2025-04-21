@@ -27,8 +27,8 @@ export default function TeamSection() {
     },
     {
       name: "Oluoch Allan",
-      role: "PicoCareer Ambassador, Nakuru region, Kenya",
-      imageUrl: "/lovable-uploads/cfb3eec7-5f0f-473f-a961-05118758fe5d.png", // Updated with the uploaded image path
+      role: "PicoCareer Ambassador, Nakuru, Kenya",
+      imageUrl: "/lovable-uploads/cfb3eec7-5f0f-473f-a961-05118758fe5d.png",
       linkedin: "https://www.linkedin.com/in/oluoch-allan-3432b7250",
       twitter: ""
     }
@@ -76,4 +76,3 @@ export default function TeamSection() {
     </section>
   );
 }
-
