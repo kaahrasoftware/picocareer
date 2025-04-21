@@ -100,20 +100,22 @@ export function ResourcesHighlightSection() {
                   "absolute inset-0 opacity-90 bg-gradient-to-br",
                   resource.gradient
                 )} />
-                <div className="relative z-10 flex flex-col items-center text-white text-center space-y-4">
+                <div className="relative z-10 flex flex-col items-center text-white text-center space-y-4 min-h-[220px]">
                   <div className="p-3 rounded-full bg-white/10 backdrop-blur-sm group-hover:scale-110 transition-transform flex flex-col items-center">
                     <Icon className="w-8 h-8" />
                   </div>
                   <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
                     {resource.title}
-                    {/* Count Badge */}
-                    <span className="ml-2 bg-black/30 rounded-full px-2 py-0.5 text-xs font-semibold">
-                      {isLoading ? "..." : count?.toLocaleString() }
-                    </span>
                   </h3>
                   <p className="text-white/90 text-sm leading-relaxed">
                     {resource.description}
                   </p>
+                  <div className="mt-auto w-full flex justify-center">
+                    {/* Count Badge now at bottom */}
+                    <span className="bg-black/30 rounded-full px-3 py-1 text-xs font-semibold">
+                      {isLoading ? "..." : `${count?.toLocaleString()} ${resource.title}`}
+                    </span>
+                  </div>
                 </div>
               </Link>
             );
