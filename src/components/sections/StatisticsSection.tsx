@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +31,10 @@ export function StatisticsSection() {
         { count: careersCount },
         { count: majorsCount },
         { count: schoolsCount },
-        { count: scholarshipsCount }
+        { count: scholarshipsCount },
+        { count: opportunitiesCount },
+        { count: eventsCount },
+        { count: blogsCount }
       ] = await Promise.all([
         supabase
           .from('profiles')
@@ -50,7 +54,19 @@ export function StatisticsSection() {
           .eq('status', 'Approved'),
         supabase
           .from('scholarships')
+          .select('id', { count: 'exact', head: true }),
+        supabase
+          .from('opportunities')
           .select('id', { count: 'exact', head: true })
+          .eq('status', 'Active'),
+        supabase
+          .from('events')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'Approved'),
+        supabase
+          .from('blogs')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'Approved'),
       ]);
 
       console.log('Statistics fetched:', {
@@ -58,7 +74,10 @@ export function StatisticsSection() {
         careers: careersCount,
         majors: majorsCount,
         schools: schoolsCount,
-        scholarships: scholarshipsCount
+        scholarships: scholarshipsCount,
+        opportunities: opportunitiesCount,
+        events: eventsCount,
+        blogs: blogsCount,
       });
 
       return {
@@ -66,12 +85,21 @@ export function StatisticsSection() {
         careers: careersCount || 0,
         majors: majorsCount || 0,
         schools: schoolsCount || 0,
-        scholarships: scholarshipsCount || 0
+        scholarships: scholarshipsCount || 0,
+        opportunities: opportunitiesCount || 0,
+        events: eventsCount || 0,
+        blogs: blogsCount || 0,
       };
     },
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: 3 // Retry failed requests 3 times
   });
+
+  const totalResources =
+    (stats?.scholarships || 0) +
+    (stats?.opportunities || 0) +
+    (stats?.events || 0) +
+    (stats?.blogs || 0);
 
   const items = [
     {
@@ -99,8 +127,8 @@ export function StatisticsSection() {
       color: "bg-orange-100 text-orange-600"
     },
     {
-      label: "Funding Sources",
-      value: formatNumber(stats?.scholarships || 0),
+      label: "Resources",
+      value: formatNumber(totalResources),
       icon: Trophy,
       color: "bg-rose-100 text-rose-600"
     }
