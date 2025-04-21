@@ -22,15 +22,15 @@ export default function TeamSection() {
       name: "Francis Kangure",
       role: "PicoCareer Ambassador, Kenya",
       imageUrl: "/lovable-uploads/37f14cf8-4c87-4e6f-b59a-c6d9dc42cbb8.png",
-      linkedin: "https://www.linkedin.com/in/francis-kangure",
-      twitter: "https://x.com/francis_kangure"
+      linkedin: "https://www.linkedin.com/in/francis-kangure-phd-shrm-scp",
+      twitter: ""
     },
     {
       name: "Oluoch Allan",
       role: "PicoCareer Ambassador, Nakuru region, Kenya",
       imageUrl: "/lovable-uploads/cfb3eec7-5f0f-473f-a961-05118758fe5d.png", // Updated with the uploaded image path
-      linkedin: "https://www.linkedin.com/in/oluoch-allan",
-      twitter: "https://x.com/oluoch_allan"
+      linkedin: "https://www.linkedin.com/in/oluoch-allan-3432b7250",
+      twitter: ""
     }
   ];
 
@@ -62,11 +62,11 @@ export default function TeamSection() {
                       <Linkedin className="w-5 h-5" />
                     </a>
                   )}
-                  {member.twitter && (
+                  {member.twitter ? (
                     <a href={member.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-picocareer-primary transition-colors">
                       <Twitter className="w-5 h-5" />
                     </a>
-                  )}
+                  ) : null}
                 </div>
               </CardHeader>
             </Card>
@@ -76,3 +76,4 @@ export default function TeamSection() {
     </section>
   );
 }
+
