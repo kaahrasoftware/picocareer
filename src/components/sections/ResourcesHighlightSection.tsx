@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { award, briefcase, calendarDays, book } from "lucide-react";
+import { Medal, Briefcase, Calendar, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Map resource keys to table details
@@ -11,7 +11,7 @@ const resourceConfigs = [
     key: "scholarships",
     title: "Scholarships",
     description: "Find scholarships and financial aid opportunities to fund your education",
-    icon: award,
+    icon: Medal,
     path: "/scholarships",
     gradient: "from-blue-500 to-blue-700",
     table: "scholarships",
@@ -22,7 +22,7 @@ const resourceConfigs = [
     key: "opportunities",
     title: "Opportunities",
     description: "Discover internships, jobs, and other career development opportunities",
-    icon: briefcase,
+    icon: Briefcase,
     path: "/opportunities",
     gradient: "from-purple-500 to-purple-700",
     table: "opportunities",
@@ -33,7 +33,7 @@ const resourceConfigs = [
     key: "events",
     title: "Events",
     description: "Join workshops, webinars, and networking events in your field",
-    icon: calendarDays,
+    icon: Calendar,
     path: "/event",
     gradient: "from-emerald-500 to-emerald-700",
     table: "events",
@@ -44,7 +44,7 @@ const resourceConfigs = [
     key: "blog",
     title: "Blog",
     description: "Read articles and insights about education, careers, and personal development",
-    icon: book,
+    icon: BookOpen,
     path: "/blog",
     gradient: "from-rose-500 to-rose-700",
     table: "blogs",
