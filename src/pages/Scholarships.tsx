@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, School, Trophy } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthState } from "@/hooks/useAuthState";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface Filters {
   search?: string;
@@ -34,11 +34,11 @@ export default function Scholarships() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, session } = useAuthState();
+  const { data: profile } = useUserProfile(session);
   const [filters, setFilters] = useState<Filters>({
     status: "Active",
   });
 
-  // Get unique categories for filtering
   const { data: categories = [] } = useQuery({
     queryKey: ["scholarship-categories"],
     queryFn: async () => {
@@ -52,7 +52,6 @@ export default function Scholarships() {
         return [];
       }
 
-      // Extract and flatten all categories, then get unique values
       const allCategories = data
         .flatMap((scholarship) => scholarship.category || [])
         .filter(Boolean);
@@ -61,13 +60,11 @@ export default function Scholarships() {
     },
   });
 
-  // Main query for scholarships
   const { data: scholarships = [], isLoading } = useQuery({
     queryKey: ["scholarships", filters],
     queryFn: async () => {
       let query = supabase.from("scholarships").select("*");
 
-      // Apply filters
       if (filters.status && filters.status !== "all") {
         query = query.eq("status", filters.status);
       }
@@ -106,7 +103,6 @@ export default function Scholarships() {
         query = query.lte("deadline", filters.deadline.toISOString());
       }
 
-      // Apply advanced filters
       if (filters.citizenship && filters.citizenship.length > 0) {
         query = query.overlaps("citizenship_requirements", filters.citizenship);
       }
@@ -115,7 +111,6 @@ export default function Scholarships() {
         query = query.overlaps("demographic_requirements", filters.demographic);
       }
 
-      // Apply academic filters through eligibility_criteria JSONB field
       if ((filters.academic_year && filters.academic_year.length > 0) || 
           (filters.major && filters.major.length > 0) ||
           filters.gpa_requirement) {
@@ -129,7 +124,6 @@ export default function Scholarships() {
         }
         
         if (filters.gpa_requirement && filters.gpa_requirement !== "none") {
-          // For GPA, we need to compare as numbers, not exact match
           const minGpa = parseFloat(filters.gpa_requirement);
           query = query.gte('eligibility_criteria->>gpa_requirement', minGpa);
         }
@@ -143,7 +137,6 @@ export default function Scholarships() {
         query = query.eq("award_frequency", filters.award_frequency);
       }
 
-      // Order by featured first, then deadline (upcoming first)
       query = query.order("featured", { ascending: false }).order("deadline", { ascending: true });
 
       const { data, error } = await query;
@@ -158,9 +151,7 @@ export default function Scholarships() {
         return [];
       }
 
-      // For application_process_length, filter client-side since it's a calculated property
       if (filters.application_process_length && filters.application_process_length !== "none") {
-        // This is a simplified approach - in a real app, you would need more sophisticated logic
         return data.filter(scholarship => {
           const processLength = scholarship.application_process ? scholarship.application_process.length : 0;
           const requiredDocsCount = scholarship.required_documents ? scholarship.required_documents.length : 0;
@@ -180,16 +171,13 @@ export default function Scholarships() {
   });
 
   const handleFilterChange = (newFilters: Filters) => {
-    // Replace empty strings or "none" values with undefined to clean up filters object
     const cleanedFilters: Filters = {};
     
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value !== "" && value !== "none" && value !== undefined) {
         if (Array.isArray(value) && value.length === 0) {
-          // Skip empty arrays
           return;
         }
-        // @ts-ignore - Dynamic key assignment
         cleanedFilters[key] = value;
       }
     });
@@ -203,7 +191,6 @@ export default function Scholarships() {
     });
   };
 
-  // Get featured scholarships
   const featuredScholarships = scholarships.filter((s) => s.featured);
 
   return (
@@ -213,7 +200,6 @@ export default function Scholarships() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              {/* Header Section */}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -225,7 +211,7 @@ export default function Scholarships() {
                   </p>
                 </div>
 
-                {user && (
+                {user && profile?.user_type === 'admin' && (
                   <Button asChild>
                     <Link to="/scholarships/add">
                       <Plus className="h-4 w-4 mr-1" /> Add Scholarship
@@ -234,7 +220,6 @@ export default function Scholarships() {
                 )}
               </div>
 
-              {/* Featured Scholarships Section */}
               {featuredScholarships.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -249,13 +234,11 @@ export default function Scholarships() {
                 </div>
               )}
 
-              {/* Filters Section */}
               <ScholarshipFilters
                 onFilterChange={handleFilterChange}
                 categories={categories}
               />
 
-              {/* Main Grid */}
               <ScholarshipGrid
                 scholarships={scholarships}
                 isLoading={isLoading}
