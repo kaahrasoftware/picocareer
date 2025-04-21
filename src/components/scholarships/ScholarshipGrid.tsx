@@ -27,7 +27,7 @@ interface ScholarshipGridProps {
 export function ScholarshipGrid({ scholarships, isLoading, compact = false, resetFilters }: ScholarshipGridProps) {
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-20 bg-[#F1F0FB] rounded-xl">
         <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
         <span className="sr-only">Loading scholarships...</span>
       </div>
@@ -39,7 +39,7 @@ export function ScholarshipGrid({ scholarships, isLoading, compact = false, rese
   }
 
   return (
-    <div className={`grid gap-4 ${compact 
+    <div className={`grid gap-4 bg-[#F1F0FB] rounded-xl p-2 ${compact 
       ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"}`}>
       {scholarships.map((scholarship) => (
