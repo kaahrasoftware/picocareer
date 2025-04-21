@@ -1,130 +1,67 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, Building, School, Trophy } from "lucide-react";
-
-const formatNumber = (num: number): string => {
-  if (num === 0) return "0";
-  
-  // For numbers less than 1000, round to nearest 10 and add +
-  if (num < 1000) {
-    const rounded = Math.floor(num / 10) * 10;
-    return rounded === 0 ? "+10" : `+${rounded}`;
-  }
-  
-  // For numbers 1000 and above, use K, M, T notation
-  const units = ["", "K", "M", "T"];
-  const order = Math.floor(Math.log10(num) / 3);
-  const unitValue = num / Math.pow(1000, order);
-  const roundedValue = Math.floor(unitValue * 100) / 100;
-  return `+${roundedValue}${units[order]}`;
-};
 
 export function StatisticsSection() {
-  const { data: stats } = useQuery({
-    queryKey: ['home-statistics'],
+  // Query for each resource count
+  const { data, isLoading } = useQuery({
+    queryKey: ["statistics-section-counts"],
     queryFn: async () => {
-      console.log('Fetching statistics...');
-      const [
-        { count: mentorsCount },
-        { count: careersCount },
-        { count: majorsCount },
-        { count: schoolsCount },
-        { count: scholarshipsCount }
-      ] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_type', 'mentor'),
-        supabase
-          .from('careers')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('majors')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('schools')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'Approved'),
-        supabase
-          .from('scholarships')
-          .select('id', { count: 'exact', head: true })
-      ]);
-
-      console.log('Statistics fetched:', {
-        mentors: mentorsCount,
-        careers: careersCount,
-        majors: majorsCount,
-        schools: schoolsCount,
-        scholarships: scholarshipsCount
-      });
-
+      const tables = [
+        { table: "scholarships", statusField: "status", statusValue: "Active" },
+        { table: "opportunities", statusField: "status", statusValue: "Active" },
+        { table: "events", statusField: "status", statusValue: "Approved" },
+        { table: "blogs", statusField: "status", statusValue: "Approved" }
+      ];
+      // Fetch counts in parallel
+      const results = await Promise.all(
+        tables.map(async ({ table, statusField, statusValue }) => {
+          const { count, error } = await supabase
+            .from(table)
+            .select("id", { count: "exact", head: true })
+            .eq(statusField, statusValue);
+          return !error && typeof count === 'number' ? count : 0;
+        })
+      );
       return {
-        mentors: mentorsCount || 0,
-        careers: careersCount || 0,
-        majors: majorsCount || 0,
-        schools: schoolsCount || 0,
-        scholarships: scholarshipsCount || 0
+        scholarships: results[0],
+        opportunities: results[1],
+        events: results[2],
+        blogs: results[3],
+        total: results.reduce((a, b) => a + b, 0),
       };
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    retry: 3 // Retry failed requests 3 times
+    staleTime: 60 * 1000 * 5,
   });
 
-  const items = [
-    {
-      label: "Active Mentors",
-      value: formatNumber(stats?.mentors || 0),
-      icon: Users,
-      color: "bg-purple-100 text-purple-600"
-    },
-    {
-      label: "Career Paths",
-      value: formatNumber(stats?.careers || 0),
-      icon: Building,
-      color: "bg-blue-100 text-blue-600"
-    },
-    {
-      label: "Fields of Study",
-      value: formatNumber(stats?.majors || 0),
-      icon: School,
-      color: "bg-green-100 text-green-600"
-    },
-    {
-      label: "Schools",
-      value: formatNumber(stats?.schools || 0),
-      icon: School,
-      color: "bg-orange-100 text-orange-600"
-    },
-    {
-      label: "Funding Sources",
-      value: formatNumber(stats?.scholarships || 0),
-      icon: Trophy,
-      color: "bg-rose-100 text-rose-600"
-    }
-  ];
-
   return (
-    <section className="py-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-center mb-8">Discover The Growing Ecosystem Of Opportunities And Support Available To You</h2>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        {items.map((item) => (
-          <Card key={item.label} className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center space-y-2">
-                <div className={`p-3 rounded-full ${item.color}`}>
-                  <item.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-3xl font-bold">{item.value}</h3>
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+    <section className="py-16 bg-muted">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {/* Scholarships */}
+          <div>
+            <div className="text-3xl font-bold text-primary">{isLoading ? "…" : data?.scholarships?.toLocaleString()}</div>
+            <div className="mt-2 text-sm text-muted-foreground">Scholarships</div>
+          </div>
+          {/* Opportunities */}
+          <div>
+            <div className="text-3xl font-bold text-primary">{isLoading ? "…" : data?.opportunities?.toLocaleString()}</div>
+            <div className="mt-2 text-sm text-muted-foreground">Opportunities</div>
+          </div>
+          {/* Events */}
+          <div>
+            <div className="text-3xl font-bold text-primary">{isLoading ? "…" : data?.events?.toLocaleString()}</div>
+            <div className="mt-2 text-sm text-muted-foreground">Events</div>
+          </div>
+          {/* Resources */}
+          <div>
+            <div className="text-3xl font-bold text-primary">{isLoading ? "…" : data?.total?.toLocaleString()}</div>
+            <div className="mt-2 text-sm text-muted-foreground">Resources</div>
+          </div>
+        </div>
+        <p className="mt-8 text-sm text-muted-foreground text-center">
+          Explore scholarships, opportunities, events, and insightful blog posts to support your journey.
+        </p>
       </div>
     </section>
   );
