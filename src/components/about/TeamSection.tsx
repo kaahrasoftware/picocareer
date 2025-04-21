@@ -28,7 +28,7 @@ export default function TeamSection() {
     {
       name: "Oluoch Allan",
       role: "PicoCareer Ambassador, Nakuru region, Kenya",
-      imageUrl: "https://images.unsplash.com/photo-1487252665478-49b61b47f302",
+      imageUrl: "/lovable-uploads/cfb3eec7-5f0f-473f-a961-05118758fe5d.png", // Updated with the uploaded image path
       linkedin: "https://www.linkedin.com/in/oluoch-allan",
       twitter: "https://x.com/oluoch_allan"
     }
