@@ -91,10 +91,7 @@ export const HeroSection = () => {
           </div>
         </div>
       </section>
-
-      <section className="mb-24">
-        <Slides />
-      </section>
+      {/* Removed duplicate <Slides /> section here */}
     </>
   );
 };
