@@ -14,7 +14,6 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  ResponsiveContainer,
   Cell,
 } from "recharts";
 import { Avatar } from "@/components/ui/avatar";
@@ -246,14 +245,20 @@ export function MentorPerformanceTab() {
   });
 
   // Generate session trend data (for line chart) - safe fallback for empty data
-  const sessionTrendData: SessionData[] = Array.from({ length: 6 }, (_, i) => {
-    const date = subMonths(new Date(), 5 - i);
-    const month = format(date, 'MMM');
-    return {
-      month,
-      sessions: Math.floor(Math.random() * 30) + 10 // Placeholder data
-    };
-  });
+  const generateSessionTrendData = (): SessionData[] => {
+    // If we have actual data, we could transform it here
+    // For now, use placeholder data that is guaranteed to be valid
+    return Array.from({ length: 6 }, (_, i) => {
+      const date = subMonths(new Date(), 5 - i);
+      const month = format(date, 'MMM');
+      return {
+        month,
+        sessions: Math.floor(Math.random() * 30) + 10 // Placeholder data (guaranteed to be a valid number)
+      };
+    });
+  };
+
+  const sessionTrendData = generateSessionTrendData();
 
   // Generate rating distribution data (for pie chart) with safe defaults
   const generateRatingDistribution = (): RatingDistribution[] => {
@@ -318,9 +323,9 @@ export function MentorPerformanceTab() {
     return {
       totalMentors,
       totalSessions,
-      averageRating: avgRating.toFixed(1),
-      totalHours: totalHours.toFixed(1),
-      completionRate,
+      averageRating: isNaN(avgRating) ? '0.0' : avgRating.toFixed(1),
+      totalHours: isNaN(totalHours) ? '0.0' : totalHours.toFixed(1),
+      completionRate: isNaN(completionRate) ? 0 : completionRate,
       qoqGrowth: 15 // Placeholder
     };
   };
@@ -566,31 +571,27 @@ export function MentorPerformanceTab() {
                 <CardContent>
                   <div className="h-[250px]">
                     {hasEnoughData ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
+                      <LineChart>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="month" 
+                          allowDataOverflow={false}
+                        />
+                        <YAxis 
+                          allowDecimals={false}
+                          domain={[0, 'auto']}
+                        />
+                        <Tooltip />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="sessions" 
+                          stroke="#8884d8" 
+                          activeDot={{ r: 8 }} 
+                          isAnimationActive={false}
                           data={sessionTrendData}
-                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis 
-                            dataKey="month" 
-                            allowDataOverflow={false}
-                          />
-                          <YAxis 
-                            allowDecimals={false}
-                            domain={[0, 'auto']}
-                          />
-                          <Tooltip />
-                          <Legend />
-                          <Line 
-                            type="monotone" 
-                            dataKey="sessions" 
-                            stroke="#8884d8" 
-                            activeDot={{ r: 8 }} 
-                            isAnimationActive={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
+                        />
+                      </LineChart>
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground">
                         Not enough data to display chart
@@ -608,26 +609,24 @@ export function MentorPerformanceTab() {
                 <CardContent>
                   <div className="h-[250px]">
                     {validRatingData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={validRatingData}
-                            dataKey="count"
-                            nameKey="rating"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            label={({ rating }) => `${rating} ★`}
-                            isAnimationActive={false}
-                          >
-                            {validRatingData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value, name) => [`${value} mentors`, `${name} stars`]} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      <PieChart>
+                        <Pie
+                          data={validRatingData}
+                          dataKey="count"
+                          nameKey="rating"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label={({ rating }) => `${rating} ★`}
+                          isAnimationActive={false}
+                        >
+                          {validRatingData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value, name) => [`${value} mentors`, `${name} stars`]} />
+                        <Legend />
+                      </PieChart>
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground">
                         No rating data available
@@ -664,37 +663,32 @@ export function MentorPerformanceTab() {
                 <h3 className="text-lg font-semibold mb-3">Completion Rate by Mentor</h3>
                 <div className="h-[300px]">
                   {hasEnoughData && mentorData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
+                    <BarChart>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        type="number"
+                        domain={[0, 100]}
+                        allowDataOverflow={false}
+                      />
+                      <YAxis 
+                        dataKey="full_name" 
+                        type="category" 
+                        width={100} 
+                        tick={{ fontSize: 12 }}
+                      />
+                      <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
+                      <Legend />
+                      <Bar 
+                        dataKey="completion_rate" 
+                        fill="#8884d8" 
+                        name="Completion Rate (%)"
+                        isAnimationActive={false}
                         data={mentorData.slice(0, 10).map(mentor => ({
                           full_name: mentor.full_name || "Unknown",
                           completion_rate: sanitizeNumber(mentor.completion_rate)
-                        }))} 
-                        layout="vertical" 
-                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis 
-                          type="number"
-                          domain={[0, 100]}
-                          allowDataOverflow={false}
-                        />
-                        <YAxis 
-                          dataKey="full_name" 
-                          type="category" 
-                          width={100} 
-                          tick={{ fontSize: 12 }}
-                        />
-                        <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
-                        <Legend />
-                        <Bar 
-                          dataKey="completion_rate" 
-                          fill="#8884d8" 
-                          name="Completion Rate (%)"
-                          isAnimationActive={false}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
+                        }))}
+                      />
+                    </BarChart>
                   ) : (
                     <div className="flex h-full items-center justify-center text-muted-foreground">
                       Not enough data to display chart

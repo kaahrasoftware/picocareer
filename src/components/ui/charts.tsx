@@ -12,7 +12,7 @@ export interface ChartProps {
   children: React.ReactNode;
 }
 
-// Helper to check if data contains NaN values
+// Enhanced helper to check if data contains NaN values or is otherwise invalid
 const hasValidData = (children: React.ReactNode): boolean => {
   if (!children) return false;
   
@@ -37,10 +37,52 @@ const hasValidData = (children: React.ReactNode): boolean => {
       if (dataKey && typeof dataKey === 'string') {
         // Check if any data point has NaN for the specified dataKey
         for (const point of data) {
-          const value = point[dataKey];
-          if (value === undefined || value === null || Number.isNaN(Number(value))) {
-            console.warn(`Invalid data detected: ${dataKey} contains NaN or undefined`, point);
+          if (!point || typeof point !== 'object') {
+            console.warn('Invalid data point:', point);
             return false;
+          }
+          
+          // If the point has the dataKey property, ensure it's a valid number
+          if (dataKey in point) {
+            const value = point[dataKey];
+            if (value === undefined || value === null || Number.isNaN(Number(value))) {
+              console.warn(`Invalid data detected: ${dataKey} contains NaN or undefined`, point);
+              return false;
+            }
+          }
+        }
+      }
+      
+      // For Pie charts, check nameKey and value props
+      if (child.type && child.type.displayName === 'Pie') {
+        const nameKey = child.props.nameKey;
+        const valueKey = child.props.dataKey;
+        
+        if (nameKey && valueKey) {
+          for (const point of data) {
+            if (!point || typeof point !== 'object') {
+              console.warn('Invalid pie data point:', point);
+              return false;
+            }
+            
+            const value = point[valueKey];
+            if (value === undefined || value === null || Number.isNaN(Number(value))) {
+              console.warn(`Invalid pie data detected: ${valueKey} contains NaN or undefined`, point);
+              return false;
+            }
+          }
+        }
+      }
+      
+      // For specific chart types, check domain values
+      if (child.type && (child.type.displayName === 'XAxis' || child.type.displayName === 'YAxis')) {
+        const domain = child.props.domain;
+        if (Array.isArray(domain)) {
+          for (const value of domain) {
+            if (value === undefined || value === null || Number.isNaN(Number(value))) {
+              console.warn(`Invalid domain value detected: ${value}`);
+              return false;
+            }
           }
         }
       }
@@ -52,7 +94,7 @@ const hasValidData = (children: React.ReactNode): boolean => {
 
 export function LineChart({ className, children }: ChartProps) {
   if (!hasValidData(children)) {
-    return <div className="flex h-full items-center justify-center text-muted-foreground">No valid chart data</div>;
+    return <div className="flex h-full items-center justify-center text-muted-foreground">Invalid chart data detected</div>;
   }
   
   return (
@@ -66,7 +108,7 @@ export function LineChart({ className, children }: ChartProps) {
 
 export function BarChart({ className, children }: ChartProps) {
   if (!hasValidData(children)) {
-    return <div className="flex h-full items-center justify-center text-muted-foreground">No valid chart data</div>;
+    return <div className="flex h-full items-center justify-center text-muted-foreground">Invalid chart data detected</div>;
   }
   
   return (
@@ -80,7 +122,7 @@ export function BarChart({ className, children }: ChartProps) {
 
 export function PieChart({ className, children }: ChartProps) {
   if (!hasValidData(children)) {
-    return <div className="flex h-full items-center justify-center text-muted-foreground">No valid chart data</div>;
+    return <div className="flex h-full items-center justify-center text-muted-foreground">Invalid chart data detected</div>;
   }
   
   return (
