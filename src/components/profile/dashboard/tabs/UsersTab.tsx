@@ -1,3 +1,4 @@
+
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ import { UserProfileDetailsDialog } from "@/components/admin/UserProfileDetailsD
 import type { OnboardingStatus, UserType } from "@/types/database/enums";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
 import { endOfDay, startOfDay } from "date-fns";
+import { MentorPerformanceTab } from "./MentorPerformanceTab";
 
 interface User {
   id: string;
@@ -43,6 +45,7 @@ export function UsersTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [usersTabValue, setUsersTabValue] = useState<string>("overview");
 
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus, startDate, endDate],
@@ -233,9 +236,15 @@ export function UsersTab() {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs 
+        defaultValue="overview" 
+        className="w-full"
+        value={usersTabValue}
+        onValueChange={setUsersTabValue}
+      >
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">Users Overview</TabsTrigger>
+          <TabsTrigger value="mentor-performance">Mentor Performance</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <Card className="p-4">
@@ -288,6 +297,10 @@ export function UsersTab() {
             </div>
             {users && <DataTable columns={columns} data={users} />}
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="mentor-performance">
+          <MentorPerformanceTab />
         </TabsContent>
       </Tabs>
 
