@@ -33,11 +33,13 @@ import {
   Users, 
   Clock, 
   Star, 
-  TrendingUp 
+  TrendingUp,
+  AlertCircle
 } from "lucide-react";
 import { useState } from "react";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
 import { startOfDay, endOfDay, format, subMonths } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MentorPerformanceData {
   id: string;
@@ -85,129 +87,161 @@ export function MentorPerformanceTab() {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [selectedMentor, setSelectedMentor] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch mentor performance data
   const { data: mentorData = [], isLoading } = useQuery({
     queryKey: ['mentor-performance', timeRange, startDate, endDate],
     queryFn: async () => {
-      console.log('Fetching mentor performance data with filters:', { timeRange, startDate, endDate });
-      
-      let query = supabase
-        .from('profiles')
-        .select(`
-          id,
-          full_name,
-          email,
-          avatar_url,
-          created_at
-        `)
-        .eq('user_type', 'mentor');
+      try {
+        console.log('Fetching mentor performance data with filters:', { timeRange, startDate, endDate });
+        
+        let query = supabase
+          .from('profiles')
+          .select(`
+            id,
+            full_name,
+            email,
+            avatar_url,
+            created_at
+          `)
+          .eq('user_type', 'mentor');
 
-      if (startDate) {
-        query = query.gte('created_at', startOfDay(startDate).toISOString());
-      }
+        if (startDate) {
+          query = query.gte('created_at', startOfDay(startDate).toISOString());
+        }
 
-      if (endDate) {
-        query = query.lte('created_at', endOfDay(endDate).toISOString());
-      }
+        if (endDate) {
+          query = query.lte('created_at', endOfDay(endDate).toISOString());
+        }
 
-      const { data: mentors, error } = await query;
+        const { data: mentors, error } = await query;
 
-      if (error) {
-        console.error('Error fetching mentors:', error);
-        throw error;
-      }
-      
-      // If no mentors found, return empty array to avoid processing
-      if (!mentors || mentors.length === 0) {
-        return [];
-      }
-      
-      // Fetch additional statistics for each mentor
-      const mentorsWithStats = await Promise.all(
-        mentors.map(async (mentor) => {
-          // Get sessions data
-          const { data: sessions, error: sessionsError } = await supabase
-            .from('mentor_sessions')
-            .select('*')
-            .eq('mentor_id', mentor.id);
+        if (error) {
+          console.error('Error fetching mentors:', error);
+          setError(`Error fetching mentors: ${error.message}`);
+          return [];
+        }
+        
+        // If no mentors found, return empty array to avoid processing
+        if (!mentors || mentors.length === 0) {
+          return [];
+        }
+        
+        // Fetch additional statistics for each mentor
+        const mentorsWithStats = await Promise.all(
+          mentors.map(async (mentor) => {
+            try {
+              // Get sessions data
+              const { data: sessions, error: sessionsError } = await supabase
+                .from('mentor_sessions')
+                .select('*')
+                .eq('mentor_id', mentor.id);
 
-          // Get feedback data
-          const { data: feedback, error: feedbackError } = await supabase
-            .from('session_feedback')
-            .select('*')
-            .eq('to_profile_id', mentor.id)
-            .eq('feedback_type', 'mentee_feedback');
-          
-          if (sessionsError || feedbackError) {
-            console.error('Error fetching mentor stats:', sessionsError || feedbackError);
-          }
+              // Get feedback data
+              const { data: feedback, error: feedbackError } = await supabase
+                .from('session_feedback')
+                .select('*')
+                .eq('to_profile_id', mentor.id)
+                .eq('feedback_type', 'mentee_feedback');
+              
+              if (sessionsError) {
+                console.error('Error fetching mentor sessions:', sessionsError);
+              }
+              
+              if (feedbackError) {
+                console.error('Error fetching feedback:', feedbackError);
+              }
 
-          const sessionsArray = sessions || [];
-          const feedbackArray = feedback || [];
-          
-          const totalSessions = sanitizeNumber(sessionsArray.length);
-          const completedSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'completed').length);
-          const cancelledSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'cancelled').length);
-          const noShowSessions = sanitizeNumber(feedbackArray.filter(f => f.did_not_show_up).length);
-          
-          // Calculate completion rate - ensure we don't divide by zero
-          const completionRate = totalSessions > 0 
-            ? Math.round((completedSessions / totalSessions) * 100) 
-            : 0;
+              const sessionsArray = sessions || [];
+              const feedbackArray = feedback || [];
+              
+              const totalSessions = sanitizeNumber(sessionsArray.length);
+              const completedSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'completed').length);
+              const cancelledSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'cancelled').length);
+              const noShowSessions = sanitizeNumber(feedbackArray.filter(f => f.did_not_show_up).length);
+              
+              // Calculate completion rate - ensure we don't divide by zero
+              const completionRate = totalSessions > 0 
+                ? Math.round((completedSessions / totalSessions) * 100) 
+                : 0;
 
-          // Calculate average rating - ensure we handle empty arrays and filter out null values
-          const validRatings = feedbackArray
-            .map(f => f.rating)
-            .filter((rating): rating is number => rating != null && !isNaN(Number(rating)));
-          
-          const averageRating = validRatings.length > 0 
-            ? Number((validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length).toFixed(1))
-            : 0;
+              // Calculate average rating - ensure we handle empty arrays and filter out null values
+              const validRatings = feedbackArray
+                .map(f => f.rating)
+                .filter((rating): rating is number => rating != null && !isNaN(Number(rating)));
+              
+              const averageRating = validRatings.length > 0 
+                ? Number((validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length).toFixed(1))
+                : 0;
 
-          // Count unique mentees - ensure we have an array to work with
-          const menteeIds = sessionsArray.map(s => s.mentee_id).filter(Boolean);
-          const uniqueMentees = new Set(menteeIds);
-          
-          // Calculate total hours - default to 0 if no data
-          let totalHours = 0;
-          if (sessionsArray.length > 0) {
-            for (const session of sessionsArray) {
-              if (session.status === 'completed' && session.session_type_id) {
-                const { data: sessionType } = await supabase
-                  .from('mentor_session_types')
-                  .select('duration')
-                  .eq('id', session.session_type_id)
-                  .single();
-                  
-                if (sessionType && sessionType.duration) {
-                  totalHours += sanitizeNumber(sessionType.duration) / 60;
+              // Count unique mentees - ensure we have an array to work with
+              const menteeIds = sessionsArray.map(s => s.mentee_id).filter(Boolean);
+              const uniqueMentees = new Set(menteeIds);
+              
+              // Calculate total hours - default to 0 if no data
+              let totalHours = 0;
+              if (sessionsArray.length > 0) {
+                for (const session of sessionsArray) {
+                  if (session.status === 'completed' && session.session_type_id) {
+                    try {
+                      const { data: sessionType } = await supabase
+                        .from('mentor_session_types')
+                        .select('duration')
+                        .eq('id', session.session_type_id)
+                        .single();
+                        
+                      if (sessionType && sessionType.duration) {
+                        totalHours += sanitizeNumber(sessionType.duration) / 60;
+                      }
+                    } catch (error) {
+                      console.error('Error fetching session duration:', error);
+                    }
+                  }
                 }
               }
-            }
-          }
 
-          return {
-            ...mentor,
-            total_sessions: totalSessions,
-            completed_sessions: completedSessions,
-            cancelled_sessions: cancelledSessions,
-            no_show_sessions: noShowSessions,
-            completion_rate: completionRate,
-            average_rating: averageRating,
-            total_mentees: uniqueMentees.size,
-            total_hours: sanitizeNumber(Number(totalHours.toFixed(1)))
-          };
-        })
-      );
-      
-      // Sort data based on selected metric
-      return mentorsWithStats.sort((a, b) => {
-        if (sortMetric === "sessions") return sanitizeNumber(b.total_sessions) - sanitizeNumber(a.total_sessions);
-        if (sortMetric === "rating") return sanitizeNumber(b.average_rating) - sanitizeNumber(a.average_rating);
-        if (sortMetric === "hours") return sanitizeNumber(b.total_hours) - sanitizeNumber(a.total_hours);
-        return 0;
-      });
+              return {
+                ...mentor,
+                total_sessions: totalSessions,
+                completed_sessions: completedSessions,
+                cancelled_sessions: cancelledSessions,
+                no_show_sessions: noShowSessions,
+                completion_rate: completionRate,
+                average_rating: averageRating,
+                total_mentees: uniqueMentees.size,
+                total_hours: sanitizeNumber(Number(totalHours.toFixed(1)))
+              };
+            } catch (err) {
+              console.error('Error processing mentor data:', err);
+              // Return mentor with default values
+              return {
+                ...mentor,
+                total_sessions: 0,
+                completed_sessions: 0,
+                cancelled_sessions: 0,
+                no_show_sessions: 0,
+                completion_rate: 0,
+                average_rating: 0,
+                total_mentees: 0,
+                total_hours: 0
+              };
+            }
+          })
+        );
+        
+        // Sort data based on selected metric
+        return mentorsWithStats.sort((a, b) => {
+          if (sortMetric === "sessions") return sanitizeNumber(b.total_sessions) - sanitizeNumber(a.total_sessions);
+          if (sortMetric === "rating") return sanitizeNumber(b.average_rating) - sanitizeNumber(a.average_rating);
+          if (sortMetric === "hours") return sanitizeNumber(b.total_hours) - sanitizeNumber(a.total_hours);
+          return 0;
+        });
+      } catch (err) {
+        console.error('Error in mentor performance query:', err);
+        setError('Error loading mentor performance data. Please try again later.');
+        return [];
+      }
     }
   });
 
@@ -222,44 +256,76 @@ export function MentorPerformanceTab() {
   });
 
   // Generate rating distribution data (for pie chart) with safe defaults
-  const ratingDistribution: RatingDistribution[] = [
-    { rating: 5, count: 0 },
-    { rating: 4, count: 0 },
-    { rating: 3, count: 0 },
-    { rating: 2, count: 0 },
-    { rating: 1, count: 0 },
-  ];
+  const generateRatingDistribution = (): RatingDistribution[] => {
+    const distribution = [
+      { rating: 5, count: 0 },
+      { rating: 4, count: 0 },
+      { rating: 3, count: 0 },
+      { rating: 2, count: 0 },
+      { rating: 1, count: 0 },
+    ];
 
-  // Calculate rating distribution safely
-  if (mentorData && mentorData.length > 0) {
-    mentorData.forEach(mentor => {
-      const rating = sanitizeNumber(mentor.average_rating);
-      if (rating >= 4.5) ratingDistribution[0].count++;
-      else if (rating >= 3.5) ratingDistribution[1].count++;
-      else if (rating >= 2.5) ratingDistribution[2].count++;
-      else if (rating >= 1.5) ratingDistribution[3].count++;
-      else if (rating > 0) ratingDistribution[4].count++;
-    });
-  }
+    // Calculate rating distribution safely
+    if (mentorData && mentorData.length > 0) {
+      mentorData.forEach(mentor => {
+        const rating = sanitizeNumber(mentor.average_rating);
+        if (rating >= 4.5) distribution[0].count++;
+        else if (rating >= 3.5) distribution[1].count++;
+        else if (rating >= 2.5) distribution[2].count++;
+        else if (rating >= 1.5) distribution[3].count++;
+        else if (rating > 0) distribution[4].count++;
+      });
+    }
+
+    return distribution;
+  };
+
+  const ratingDistribution = generateRatingDistribution();
 
   // Only use the pie chart data if there's actual data to display
   const validRatingData = ratingDistribution.filter(item => item.count > 0);
 
   // Get performance statistics with safe defaults
-  const statistics = {
-    totalMentors: sanitizeNumber(mentorData?.length),
-    totalSessions: mentorData?.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_sessions), 0) || 0,
-    averageRating: mentorData?.length ? 
-      (mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.average_rating), 0) / mentorData.length).toFixed(1) : 
-      '0.0',
-    totalHours: (mentorData?.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_hours), 0) || 0).toFixed(1),
-    completionRate: mentorData?.length ? 
-      Math.round(mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.completion_rate), 0) / mentorData.length) : 
-      0
+  const calculateStatistics = () => {
+    if (!mentorData || mentorData.length === 0) {
+      return {
+        totalMentors: 0,
+        totalSessions: 0,
+        averageRating: '0.0',
+        totalHours: '0.0',
+        completionRate: 0,
+        qoqGrowth: 0
+      };
+    }
+
+    const totalMentors = mentorData.length;
+    const totalSessions = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_sessions), 0);
+    
+    let avgRating = 0;
+    if (totalMentors > 0) {
+      const ratingSum = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.average_rating), 0);
+      avgRating = ratingSum / totalMentors;
+    }
+    
+    const totalHours = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_hours), 0);
+    
+    let completionRate = 0;
+    if (totalMentors > 0) {
+      const rateSum = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.completion_rate), 0);
+      completionRate = Math.round(rateSum / totalMentors);
+    }
+
+    return {
+      totalMentors,
+      totalSessions,
+      averageRating: avgRating.toFixed(1),
+      totalHours: totalHours.toFixed(1),
+      completionRate,
+      qoqGrowth: 15 // Placeholder
+    };
   };
 
-  // Calculate quarter-over-quarter growth (placeholder)
-  const qoqGrowth = 15; // Placeholder 15% growth
+  const statistics = calculateStatistics();
 
   // Table columns definition
   const columns = [
@@ -343,7 +409,13 @@ export function MentorPerformanceTab() {
     {
       accessorKey: "created_at",
       header: "Joined",
-      cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
+      cell: ({ row }) => {
+        try {
+          return new Date(row.original.created_at).toLocaleDateString();
+        } catch (err) {
+          return "Invalid date";
+        }
+      },
     },
   ];
 
@@ -354,6 +426,18 @@ export function MentorPerformanceTab() {
 
   // Determine if we have enough data to show charts
   const hasEnoughData = mentorData && mentorData.length > 0;
+
+  // Show error if present
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          {error}
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -464,7 +548,7 @@ export function MentorPerformanceTab() {
                 <CardContent className="p-3 pt-0">
                   <div className="flex justify-between items-center">
                     <div className="text-2xl font-bold text-green-500">
-                      +{qoqGrowth}%
+                      +{statistics.qoqGrowth}%
                     </div>
                     <TrendingUp className="h-5 w-5 text-green-500" />
                   </div>
@@ -483,10 +567,19 @@ export function MentorPerformanceTab() {
                   <div className="h-[250px]">
                     {hasEnoughData ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={sessionTrendData}>
+                        <LineChart
+                          data={sessionTrendData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis domain={[0, 'auto']} />
+                          <XAxis 
+                            dataKey="month" 
+                            allowDataOverflow={false}
+                          />
+                          <YAxis 
+                            allowDecimals={false}
+                            domain={[0, 'auto']}
+                          />
                           <Tooltip />
                           <Legend />
                           <Line 
@@ -494,6 +587,7 @@ export function MentorPerformanceTab() {
                             dataKey="sessions" 
                             stroke="#8884d8" 
                             activeDot={{ r: 8 }} 
+                            isAnimationActive={false}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -524,6 +618,7 @@ export function MentorPerformanceTab() {
                             cy="50%"
                             outerRadius={80}
                             label={({ rating }) => `${rating} ★`}
+                            isAnimationActive={false}
                           >
                             {validRatingData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -572,14 +667,18 @@ export function MentorPerformanceTab() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart 
                         data={mentorData.slice(0, 10).map(mentor => ({
-                          ...mentor,
+                          full_name: mentor.full_name || "Unknown",
                           completion_rate: sanitizeNumber(mentor.completion_rate)
                         }))} 
                         layout="vertical" 
                         margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" domain={[0, 100]} />
+                        <XAxis 
+                          type="number"
+                          domain={[0, 100]}
+                          allowDataOverflow={false}
+                        />
                         <YAxis 
                           dataKey="full_name" 
                           type="category" 
@@ -588,7 +687,12 @@ export function MentorPerformanceTab() {
                         />
                         <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
                         <Legend />
-                        <Bar dataKey="completion_rate" fill="#8884d8" name="Completion Rate (%)" />
+                        <Bar 
+                          dataKey="completion_rate" 
+                          fill="#8884d8" 
+                          name="Completion Rate (%)"
+                          isAnimationActive={false}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
