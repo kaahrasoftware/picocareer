@@ -131,37 +131,46 @@ export function MentorPerformanceTab() {
             console.error('Error fetching mentor stats:', sessionsError || feedbackError);
           }
 
-          const totalSessions = sessions?.length || 0;
-          const completedSessions = sessions?.filter(s => s.status === 'completed').length || 0;
-          const cancelledSessions = sessions?.filter(s => s.status === 'cancelled').length || 0;
-          const noShowSessions = feedback?.filter(f => f.did_not_show_up).length || 0;
+          const sessionsArray = sessions || [];
+          const feedbackArray = feedback || [];
+          
+          const totalSessions = sessionsArray.length || 0;
+          const completedSessions = sessionsArray.filter(s => s.status === 'completed').length || 0;
+          const cancelledSessions = sessionsArray.filter(s => s.status === 'cancelled').length || 0;
+          const noShowSessions = feedbackArray.filter(f => f.did_not_show_up).length || 0;
           
           // Calculate completion rate
           const completionRate = totalSessions > 0 
             ? Math.round((completedSessions / totalSessions) * 100) 
             : 0;
 
-          // Calculate average rating
-          const ratings = feedback?.map(f => f.rating).filter(Boolean) || [];
-          const averageRating = ratings.length > 0 
-            ? Number((ratings.reduce((sum, rating) => sum + Number(rating), 0) / ratings.length).toFixed(1))
+          // Calculate average rating - ensure we handle empty arrays and filter out null values
+          const validRatings = feedbackArray
+            .map(f => f.rating)
+            .filter((rating): rating is number => rating != null && !isNaN(rating));
+          
+          const averageRating = validRatings.length > 0 
+            ? Number((validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length).toFixed(1))
             : 0;
 
-          // Count unique mentees
-          const uniqueMentees = new Set(sessions?.map(s => s.mentee_id) || []);
+          // Count unique mentees - ensure we have an array to work with
+          const menteeIds = sessionsArray.map(s => s.mentee_id).filter(Boolean);
+          const uniqueMentees = new Set(menteeIds);
           
-          // Calculate total hours (assuming duration is stored in minutes in the session_type)
+          // Calculate total hours - default to 0 if no data
           let totalHours = 0;
-          if (sessions) {
-            for (const session of sessions) {
-              const { data: sessionType } = await supabase
-                .from('mentor_session_types')
-                .select('duration')
-                .eq('id', session.session_type_id)
-                .single();
-                
-              if (sessionType && session.status === 'completed') {
-                totalHours += (sessionType.duration || 0) / 60;
+          if (sessionsArray.length > 0) {
+            for (const session of sessionsArray) {
+              if (session.status === 'completed' && session.session_type_id) {
+                const { data: sessionType } = await supabase
+                  .from('mentor_session_types')
+                  .select('duration')
+                  .eq('id', session.session_type_id)
+                  .single();
+                  
+                if (sessionType && sessionType.duration) {
+                  totalHours += (sessionType.duration || 0) / 60;
+                }
               }
             }
           }
@@ -173,9 +182,9 @@ export function MentorPerformanceTab() {
             cancelled_sessions: cancelledSessions,
             no_show_sessions: noShowSessions,
             completion_rate: completionRate,
-            average_rating: averageRating,
+            average_rating: averageRating || 0, // Ensure we don't return NaN
             total_mentees: uniqueMentees.size,
-            total_hours: Number(totalHours.toFixed(1))
+            total_hours: Number(totalHours.toFixed(1)) || 0
           };
         })
       );
@@ -190,8 +199,8 @@ export function MentorPerformanceTab() {
     }
   });
 
-  // Generate session trend data (for line chart)
-  const sessionTrendData = Array.from({ length: 6 }, (_, i) => {
+  // Generate session trend data (for line chart) - safe fallback for empty data
+  const sessionTrendData: SessionData[] = Array.from({ length: 6 }, (_, i) => {
     const date = subMonths(new Date(), 5 - i);
     const month = format(date, 'MMM');
     return {
@@ -200,7 +209,7 @@ export function MentorPerformanceTab() {
     };
   });
 
-  // Generate rating distribution data (for pie chart)
+  // Generate rating distribution data (for pie chart) with safe defaults
   const ratingDistribution: RatingDistribution[] = [
     { rating: 5, count: 0 },
     { rating: 4, count: 0 },
@@ -209,27 +218,31 @@ export function MentorPerformanceTab() {
     { rating: 1, count: 0 },
   ];
 
-  // Calculate rating distribution
-  if (mentorData) {
+  // Calculate rating distribution safely
+  if (mentorData && mentorData.length > 0) {
     mentorData.forEach(mentor => {
-      if (mentor.average_rating >= 4.5) ratingDistribution[0].count++;
-      else if (mentor.average_rating >= 3.5) ratingDistribution[1].count++;
-      else if (mentor.average_rating >= 2.5) ratingDistribution[2].count++;
-      else if (mentor.average_rating >= 1.5) ratingDistribution[3].count++;
-      else if (mentor.average_rating > 0) ratingDistribution[4].count++;
+      const rating = mentor.average_rating || 0;
+      if (rating >= 4.5) ratingDistribution[0].count++;
+      else if (rating >= 3.5) ratingDistribution[1].count++;
+      else if (rating >= 2.5) ratingDistribution[2].count++;
+      else if (rating >= 1.5) ratingDistribution[3].count++;
+      else if (rating > 0) ratingDistribution[4].count++;
     });
   }
 
-  // Get performance statistics
+  // Only use the pie chart data if there's actual data to display
+  const validRatingData = ratingDistribution.filter(item => item.count > 0);
+
+  // Get performance statistics with safe defaults
   const statistics = {
-    totalMentors: mentorData.length,
-    totalSessions: mentorData.reduce((sum, mentor) => sum + mentor.total_sessions, 0),
+    totalMentors: mentorData.length || 0,
+    totalSessions: mentorData.reduce((sum, mentor) => sum + (mentor.total_sessions || 0), 0),
     averageRating: mentorData.length ? 
-      (mentorData.reduce((sum, mentor) => sum + mentor.average_rating, 0) / mentorData.length).toFixed(1) : 
+      (mentorData.reduce((sum, mentor) => sum + (mentor.average_rating || 0), 0) / mentorData.length).toFixed(1) : 
       '0.0',
-    totalHours: mentorData.reduce((sum, mentor) => sum + mentor.total_hours, 0).toFixed(1),
+    totalHours: mentorData.reduce((sum, mentor) => sum + (mentor.total_hours || 0), 0).toFixed(1),
     completionRate: mentorData.length ? 
-      Math.round(mentorData.reduce((sum, mentor) => sum + mentor.completion_rate, 0) / mentorData.length) : 
+      Math.round(mentorData.reduce((sum, mentor) => sum + (mentor.completion_rate || 0), 0) / mentorData.length) : 
       0
   };
 
@@ -261,9 +274,9 @@ export function MentorPerformanceTab() {
       header: "Sessions",
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.original.total_sessions}</div>
+          <div className="font-medium">{row.original.total_sessions || 0}</div>
           <div className="text-xs text-muted-foreground">
-            {row.original.completed_sessions} completed
+            {row.original.completed_sessions || 0} completed
           </div>
         </div>
       ),
@@ -272,7 +285,7 @@ export function MentorPerformanceTab() {
       accessorKey: "completion_rate",
       header: "Completion Rate",
       cell: ({ row }) => {
-        const rate = row.original.completion_rate;
+        const rate = row.original.completion_rate || 0;
         let statusColor = STATUS_COLORS.medium;
         if (rate >= 85) statusColor = STATUS_COLORS.high;
         if (rate < 70) statusColor = STATUS_COLORS.low;
@@ -288,7 +301,7 @@ export function MentorPerformanceTab() {
       accessorKey: "average_rating",
       header: "Rating",
       cell: ({ row }) => {
-        const rating = row.original.average_rating;
+        const rating = row.original.average_rating || 0;
         let statusColor = STATUS_COLORS.medium;
         if (rating >= 4.5) statusColor = STATUS_COLORS.high;
         if (rating < 3.5) statusColor = STATUS_COLORS.low;
@@ -305,14 +318,14 @@ export function MentorPerformanceTab() {
       accessorKey: "total_mentees",
       header: "Mentees",
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.total_mentees}</div>
+        <div className="font-medium">{row.original.total_mentees || 0}</div>
       ),
     },
     {
       accessorKey: "total_hours",
       header: "Hours",
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.total_hours}</div>
+        <div className="font-medium">{row.original.total_hours || 0}</div>
       ),
     },
     {
@@ -326,6 +339,9 @@ export function MentorPerformanceTab() {
     setStartDate(start);
     setEndDate(end);
   };
+
+  // Determine if we have enough data to show charts
+  const hasEnoughData = mentorData && mentorData.length > 0;
 
   return (
     <div className="space-y-4">
@@ -453,21 +469,27 @@ export function MentorPerformanceTab() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={sessionTrendData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="sessions" 
-                          stroke="#8884d8" 
-                          activeDot={{ r: 8 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                    {hasEnoughData ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={sessionTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis domain={[0, 'auto']} />
+                          <Tooltip />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="sessions" 
+                            stroke="#8884d8" 
+                            activeDot={{ r: 8 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        Not enough data to display chart
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -479,25 +501,31 @@ export function MentorPerformanceTab() {
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={ratingDistribution.filter(item => item.count > 0)}
-                          dataKey="count"
-                          nameKey="rating"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          label={({ rating }) => `${rating} ★`}
-                        >
-                          {ratingDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value, name) => [`${value} mentors`, `${name} stars`]} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                    {validRatingData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={validRatingData}
+                            dataKey="count"
+                            nameKey="rating"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            label={({ rating }) => `${rating} ★`}
+                          >
+                            {validRatingData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value, name) => [`${value} mentors`, `${name} stars`]} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        No rating data available
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -506,7 +534,13 @@ export function MentorPerformanceTab() {
             {/* Mentor Table */}
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-3">Mentor Rankings</h3>
-              {mentorData && <DataTable columns={columns} data={mentorData} />}
+              {mentorData && mentorData.length > 0 ? (
+                <DataTable columns={columns} data={mentorData} />
+              ) : (
+                <div className="text-center p-8 border rounded text-muted-foreground">
+                  No mentor data available for the selected filters
+                </div>
+              )}
             </div>
           </Card>
         </TabsContent>
@@ -522,25 +556,31 @@ export function MentorPerformanceTab() {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Completion Rate by Mentor</h3>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart 
-                      data={mentorData.slice(0, 10)} 
-                      layout="vertical" 
-                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 100]} />
-                      <YAxis 
-                        dataKey="full_name" 
-                        type="category" 
-                        width={100} 
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
-                      <Legend />
-                      <Bar dataKey="completion_rate" fill="#8884d8" name="Completion Rate (%)" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {hasEnoughData ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={mentorData.slice(0, 10)} 
+                        layout="vertical" 
+                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis 
+                          dataKey="full_name" 
+                          type="category" 
+                          width={100} 
+                          tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
+                        <Legend />
+                        <Bar dataKey="completion_rate" fill="#8884d8" name="Completion Rate (%)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      Not enough data to display chart
+                    </div>
+                  )}
                 </div>
               </div>
               
