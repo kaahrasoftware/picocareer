@@ -305,7 +305,6 @@ export function MentorPerformanceTab() {
         <TabsList>
           <TabsTrigger value="overview">Performance Overview</TabsTrigger>
           <TabsTrigger value="rankings">Mentor Rankings</TabsTrigger>
-          <TabsTrigger value="analytics">Detailed Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -490,58 +489,6 @@ export function MentorPerformanceTab() {
             onSortMetricChange={setSortMetric}
             onDateRangeChange={handleDateRangeChange}
           />
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <Card className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Detailed Analytics</h2>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Completion Rate by Mentor</h3>
-                <div className="h-[300px]">
-                  {hasEnoughData && mentorData.length > 0 ? (
-                    <BarChart>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        type="number"
-                        domain={[0, 100]}
-                        allowDataOverflow={false}
-                      />
-                      <YAxis 
-                        dataKey="full_name" 
-                        type="category" 
-                        width={100} 
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Completion Rate']} />
-                      <Legend />
-                      <Bar 
-                        dataKey="completion_rate" 
-                        fill="#8884d8" 
-                        name="Completion Rate (%)"
-                        isAnimationActive={false}
-                        data={mentorData.slice(0, 10).map(mentor => ({
-                          full_name: mentor.full_name || "Unknown",
-                          completion_rate: sanitizeNumber(mentor.completion_rate)
-                        }))}
-                      />
-                    </BarChart>
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground">
-                      Not enough data to display chart
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="p-8 border rounded-lg text-center text-muted-foreground">
-                Additional analytics visualizations coming soon...
-              </div>
-            </div>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
