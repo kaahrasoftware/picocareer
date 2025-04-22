@@ -1,9 +1,7 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataTable } from "@/components/ui/data-table";
 import { BarChart, LineChart, PieChart } from "@/components/ui/charts";
 import {
   Bar,
@@ -16,15 +14,6 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { 
   ChevronUp, 
   ChevronDown, 
@@ -37,34 +26,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
-import { startOfDay, endOfDay, format, subMonths } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface MentorPerformanceData {
-  id: string;
-  full_name: string;
-  email: string;
-  avatar_url: string | null;
-  total_sessions: number;
-  completed_sessions: number;
-  cancelled_sessions: number;
-  no_show_sessions: number;
-  completion_rate: number;
-  average_rating: number;
-  total_mentees: number;
-  total_hours: number;
-  created_at: string;
-}
-
-interface SessionData {
-  month: string;
-  sessions: number;
-}
-
-interface RatingDistribution {
-  rating: number;
-  count: number;
-}
+import { MentorRankingsTab } from "./MentorRankingsTab";
+import type { MentorPerformanceData } from "./types";
 
 const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c'];
 const STATUS_COLORS = {
@@ -85,7 +49,6 @@ export function MentorPerformanceTab() {
   const [sortMetric, setSortMetric] = useState<"sessions" | "rating" | "hours">("sessions");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
-  const [selectedMentor, setSelectedMentor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch mentor performance data
@@ -107,11 +70,11 @@ export function MentorPerformanceTab() {
           .eq('user_type', 'mentor');
 
         if (startDate) {
-          query = query.gte('created_at', startOfDay(startDate).toISOString());
+          query = query.gte('created_at', new Date(startDate.setHours(0, 0, 0, 0)).toISOString());
         }
 
         if (endDate) {
-          query = query.lte('created_at', endOfDay(endDate).toISOString());
+          query = query.lte('created_at', new Date(endDate.setHours(23, 59, 59, 999)).toISOString());
         }
 
         const { data: mentors, error } = await query;
@@ -245,7 +208,7 @@ export function MentorPerformanceTab() {
   });
 
   // Generate session trend data (for line chart) - safe fallback for empty data
-  const generateSessionTrendData = (): SessionData[] => {
+  const generateSessionTrendData = (): { month: string; sessions: number }[] => {
     // If we have actual data, we could transform it here
     // For now, use placeholder data that is guaranteed to be valid
     return Array.from({ length: 6 }, (_, i) => {
@@ -261,7 +224,7 @@ export function MentorPerformanceTab() {
   const sessionTrendData = generateSessionTrendData();
 
   // Generate rating distribution data (for pie chart) with safe defaults
-  const generateRatingDistribution = (): RatingDistribution[] => {
+  const generateRatingDistribution = (): { rating: number; count: number }[] => {
     const distribution = [
       { rating: 5, count: 0 },
       { rating: 4, count: 0 },
@@ -330,112 +293,16 @@ export function MentorPerformanceTab() {
     };
   };
 
-  const statistics = calculateStatistics();
-
-  // Table columns definition
-  const columns = [
-    {
-      accessorKey: "full_name",
-      header: "Mentor",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <img 
-              src={row.original.avatar_url || "https://via.placeholder.com/40"} 
-              alt={row.original.full_name || ""}
-            />
-          </Avatar>
-          <div>
-            <div className="font-medium">{row.original.full_name}</div>
-            <div className="text-xs text-muted-foreground">{row.original.email}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "total_sessions",
-      header: "Sessions",
-      cell: ({ row }) => (
-        <div>
-          <div className="font-medium">{sanitizeNumber(row.original.total_sessions)}</div>
-          <div className="text-xs text-muted-foreground">
-            {sanitizeNumber(row.original.completed_sessions)} completed
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "completion_rate",
-      header: "Completion Rate",
-      cell: ({ row }) => {
-        const rate = sanitizeNumber(row.original.completion_rate);
-        let statusColor = STATUS_COLORS.medium;
-        if (rate >= 85) statusColor = STATUS_COLORS.high;
-        if (rate < 70) statusColor = STATUS_COLORS.low;
-        
-        return (
-          <div className={`font-medium ${statusColor}`}>
-            {rate}%
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "average_rating",
-      header: "Rating",
-      cell: ({ row }) => {
-        const rating = sanitizeNumber(row.original.average_rating);
-        let statusColor = STATUS_COLORS.medium;
-        if (rating >= 4.5) statusColor = STATUS_COLORS.high;
-        if (rating < 3.5) statusColor = STATUS_COLORS.low;
-        
-        return (
-          <div className="flex items-center">
-            <Star className={`h-4 w-4 mr-1 ${statusColor}`} />
-            <span className={`font-medium ${statusColor}`}>{rating}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "total_mentees",
-      header: "Mentees",
-      cell: ({ row }) => (
-        <div className="font-medium">{sanitizeNumber(row.original.total_mentees)}</div>
-      ),
-    },
-    {
-      accessorKey: "total_hours",
-      header: "Hours",
-      cell: ({ row }) => (
-        <div className="font-medium">{sanitizeNumber(row.original.total_hours)}</div>
-      ),
-    },
-    {
-      accessorKey: "created_at",
-      header: "Joined",
-      cell: ({ row }) => {
-        try {
-          return new Date(row.original.created_at).toLocaleDateString();
-        } catch (err) {
-          return "Invalid date";
-        }
-      },
-    },
-  ];
-
+  // Handle date range changes
   const handleDateRangeChange = (start: Date | undefined, end: Date | undefined) => {
     setStartDate(start);
     setEndDate(end);
   };
 
-  // Determine if we have enough data to show charts
-  const hasEnoughData = mentorData && mentorData.length > 0;
-
   // Show error if present
   if (error) {
     return (
-      <Alert variant="destructive" className="mb-4">
+      <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
           {error}
@@ -444,43 +311,25 @@ export function MentorPerformanceTab() {
     );
   }
 
+  // Calculate statistics
+  const statistics = calculateStatistics();
+
+  // Determine if we have enough data to show charts
+  const hasEnoughData = mentorData && mentorData.length > 0;
+
   return (
     <div className="space-y-4">
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Performance Overview</TabsTrigger>
+          <TabsTrigger value="rankings">Mentor Rankings</TabsTrigger>
           <TabsTrigger value="analytics">Detailed Analytics</TabsTrigger>
         </TabsList>
+
         <TabsContent value="overview">
           <Card className="p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Mentor Performance</h2>
-              <div className="flex gap-3">
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Time Range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Time</SelectItem>
-                    <SelectItem value="month">Last Month</SelectItem>
-                    <SelectItem value="quarter">Last Quarter</SelectItem>
-                    <SelectItem value="year">Last Year</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={sortMetric} onValueChange={setSortMetric}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Sort By" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sessions">Total Sessions</SelectItem>
-                    <SelectItem value="rating">Average Rating</SelectItem>
-                    <SelectItem value="hours">Total Hours</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
-              </div>
             </div>
             
             {/* Stats Cards */}
@@ -636,19 +485,19 @@ export function MentorPerformanceTab() {
                 </CardContent>
               </Card>
             </div>
-            
-            {/* Mentor Table */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3">Mentor Rankings</h3>
-              {mentorData && mentorData.length > 0 ? (
-                <DataTable columns={columns} data={mentorData} />
-              ) : (
-                <div className="text-center p-8 border rounded text-muted-foreground">
-                  No mentor data available for the selected filters
-                </div>
-              )}
-            </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="rankings">
+          <MentorRankingsTab 
+            mentorData={mentorData || []}
+            isLoading={isLoading}
+            timeRange={timeRange}
+            sortMetric={sortMetric}
+            onTimeRangeChange={setTimeRange}
+            onSortMetricChange={setSortMetric}
+            onDateRangeChange={handleDateRangeChange}
+          />
         </TabsContent>
 
         <TabsContent value="analytics">
