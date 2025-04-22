@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ import { useState } from "react";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MentorRankingsTab } from "./MentorRankingsTab";
+import { format, subMonths } from "date-fns";
 import type { MentorPerformanceData } from "./types";
 
 const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c'];
