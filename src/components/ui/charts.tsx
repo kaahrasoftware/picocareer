@@ -22,6 +22,31 @@ const hasValidData = (children: React.ReactNode): boolean => {
   // If there are no children, the data is likely valid (empty)
   if (childrenArray.length === 0) return true;
   
+  // Check for specific recharts components that might have NaN data
+  for (const child of childrenArray) {
+    if (React.isValidElement(child) && child.props && child.props.data) {
+      // Check if any data point contains NaN, undefined or null values
+      const data = child.props.data;
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        // Empty data is allowed, but not ideal
+        continue;
+      }
+      
+      // Check if dataKey exists and is valid
+      const dataKey = child.props.dataKey;
+      if (dataKey && typeof dataKey === 'string') {
+        // Check if any data point has NaN for the specified dataKey
+        for (const point of data) {
+          const value = point[dataKey];
+          if (value === undefined || value === null || Number.isNaN(Number(value))) {
+            console.warn(`Invalid data detected: ${dataKey} contains NaN or undefined`, point);
+            return false;
+          }
+        }
+      }
+    }
+  }
+  
   return true; // Default to allowing render - the charts have their own error handling
 };
 

@@ -72,6 +72,13 @@ const STATUS_COLORS = {
   low: "text-red-500"
 };
 
+// Helper function to sanitize numeric values
+const sanitizeNumber = (value: any, defaultValue = 0): number => {
+  if (value === null || value === undefined) return defaultValue;
+  const num = Number(value);
+  return Number.isNaN(num) ? defaultValue : num;
+};
+
 export function MentorPerformanceTab() {
   const [timeRange, setTimeRange] = useState<"all" | "month" | "quarter" | "year">("all");
   const [sortMetric, setSortMetric] = useState<"sessions" | "rating" | "hours">("sessions");
@@ -111,6 +118,11 @@ export function MentorPerformanceTab() {
         throw error;
       }
       
+      // If no mentors found, return empty array to avoid processing
+      if (!mentors || mentors.length === 0) {
+        return [];
+      }
+      
       // Fetch additional statistics for each mentor
       const mentorsWithStats = await Promise.all(
         mentors.map(async (mentor) => {
@@ -134,12 +146,12 @@ export function MentorPerformanceTab() {
           const sessionsArray = sessions || [];
           const feedbackArray = feedback || [];
           
-          const totalSessions = sessionsArray.length || 0;
-          const completedSessions = sessionsArray.filter(s => s.status === 'completed').length || 0;
-          const cancelledSessions = sessionsArray.filter(s => s.status === 'cancelled').length || 0;
-          const noShowSessions = feedbackArray.filter(f => f.did_not_show_up).length || 0;
+          const totalSessions = sanitizeNumber(sessionsArray.length);
+          const completedSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'completed').length);
+          const cancelledSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'cancelled').length);
+          const noShowSessions = sanitizeNumber(feedbackArray.filter(f => f.did_not_show_up).length);
           
-          // Calculate completion rate
+          // Calculate completion rate - ensure we don't divide by zero
           const completionRate = totalSessions > 0 
             ? Math.round((completedSessions / totalSessions) * 100) 
             : 0;
@@ -147,7 +159,7 @@ export function MentorPerformanceTab() {
           // Calculate average rating - ensure we handle empty arrays and filter out null values
           const validRatings = feedbackArray
             .map(f => f.rating)
-            .filter((rating): rating is number => rating != null && !isNaN(rating));
+            .filter((rating): rating is number => rating != null && !isNaN(Number(rating)));
           
           const averageRating = validRatings.length > 0 
             ? Number((validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length).toFixed(1))
@@ -169,7 +181,7 @@ export function MentorPerformanceTab() {
                   .single();
                   
                 if (sessionType && sessionType.duration) {
-                  totalHours += (sessionType.duration || 0) / 60;
+                  totalHours += sanitizeNumber(sessionType.duration) / 60;
                 }
               }
             }
@@ -182,18 +194,18 @@ export function MentorPerformanceTab() {
             cancelled_sessions: cancelledSessions,
             no_show_sessions: noShowSessions,
             completion_rate: completionRate,
-            average_rating: averageRating || 0, // Ensure we don't return NaN
+            average_rating: averageRating,
             total_mentees: uniqueMentees.size,
-            total_hours: Number(totalHours.toFixed(1)) || 0
+            total_hours: sanitizeNumber(Number(totalHours.toFixed(1)))
           };
         })
       );
       
       // Sort data based on selected metric
       return mentorsWithStats.sort((a, b) => {
-        if (sortMetric === "sessions") return b.total_sessions - a.total_sessions;
-        if (sortMetric === "rating") return b.average_rating - a.average_rating;
-        if (sortMetric === "hours") return b.total_hours - a.total_hours;
+        if (sortMetric === "sessions") return sanitizeNumber(b.total_sessions) - sanitizeNumber(a.total_sessions);
+        if (sortMetric === "rating") return sanitizeNumber(b.average_rating) - sanitizeNumber(a.average_rating);
+        if (sortMetric === "hours") return sanitizeNumber(b.total_hours) - sanitizeNumber(a.total_hours);
         return 0;
       });
     }
@@ -221,7 +233,7 @@ export function MentorPerformanceTab() {
   // Calculate rating distribution safely
   if (mentorData && mentorData.length > 0) {
     mentorData.forEach(mentor => {
-      const rating = mentor.average_rating || 0;
+      const rating = sanitizeNumber(mentor.average_rating);
       if (rating >= 4.5) ratingDistribution[0].count++;
       else if (rating >= 3.5) ratingDistribution[1].count++;
       else if (rating >= 2.5) ratingDistribution[2].count++;
@@ -235,14 +247,14 @@ export function MentorPerformanceTab() {
 
   // Get performance statistics with safe defaults
   const statistics = {
-    totalMentors: mentorData.length || 0,
-    totalSessions: mentorData.reduce((sum, mentor) => sum + (mentor.total_sessions || 0), 0),
-    averageRating: mentorData.length ? 
-      (mentorData.reduce((sum, mentor) => sum + (mentor.average_rating || 0), 0) / mentorData.length).toFixed(1) : 
+    totalMentors: sanitizeNumber(mentorData?.length),
+    totalSessions: mentorData?.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_sessions), 0) || 0,
+    averageRating: mentorData?.length ? 
+      (mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.average_rating), 0) / mentorData.length).toFixed(1) : 
       '0.0',
-    totalHours: mentorData.reduce((sum, mentor) => sum + (mentor.total_hours || 0), 0).toFixed(1),
-    completionRate: mentorData.length ? 
-      Math.round(mentorData.reduce((sum, mentor) => sum + (mentor.completion_rate || 0), 0) / mentorData.length) : 
+    totalHours: (mentorData?.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_hours), 0) || 0).toFixed(1),
+    completionRate: mentorData?.length ? 
+      Math.round(mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.completion_rate), 0) / mentorData.length) : 
       0
   };
 
@@ -274,9 +286,9 @@ export function MentorPerformanceTab() {
       header: "Sessions",
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.original.total_sessions || 0}</div>
+          <div className="font-medium">{sanitizeNumber(row.original.total_sessions)}</div>
           <div className="text-xs text-muted-foreground">
-            {row.original.completed_sessions || 0} completed
+            {sanitizeNumber(row.original.completed_sessions)} completed
           </div>
         </div>
       ),
@@ -285,7 +297,7 @@ export function MentorPerformanceTab() {
       accessorKey: "completion_rate",
       header: "Completion Rate",
       cell: ({ row }) => {
-        const rate = row.original.completion_rate || 0;
+        const rate = sanitizeNumber(row.original.completion_rate);
         let statusColor = STATUS_COLORS.medium;
         if (rate >= 85) statusColor = STATUS_COLORS.high;
         if (rate < 70) statusColor = STATUS_COLORS.low;
@@ -301,7 +313,7 @@ export function MentorPerformanceTab() {
       accessorKey: "average_rating",
       header: "Rating",
       cell: ({ row }) => {
-        const rating = row.original.average_rating || 0;
+        const rating = sanitizeNumber(row.original.average_rating);
         let statusColor = STATUS_COLORS.medium;
         if (rating >= 4.5) statusColor = STATUS_COLORS.high;
         if (rating < 3.5) statusColor = STATUS_COLORS.low;
@@ -318,14 +330,14 @@ export function MentorPerformanceTab() {
       accessorKey: "total_mentees",
       header: "Mentees",
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.total_mentees || 0}</div>
+        <div className="font-medium">{sanitizeNumber(row.original.total_mentees)}</div>
       ),
     },
     {
       accessorKey: "total_hours",
       header: "Hours",
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.total_hours || 0}</div>
+        <div className="font-medium">{sanitizeNumber(row.original.total_hours)}</div>
       ),
     },
     {
@@ -556,10 +568,13 @@ export function MentorPerformanceTab() {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Completion Rate by Mentor</h3>
                 <div className="h-[300px]">
-                  {hasEnoughData ? (
+                  {hasEnoughData && mentorData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart 
-                        data={mentorData.slice(0, 10)} 
+                        data={mentorData.slice(0, 10).map(mentor => ({
+                          ...mentor,
+                          completion_rate: sanitizeNumber(mentor.completion_rate)
+                        }))} 
                         layout="vertical" 
                         margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
                       >
