@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
@@ -6,6 +6,8 @@ import { Star, Users, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
 import { MentorPerformanceData } from "./types";
+import { MentorMenteesDialog } from "./dialogs/MentorMenteesDialog";
+import { MentorRatingsDialog } from "./dialogs/MentorRatingsDialog";
 
 const STATUS_COLORS = {
   high: "text-green-500",
@@ -32,6 +34,24 @@ export function MentorRankingsTab({
   onSortMetricChange,
   onDateRangeChange
 }: MentorRankingsTabProps) {
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const [dialogType, setDialogType] = useState<'mentees' | 'ratings' | null>(null);
+
+  const handleMenteesClick = (mentorId: string) => {
+    setSelectedMentorId(mentorId);
+    setDialogType('mentees');
+  };
+
+  const handleRatingsClick = (mentorId: string) => {
+    setSelectedMentorId(mentorId);
+    setDialogType('ratings');
+  };
+
+  const handleCloseDialog = () => {
+    setSelectedMentorId(null);
+    setDialogType(null);
+  };
+
   const columns = [
     {
       accessorKey: "full_name",
@@ -89,10 +109,13 @@ export function MentorRankingsTab({
         if (rating < 3.5) statusColor = STATUS_COLORS.low;
         
         return (
-          <div className="flex items-center">
+          <button
+            onClick={() => handleRatingsClick(row.original.id)}
+            className="flex items-center hover:bg-accent hover:text-accent-foreground p-1 rounded transition-colors"
+          >
             <Star className={`h-4 w-4 mr-1 ${statusColor}`} />
             <span className={`font-medium ${statusColor}`}>{rating}</span>
-          </div>
+          </button>
         );
       },
     },
@@ -100,7 +123,12 @@ export function MentorRankingsTab({
       accessorKey: "total_mentees",
       header: "Mentees",
       cell: ({ row }) => (
-        <div className="font-medium">{row.original.total_mentees}</div>
+        <button
+          onClick={() => handleMenteesClick(row.original.id)}
+          className="font-medium hover:bg-accent hover:text-accent-foreground p-1 rounded transition-colors"
+        >
+          {row.original.total_mentees}
+        </button>
       ),
     },
     {
@@ -164,6 +192,23 @@ export function MentorRankingsTab({
           </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      {selectedMentorId && dialogType === 'mentees' && (
+        <MentorMenteesDialog
+          isOpen={true}
+          onClose={handleCloseDialog}
+          mentorId={selectedMentorId}
+        />
+      )}
+
+      {selectedMentorId && dialogType === 'ratings' && (
+        <MentorRatingsDialog
+          isOpen={true}
+          onClose={handleCloseDialog}
+          mentorId={selectedMentorId}
+        />
+      )}
     </Card>
   );
 }
