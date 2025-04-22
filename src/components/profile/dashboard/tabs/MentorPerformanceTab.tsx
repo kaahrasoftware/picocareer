@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +38,6 @@ const STATUS_COLORS = {
   low: "text-red-500"
 };
 
-// Helper function to sanitize numeric values
 const sanitizeNumber = (value: any, defaultValue = 0): number => {
   if (value === null || value === undefined) return defaultValue;
   const num = Number(value);
@@ -53,7 +51,6 @@ export function MentorPerformanceTab() {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch mentor performance data
   const { data: mentorData = [], isLoading } = useQuery({
     queryKey: ['mentor-performance', timeRange, startDate, endDate],
     queryFn: async () => {
@@ -87,36 +84,24 @@ export function MentorPerformanceTab() {
           return [];
         }
         
-        // If no mentors found, return empty array to avoid processing
         if (!mentors || mentors.length === 0) {
           return [];
         }
         
-        // Fetch additional statistics for each mentor
         const mentorsWithStats = await Promise.all(
           mentors.map(async (mentor) => {
             try {
-              // Get sessions data
-              const { data: sessions, error: sessionsError } = await supabase
+              const { data: sessions } = await supabase
                 .from('mentor_sessions')
                 .select('*')
                 .eq('mentor_id', mentor.id);
 
-              // Get feedback data
-              const { data: feedback, error: feedbackError } = await supabase
+              const { data: feedback } = await supabase
                 .from('session_feedback')
                 .select('*')
                 .eq('to_profile_id', mentor.id)
                 .eq('feedback_type', 'mentee_feedback');
               
-              if (sessionsError) {
-                console.error('Error fetching mentor sessions:', sessionsError);
-              }
-              
-              if (feedbackError) {
-                console.error('Error fetching feedback:', feedbackError);
-              }
-
               const sessionsArray = sessions || [];
               const feedbackArray = feedback || [];
               
@@ -125,25 +110,19 @@ export function MentorPerformanceTab() {
               const cancelledSessions = sanitizeNumber(sessionsArray.filter(s => s.status === 'cancelled').length);
               const noShowSessions = sanitizeNumber(feedbackArray.filter(f => f.did_not_show_up).length);
               
-              // Calculate completion rate - ensure we don't divide by zero
-              const completionRate = totalSessions > 0 
-                ? Math.round((completedSessions / totalSessions) * 100) 
-                : 0;
-
-              // Calculate average rating - ensure we handle empty arrays and filter out null values
               const validRatings = feedbackArray
                 .map(f => f.rating)
-                .filter((rating): rating is number => rating != null && !isNaN(Number(rating)));
+                .filter((rating): rating is number => 
+                  rating != null && !isNaN(Number(rating)) && rating > 0
+                );
               
               const averageRating = validRatings.length > 0 
                 ? Number((validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length).toFixed(1))
-                : 0;
-
-              // Count unique mentees - ensure we have an array to work with
+                : undefined;
+              
               const menteeIds = sessionsArray.map(s => s.mentee_id).filter(Boolean);
               const uniqueMentees = new Set(menteeIds);
               
-              // Calculate total hours - default to 0 if no data
               let totalHours = 0;
               if (sessionsArray.length > 0) {
                 for (const session of sessionsArray) {
@@ -171,14 +150,15 @@ export function MentorPerformanceTab() {
                 completed_sessions: completedSessions,
                 cancelled_sessions: cancelledSessions,
                 no_show_sessions: noShowSessions,
-                completion_rate: completionRate,
+                completion_rate: totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0,
                 average_rating: averageRating,
+                has_ratings: validRatings.length > 0,
+                total_ratings: validRatings.length,
                 total_mentees: uniqueMentees.size,
                 total_hours: sanitizeNumber(Number(totalHours.toFixed(1)))
               };
             } catch (err) {
               console.error('Error processing mentor data:', err);
-              // Return mentor with default values
               return {
                 ...mentor,
                 total_sessions: 0,
@@ -186,7 +166,9 @@ export function MentorPerformanceTab() {
                 cancelled_sessions: 0,
                 no_show_sessions: 0,
                 completion_rate: 0,
-                average_rating: 0,
+                average_rating: undefined,
+                has_ratings: false,
+                total_ratings: 0,
                 total_mentees: 0,
                 total_hours: 0
               };
@@ -194,11 +176,15 @@ export function MentorPerformanceTab() {
           })
         );
         
-        // Sort data based on selected metric
         return mentorsWithStats.sort((a, b) => {
-          if (sortMetric === "sessions") return sanitizeNumber(b.total_sessions) - sanitizeNumber(a.total_sessions);
-          if (sortMetric === "rating") return sanitizeNumber(b.average_rating) - sanitizeNumber(a.average_rating);
-          if (sortMetric === "hours") return sanitizeNumber(b.total_hours) - sanitizeNumber(a.total_hours);
+          if (sortMetric === "sessions") return b.total_sessions - a.total_sessions;
+          if (sortMetric === "rating") {
+            if (a.average_rating === undefined && b.average_rating === undefined) return 0;
+            if (a.average_rating === undefined) return 1;
+            if (b.average_rating === undefined) return -1;
+            return b.average_rating - a.average_rating;
+          }
+          if (sortMetric === "hours") return b.total_hours - a.total_hours;
           return 0;
         });
       } catch (err) {
@@ -209,23 +195,19 @@ export function MentorPerformanceTab() {
     }
   });
 
-  // Generate session trend data (for line chart) - safe fallback for empty data
   const generateSessionTrendData = (): { month: string; sessions: number }[] => {
-    // If we have actual data, we could transform it here
-    // For now, use placeholder data that is guaranteed to be valid
     return Array.from({ length: 6 }, (_, i) => {
       const date = subMonths(new Date(), 5 - i);
       const month = format(date, 'MMM');
       return {
         month,
-        sessions: Math.floor(Math.random() * 30) + 10 // Placeholder data (guaranteed to be a valid number)
+        sessions: Math.floor(Math.random() * 30) + 10
       };
     });
   };
 
   const sessionTrendData = generateSessionTrendData();
 
-  // Generate rating distribution data (for pie chart) with safe defaults
   const generateRatingDistribution = (): { rating: number; count: number }[] => {
     const distribution = [
       { rating: 5, count: 0 },
@@ -235,7 +217,6 @@ export function MentorPerformanceTab() {
       { rating: 1, count: 0 },
     ];
 
-    // Calculate rating distribution safely
     if (mentorData && mentorData.length > 0) {
       mentorData.forEach(mentor => {
         const rating = sanitizeNumber(mentor.average_rating);
@@ -252,14 +233,13 @@ export function MentorPerformanceTab() {
 
   const ratingDistribution = generateRatingDistribution();
 
-  // Only use the pie chart data if there's actual data to display
   const validRatingData = ratingDistribution.filter(item => item.count > 0);
 
-  // Get performance statistics with safe defaults
   const calculateStatistics = () => {
     if (!mentorData || mentorData.length === 0) {
       return {
         totalMentors: 0,
+        ratedMentors: 0,
         totalSessions: 0,
         averageRating: '0.0',
         totalHours: '0.0',
@@ -269,39 +249,41 @@ export function MentorPerformanceTab() {
     }
 
     const totalMentors = mentorData.length;
-    const totalSessions = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_sessions), 0);
+    const ratedMentors = mentorData.filter(mentor => mentor.has_ratings).length;
+    const totalSessions = mentorData.reduce((sum, mentor) => sum + mentor.total_sessions, 0);
     
+    const mentorsWithRatings = mentorData.filter(mentor => mentor.has_ratings);
     let avgRating = 0;
-    if (totalMentors > 0) {
-      const ratingSum = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.average_rating), 0);
-      avgRating = ratingSum / totalMentors;
+    if (mentorsWithRatings.length > 0) {
+      const ratingSum = mentorsWithRatings.reduce((sum, mentor) => 
+        sum + (mentor.average_rating || 0), 0);
+      avgRating = ratingSum / mentorsWithRatings.length;
     }
     
-    const totalHours = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.total_hours), 0);
+    const totalHours = mentorData.reduce((sum, mentor) => sum + mentor.total_hours, 0);
     
     let completionRate = 0;
     if (totalMentors > 0) {
-      const rateSum = mentorData.reduce((sum, mentor) => sum + sanitizeNumber(mentor.completion_rate), 0);
+      const rateSum = mentorData.reduce((sum, mentor) => sum + mentor.completion_rate, 0);
       completionRate = Math.round(rateSum / totalMentors);
     }
 
     return {
       totalMentors,
+      ratedMentors,
       totalSessions,
       averageRating: isNaN(avgRating) ? '0.0' : avgRating.toFixed(1),
       totalHours: isNaN(totalHours) ? '0.0' : totalHours.toFixed(1),
       completionRate: isNaN(completionRate) ? 0 : completionRate,
-      qoqGrowth: 15 // Placeholder
+      qoqGrowth: 15
     };
   };
 
-  // Handle date range changes
   const handleDateRangeChange = (start: Date | undefined, end: Date | undefined) => {
     setStartDate(start);
     setEndDate(end);
   };
 
-  // Show error if present
   if (error) {
     return (
       <Alert variant="destructive">
@@ -313,10 +295,8 @@ export function MentorPerformanceTab() {
     );
   }
 
-  // Calculate statistics
   const statistics = calculateStatistics();
 
-  // Determine if we have enough data to show charts
   const hasEnoughData = mentorData && mentorData.length > 0;
 
   return (
@@ -334,8 +314,7 @@ export function MentorPerformanceTab() {
               <h2 className="text-2xl font-bold">Mentor Performance</h2>
             </div>
             
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
               <Card>
                 <CardHeader className="p-3 pb-1">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -346,6 +325,20 @@ export function MentorPerformanceTab() {
                   <div className="flex justify-between items-center">
                     <div className="text-2xl font-bold">{statistics.totalMentors}</div>
                     <Users className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="p-3 pb-1">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Rated Mentors
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <div className="flex justify-between items-center">
+                    <div className="text-2xl font-bold">{statistics.ratedMentors}</div>
+                    <Star className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </CardContent>
               </Card>
@@ -412,9 +405,7 @@ export function MentorPerformanceTab() {
               </Card>
             </div>
             
-            {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-              {/* Session Trend (Line Chart) */}
               <Card className="col-span-2">
                 <CardHeader>
                   <CardTitle>Session Trend</CardTitle>
@@ -452,17 +443,16 @@ export function MentorPerformanceTab() {
                 </CardContent>
               </Card>
 
-              {/* Rating Distribution (Pie Chart) */}
               <Card>
                 <CardHeader>
                   <CardTitle>Rating Distribution</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="h-[250px]">
-                    {validRatingData.length > 0 ? (
+                    {mentorData.filter(m => m.has_ratings).length > 0 ? (
                       <PieChart>
                         <Pie
-                          data={validRatingData}
+                          data={ratingDistribution.filter(item => item.count > 0)}
                           dataKey="count"
                           nameKey="rating"
                           cx="50%"
@@ -509,7 +499,6 @@ export function MentorPerformanceTab() {
             </div>
             
             <div className="space-y-6">
-              {/* Completion Rate by Mentor (Bar Chart) */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">Completion Rate by Mentor</h3>
                 <div className="h-[300px]">
@@ -548,7 +537,6 @@ export function MentorPerformanceTab() {
                 </div>
               </div>
               
-              {/* More analytics would be added here */}
               <div className="p-8 border rounded-lg text-center text-muted-foreground">
                 Additional analytics visualizations coming soon...
               </div>
