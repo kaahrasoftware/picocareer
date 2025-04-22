@@ -1,4 +1,3 @@
-
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { UserProfileDetailsDialog } from "@/components/admin/UserProfileDetailsDialog";
 import type { OnboardingStatus, UserType } from "@/types/database/enums";
+import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
+import { endOfDay, startOfDay } from "date-fns";
 
 interface User {
   id: string;
@@ -40,11 +41,13 @@ export function UsersTab() {
   const [selectedStatus, setSelectedStatus] = useState<"all" | OnboardingStatus>("all");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
 
   const { data: users = [], isLoading, refetch } = useQuery({
-    queryKey: ['dashboard-users', selectedUserType, selectedStatus],
+    queryKey: ['dashboard-users', selectedUserType, selectedStatus, startDate, endDate],
     queryFn: async () => {
-      console.log('Fetching users with filters:', { selectedUserType, selectedStatus });
+      console.log('Fetching users with filters:', { selectedUserType, selectedStatus, startDate, endDate });
       
       let query = supabase
         .from('profiles')
@@ -65,6 +68,14 @@ export function UsersTab() {
         query = query.eq('onboarding_status', selectedStatus);
       }
 
+      if (startDate) {
+        query = query.gte('created_at', startOfDay(startDate).toISOString());
+      }
+
+      if (endDate) {
+        query = query.lte('created_at', endOfDay(endDate).toISOString());
+      }
+
       const { data, error } = await query;
 
       if (error) {
@@ -77,7 +88,6 @@ export function UsersTab() {
     }
   });
 
-  // Calculate statistics
   const stats = useMemo(() => {
     const totalUsers = users.length;
     const totalMentors = users.filter(user => user.user_type === 'mentor').length;
@@ -149,6 +159,11 @@ export function UsersTab() {
   const handleDialogClose = () => {
     setDialogOpen(false);
     setSelectedUserId(null);
+  };
+
+  const handleDateRangeChange = (start: Date | undefined, end: Date | undefined) => {
+    setStartDate(start);
+    setEndDate(end);
   };
 
   const columns = [
@@ -268,6 +283,8 @@ export function UsersTab() {
                   <SelectItem value="Rejected" className={statusColors["Rejected"]}>Rejected</SelectItem>
                 </SelectContent>
               </Select>
+
+              <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
             </div>
             {users && <DataTable columns={columns} data={users} />}
           </Card>
