@@ -84,13 +84,13 @@ export function EmailCampaignForm({
           ({ data: content } = await supabase.from("scholarships").select("id, title").eq("status", "Active"));
           break;
         case "opportunities":
-          ({ data: content } = await supabase.from("opportunities").select("id, title").eq("status", "approved"));
+          ({ data: content } = await supabase.from("opportunities").select("id, title").eq("status", "Active"));
           break;
         case "careers":
-          ({ data: content } = await supabase.from("careers").select("id, title").eq("status", "approved"));
+          ({ data: content } = await supabase.from("careers").select("id, title").eq("status", "Active"));
           break;
         case "majors":
-          ({ data: content } = await supabase.from("majors").select("id, title").eq("status", "approved"));
+          ({ data: content } = await supabase.from("majors").select("id, title").eq("status", "Active"));
           break;
         case "schools":
           ({ data: content } = await supabase.from("schools").select("id, name"));
@@ -98,13 +98,10 @@ export function EmailCampaignForm({
           break;
         case "mentors":
           ({ data: content } = await supabase.from("profiles").select("id, full_name").eq("user_type", "mentor"));
-          content = (content || []).map(item => ({
-            id: item.id,
-            title: item.full_name || "Untitled"
-          }));
+          content = mapRows(content, "full_name");
           break;
         case "blogs":
-          ({ data: content } = await supabase.from("blogs").select("id, title").eq("status", "approved"));
+          ({ data: content } = await supabase.from("blogs").select("id, title").eq("status", "Active"));
           break;
         default: content = [];
       }
@@ -233,7 +230,7 @@ export function EmailCampaignForm({
         failed_count: 0,
         recipients_count: 0,
         status: 'pending', // Set initial status as pending
-        last_error: null, // <-- This line updated: replace error_message with last_error
+        last_error: null, // Using last_error instead of error_message
         last_checked_at: null
       }));
 
