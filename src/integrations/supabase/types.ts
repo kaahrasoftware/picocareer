@@ -2889,6 +2889,7 @@ export type Database = {
           eligibility_criteria: Json | null
           featured: boolean | null
           id: string
+          image_url: string | null
           provider_name: string
           renewable: boolean | null
           required_documents: string[] | null
@@ -2918,6 +2919,7 @@ export type Database = {
           eligibility_criteria?: Json | null
           featured?: boolean | null
           id?: string
+          image_url?: string | null
           provider_name: string
           renewable?: boolean | null
           required_documents?: string[] | null
@@ -2947,6 +2949,7 @@ export type Database = {
           eligibility_criteria?: Json | null
           featured?: boolean | null
           id?: string
+          image_url?: string | null
           provider_name?: string
           renewable?: boolean | null
           required_documents?: string[] | null

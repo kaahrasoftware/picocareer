@@ -80,7 +80,10 @@ async function fetchBlogDetails(supabase: any, contentIds: string[]) {
 // Helper to format content for email
 function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
   const imgSrc = getImageUrl(content, contentType);
-  const imgHtml = imgSrc ? `<img src="${imgSrc}" alt="${content.title || 'Content'}" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">` : '';
+  const imgHtml = imgSrc 
+    ? `<img src="${imgSrc}" alt="${content.title || 'Content'}" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`
+    : ''; // Fallback to empty string if no image
+  
   const detailsHtml = getContentDetails(content, contentType);
   const contentUrl = getContentUrl(content.id, contentType, siteUrl);
   
@@ -88,7 +91,7 @@ function formatContentForEmail(content: any, contentType: string, siteUrl: strin
     <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background-color: white;">
       <div style="padding: 16px;">
         ${imgHtml}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #2a2a72;">${content.title || content.full_name || 'Untitled'}</h3>
+        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #2a2a72;">${content.title || 'Untitled'}</h3>
         ${detailsHtml}
         <div style="margin-top: 16px;">
           <a href="${contentUrl}" style="display: inline-block; background-color: #2a2a72; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: 600;">Learn More</a>
