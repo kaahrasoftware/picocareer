@@ -8,41 +8,50 @@ interface EmailPreviewProps {
   contentType: ContentType;
 }
 
-function getEmailTemplate(content: {id: string, title: string} | undefined, contentType: ContentType) {
+function getEmailTemplate(contentItems: {id: string, title: string}[], contentType: ContentType) {
   const label = CONTENT_TYPE_LABELS[contentType];
-  const previewTitle = content ? `${label}: ${content.title}` : label;
-  switch (contentType) {
-    default:
-      return (
-        <div>
-          <h2 className="text-lg font-bold mb-1">{previewTitle}</h2>
-          <p>Hello!</p>
-          <p>
-            We're excited to feature this {contentType.slice(0, -1)} in our {label.replace("Spotlight", "Spotlight Email")}!
-          </p>
-          <p><b>{content?.title}</b></p>
-          <p>Learn more by clicking the link in this email or visiting our platform.</p>
-          <em>— The PicoCareer Team</em>
-        </div>
-      );
-  }
+  const title = contentItems.length > 1 
+    ? `${label}: ${contentItems.length} Items` 
+    : `${label}: ${contentItems[0]?.title || 'No title'}`;
+  
+  return (
+    <div className="p-4 border rounded bg-white">
+      <h2 className="text-lg font-bold mb-2">{title}</h2>
+      <p>Hello!</p>
+      <p className="mb-6">
+        We're excited to share these {contentType} with you!
+      </p>
+      
+      <div className="space-y-4">
+        {contentItems.map(content => (
+          <div key={content.id} className="border p-3 rounded">
+            <h3 className="font-semibold">{content.title}</h3>
+            <p className="text-sm text-muted-foreground">
+              Learn more about this {contentType.slice(0, -1)} on our platform.
+            </p>
+          </div>
+        ))}
+      </div>
+      
+      <p className="mt-6 text-sm">
+        Visit PicoCareer to discover more opportunities!
+      </p>
+      <p className="italic text-sm">— The PicoCareer Team</p>
+    </div>
+  );
 }
 
 export function EmailPreview({ selectedContentIds, contentList, contentType }: EmailPreviewProps) {
+  const selectedContents = contentList.filter(content => selectedContentIds.includes(content.id));
+  
   return (
     <div>
       <label className="block font-medium mb-1">Email Preview</label>
       <div className="border bg-muted rounded px-3 py-4 text-sm">
         {selectedContentIds.length === 0
           ? "(Nothing selected)"
-          : selectedContentIds.map(id => {
-            const content = contentList.find(c => c.id === id);
-            return (
-              <div key={id} className="mb-4 border-b last:border-b-0 pb-2 last:pb-0">
-                {getEmailTemplate(content, contentType)}
-              </div>
-            );
-          })}
+          : getEmailTemplate(selectedContents, contentType)
+        }
       </div>
     </div>
   );

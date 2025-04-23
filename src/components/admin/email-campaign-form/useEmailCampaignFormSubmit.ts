@@ -41,15 +41,19 @@ export async function handleEmailCampaignFormSubmit({
 
   setSubmitting(true);
   try {
+    // For multiple content IDs, we'll create a single campaign with all content IDs
     const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
+    const contentTitles = selectedContents.map(c => c.title).join(", ");
     
-    const campaignInserts = selectedContents.map(content => ({
+    // Create a single campaign with all content IDs
+    const campaignInsert = {
       scheduled_for: scheduledFor,
       frequency,
       content_type: contentType,
-      content_id: content.id,
-      subject: `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}`,
-      body: `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`,
+      content_ids: selectedContentIds, // Store all content IDs
+      content_id: selectedContentIds[0], // Keep first ID for backward compatibility
+      subject: `${CONTENT_TYPE_LABELS[contentType]}: ${selectedContents.length > 1 ? `${selectedContents.length} Items` : contentTitles}`,
+      body: `Check out these featured ${contentType}!`,
       admin_id: adminId,
       recipient_type: recipientType,
       recipient_filter: recipientType === 'selected' 
@@ -61,22 +65,21 @@ export async function handleEmailCampaignFormSubmit({
       status: 'pending',
       last_error: null,
       last_checked_at: null
-    }));
+    };
 
-    const { data: insertedCampaigns, error: campaignError } = await supabase
+    const { data: insertedCampaign, error: campaignError } = await supabase
       .from('email_campaigns')
-      .insert(campaignInserts)
-      .select();
+      .insert(campaignInsert)
+      .select()
+      .single();
 
     if (campaignError) throw campaignError;
 
-    if (recipientType === 'selected' && insertedCampaigns) {
-      const recipientRecords = insertedCampaigns.flatMap(campaign => 
-        selectedRecipients.map(recipientId => ({
-          campaign_id: campaign.id,
-          profile_id: recipientId
-        }))
-      );
+    if (recipientType === 'selected' && insertedCampaign) {
+      const recipientRecords = selectedRecipients.map(recipientId => ({
+        campaign_id: insertedCampaign.id,
+        profile_id: recipientId
+      }));
 
       const { error: recipientError } = await supabase
         .from('email_campaign_recipients')
@@ -86,8 +89,8 @@ export async function handleEmailCampaignFormSubmit({
     }
 
     toast({ 
-      title: "Campaign(s) created!", 
-      description: `Scheduled ${campaignInserts.length} campaign(s) for ${new Date(scheduledFor).toLocaleString()}.` 
+      title: "Campaign created!", 
+      description: `Scheduled campaign with ${selectedContentIds.length} items for ${new Date(scheduledFor).toLocaleString()}.` 
     });
     
     setSelectedContentIds([]);
