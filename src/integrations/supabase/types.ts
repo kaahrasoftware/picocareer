@@ -484,6 +484,57 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          admin_id: string
+          body: string | null
+          content_id: string
+          content_type: string
+          created_at: string
+          frequency: string
+          id: string
+          last_error: string | null
+          last_sent: string | null
+          scheduled_for: string | null
+          sent_count: number
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          body?: string | null
+          content_id: string
+          content_type: string
+          created_at?: string
+          frequency: string
+          id?: string
+          last_error?: string | null
+          last_sent?: string | null
+          scheduled_for?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          body?: string | null
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          last_error?: string | null
+          last_sent?: string | null
+          scheduled_for?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_subscriptions: {
         Row: {
           created_at: string
