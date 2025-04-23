@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +17,7 @@ type Campaign = {
   failed_count: number;
   recipients_count: number;
   created_at: string;
-  error_message: string | null;
+  last_error: string | null;
   last_checked_at: string | null;
 };
 
@@ -91,8 +90,8 @@ export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCard
               {campaign.sent_at && <p>Sent At: {new Date(campaign.sent_at).toLocaleString()}</p>}
               <p>Sent: {campaign.sent_count}/{campaign.recipients_count || 0}</p>
               <p>Failed: {campaign.failed_count}</p>
-              {campaign.error_message && (
-                <p className="text-red-500 mt-1">Error: {campaign.error_message}</p>
+              {campaign.last_error && (
+                <p className="text-red-500 mt-1">Error: {campaign.last_error}</p>
               )}
             </div>
           </div>
@@ -145,4 +144,3 @@ export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCard
     </Card>
   );
 }
-

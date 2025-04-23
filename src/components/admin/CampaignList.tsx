@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -21,7 +20,7 @@ type Campaign = {
   failed_count: number;
   recipients_count: number;
   created_at: string;
-  error_message: string | null;
+  last_error: string | null;
   last_checked_at: string | null;
 };
 
@@ -54,7 +53,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
           failed_count,
           recipients_count,
           created_at,
-          error_message,
+          last_error,
           last_checked_at
         `)
         .eq('admin_id', adminId)
@@ -198,4 +197,3 @@ export function CampaignList({ adminId }: CampaignListProps) {
     </div>
   );
 }
-
