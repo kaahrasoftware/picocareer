@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -17,7 +16,6 @@ interface CampaignEmailRequest {
   retryCount?: number;
 }
 
-// Fetch content details by type
 async function fetchContentDetails(supabase: any, contentType: string, contentIds: string[]) {
   if (!contentIds || contentIds.length === 0) {
     return [];
@@ -70,7 +68,6 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
         break;
         
       case 'mentors':
-        // Updated mentor query with proper joins
         const { data: mentorData, error: mentorError } = await supabase
           .from('profiles')
           .select(`
@@ -117,14 +114,16 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
       case 'schools':
         const { data: schools, error: schoolError } = await supabase
           .from('schools')
-          .select('id, name, status, country, state, website, banner_url, logo_url, description')
+          .select('id, name, status, country, state, website, description, type')
           .in('id', contentIds);
         
         if (schoolError) throw new Error(`Error fetching schools: ${schoolError.message}`);
         
         data = (schools || []).map(school => ({
           ...school,
-          title: school.name || 'Unnamed School'
+          title: school.name || 'Unnamed School',
+          description: school.description || '',
+          location: [school.state, school.country].filter(Boolean).join(', ') || 'Location not specified'
         }));
         break;
         
@@ -137,11 +136,10 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
     
   } catch (error) {
     console.error(`Error fetching ${contentType} details:`, error);
-    throw error; // Rethrow to be handled by the caller
+    throw error;
   }
 }
 
-// Get image URL for the content type
 function getImageUrl(content: any, contentType: string): string | null {
   if (!content) return null;
   
@@ -163,7 +161,6 @@ function getImageUrl(content: any, contentType: string): string | null {
   }
 }
 
-// Get URL for viewing the content
 function getContentUrl(id: string, contentType: string, siteUrl: string): string {
   const baseUrl = siteUrl || 'https://picocareer.com';
   
@@ -187,7 +184,6 @@ function getContentUrl(id: string, contentType: string, siteUrl: string): string
   }
 }
 
-// Generate HTML content for each content type
 function getContentDetails(content: any, contentType: string): string {
   if (!content) {
     return `<p class="text-gray-500">No details available.</p>`;
@@ -266,7 +262,6 @@ function getContentDetails(content: any, contentType: string): string {
   }
 }
 
-// Format content item for email
 function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
   if (!content) return '';
   
@@ -293,7 +288,6 @@ function formatContentForEmail(content: any, contentType: string, siteUrl: strin
   `;
 }
 
-// Generate email content with header, footer and formatted content items
 function generateEmailContent(
   title: string,
   body: string,
@@ -305,7 +299,6 @@ function generateEmailContent(
 ): string {
   const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
   
-  // Generate content cards HTML
   let contentCardsHtml = '';
   if (contentItems && contentItems.length > 0) {
     contentItems.forEach(item => {
@@ -360,7 +353,6 @@ function generateEmailContent(
   `;
 }
 
-// Process sending email batches with proper error handling and tracking
 async function processBatchSending(
   recipients: { id: string; email: string; full_name?: string }[],
   emailSubject: string,
@@ -375,14 +367,12 @@ async function processBatchSending(
   const errors = [];
   const processedRecipientIds: string[] = [];
   
-  // Process recipients in batches
   for (let i = 0; i < recipients.length; i += batchSize) {
     const batch = recipients.slice(i, i + batchSize);
     console.log(`Processing batch ${Math.floor(i/batchSize) + 1} of ${Math.ceil(recipients.length/batchSize)} (${batch.length} recipients)`);
     
     const batchPromises = batch.map(async (recipient) => {
       try {
-        // Validate email format
         if (!recipient.email || !recipient.email.includes('@')) {
           throw new Error(`Invalid email format: ${recipient.email}`);
         }
@@ -391,14 +381,13 @@ async function processBatchSending(
           from: "PicoCareer <info@picocareer.com>",
           to: [recipient.email],
           subject: emailSubject,
-          html: emailContent, // All recipients get the same content for now
+          html: emailContent,
         });
         
         if (res.error) {
           throw new Error(res.error.message || JSON.stringify(res.error));
         }
         
-        // Track successful send
         processedRecipientIds.push(recipient.id);
         sentCount++;
         
@@ -420,7 +409,6 @@ async function processBatchSending(
     
     await Promise.all(batchPromises);
     
-    // Wait briefly between batches to avoid rate limiting
     if (i + batchSize < recipients.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -429,22 +417,54 @@ async function processBatchSending(
   return { sent: sentCount, failed: failedCount, errors };
 }
 
-// Main handler
+async function updateCampaignStatus(
+  supabase: any,
+  campaignId: string,
+  status: string,
+  sentCount: number,
+  failedCount: number,
+  recipientsCount: number,
+  lastError?: string
+): Promise<void> {
+  try {
+    const updateData: any = {
+      status,
+      sent_at: status !== 'failed' ? new Date().toISOString() : null,
+      recipients_count: recipientsCount,
+      sent_count: sentCount,
+      failed_count: failedCount
+    };
+    
+    if (lastError) {
+      updateData.last_error = lastError;
+    }
+    
+    const { error } = await supabase
+      .from('email_campaigns')
+      .update(updateData)
+      .eq('id', campaignId);
+      
+    if (error) {
+      console.error("Failed to update campaign status:", error.message);
+    }
+  } catch (error) {
+    console.error("Error updating campaign status:", error);
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Parse request params
     let campaignId: string, batchSize: number, retryCount: number;
     
     try {
       const json = await req.json();
       campaignId = json.campaignId;
-      batchSize = json.batchSize ?? 50; // Default batch size
-      retryCount = json.retryCount ?? 0; // Track retry attempts
+      batchSize = json.batchSize ?? 50;
+      retryCount = json.retryCount ?? 0;
     } catch (error) {
       console.error("Invalid JSON in request body:", error);
       return new Response(
@@ -459,7 +479,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Validate required fields
     if (!campaignId) {
       console.error("Missing campaignId in request.");
       return new Response(
@@ -471,13 +490,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Load campaign details
     const { data: campaign, error: campaignError } = await supabaseClient
       .from('email_campaigns')
       .select('*')
@@ -495,7 +512,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update campaign status to indicate processing
     await supabaseClient
       .from('email_campaigns')
       .update({ 
@@ -504,7 +520,6 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('id', campaignId);
 
-    // Get recipients based on campaign settings
     let recipients: { id: string; email: string; full_name?: string }[] = [];
     try {
       if (campaign.recipient_type === 'selected' && campaign.recipient_filter?.profile_ids) {
@@ -556,7 +571,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get content IDs and validate
     let contentIds: string[] = [];
     if (campaign.content_ids && Array.isArray(campaign.content_ids) && campaign.content_ids.length > 0) {
       contentIds = campaign.content_ids;
@@ -577,7 +591,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Fetch content details based on content type
     let contentList: any[] = [];
     try {
       contentList = await fetchContentDetails(supabaseClient, campaign.content_type, contentIds);
@@ -607,7 +620,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get content type label for email subject
     const contentTypeLabel = {
       'scholarships': 'Scholarship',
       'opportunities': 'Opportunity',
@@ -618,27 +630,22 @@ const handler = async (req: Request): Promise<Response> => {
       'blogs': 'Blog'
     }[campaign.content_type] || 'Content';
 
-    // Email subject
     const emailSubject = campaign.subject || `${contentTypeLabel} Spotlight: ${contentList.length > 1 ? `${contentList.length} New Items` : contentList[0].title || contentList[0].name || contentList[0].full_name || 'Featured Content'}`;
 
-    // Get site URL from environment or use default
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
 
-    // Generate email content
     const emailContent = generateEmailContent(
       emailSubject,
       campaign.body || `Check out these featured ${campaign.content_type}!`,
-      "Valued Member", // Personalized per-recipient in a more advanced version
+      "Valued Member",
       campaign.id,
       contentList,
       campaign.content_type,
       siteUrl
     );
 
-    // Timing for metrics
     const startTime = Date.now();
     
-    // Send emails in batches
     const { sent, failed, errors } = await processBatchSending(
       recipients, 
       emailSubject, 
@@ -650,7 +657,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const executionTime = (Date.now() - startTime) / 1000;
 
-    // Update campaign status in database
     const status = sent > 0 ? (failed > 0 ? 'partial' : 'sent') : 'failed';
     await updateCampaignStatus(supabaseClient, campaignId, status, sent, failed, recipients.length);
 
@@ -669,7 +675,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Success!
     return new Response(
       JSON.stringify({
         success: true,
@@ -686,7 +691,6 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    // Top-level error handler
     console.error("Unexpected error in send-campaign-emails:", error);
     return new Response(
       JSON.stringify({
@@ -700,41 +704,5 @@ const handler = async (req: Request): Promise<Response> => {
     );
   }
 };
-
-// Helper function to update campaign status
-async function updateCampaignStatus(
-  supabase: any,
-  campaignId: string,
-  status: string,
-  sentCount: number,
-  failedCount: number,
-  recipientsCount: number,
-  lastError?: string
-): Promise<void> {
-  try {
-    const updateData: any = {
-      status,
-      sent_at: status !== 'failed' ? new Date().toISOString() : null,
-      recipients_count: recipientsCount,
-      sent_count: sentCount,
-      failed_count: failedCount
-    };
-    
-    if (lastError) {
-      updateData.last_error = lastError;
-    }
-    
-    const { error } = await supabase
-      .from('email_campaigns')
-      .update(updateData)
-      .eq('id', campaignId);
-      
-    if (error) {
-      console.error("Failed to update campaign status:", error.message);
-    }
-  } catch (error) {
-    console.error("Error updating campaign status:", error);
-  }
-}
 
 serve(handler);
