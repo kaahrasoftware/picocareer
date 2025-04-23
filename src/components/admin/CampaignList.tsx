@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -90,20 +91,22 @@ export function CampaignList({ adminId }: CampaignListProps) {
 
       if (error) throw error;
 
-      if (data.success) {
+      if (data && data.success) {
         toast({
           title: "Campaign sent successfully",
           description: `Sent to ${data.sent} recipients (${data.failed} failed)`
         });
 
         loadCampaigns();
+      } else if (data && data.error) {
+        throw new Error(data.error);
       } else {
-        throw new Error(data.message || "Failed to send campaign");
+        throw new Error("Unexpected error: No response from email campaign function.");
       }
     } catch (err: any) {
       toast({
         title: "Error sending campaign",
-        description: err.message,
+        description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
         variant: "destructive"
       });
     } finally {
@@ -116,17 +119,23 @@ export function CampaignList({ adminId }: CampaignListProps) {
     try {
       const { data, error } = await supabase.functions.invoke('check-scheduled-campaigns', {});
       if (error) throw error;
-      toast({
-        title: "Checked scheduled campaigns",
-        description: data.campaigns_processed
-          ? `Processed ${data.campaigns_processed} campaigns`
-          : "No campaigns due for sending"
-      });
-      loadCampaigns();
+      if (data && data.success) {
+        toast({
+          title: "Checked scheduled campaigns",
+          description: data.campaigns_processed
+            ? `Processed ${data.campaigns_processed} campaigns`
+            : (data.message || "No campaigns due for sending")
+        });
+        loadCampaigns();
+      } else if (data && data.error) {
+        throw new Error(data.error);
+      } else {
+        throw new Error("Unexpected error: No response from campaign scheduler function.");
+      }
     } catch (err: any) {
       toast({
         title: "Error checking scheduled campaigns",
-        description: err.message,
+        description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
         variant: "destructive"
       });
     } finally {
@@ -197,3 +206,4 @@ export function CampaignList({ adminId }: CampaignListProps) {
     </div>
   );
 }
+
