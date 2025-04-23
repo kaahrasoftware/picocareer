@@ -2384,6 +2384,7 @@ export type Database = {
           author_id: string | null
           categories: string[] | null
           compensation: string | null
+          cover_image_url: string | null
           created_at: string
           deadline: string | null
           description: string
@@ -2403,6 +2404,7 @@ export type Database = {
           author_id?: string | null
           categories?: string[] | null
           compensation?: string | null
+          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description: string
@@ -2422,6 +2424,7 @@ export type Database = {
           author_id?: string | null
           categories?: string[] | null
           compensation?: string | null
+          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description?: string
