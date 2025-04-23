@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Loader2, Clock, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 
 type Campaign = {
@@ -25,6 +25,23 @@ interface CampaignCardProps {
   campaign: Campaign;
   sendingCampaign: string | null;
   onSend: (id: string) => void;
+}
+
+function getStatusStyles(status: string) {
+  switch (status) {
+    case 'sent':
+      return 'bg-green-50/50 border-green-200 hover:bg-green-50/80';
+    case 'sending':
+      return 'bg-blue-50/50 border-blue-200 hover:bg-blue-50/80';
+    case 'pending':
+      return 'bg-yellow-50/50 border-yellow-200 hover:bg-yellow-50/80';
+    case 'partial':
+      return 'bg-amber-50/50 border-amber-200 hover:bg-amber-50/80';
+    case 'failed':
+      return 'bg-red-50/50 border-red-200 hover:bg-red-50/80';
+    default:
+      return 'bg-gray-50/50 border-gray-200 hover:bg-gray-50/80';
+  }
 }
 
 function renderStatusBadge(campaign: Campaign) {
@@ -75,40 +92,52 @@ function renderStatusBadge(campaign: Campaign) {
 
 export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCardProps) {
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="pt-6">
+    <Card className={`overflow-hidden transition-all duration-200 ${getStatusStyles(campaign.status)}`}>
+      <div className="p-6">
         <div className="flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg">{campaign.subject || "Unnamed Campaign"}</h3>
-              {renderStatusBadge(campaign)}
+              <div className="flex items-center gap-2">
+                {renderStatusBadge(campaign)}
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              <p>Type: {campaign.content_type}</p>
-              <p>Scheduled: {new Date(campaign.scheduled_for).toLocaleString()}</p>
-              <p>Recipients: {campaign.recipient_type}</p>
-              {campaign.sent_at && <p>Sent At: {new Date(campaign.sent_at).toLocaleString()}</p>}
-              <p>Sent: {campaign.sent_count}/{campaign.recipients_count || 0}</p>
-              <p>Failed: {campaign.failed_count}</p>
+            
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p><span className="font-medium">Type:</span> {campaign.content_type}</p>
+              <p><span className="font-medium">Scheduled:</span> {new Date(campaign.scheduled_for).toLocaleString()}</p>
+              <p><span className="font-medium">Recipients:</span> {campaign.recipient_type}</p>
+              {campaign.sent_at && 
+                <p><span className="font-medium">Sent At:</span> {new Date(campaign.sent_at).toLocaleString()}</p>
+              }
+              <div className="flex gap-4">
+                <p><span className="font-medium">Sent:</span> {campaign.sent_count}/{campaign.recipients_count || 0}</p>
+                <p><span className="font-medium">Failed:</span> {campaign.failed_count}</p>
+              </div>
               {campaign.last_error && (
-                <p className="text-red-500 mt-1">Error: {campaign.last_error}</p>
+                <p className="text-red-500 mt-1 bg-red-50 p-2 rounded-md">
+                  Error: {campaign.last_error}
+                </p>
               )}
             </div>
           </div>
+
           <div className="flex items-center space-x-2">
             {campaign.status === 'sent' ? (
-              <div className="text-sm text-green-600 font-medium">
+              <div className="text-sm text-green-600 font-medium flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
                 Sent ({campaign.sent_count} recipients)
               </div>
             ) : campaign.status === 'partial' ? (
-              <div className="text-sm text-amber-600 font-medium">
+              <div className="text-sm text-amber-600 font-medium flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
                 Partially Sent ({campaign.sent_count}/{campaign.recipients_count})
               </div>
             ) : campaign.status === 'failed' ? (
               <Button
                 size="sm"
                 variant="outline"
-                className="text-red-600 border-red-300"
+                className="text-red-600 border-red-300 hover:bg-red-50"
                 onClick={() => onSend(campaign.id)}
                 disabled={sendingCampaign === campaign.id}
               >
@@ -117,11 +146,16 @@ export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCard
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Retrying...
                   </>
-                ) : "Retry Send"}
+                ) : (
+                  <>
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Retry Send
+                  </>
+                )}
               </Button>
             ) : campaign.status === 'sending' ? (
-              <div className="text-sm text-blue-600 font-medium flex items-center">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <div className="text-sm text-blue-600 font-medium flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Sending...
               </div>
             ) : (
@@ -129,18 +163,24 @@ export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCard
                 size="sm"
                 onClick={() => onSend(campaign.id)}
                 disabled={sendingCampaign === campaign.id}
+                className="bg-primary hover:bg-primary/90"
               >
                 {sendingCampaign === campaign.id ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Sending...
                   </>
-                ) : "Send Now"}
+                ) : (
+                  <>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Send Now
+                  </>
+                )}
               </Button>
             )}
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

@@ -155,14 +155,17 @@ export function CampaignList({ adminId }: CampaignListProps) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Recent Campaigns</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Recent Campaigns
+        </h2>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleCheckScheduledCampaigns}
             disabled={loading}
+            className="border-primary/20 hover:border-primary/40 transition-colors"
           >
             {loading ? (
               <>
@@ -176,6 +179,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
             size="sm"
             onClick={loadCampaigns}
             disabled={loadingCampaigns}
+            className="border-primary/20 hover:border-primary/40 transition-colors"
           >
             {loadingCampaigns ? (
               <>
@@ -186,18 +190,19 @@ export function CampaignList({ adminId }: CampaignListProps) {
           </Button>
         </div>
       </div>
+      
       {campaigns.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
             {loadingCampaigns ? (
               <div className="flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <>
+              <div className="space-y-2">
                 <p>No campaigns found.</p>
-                <p className="text-sm mt-2">Create a new campaign to get started.</p>
-              </>
+                <p className="text-sm">Create a new campaign to get started.</p>
+              </div>
             )}
           </CardContent>
         </Card>

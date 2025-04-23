@@ -70,10 +70,17 @@ export function EmailCampaignForm({
   }
 
   return (
-    <Card>
-      <CardContent className="py-8">
+    <Card className="overflow-hidden bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm">
+      <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="grid gap-6">
-          <ContentTypeSelector contentType={contentType} setContentType={(v) => { setContentType(v); setRandomSelect(false); setRandomCount(1); }} />
+          <ContentTypeSelector 
+            contentType={contentType} 
+            setContentType={(v) => { 
+              setContentType(v); 
+              setRandomSelect(false); 
+              setRandomCount(1); 
+            }} 
+          />
 
           <ContentSelect 
             contentList={contentList}
@@ -91,7 +98,13 @@ export function EmailCampaignForm({
 
           <ScheduleDateTimeInput scheduledFor={scheduledFor} setScheduledFor={setScheduledFor} />
 
-          <EmailPreview selectedContentIds={selectedContentIds} contentList={contentList} contentType={contentType} />
+          <div className="border rounded-lg p-4 bg-white/80">
+            <EmailPreview 
+              selectedContentIds={selectedContentIds} 
+              contentList={contentList} 
+              contentType={contentType} 
+            />
+          </div>
 
           <RecipientTypeSelector recipientType={recipientType} setRecipientType={setRecipientType} />
             
@@ -102,9 +115,18 @@ export function EmailCampaignForm({
               setSelectedRecipients={setSelectedRecipients}
             />
           )}
-          <Button type="submit" className="w-full" disabled={submitting || selectedContentIds.length === 0}>
-            {submitting ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Create Campaign"}
-            {submitting ? "Creating..." : ""}
+
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200"
+            disabled={submitting || selectedContentIds.length === 0}
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                Creating...
+              </>
+            ) : "Create Campaign"}
           </Button>
         </form>
       </CardContent>
