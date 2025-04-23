@@ -535,6 +535,7 @@ export type Database = {
           admin_id: string
           body: string | null
           content_id: string
+          content_ids: string[] | null
           content_type: string
           created_at: string
           failed_count: number
@@ -557,6 +558,7 @@ export type Database = {
           admin_id: string
           body?: string | null
           content_id: string
+          content_ids?: string[] | null
           content_type: string
           created_at?: string
           failed_count?: number
@@ -579,6 +581,7 @@ export type Database = {
           admin_id?: string
           body?: string | null
           content_id?: string
+          content_ids?: string[] | null
           content_type?: string
           created_at?: string
           failed_count?: number
