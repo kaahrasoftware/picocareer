@@ -208,7 +208,7 @@ export function EmailCampaignForm({
         failed_count: 0,
         recipients_count: 0,
         status: 'pending', // Set initial status as pending
-        error_message: null,
+        last_error: null, // <-- This line updated: replace error_message with last_error
         last_checked_at: null
       }));
 
