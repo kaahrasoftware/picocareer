@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -13,130 +14,134 @@ const corsHeaders = {
 interface CampaignEmailRequest {
   campaignId: string;
   batchSize?: number;
+  retryCount?: number;
 }
 
-// Content detail fetch helpers
-async function fetchScholarshipDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('scholarships')
-    .select('id, title, description, deadline, image_url')
-    .in('id', contentIds);
-  
-  if (error) throw new Error(`Error fetching scholarships: ${error.message}`);
-  return data || [];
+// Fetch content details by type
+async function fetchContentDetails(supabase: any, contentType: string, contentIds: string[]) {
+  if (!contentIds || contentIds.length === 0) {
+    return [];
+  }
+
+  console.log(`Fetching ${contentType} details for IDs:`, contentIds);
+
+  try {
+    let data: any[] = [];
+    
+    switch (contentType) {
+      case 'scholarships':
+        const { data: scholarships, error: scholarshipError } = await supabase
+          .from('scholarships')
+          .select('id, title, description, deadline, image_url, provider_name, amount')
+          .in('id', contentIds);
+        
+        if (scholarshipError) throw new Error(`Error fetching scholarships: ${scholarshipError.message}`);
+        data = scholarships || [];
+        break;
+        
+      case 'opportunities':
+        const { data: opportunities, error: opportunityError } = await supabase
+          .from('opportunities')
+          .select('id, title, description, provider_name, compensation, location, remote, deadline, cover_image_url')
+          .in('id', contentIds);
+        
+        if (opportunityError) throw new Error(`Error fetching opportunities: ${opportunityError.message}`);
+        data = opportunities || [];
+        break;
+        
+      case 'careers':
+        const { data: careers, error: careerError } = await supabase
+          .from('careers')
+          .select('id, title, description, salary_range, image_url, keywords')
+          .in('id', contentIds);
+        
+        if (careerError) throw new Error(`Error fetching careers: ${careerError.message}`);
+        data = careers || [];
+        break;
+        
+      case 'majors':
+        const { data: majors, error: majorError } = await supabase
+          .from('majors')
+          .select('id, title, description, potential_salary, job_prospects, image_url')
+          .in('id', contentIds);
+        
+        if (majorError) throw new Error(`Error fetching majors: ${majorError.message}`);
+        data = majors || [];
+        break;
+        
+      case 'mentors':
+        // Careful selection of fields with proper error handling
+        const { data: mentorData, error: mentorError } = await supabase
+          .from('profiles')
+          .select(`
+            id,
+            full_name,
+            bio,
+            avatar_url,
+            skills,
+            position,
+            company_name,
+            careers:position(title)
+          `)
+          .in('id', contentIds)
+          .eq('user_type', 'mentor');
+
+        if (mentorError) throw new Error(`Error fetching mentors: ${mentorError.message}`);
+        
+        data = (mentorData || []).map(mentor => ({
+          id: mentor.id,
+          title: mentor.full_name || '',
+          description: mentor.bio || '',
+          avatar_url: mentor.avatar_url,
+          skills: mentor.skills,
+          position: mentor.position || '',
+          career_title: mentor.careers?.title || '',
+          company_name: mentor.company_name || ''
+        }));
+        break;
+        
+      case 'blogs':
+        const { data: blogs, error: blogError } = await supabase
+          .from('blogs')
+          .select('id, title, summary, cover_image_url, categories, author_id')
+          .in('id', contentIds);
+        
+        if (blogError) throw new Error(`Error fetching blogs: ${blogError.message}`);
+        data = blogs || [];
+        break;
+        
+      case 'schools':
+        const { data: schools, error: schoolError } = await supabase
+          .from('schools')
+          .select('id, name, status, country, state, website, banner_url, logo_url, description')
+          .in('id', contentIds);
+        
+        if (schoolError) throw new Error(`Error fetching schools: ${schoolError.message}`);
+        
+        // Transform schools to match our expected format with title field
+        data = (schools || []).map(school => ({
+          ...school,
+          title: school.name || 'Unnamed School'
+        }));
+        break;
+        
+      default:
+        throw new Error(`Unsupported content type: ${contentType}`);
+    }
+    
+    console.log(`Successfully fetched ${data.length} ${contentType} items`);
+    return data;
+    
+  } catch (error) {
+    console.error(`Error fetching ${contentType} details:`, error);
+    throw error; // Rethrow to be handled by the caller
+  }
 }
 
-async function fetchOpportunityDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('opportunities')
-    .select('id, title, description, provider_name, compensation, location, remote, deadline, cover_image_url')
-    .in('id', contentIds);
-  
-  if (error) throw new Error(`Error fetching opportunities: ${error.message}`);
-  return data || [];
-}
-
-async function fetchCareerDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('careers')
-    .select('id, title, description, salary_range, image_url')
-    .in('id', contentIds);
-  
-  if (error) throw new Error(`Error fetching careers: ${error.message}`);
-  return data || [];
-}
-
-async function fetchMajorDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('majors')
-    .select('id, title, description, potential_salary, job_prospects, image_url')
-    .in('id', contentIds);
-  
-  if (error) throw new Error(`Error fetching majors: ${error.message}`);
-  return data || [];
-}
-
-async function fetchMentorDetails(supabase: any, contentIds: string[]) {
-  console.log("Fetching mentor details for:", contentIds);
-  
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(`
-      id,
-      full_name,
-      bio,
-      avatar_url,
-      skills,
-      position,
-      company_name,
-      careers:position(title)
-    `)
-    .in('id', contentIds)
-    .eq('user_type', 'mentor');
-
-  if (error) throw new Error(`Error fetching mentors: ${error.message}`);
-  
-  console.log("Raw mentor data:", data);
-
-  const transformedData = (data || []).map((mentor: any) => {
-    const transformed = {
-      ...mentor,
-      title: mentor.full_name || '',
-      position: mentor.position || '',
-      career_title: mentor.careers?.title || '',
-      company_name: mentor.company_name || ''
-    };
-    return transformed;
-  });
-  
-  console.log("Transformed mentor data:", transformedData);
-  return transformedData;
-}
-
-async function fetchBlogDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('blogs')
-    .select('id, title, summary, cover_image_url, categories')
-    .in('id', contentIds);
-  
-  if (error) throw new Error(`Error fetching blogs: ${error.message}`);
-  return data || [];
-}
-
-async function fetchSchoolDetails(supabase: any, contentIds: string[]) {
-  const { data, error } = await supabase
-    .from('schools')
-    .select('id, name, status, country, state, website, banner_url, logo_url')
-    .in('id', contentIds);
-  if (error) throw new Error(`Error fetching schools: ${error.message}`);
-  return data || [];
-}
-
-// Helper to format content for email
-function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
-  const imgSrc = getImageUrl(content, contentType);
-  const imgHtml = imgSrc 
-    ? `<img src="${imgSrc}" alt="${content.title || 'Content'}" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`
-    : ''; // Fallback to empty string if no image
-  
-  const detailsHtml = getContentDetails(content, contentType);
-  const contentUrl = getContentUrl(content.id, contentType, siteUrl);
-  
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
-        ${imgHtml}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #2a2a72;">${content.title || 'Untitled'}</h3>
-        ${detailsHtml}
-        <div style="margin-top: 16px;">
-          <a href="${contentUrl}" style="display: inline-block; background-color: #2a2a72; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: 600;">Learn More</a>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
+// Get image URL for the content type
 function getImageUrl(content: any, contentType: string): string | null {
+  if (!content) return null;
+  
   switch (contentType) {
     case 'blogs':
       return content.cover_image_url;
@@ -155,87 +160,288 @@ function getImageUrl(content: any, contentType: string): string | null {
   }
 }
 
+// Get URL for viewing the content
 function getContentUrl(id: string, contentType: string, siteUrl: string): string {
+  const baseUrl = siteUrl || 'https://picocareer.com';
+  
   switch (contentType) {
     case 'blogs':
-      return `${siteUrl}/blog/${id}`;
+      return `${baseUrl}/blog/${id}`;
     case 'scholarships':
-      return `${siteUrl}/scholarships/${id}`;
+      return `${baseUrl}/scholarships/${id}`;
     case 'opportunities':
-      return `${siteUrl}/opportunities/${id}`;
+      return `${baseUrl}/opportunities/${id}`;
     case 'careers':
-      return `${siteUrl}/career/${id}`;
+      return `${baseUrl}/career/${id}`;
     case 'majors':
-      return `${siteUrl}/program/${id}`;
+      return `${baseUrl}/program/${id}`;
     case 'mentors':
-      return `${siteUrl}/mentor/${id}`;
+      return `${baseUrl}/mentor/${id}`;
     case 'schools':
-      return `${siteUrl}/school/${id}`;
+      return `${baseUrl}/school/${id}`;
     default:
-      return siteUrl;
+      return baseUrl;
   }
 }
 
+// Generate HTML content for each content type
 function getContentDetails(content: any, contentType: string): string {
+  if (!content) {
+    return `<p class="text-gray-500">No details available.</p>`;
+  }
+  
+  const truncateText = (text: string, maxLength = 150) => {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleDateString();
+    } catch (e) {
+      return dateStr;
+    }
+  };
+  
   switch (contentType) {
     case 'blogs':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.summary || 'No summary available'}</p>
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.summary)}</p>
         ${content.categories ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Categories: ${Array.isArray(content.categories) ? content.categories.join(', ') : content.categories}</p>` : ''}
       `;
+      
     case 'scholarships':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.description ? content.description.substring(0, 150) + '...' : 'No description available'}</p>
-        ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${new Date(content.deadline).toLocaleDateString()}</p>` : ''}
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
+        ${content.provider_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>` : ''}
+        ${content.amount ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Amount: ${content.amount}</p>` : ''}
+        ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${formatDate(content.deadline)}</p>` : ''}
       `;
+      
     case 'opportunities':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.description ? content.description.substring(0, 150) + '...' : 'No description available'}</p>
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
         ${content.provider_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>` : ''}
         ${content.compensation ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Compensation: ${content.compensation}</p>` : ''}
         ${content.location ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">${content.location}${content.remote ? ' (Remote)' : ''}</p>` : ''}
+        ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${formatDate(content.deadline)}</p>` : ''}
       `;
+      
     case 'careers':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.description ? content.description.substring(0, 150) + '...' : 'No description available'}</p>
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
         ${content.salary_range ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Salary Range: ${content.salary_range}</p>` : ''}
+        ${content.keywords && content.keywords.length > 0 ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Keywords: ${Array.isArray(content.keywords) ? content.keywords.slice(0, 5).join(', ') : ''}</p>` : ''}
       `;
+      
     case 'majors':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.description ? content.description.substring(0, 150) + '...' : 'No description available'}</p>
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
         ${content.job_prospects ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Job Prospects: ${content.job_prospects}</p>` : ''}
         ${content.potential_salary ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Potential Salary: ${content.potential_salary}</p>` : ''}
       `;
+      
     case 'mentors':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.bio ? content.bio.substring(0, 150) + '...' : 'No bio available'}</p>
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
         ${content.career_title ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${content.career_title}</p>` : ''}
         ${content.company_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">at ${content.company_name}</p>` : ''}
         ${content.skills ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Skills: ${Array.isArray(content.skills) ? content.skills.slice(0, 3).join(', ') + (content.skills.length > 3 ? '...' : '') : content.skills}</p>` : ''}
       `;
+      
     case 'schools':
       return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${content.name || 'Unnamed School'}</p>
-        ${content.status ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Status: ${content.status}</p>` : ''}
-        ${content.country ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Country: ${content.country}${content.state ? ', ' + content.state : ''}</p>` : ''}
-        ${content.website ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Website: <a href="${content.website}">${content.website}</a></p>` : ''}
+        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description || '')}</p>
+        ${content.status ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Status: ${content.status}</p>` : ''}
+        ${content.country ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Location: ${content.country}${content.state ? ', ' + content.state : ''}</p>` : ''}
+        ${content.website ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Website: <a href="${content.website}" style="color: #2a2a72;">${content.website}</a></p>` : ''}
       `;
+      
     default:
       return `<p style="color: #4b5563;">No details available.</p>`;
   }
 }
 
+// Format content item for email
+function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
+  if (!content) return '';
+  
+  const imgSrc = getImageUrl(content, contentType);
+  const imgHtml = imgSrc 
+    ? `<img src="${imgSrc}" alt="${content.title || 'Content'}" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`
+    : ''; 
+  
+  const contentTitle = content.title || content.name || content.full_name || 'Untitled';
+  const detailsHtml = getContentDetails(content, contentType);
+  const contentUrl = getContentUrl(content.id, contentType, siteUrl);
+  
+  return `
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background-color: white;">
+      <div style="padding: 16px;">
+        ${imgHtml}
+        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #2a2a72;">${contentTitle}</h3>
+        ${detailsHtml}
+        <div style="margin-top: 16px;">
+          <a href="${contentUrl}" style="display: inline-block; background-color: #2a2a72; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: 600;">Learn More</a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Generate email content with header, footer and formatted content items
+function generateEmailContent(
+  title: string,
+  body: string,
+  recipientName: string,
+  campaignId: string,
+  contentItems: any[],
+  contentType: string,
+  siteUrl: string
+): string {
+  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
+  
+  // Generate content cards HTML
+  let contentCardsHtml = '';
+  if (contentItems && contentItems.length > 0) {
+    contentItems.forEach(item => {
+      contentCardsHtml += formatContentForEmail(item, contentType, siteUrl);
+    });
+  } else {
+    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
+  }
+
+  const currentYear = new Date().getFullYear();
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #f9f9fb;">
+        <div style="background-color: #2a2a72; color: white; padding: 16px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px;">
+          <h1 style="margin: 0; font-size: 24px;">${title}</h1>
+        </div>
+        
+        <p style="margin-top: 0; color: #374151;">Hello ${recipientName},</p>
+        
+        <div style="margin: 20px 0; color: #374151;">
+          ${body}
+        </div>
+        
+        <div style="margin: 30px 0;">
+          ${contentCardsHtml}
+        </div>
+        
+        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; margin-top: 30px;">
+          <p style="margin-top: 0; color: #4b5563;">
+            Visit <a href="${siteUrl}" style="color: #2a2a72; text-decoration: none; font-weight: bold;">PicoCareer</a> 
+            to discover more opportunities tailored to your interests.
+          </p>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 12px; color: #6b7280; text-align: center;">
+          <p>&copy; ${currentYear} PicoCareer. All rights reserved.</p>
+          <div style="margin-top: 8px;">
+            <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails.
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Process sending email batches with proper error handling and tracking
+async function processBatchSending(
+  recipients: { id: string; email: string; full_name?: string }[],
+  emailSubject: string,
+  emailContent: string,
+  campaignId: string,
+  batchSize: number,
+  supabaseClient: any
+): Promise<{ sent: number, failed: number, errors: any[] }> {
+  
+  let sentCount = 0;
+  let failedCount = 0;
+  const errors = [];
+  const processedRecipientIds: string[] = [];
+  
+  // Process recipients in batches
+  for (let i = 0; i < recipients.length; i += batchSize) {
+    const batch = recipients.slice(i, i + batchSize);
+    console.log(`Processing batch ${Math.floor(i/batchSize) + 1} of ${Math.ceil(recipients.length/batchSize)} (${batch.length} recipients)`);
+    
+    const batchPromises = batch.map(async (recipient) => {
+      try {
+        // Validate email format
+        if (!recipient.email || !recipient.email.includes('@')) {
+          throw new Error(`Invalid email format: ${recipient.email}`);
+        }
+        
+        const res = await resend.emails.send({
+          from: "PicoCareer <info@picocareer.com>",
+          to: [recipient.email],
+          subject: emailSubject,
+          html: emailContent, // All recipients get the same content for now
+        });
+        
+        if (res.error) {
+          throw new Error(res.error.message || JSON.stringify(res.error));
+        }
+        
+        // Track successful send
+        processedRecipientIds.push(recipient.id);
+        sentCount++;
+        
+        return { success: true, recipient_id: recipient.id, email: recipient.email };
+        
+      } catch (error) {
+        failedCount++;
+        const errMsg = (error as Error).message || String(error);
+        errors.push({ 
+          recipient_id: recipient.id, 
+          email: recipient.email, 
+          error: errMsg 
+        });
+        
+        console.error(`Email send failure for ${recipient.email}: ${errMsg}`);
+        return { success: false, recipient_id: recipient.id, email: recipient.email, error: errMsg };
+      }
+    });
+    
+    await Promise.all(batchPromises);
+    
+    // Wait briefly between batches to avoid rate limiting
+    if (i + batchSize < recipients.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  return { sent: sentCount, failed: failedCount, errors };
+}
+
+// Main handler
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    let campaignId, batchSize;
+    // Parse request params
+    let campaignId: string, batchSize: number, retryCount: number;
+    
     try {
       const json = await req.json();
       campaignId = json.campaignId;
-      batchSize = json.batchSize ?? 50;
+      batchSize = json.batchSize ?? 50; // Default batch size
+      retryCount = json.retryCount ?? 0; // Track retry attempts
     } catch (error) {
       console.error("Invalid JSON in request body:", error);
       return new Response(
@@ -250,6 +456,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate required fields
     if (!campaignId) {
       console.error("Missing campaignId in request.");
       return new Response(
@@ -261,6 +468,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -284,7 +492,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get recipients
+    // Update campaign status to indicate processing
+    await supabaseClient
+      .from('email_campaigns')
+      .update({ 
+        status: 'processing', 
+        last_checked_at: new Date().toISOString()
+      })
+      .eq('id', campaignId);
+
+    // Get recipients based on campaign settings
     let recipients: { id: string; email: string; full_name?: string }[] = [];
     try {
       if (campaign.recipient_type === 'selected' && campaign.recipient_filter?.profile_ids) {
@@ -292,20 +509,25 @@ const handler = async (req: Request): Promise<Response> => {
           .from('profiles')
           .select('id, email, full_name')
           .in('id', campaign.recipient_filter.profile_ids);
+          
         if (recipientsError) {
           throw new Error(`Error fetching selected recipients: ${recipientsError.message}`);
         }
         recipients = selectedRecipients || [];
+        
       } else {
         let query = supabaseClient
           .from('profiles')
           .select('id, email, full_name');
+          
         if (campaign.recipient_type === 'mentees') {
           query = query.eq('user_type', 'mentee');
         } else if (campaign.recipient_type === 'mentors') {
           query = query.eq('user_type', 'mentor');
         }
+        
         const { data: queriedRecipients, error: recipientsError } = await query;
+        
         if (recipientsError) {
           throw new Error(`Error fetching recipients: ${recipientsError.message}`);
         }
@@ -313,6 +535,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } catch (error) {
       console.error("Error fetching recipients:", error);
+      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, `Error fetching recipients: ${(error as Error).message}`);
+      
       return new Response(
         JSON.stringify({ success: false, error: "Error fetching recipients: " + (error as Error).message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -321,13 +545,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (recipients.length === 0) {
       console.warn("No recipients found for this campaign:", campaignId);
+      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, 0, "No recipients found for this campaign");
+      
       return new Response(
         JSON.stringify({ success: false, error: "No recipients found for this campaign" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get all content IDs from the campaign
+    // Get content IDs and validate
     let contentIds: string[] = [];
     if (campaign.content_ids && Array.isArray(campaign.content_ids) && campaign.content_ids.length > 0) {
       contentIds = campaign.content_ids;
@@ -337,6 +563,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (contentIds.length === 0) {
       console.error("No content IDs found in campaign:", campaignId);
+      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, "No content IDs found in campaign");
+      
       return new Response(
         JSON.stringify({ success: false, error: "No content IDs found in campaign" }),
         {
@@ -349,25 +577,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch content details based on content type
     let contentList: any[] = [];
     try {
-      if (campaign.content_type === 'scholarships') {
-        contentList = await fetchScholarshipDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'opportunities') {
-        contentList = await fetchOpportunityDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'careers') {
-        contentList = await fetchCareerDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'majors') {
-        contentList = await fetchMajorDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'mentors') {
-        contentList = await fetchMentorDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'blogs') {
-        contentList = await fetchBlogDetails(supabaseClient, contentIds);
-      } else if (campaign.content_type === 'schools') {
-        contentList = await fetchSchoolDetails(supabaseClient, contentIds);
-      } else {
-        throw new Error(`Unknown content type: ${campaign.content_type}`);
-      }
+      contentList = await fetchContentDetails(supabaseClient, campaign.content_type, contentIds);
     } catch (error) {
       console.error("Error fetching content details:", error);
+      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, `Error fetching content details: ${(error as Error).message}`);
+      
       return new Response(
         JSON.stringify({ success: false, error: "Error fetching content details: " + (error as Error).message }),
         {
@@ -379,6 +593,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (contentList.length === 0) {
       console.error("No content details found for the provided IDs:", contentIds);
+      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, "No content details found for the provided IDs");
+      
       return new Response(
         JSON.stringify({ success: false, error: "No content details found for the provided IDs" }),
         {
@@ -388,7 +604,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get content type title for email subject
+    // Get content type label for email subject
     const contentTypeLabel = {
       'scholarships': 'Scholarship',
       'opportunities': 'Opportunity',
@@ -400,87 +616,42 @@ const handler = async (req: Request): Promise<Response> => {
     }[campaign.content_type] || 'Content';
 
     // Email subject
-    const emailSubject = campaign.subject || `${contentTypeLabel} Spotlight: ${contentList.length > 1 ? `${contentList.length} New Items` : contentList[0].title || contentList[0].full_name || 'Featured Content'}`;
+    const emailSubject = campaign.subject || `${contentTypeLabel} Spotlight: ${contentList.length > 1 ? `${contentList.length} New Items` : contentList[0].title || contentList[0].name || contentList[0].full_name || 'Featured Content'}`;
 
-    // Use Resend for email delivery only
-    const batchedRecipients = [];
-    for (let i = 0; i < recipients.length; i += batchSize) {
-      batchedRecipients.push(recipients.slice(i, i + batchSize));
-    }
-
-    let sentCount = 0;
-    let failedCount = 0;
-    const errors = [];
-    const processedRecipientIds: string[] = [];
-    const startTime = Date.now();
+    // Get site URL from environment or use default
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
 
-    // Processing email sending
-    for (let batchIndex = 0; batchIndex < batchedRecipients.length; batchIndex++) {
-      const batch = batchedRecipients[batchIndex];
-      const batchPromises = batch.map(async (recipient) => {
-        try {
-          // Generate email content with all items in contentList
-          const emailContent = generateEmailContent(
-            emailSubject,
-            campaign.body || `Check out these featured ${campaign.content_type}!`,
-            recipient.full_name || "Valued Member",
-            campaign.id,
-            contentList,
-            campaign.content_type,
-            siteUrl
-          );
+    // Generate email content
+    const emailContent = generateEmailContent(
+      emailSubject,
+      campaign.body || `Check out these featured ${campaign.content_type}!`,
+      "Valued Member", // Personalized per-recipient in a more advanced version
+      campaign.id,
+      contentList,
+      campaign.content_type,
+      siteUrl
+    );
 
-          const res = await resend.emails.send({
-            from: "PicoCareer <info@picocareer.com>",
-            to: [recipient.email],
-            subject: emailSubject,
-            html: emailContent,
-          });
-          if (res.error) {
-            throw new Error(res.error.message || JSON.stringify(res.error));
-          }
-
-          processedRecipientIds.push(recipient.id);
-          sentCount++;
-          return { success: true, recipient_id: recipient.id, email: recipient.email };
-        } catch (error) {
-          failedCount++;
-          const errMsg = (error as Error).message || error;
-          errors.push({ recipient_id: recipient.id, email: recipient.email, error: errMsg });
-          console.error("Email send failure:", recipient.email, errMsg);
-          return { success: false, recipient_id: recipient.id, email: recipient.email, error: errMsg };
-        }
-      });
-      await Promise.all(batchPromises);
-      if (batchIndex < batchedRecipients.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-    }
+    // Timing for metrics
+    const startTime = Date.now();
+    
+    // Send emails in batches
+    const { sent, failed, errors } = await processBatchSending(
+      recipients, 
+      emailSubject, 
+      emailContent, 
+      campaign.id,
+      batchSize,
+      supabaseClient
+    );
 
     const executionTime = (Date.now() - startTime) / 1000;
 
-    const campaignUpdateData: any = {
-      status: sentCount > 0 ? (failedCount > 0 ? 'partial' : 'sent') : 'failed',
-      sent_at: new Date().toISOString(),
-      recipients_count: recipients.length,
-      sent_count: sentCount,
-      failed_count: failedCount
-    };
+    // Update campaign status in database
+    const status = sent > 0 ? (failed > 0 ? 'partial' : 'sent') : 'failed';
+    await updateCampaignStatus(supabaseClient, campaignId, status, sent, failed, recipients.length);
 
-    try {
-      const { error: updateError } = await supabaseClient
-        .from('email_campaigns')
-        .update(campaignUpdateData)
-        .eq('id', campaignId);
-      if (updateError) {
-        console.error("Failed to update campaign status:", updateError.message);
-      }
-    } catch (_updateErr) {
-      // ignore update errors, already logged
-    }
-
-    if (sentCount === 0) {
+    if (sent === 0) {
       console.error("Zero emails sent for campaign:", campaignId, "errors:", errors);
       return new Response(
         JSON.stringify({
@@ -501,8 +672,8 @@ const handler = async (req: Request): Promise<Response> => {
         success: true,
         campaign_id: campaignId,
         total_recipients: recipients.length,
-        sent: sentCount,
-        failed: failedCount,
+        sent,
+        failed,
         execution_time_seconds: executionTime,
         errors: errors.length > 0 ? errors : undefined
       }),
@@ -527,56 +698,40 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-function generateEmailContent(
-  title: string,
-  body: string,
-  recipientName: string,
+// Helper function to update campaign status
+async function updateCampaignStatus(
+  supabase: any,
   campaignId: string,
-  contentItems: any[],
-  contentType: string,
-  siteUrl: string
-): string {
-  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
-  
-  // Generate content cards HTML
-  let contentCardsHtml = '';
-  if (contentItems.length > 0) {
-    contentItems.forEach(item => {
-      contentCardsHtml += formatContentForEmail(item, contentType, siteUrl);
-    });
+  status: string,
+  sentCount: number,
+  failedCount: number,
+  recipientsCount: number,
+  lastError?: string
+): Promise<void> {
+  try {
+    const updateData: any = {
+      status,
+      sent_at: status !== 'failed' ? new Date().toISOString() : null,
+      recipients_count: recipientsCount,
+      sent_count: sentCount,
+      failed_count: failedCount
+    };
+    
+    if (lastError) {
+      updateData.last_error = lastError;
+    }
+    
+    const { error } = await supabase
+      .from('email_campaigns')
+      .update(updateData)
+      .eq('id', campaignId);
+      
+    if (error) {
+      console.error("Failed to update campaign status:", error.message);
+    }
+  } catch (error) {
+    console.error("Error updating campaign status:", error);
   }
-
-  return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #f9f9fb;">
-      <div style="background-color: #2a2a72; color: white; padding: 16px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px;">
-        <h1 style="margin: 0; font-size: 24px;">${title}</h1>
-      </div>
-      
-      <p style="margin-top: 0; color: #374151;">Hello ${recipientName},</p>
-      
-      <div style="margin: 20px 0; color: #374151;">
-        ${body}
-      </div>
-      
-      <div style="margin: 30px 0;">
-        ${contentCardsHtml}
-      </div>
-      
-      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 6px; margin-top: 30px;">
-        <p style="margin-top: 0; color: #4b5563;">
-          Visit <a href="${siteUrl}" style="color: #2a2a72; text-decoration: none; font-weight: bold;">PicoCareer</a> 
-          to discover more opportunities tailored to your interests.
-        </p>
-      </div>
-      
-      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 12px; color: #6b7280; text-align: center;">
-        <p>&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
-        <div style="margin-top: 8px;">
-          <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails.
-        </div>
-      </div>
-    </div>
-  `;
 }
 
 serve(handler);
