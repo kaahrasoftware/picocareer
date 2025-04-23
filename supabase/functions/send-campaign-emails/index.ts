@@ -1,4 +1,5 @@
 
+// Use Resend for campaign email delivery, no Google/Gmail refs should remain!
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -151,7 +152,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // ======== SENDING EMAILS USING RESEND ========
+    // SENDING EMAILS USING RESEND ONLY -- Google/Gmail code completely removed!
     const batchedRecipients = [];
     for (let i = 0; i < recipients.length; i += batchSize) {
       batchedRecipients.push(recipients.slice(i, i + batchSize));
