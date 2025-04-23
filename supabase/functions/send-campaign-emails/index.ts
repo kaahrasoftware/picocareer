@@ -70,18 +70,22 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
         break;
         
       case 'mentors':
-        // Careful selection of fields with proper error handling
+        // Updated mentor query with proper joins
         const { data: mentorData, error: mentorError } = await supabase
           .from('profiles')
           .select(`
-            id,
+            id, 
             full_name,
             bio,
             avatar_url,
             skills,
             position,
-            company_name,
-            careers:position(title)
+            companies:company_id (
+              name
+            ),
+            careers:position (
+              title
+            )
           `)
           .in('id', contentIds)
           .eq('user_type', 'mentor');
@@ -96,7 +100,7 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
           skills: mentor.skills,
           position: mentor.position || '',
           career_title: mentor.careers?.title || '',
-          company_name: mentor.company_name || ''
+          company_name: mentor.companies?.name || ''
         }));
         break;
         
@@ -118,7 +122,6 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
         
         if (schoolError) throw new Error(`Error fetching schools: ${schoolError.message}`);
         
-        // Transform schools to match our expected format with title field
         data = (schools || []).map(school => ({
           ...school,
           title: school.name || 'Unnamed School'
