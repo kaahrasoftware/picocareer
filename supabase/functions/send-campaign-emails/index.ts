@@ -29,7 +29,7 @@ async function fetchScholarshipDetails(supabase: any, contentIds: string[]) {
 async function fetchOpportunityDetails(supabase: any, contentIds: string[]) {
   const { data, error } = await supabase
     .from('opportunities')
-    .select('id, title, description, provider_name, compensation, location, remote, deadline, image_url')
+    .select('id, title, description, provider_name, compensation, location, remote, deadline, cover_image_url')
     .in('id', contentIds);
   
   if (error) throw new Error(`Error fetching opportunities: ${error.message}`);
@@ -77,6 +77,15 @@ async function fetchBlogDetails(supabase: any, contentIds: string[]) {
   return data || [];
 }
 
+async function fetchSchoolDetails(supabase: any, contentIds: string[]) {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('id, name, status, country, state, website, banner_url, logo_url')
+    .in('id', contentIds);
+  if (error) throw new Error(`Error fetching schools: ${error.message}`);
+  return data || [];
+}
+
 // Helper to format content for email
 function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
   const imgSrc = getImageUrl(content, contentType);
@@ -106,12 +115,15 @@ function getImageUrl(content: any, contentType: string): string | null {
     case 'blogs':
       return content.cover_image_url;
     case 'scholarships':
-    case 'opportunities':
     case 'careers':
     case 'majors':
       return content.image_url;
+    case 'opportunities':
+      return content.cover_image_url;
     case 'mentors':
       return content.avatar_url;
+    case 'schools':
+      return content.banner_url || content.logo_url;
     default:
       return null;
   }
@@ -131,6 +143,8 @@ function getContentUrl(id: string, contentType: string, siteUrl: string): string
       return `${siteUrl}/program/${id}`;
     case 'mentors':
       return `${siteUrl}/mentor/${id}`;
+    case 'schools':
+      return `${siteUrl}/school/${id}`;
     default:
       return siteUrl;
   }
@@ -171,6 +185,13 @@ function getContentDetails(content: any, contentType: string): string {
         <p style="color: #4b5563; margin-bottom: 8px;">${content.bio ? content.bio.substring(0, 150) + '...' : 'No bio available'}</p>
         ${content.professional_title ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${content.professional_title}</p>` : ''}
         ${content.skills ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Skills: ${Array.isArray(content.skills) ? content.skills.slice(0, 3).join(', ') + (content.skills.length > 3 ? '...' : '') : content.skills}</p>` : ''}
+      `;
+    case 'schools':
+      return `
+        <p style="color: #4b5563; margin-bottom: 8px;">${content.name || 'Unnamed School'}</p>
+        ${content.status ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Status: ${content.status}</p>` : ''}
+        ${content.country ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Country: ${content.country}${content.state ? ', ' + content.state : ''}</p>` : ''}
+        ${content.website ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Website: <a href="${content.website}">${content.website}</a></p>` : ''}
       `;
     default:
       return `<p style="color: #4b5563;">No details available.</p>`;
@@ -313,6 +334,8 @@ const handler = async (req: Request): Promise<Response> => {
         contentList = await fetchMentorDetails(supabaseClient, contentIds);
       } else if (campaign.content_type === 'blogs') {
         contentList = await fetchBlogDetails(supabaseClient, contentIds);
+      } else if (campaign.content_type === 'schools') {
+        contentList = await fetchSchoolDetails(supabaseClient, contentIds);
       } else {
         throw new Error(`Unknown content type: ${campaign.content_type}`);
       }
