@@ -68,6 +68,7 @@ async function fetchMentorDetails(supabase: any, contentIds: string[]) {
       avatar_url,
       skills,
       position,
+      company_name,
       careers:position(title)
     `)
     .in('id', contentIds)
@@ -77,11 +78,13 @@ async function fetchMentorDetails(supabase: any, contentIds: string[]) {
   
   console.log("Raw mentor data:", data);
 
-  // Map: use position title from careers join for professional_title
   const transformedData = (data || []).map((mentor: any) => {
     const transformed = {
       ...mentor,
-      professional_title: mentor.careers?.title || ""
+      title: mentor.full_name || '',
+      position: mentor.position || '',
+      career_title: mentor.careers?.title || '',
+      company_name: mentor.company_name || ''
     };
     return transformed;
   });
@@ -206,7 +209,8 @@ function getContentDetails(content: any, contentType: string): string {
     case 'mentors':
       return `
         <p style="color: #4b5563; margin-bottom: 8px;">${content.bio ? content.bio.substring(0, 150) + '...' : 'No bio available'}</p>
-        ${content.professional_title ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${content.professional_title}</p>` : ''}
+        ${content.career_title ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${content.career_title}</p>` : ''}
+        ${content.company_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">at ${content.company_name}</p>` : ''}
         ${content.skills ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Skills: ${Array.isArray(content.skills) ? content.skills.slice(0, 3).join(', ') + (content.skills.length > 3 ? '...' : '') : content.skills}</p>` : ''}
       `;
     case 'schools':
