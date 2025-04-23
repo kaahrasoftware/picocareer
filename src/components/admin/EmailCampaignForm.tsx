@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,17 @@ export function EmailCampaignForm({
       return;
     }
 
+    // Validate that scheduled time is in the future
+    const scheduleDate = new Date(scheduledFor);
+    if (scheduleDate <= new Date()) {
+      toast({ 
+        title: "Invalid schedule time", 
+        description: "Scheduled time must be in the future",
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
@@ -210,7 +222,10 @@ export function EmailCampaignForm({
           : {},
         sent_at: null,
         failed_count: 0,
-        recipients_count: 0
+        recipients_count: 0,
+        status: 'pending', // Set initial status as pending
+        error_message: null,
+        last_checked_at: null
       }));
 
       const { data: insertedCampaigns, error: campaignError } = await supabase
@@ -237,7 +252,7 @@ export function EmailCampaignForm({
 
       toast({ 
         title: "Campaign(s) created!", 
-        description: `Scheduled ${campaignInserts.length} campaign(s).` 
+        description: `Scheduled ${campaignInserts.length} campaign(s) for ${new Date(scheduledFor).toLocaleString()}.` 
       });
       
       setSelectedContentIds([]);

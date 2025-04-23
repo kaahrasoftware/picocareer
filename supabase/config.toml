@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.send-campaign-emails]
 verify_jwt = true
+
+[functions.check-scheduled-campaigns]
+verify_jwt = false

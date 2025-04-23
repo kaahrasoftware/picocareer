@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { EmailCampaignForm } from "@/components/admin/EmailCampaignForm";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -7,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
@@ -38,10 +40,12 @@ export default function AdminEmailCampaigns() {
           sent_count,
           failed_count,
           recipients_count,
-          created_at
+          created_at,
+          error_message,
+          last_checked_at
         `)
         .eq('admin_id', profile.id)
-        .order('created_at', { ascending: false })
+        .order('scheduled_for', { ascending: false })
         .limit(20);
       
       if (error) throw error;
@@ -56,6 +60,13 @@ export default function AdminEmailCampaigns() {
       setLoadingCampaigns(false);
     }
   };
+
+  // Load campaigns when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      loadCampaigns();
+    }
+  }, [profile]);
 
   // Handle sending a campaign
   const handleSendCampaign = async (campaignId: string) => {
@@ -91,6 +102,80 @@ export default function AdminEmailCampaigns() {
     }
   };
 
+  // Manually trigger campaign check
+  const handleCheckScheduledCampaigns = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-scheduled-campaigns', {});
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Checked scheduled campaigns",
+        description: data.campaigns_processed 
+          ? `Processed ${data.campaigns_processed} campaigns` 
+          : "No campaigns due for sending"
+      });
+      
+      // Refresh campaigns list
+      loadCampaigns();
+    } catch (err: any) {
+      toast({
+        title: "Error checking scheduled campaigns",
+        description: err.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStatusBadge = (campaign: any) => {
+    switch (campaign.status) {
+      case 'sent':
+        return (
+          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Sent
+          </Badge>
+        );
+      case 'sending':
+        return (
+          <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Sending
+          </Badge>
+        );
+      case 'pending':
+        return (
+          <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200 flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Scheduled
+          </Badge>
+        );
+      case 'partial':
+        return (
+          <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Partial
+          </Badge>
+        );
+      case 'failed':
+        return (
+          <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 flex items-center gap-1">
+            <XCircle className="h-3 w-3" />
+            Failed
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+            {campaign.status || 'Unknown'}
+          </Badge>
+        );
+    }
+  };
+
   if (!profile) return null;
   if (profile.user_type !== "admin") {
     return <Navigate to="/" replace />;
@@ -113,19 +198,34 @@ export default function AdminEmailCampaigns() {
         <div className="md:col-span-2">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Recent Campaigns</h2>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => loadCampaigns()}
-              disabled={loadingCampaigns}
-            >
-              {loadingCampaigns ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : "Refresh"}
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleCheckScheduledCampaigns}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
+                  </>
+                ) : "Check Scheduled"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => loadCampaigns()}
+                disabled={loadingCampaigns}
+              >
+                {loadingCampaigns ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : "Refresh"}
+              </Button>
+            </div>
           </div>
           
           {campaigns.length === 0 ? (
@@ -150,7 +250,10 @@ export default function AdminEmailCampaigns() {
                   <CardContent className="pt-6">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-semibold text-lg">{campaign.subject || "Unnamed Campaign"}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg">{campaign.subject || "Unnamed Campaign"}</h3>
+                          {renderStatusBadge(campaign)}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           <p>Type: {campaign.content_type}</p>
                           <p>Scheduled: {new Date(campaign.scheduled_for).toLocaleString()}</p>
@@ -158,8 +261,11 @@ export default function AdminEmailCampaigns() {
                           {campaign.sent_at && (
                             <p>Sent At: {new Date(campaign.sent_at).toLocaleString()}</p>
                           )}
-                          <p>Sent: {campaign.sent_count}/{campaign.recipients_count}</p>
+                          <p>Sent: {campaign.sent_count}/{campaign.recipients_count || 0}</p>
                           <p>Failed: {campaign.failed_count}</p>
+                          {campaign.error_message && (
+                            <p className="text-red-500 mt-1">Error: {campaign.error_message}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -172,8 +278,24 @@ export default function AdminEmailCampaigns() {
                             Partially Sent ({campaign.sent_count}/{campaign.recipients_count})
                           </div>
                         ) : campaign.status === 'failed' ? (
-                          <div className="text-sm text-red-600 font-medium">
-                            Failed to Send
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 border-red-300"
+                            onClick={() => handleSendCampaign(campaign.id)}
+                            disabled={sendingCampaign === campaign.id}
+                          >
+                            {sendingCampaign === campaign.id ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Retrying...
+                              </>
+                            ) : "Retry Send"}
+                          </Button>
+                        ) : campaign.status === 'sending' ? (
+                          <div className="text-sm text-blue-600 font-medium flex items-center">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Sending...
                           </div>
                         ) : (
                           <Button
