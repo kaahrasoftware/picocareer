@@ -7,7 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 type ContentType = "scholarships" | "opportunities" | "careers" | "majors" | "schools" | "mentors" | "blogs";
-
 type ContentOption = { id: string; title: string };
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
@@ -20,17 +19,31 @@ const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   blogs: "Blog Spotlight",
 };
 
+function getRandomIndexes(arrayLength: number, count: number) {
+  const result: number[] = [];
+  const min = Math.min(count, arrayLength);
+  while (result.length < min) {
+    const randomIndex = Math.floor(Math.random() * arrayLength);
+    if (!result.includes(randomIndex)) {
+      result.push(randomIndex);
+    }
+  }
+  return result;
+}
+
 /**
  * Form for admins to create and schedule content spotlight campaigns
  */
 export function EmailCampaignForm({ adminId }: { adminId: string }) {
   const [contentType, setContentType] = useState<ContentType>("scholarships");
   const [contentList, setContentList] = useState<ContentOption[]>([]);
-  const [selectedContentId, setSelectedContentId] = useState<string>("");
+  const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [scheduledFor, setScheduledFor] = useState<string>(""); // ISO date-time string
   const [loadingContent, setLoadingContent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [randomSelect, setRandomSelect] = useState(false);
+  const [randomCount, setRandomCount] = useState(1);
 
   // Load the appropriate content list on contentType change
   useEffect(() => {
@@ -38,7 +51,7 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     async function loadContent() {
       setLoadingContent(true);
       setContentList([]);
-      setSelectedContentId("");
+      setSelectedContentIds([]);
       let content: ContentOption[] = [];
       const mapRows = (list: any[] | null, field = "title") => (list || []).map(item => ({
         id: item.id, title: item[field] || item.full_name || "Untitled"
@@ -77,18 +90,22 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     loadContent();
     return () => { isMounted = false; }
   }, [contentType]);
-  
+
+  // Handle random selection logic
+  useEffect(() => {
+    if (randomSelect && contentList.length > 0) {
+      const count = Math.min(randomCount, contentList.length);
+      const randomIndexes = getRandomIndexes(contentList.length, count);
+      setSelectedContentIds(randomIndexes.map(idx => contentList[idx].id));
+    }
+  // Only re-run if randomSelect, contentList, or randomCount changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [randomSelect, contentList, randomCount]);
+
   function getEmailTemplate(content: ContentOption | undefined) {
     const label = CONTENT_TYPE_LABELS[contentType];
     const previewTitle = content ? `${label}: ${content.title}` : label;
     switch (contentType) {
-      case "scholarships":
-      case "opportunities":
-      case "majors":
-      case "careers":
-      case "schools":
-      case "mentors":
-      case "blogs":
       default:
         return (
           <div>
@@ -107,27 +124,31 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedContentId || !contentType || !frequency || !scheduledFor) {
+    if (!contentType || !frequency || !scheduledFor || selectedContentIds.length === 0) {
       toast({ title: "Fill all required fields", variant: "destructive" });
       return;
     }
     setSubmitting(true);
     try {
-      const content = contentList.find(c => c.id === selectedContentId);
-      const subject = `${CONTENT_TYPE_LABELS[contentType]}: ${content?.title}`;
-      const body = `${subject}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`;
-      const { error } = await supabase.from("email_campaigns").insert([{
-        scheduled_for: scheduledFor,
-        frequency,
-        content_type: contentType,
-        content_id: selectedContentId,
-        subject,
-        body,
-        admin_id: adminId,
-      }]);
+      // For each selected content, create an email campaign
+      const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
+      const inserts = selectedContents.map(content => {
+        const subject = `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}`;
+        const body = `${subject}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`;
+        return {
+          scheduled_for: scheduledFor,
+          frequency,
+          content_type: contentType,
+          content_id: content.id,
+          subject,
+          body,
+          admin_id: adminId,
+        };
+      });
+      const { error } = await supabase.from("email_campaigns").insert(inserts);
       if (error) throw error;
-      toast({ title: "Campaign created!", description: "Your campaign has been scheduled." });
-      setSelectedContentId("");
+      toast({ title: "Campaign(s) created!", description: `Scheduled ${inserts.length} campaign(s).` });
+      setSelectedContentIds([]);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -140,7 +161,16 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
         <form onSubmit={handleSubmit} className="grid gap-6">
           <div>
             <label htmlFor="contentType" className="block font-medium mb-1">Content Type</label>
-            <select id="contentType" value={contentType} onChange={e => setContentType(e.target.value as ContentType)} className="w-full border px-3 py-2 rounded">
+            <select
+              id="contentType"
+              value={contentType}
+              onChange={e => { 
+                setContentType(e.target.value as ContentType)
+                setRandomSelect(false);
+                setRandomCount(1);
+              }}
+              className="w-full border px-3 py-2 rounded"
+            >
               {Object.keys(CONTENT_TYPE_LABELS).map(type => (
                 <option key={type} value={type}>{CONTENT_TYPE_LABELS[type as ContentType]}</option>
               ))}
@@ -155,17 +185,49 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
             ) : (
               <select
                 id="selectContent"
-                value={selectedContentId}
-                onChange={e => setSelectedContentId(e.target.value)}
-                className="w-full border px-3 py-2 rounded"
-                required
+                multiple
+                disabled={randomSelect}
+                value={selectedContentIds}
+                onChange={e => {
+                  const options = Array.from(e.target.selectedOptions, option => option.value);
+                  setSelectedContentIds(options);
+                }}
+                className="w-full border px-3 py-2 rounded min-h-[4rem]"
+                required={!randomSelect}
+                size={Math.min(Math.max(4, contentList.length), 8)}
               >
-                <option value="">Select...</option>
                 {contentList.map(option => (
                   <option key={option.id} value={option.id}>{option.title}</option>
                 ))}
               </select>
             )}
+            <div className="flex items-center space-x-4 mt-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={randomSelect}
+                  onChange={e => setRandomSelect(e.target.checked)}
+                  className="mr-2"
+                />
+                Select Random
+              </label>
+              {randomSelect && (
+                <input
+                  type="number"
+                  min={1}
+                  max={contentList.length || 1}
+                  value={randomCount}
+                  onChange={e => setRandomCount(Math.max(1, Math.min(Number(e.target.value), contentList.length || 1)))}
+                  className="w-20 border px-2 py-1 rounded"
+                  disabled={!randomSelect}
+                />
+              )}
+              {randomSelect && (
+                <span className="text-xs text-muted-foreground">
+                  (Selects {randomCount} random)
+                </span>
+              )}
+            </div>
           </div>
           <div>
             <label htmlFor="frequency" className="block font-medium mb-1">Frequency</label>
@@ -188,9 +250,20 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
           </div>
           <div>
             <label className="block font-medium mb-1">Email Preview</label>
-            <div className="border bg-muted rounded px-3 py-4 text-sm">{getEmailTemplate(contentList.find(c => c.id === selectedContentId))}</div>
+            <div className="border bg-muted rounded px-3 py-4 text-sm">
+              {selectedContentIds.length === 0
+                ? "(Nothing selected)"
+                : selectedContentIds.map(id => {
+                    const content = contentList.find(c => c.id === id);
+                    return (
+                      <div key={id} className="mb-4 border-b last:border-b-0 pb-2 last:pb-0">
+                        {getEmailTemplate(content)}
+                      </div>
+                    );
+                  })}
+            </div>
           </div>
-          <Button type="submit" className="w-full" disabled={submitting || !selectedContentId}>
+          <Button type="submit" className="w-full" disabled={submitting || selectedContentIds.length === 0}>
             {submitting ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Create Campaign"}
             {submitting ? "Creating..." : ""}
           </Button>
