@@ -21,6 +21,7 @@ import { EmailPreview } from "./email-campaign-form/EmailPreview";
 import { RecipientTypeSelector } from "./email-campaign-form/RecipientTypeSelector";
 import { RecipientSelection } from "./email-campaign-form/RecipientSelection";
 import { CONTENT_TYPE_LABELS, ContentType } from "./email-campaign-form/utils";
+import { getRandomIndexes } from "./email-campaign-form/helpers";
 import { useEmailCampaignFormState } from "./email-campaign-form/useEmailCampaignFormState";
 import { handleEmailCampaignFormSubmit } from "./email-campaign-form/useEmailCampaignFormSubmit";
 
