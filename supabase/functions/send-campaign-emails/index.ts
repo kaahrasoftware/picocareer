@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -115,7 +114,7 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
       case 'schools':
         const { data: schools, error: schoolError } = await supabase
           .from('schools')
-          .select('id, name, status, country, state, website, type, location')
+          .select('id, name, type, location, country, state, website')
           .in('id', contentIds);
         
         if (schoolError) throw new Error(`Error fetching schools: ${schoolError.message}`);
@@ -123,8 +122,7 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
         data = (schools || []).map(school => ({
           ...school,
           title: school.name || 'Unnamed School',
-          description: '', // Set empty description since it doesn't exist in the table
-          location: [school.state, school.country].filter(Boolean).join(', ') || 'Location not specified'
+          location: school.location || [school.state, school.country].filter(Boolean).join(', ') || 'Location not specified'
         }));
         break;
         
@@ -187,7 +185,7 @@ function getContentUrl(id: string, contentType: string, siteUrl: string): string
 
 function getContentDetails(content: any, contentType: string): string {
   if (!content) {
-    return `<p class="text-gray-500">No details available.</p>`;
+    return `<p style="color: #4b5563;">No details available.</p>`;
   }
   
   const truncateText = (text: string, maxLength = 150) => {
@@ -253,7 +251,6 @@ function getContentDetails(content: any, contentType: string): string {
     case 'schools':
       return `
         ${content.type ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Type: ${content.type}</p>` : ''}
-        ${content.status ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Status: ${content.status}</p>` : ''}
         ${content.location ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Location: ${content.location}</p>` : ''}
         ${content.website ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Website: <a href="${content.website}" style="color: #2a2a72;">${content.website}</a></p>` : ''}
       `;
