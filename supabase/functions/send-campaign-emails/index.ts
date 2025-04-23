@@ -57,6 +57,8 @@ async function fetchMajorDetails(supabase: any, contentIds: string[]) {
 }
 
 async function fetchMentorDetails(supabase: any, contentIds: string[]) {
+  console.log("Fetching mentor details for:", contentIds);
+  
   const { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -65,6 +67,7 @@ async function fetchMentorDetails(supabase: any, contentIds: string[]) {
       bio,
       avatar_url,
       skills,
+      position,
       careers:position(title)
     `)
     .in('id', contentIds)
@@ -72,12 +75,19 @@ async function fetchMentorDetails(supabase: any, contentIds: string[]) {
 
   if (error) throw new Error(`Error fetching mentors: ${error.message}`);
   
-  // Map: flatten careers.title onto professional_title for compatibility with expected template
-  // If position/careers join is missing, professional_title will be ""
-  return (data || []).map((mentor: any) => ({
-    ...mentor,
-    professional_title: mentor.careers?.title || "",
-  }));
+  console.log("Raw mentor data:", data);
+
+  // Map: use position title from careers join for professional_title
+  const transformedData = (data || []).map((mentor: any) => {
+    const transformed = {
+      ...mentor,
+      professional_title: mentor.careers?.title || ""
+    };
+    return transformed;
+  });
+  
+  console.log("Transformed mentor data:", transformedData);
+  return transformedData;
 }
 
 async function fetchBlogDetails(supabase: any, contentIds: string[]) {
