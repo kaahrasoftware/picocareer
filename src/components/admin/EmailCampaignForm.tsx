@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,30 @@ import { RecipientSelection } from "./email-campaign-form/RecipientSelection";
 import { CONTENT_TYPE_LABELS, ContentType } from "./email-campaign-form/utils";
 
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
+
+/**
+ * Generates an array of random unique indexes within a given range
+ * @param max The maximum index value (exclusive)
+ * @param count Number of random indexes to generate
+ * @returns Array of random unique indexes
+ */
+function getRandomIndexes(max: number, count: number): number[] {
+  const indexes: number[] = [];
+  const available = Array.from({ length: max }, (_, i) => i);
+  
+  // Handle edge cases
+  if (count >= max) {
+    return available;
+  }
+  
+  for (let i = 0; i < count; i++) {
+    const randomIndex = Math.floor(Math.random() * available.length);
+    const selected = available.splice(randomIndex, 1)[0];
+    indexes.push(selected);
+  }
+  
+  return indexes;
+}
 
 export function EmailCampaignForm({ 
   adminId, 
