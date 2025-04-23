@@ -1,9 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
-import { getRandomIndexes } from "./helpers";
 
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
 
@@ -28,7 +26,7 @@ export function useEmailCampaignFormState({
   setRecipientsList,
   recipientType
 }: UseEmailCampaignFormStateProps) {
-  // Content loading logic
+  
   useEffect(() => {
     let isMounted = true;
     async function loadContent() {
@@ -36,46 +34,82 @@ export function useEmailCampaignFormState({
       setContentList([]);
       setSelectedContentIds([]);
       let content: {id: string, title: string}[] = [];
-      const mapRows = (list: any[] | null, field = "title") => (list || []).map(item => ({
-        id: item.id, title: item[field] || item.full_name || "Untitled"
-      }));
-      switch (contentType) {
-        case "scholarships":
-          ({ data: content } = await supabase.from("scholarships").select("id, title").eq("status", "Active"));
-          break;
-        case "opportunities":
-          ({ data: content } = await supabase.from("opportunities").select("id, title").eq("status", "Active"));
-          break;
-        case "careers":
-          ({ data: content } = await supabase.from("careers").select("id, title").eq("status", "Active"));
-          break;
-        case "majors":
-          ({ data: content } = await supabase.from("majors").select("id, title").eq("status", "Active"));
-          break;
-        case "schools":
-          ({ data: content } = await supabase.from("schools").select("id, name"));
-          content = mapRows(content, "name");
-          break;
-        case "mentors":
-          ({ data: content } = await supabase.from("profiles").select("id, full_name").eq("user_type", "mentor"));
-          content = mapRows(content, "full_name");
-          break;
-        case "blogs":
-          ({ data: content } = await supabase.from("blogs").select("id, title").eq("status", "Active"));
-          break;
-        default: content = [];
-      }
-      if (isMounted) {
-        setContentList(content ? content : []);
-        setLoadingContent(false);
+      
+      try {
+        switch (contentType) {
+          case "scholarships":
+            ({ data: content } = await supabase
+              .from("scholarships")
+              .select("id, title")
+              .eq("status", "Active"));
+            break;
+            
+          case "opportunities":
+            ({ data: content } = await supabase
+              .from("opportunities")
+              .select("id, title")
+              .eq("status", "Active"));
+            break;
+            
+          case "careers":
+            ({ data: content } = await supabase
+              .from("careers")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          case "majors":
+            ({ data: content } = await supabase
+              .from("majors")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          case "schools":
+            ({ data: content } = await supabase
+              .from("schools")
+              .select("id, name")
+              .eq("status", "Approved"));
+            content = content?.map(school => ({
+              id: school.id,
+              title: school.name
+            }));
+            break;
+            
+          case "blogs":
+            ({ data: content } = await supabase
+              .from("blogs")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          default:
+            content = [];
+        }
+
+        if (isMounted) {
+          console.log(`Loaded ${contentType} content:`, content);
+          setContentList(content || []);
+          setLoadingContent(false);
+        }
+      } catch (error) {
+        console.error(`Error loading ${contentType} content:`, error);
+        toast({
+          title: "Error Loading Content",
+          description: `Failed to load ${CONTENT_TYPE_LABELS[contentType]}. Please try again.`,
+          variant: "destructive"
+        });
+        if (isMounted) {
+          setContentList([]);
+          setLoadingContent(false);
+        }
       }
     }
+    
     loadContent();
     return () => { isMounted = false; }
-    // eslint-disable-next-line
   }, [contentType]);
 
-  // Select random content logic: moved here!
   useEffect(() => {
     setSelectedContentIds(prev => {
       return prev; // intentionally not resetting outside of randomSelect change or contentList population
