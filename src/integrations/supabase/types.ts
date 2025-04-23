@@ -540,6 +540,7 @@ export type Database = {
           failed_count: number
           frequency: string
           id: string
+          last_checked_at: string | null
           last_error: string | null
           last_sent: string | null
           recipient_filter: Json | null
@@ -561,6 +562,7 @@ export type Database = {
           failed_count?: number
           frequency: string
           id?: string
+          last_checked_at?: string | null
           last_error?: string | null
           last_sent?: string | null
           recipient_filter?: Json | null
@@ -582,6 +584,7 @@ export type Database = {
           failed_count?: number
           frequency?: string
           id?: string
+          last_checked_at?: string | null
           last_error?: string | null
           last_sent?: string | null
           recipient_filter?: Json | null
