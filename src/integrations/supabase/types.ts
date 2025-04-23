@@ -537,13 +537,16 @@ export type Database = {
           content_id: string
           content_type: string
           created_at: string
+          failed_count: number
           frequency: string
           id: string
           last_error: string | null
           last_sent: string | null
           recipient_filter: Json | null
           recipient_type: string | null
+          recipients_count: number
           scheduled_for: string | null
+          sent_at: string | null
           sent_count: number
           status: string
           subject: string | null
@@ -555,13 +558,16 @@ export type Database = {
           content_id: string
           content_type: string
           created_at?: string
+          failed_count?: number
           frequency: string
           id?: string
           last_error?: string | null
           last_sent?: string | null
           recipient_filter?: Json | null
           recipient_type?: string | null
+          recipients_count?: number
           scheduled_for?: string | null
+          sent_at?: string | null
           sent_count?: number
           status?: string
           subject?: string | null
@@ -573,13 +579,16 @@ export type Database = {
           content_id?: string
           content_type?: string
           created_at?: string
+          failed_count?: number
           frequency?: string
           id?: string
           last_error?: string | null
           last_sent?: string | null
           recipient_filter?: Json | null
           recipient_type?: string | null
+          recipients_count?: number
           scheduled_for?: string | null
+          sent_at?: string | null
           sent_count?: number
           status?: string
           subject?: string | null

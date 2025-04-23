@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 type ContentType = "scholarships" | "opportunities" | "careers" | "majors" | "schools" | "mentors" | "blogs";
-type ContentOption = { id: string; title: string };
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
@@ -40,9 +39,6 @@ function getRandomIndexes(arrayLength: number, count: number) {
   return result;
 }
 
-/**
- * Form for admins to create and schedule content spotlight campaigns
- */
 export function EmailCampaignForm({ 
   adminId, 
   onCampaignCreated 
@@ -51,17 +47,17 @@ export function EmailCampaignForm({
   onCampaignCreated?: () => void 
 }) {
   const [contentType, setContentType] = useState<ContentType>("scholarships");
-  const [contentList, setContentList] = useState<ContentOption[]>([]);
+  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
-  const [scheduledFor, setScheduledFor] = useState<string>(""); // ISO date-time string
+  const [scheduledFor, setScheduledFor] = useState<string>(""); 
   const [loadingContent, setLoadingContent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [randomSelect, setRandomSelect] = useState(false);
   const [randomCount, setRandomCount] = useState(1);
   const [recipientType, setRecipientType] = useState<RecipientType>('all');
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [recipientsList, setRecipientsList] = useState<{ id: string; email: string; full_name?: string }[]>([]);
+  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,7 +65,7 @@ export function EmailCampaignForm({
       setLoadingContent(true);
       setContentList([]);
       setSelectedContentIds([]);
-      let content: ContentOption[] = [];
+      let content: {id: string, title: string}[] = [];
       const mapRows = (list: any[] | null, field = "title") => (list || []).map(item => ({
         id: item.id, title: item[field] || item.full_name || "Untitled"
       }));
@@ -116,7 +112,7 @@ export function EmailCampaignForm({
     }
   }, [randomSelect, contentList, randomCount]);
 
-  function getEmailTemplate(content: ContentOption | undefined) {
+  function getEmailTemplate(content: {id: string, title: string} | undefined) {
     const label = CONTENT_TYPE_LABELS[contentType];
     const previewTitle = content ? `${label}: ${content.title}` : label;
     switch (contentType) {
@@ -197,24 +193,22 @@ export function EmailCampaignForm({
     try {
       const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
       
-      const campaignInserts = selectedContents.map(content => {
-        const subject = `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}`;
-        const body = `${subject}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`;
-        
-        return {
-          scheduled_for: scheduledFor,
-          frequency,
-          content_type: contentType,
-          content_id: content.id,
-          subject,
-          body,
-          admin_id: adminId,
-          recipient_type: recipientType,
-          recipient_filter: recipientType === 'selected' 
-            ? { profile_ids: selectedRecipients } 
-            : {}
-        };
-      });
+      const campaignInserts = selectedContents.map(content => ({
+        scheduled_for: scheduledFor,
+        frequency,
+        content_type: contentType,
+        content_id: content.id,
+        subject: `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}`,
+        body: `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`,
+        admin_id: adminId,
+        recipient_type: recipientType,
+        recipient_filter: recipientType === 'selected' 
+          ? { profile_ids: selectedRecipients } 
+          : {},
+        sent_at: null,
+        failed_count: 0,
+        recipients_count: 0
+      }));
 
       const { data: insertedCampaigns, error: campaignError } = await supabase
         .from('email_campaigns')

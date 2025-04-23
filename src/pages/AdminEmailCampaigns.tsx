@@ -10,9 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-/**
- * AdminEmailCampaigns page for admins to plan and schedule spotlight emails.
- */
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
@@ -41,6 +38,7 @@ export default function AdminEmailCampaigns() {
           recipient_type,
           sent_count,
           failed_count,
+          recipients_count,
           created_at
         `)
         .eq('admin_id', profile.id)
@@ -158,6 +156,11 @@ export default function AdminEmailCampaigns() {
                           <p>Type: {campaign.content_type}</p>
                           <p>Scheduled: {new Date(campaign.scheduled_for).toLocaleString()}</p>
                           <p>Recipients: {campaign.recipient_type}</p>
+                          {campaign.sent_at && (
+                            <p>Sent At: {new Date(campaign.sent_at).toLocaleString()}</p>
+                          )}
+                          <p>Sent: {campaign.sent_count}/{campaign.recipients_count}</p>
+                          <p>Failed: {campaign.failed_count}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -167,7 +170,7 @@ export default function AdminEmailCampaigns() {
                           </div>
                         ) : campaign.status === 'partial' ? (
                           <div className="text-sm text-amber-600 font-medium">
-                            Partially Sent ({campaign.sent_count}/{campaign.sent_count + campaign.failed_count})
+                            Partially Sent ({campaign.sent_count}/{campaign.recipients_count})
                           </div>
                         ) : campaign.status === 'failed' ? (
                           <div className="text-sm text-red-600 font-medium">
