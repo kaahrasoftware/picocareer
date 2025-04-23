@@ -59,7 +59,7 @@ async function fetchMajorDetails(supabase: any, contentIds: string[]) {
 async function fetchMentorDetails(supabase: any, contentIds: string[]) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, bio, avatar_url, skills, professional_title')
+    .select('id, full_name, bio, avatar_url, skills, position as professional_title')
     .in('id', contentIds)
     .eq('user_type', 'mentor');
   
