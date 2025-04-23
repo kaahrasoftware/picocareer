@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { google } from "npm:googleapis@126.0.1";
@@ -20,108 +19,158 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { campaignId, batchSize = 50 }: CampaignEmailRequest = await req.json();
-    
-    if (!campaignId) {
-      throw new Error("Campaign ID is required");
+    let campaignId, batchSize;
+    try {
+      const json = await req.json();
+      campaignId = json.campaignId;
+      batchSize = json.batchSize ?? 50;
+    } catch (error) {
+      console.error("Failed to parse request JSON", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Invalid JSON request body."
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    // Initialize Supabase client
+    if (!campaignId) {
+      const message = "Campaign ID is required";
+      console.error(message);
+      return new Response(
+        JSON.stringify({ success: false, error: message }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get campaign details
-    const { data: campaign, error: campaignError } = await supabaseClient
-      .from('email_campaigns')
-      .select('*')
-      .eq('id', campaignId)
-      .single();
-
-    if (campaignError || !campaign) {
-      throw new Error(`Campaign not found: ${campaignError?.message || "Unknown error"}`);
+    let campaign;
+    let campaignError;
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_campaigns')
+        .select('*')
+        .eq('id', campaignId)
+        .single();
+      campaign = data;
+      campaignError = error;
+    } catch (err) {
+      campaignError = err instanceof Error ? err : { message: String(err) };
     }
 
-    // Get recipients based on recipient_type
+    if (campaignError || !campaign) {
+      const message = `Campaign not found: ${campaignError?.message || "Unknown error"}`;
+      console.error(message);
+      return new Response(
+        JSON.stringify({ success: false, error: message }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
     let recipients: { id: string; email: string; full_name?: string }[] = [];
-    
-    if (campaign.recipient_type === 'selected' && campaign.recipient_filter?.profile_ids) {
-      // Get selected recipients
-      const { data: selectedRecipients, error: recipientsError } = await supabaseClient
-        .from('profiles')
-        .select('id, email, full_name')
-        .in('id', campaign.recipient_filter.profile_ids);
-      
-      if (recipientsError) {
-        throw new Error(`Error fetching selected recipients: ${recipientsError.message}`);
+    try {
+      if (campaign.recipient_type === 'selected' && campaign.recipient_filter?.profile_ids) {
+        const { data: selectedRecipients, error: recipientsError } = await supabaseClient
+          .from('profiles')
+          .select('id, email, full_name')
+          .in('id', campaign.recipient_filter.profile_ids);
+        if (recipientsError) {
+          throw new Error(`Error fetching selected recipients: ${recipientsError.message}`);
+        }
+        recipients = selectedRecipients || [];
+      } else {
+        let query = supabaseClient
+          .from('profiles')
+          .select('id, email, full_name');
+        if (campaign.recipient_type === 'mentees') {
+          query = query.eq('user_type', 'mentee');
+        } else if (campaign.recipient_type === 'mentors') {
+          query = query.eq('user_type', 'mentor');
+        }
+        const { data: queriedRecipients, error: recipientsError } = await query;
+        if (recipientsError) {
+          throw new Error(`Error fetching recipients: ${recipientsError.message}`);
+        }
+        recipients = queriedRecipients || [];
       }
-      
-      recipients = selectedRecipients || [];
-    } else {
-      // Get recipients based on type (all, mentees, mentors)
-      let query = supabaseClient
-        .from('profiles')
-        .select('id, email, full_name');
-      
-      // Filter by user type if specified
-      if (campaign.recipient_type === 'mentees') {
-        query = query.eq('user_type', 'mentee');
-      } else if (campaign.recipient_type === 'mentors') {
-        query = query.eq('user_type', 'mentor');
-      }
-      
-      const { data: queriedRecipients, error: recipientsError } = await query;
-      
-      if (recipientsError) {
-        throw new Error(`Error fetching recipients: ${recipientsError.message}`);
-      }
-      
-      recipients = queriedRecipients || [];
+    } catch (error) {
+      const msg = (error as Error).message || error;
+      console.error("Error fetching recipients:", msg);
+      return new Response(
+        JSON.stringify({ success: false, error: "Error fetching recipients: " + msg }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
     }
 
     if (recipients.length === 0) {
+      const message = "No recipients found for this campaign";
+      console.error(message);
       return new Response(
-        JSON.stringify({ success: false, message: "No recipients found for this campaign" }),
+        JSON.stringify({ success: false, message }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
+
     console.log(`Found ${recipients.length} recipients for campaign ${campaignId}`);
 
-    // Get content details based on content_type and content_id
     let contentTitle = campaign.subject || "";
-    
     if (campaign.content_type && campaign.content_id) {
       const contentTable = campaign.content_type;
       const titleField = contentTable === 'schools' ? 'name' : 'title';
-      
-      const { data: content, error: contentError } = await supabaseClient
-        .from(contentTable)
-        .select(`id, ${titleField}`)
-        .eq('id', campaign.content_id)
-        .single();
-      
-      if (!contentError && content) {
-        contentTitle = content[titleField] || contentTitle;
+      try {
+        const { data: content, error: contentError } = await supabaseClient
+          .from(contentTable)
+          .select(`id, ${titleField}`)
+          .eq('id', campaign.content_id)
+          .single();
+        if (!contentError && content) {
+          contentTitle = content[titleField] || contentTitle;
+        }
+      } catch (contentErr) {
+        console.error("Error fetching campaign content:", contentErr);
       }
     }
 
-    // Configure Gmail API with existing credentials
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
-        private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
-    });
+    let auth, gmail;
+    try {
+      auth = new google.auth.GoogleAuth({
+        credentials: {
+          client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
+          private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+        },
+        scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      });
+      gmail = google.gmail({ version: 'v1', auth });
+      await auth.actAs(Deno.env.get('GOOGLE_CALENDAR_EMAIL'));
+    } catch (gmailError) {
+      const msg = "Failed to configure Gmail API: " + (gmailError as Error).message;
+      console.error(msg);
+      return new Response(
+        JSON.stringify({ success: false, error: msg }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
 
-    const gmail = google.gmail({ version: 'v1', auth });
-
-    // Impersonate the info@picocareer.com account
-    await auth.actAs(Deno.env.get('GOOGLE_CALENDAR_EMAIL'));
-
-    // Process recipients in batches
     const batchedRecipients = [];
     for (let i = 0; i < recipients.length; i += batchSize) {
       batchedRecipients.push(recipients.slice(i, i + batchSize));
@@ -130,29 +179,20 @@ const handler = async (req: Request): Promise<Response> => {
     let sentCount = 0;
     let failedCount = 0;
     const errors = [];
-    
-    // Track processed recipients
     const processedRecipientIds: string[] = [];
-
-    // Track start time for performance measurement
     const startTime = Date.now();
 
-    // Process each batch
     for (let batchIndex = 0; batchIndex < batchedRecipients.length; batchIndex++) {
       const batch = batchedRecipients[batchIndex];
       console.log(`Processing batch ${batchIndex + 1}/${batchedRecipients.length} with ${batch.length} recipients`);
-      
       const batchPromises = batch.map(async (recipient) => {
         try {
-          // Generate personalized email content
           const emailContent = generateEmailContent(
             campaign.subject || contentTitle,
             campaign.body || `Check out this featured ${campaign.content_type?.slice(0, -1) || 'content'}!`,
             recipient.full_name || "Valued Member",
             campaign.id
           );
-
-          // Create email message
           const str = [
             'Content-Type: text/html; charset=utf-8',
             'MIME-Version: 1.0',
@@ -162,45 +202,33 @@ const handler = async (req: Request): Promise<Response> => {
             '',
             emailContent
           ].join('\n');
-
           const encodedMessage = btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-          // Send the email
           const res = await gmail.users.messages.send({
             userId: 'me',
             requestBody: {
               raw: encodedMessage,
             },
           });
-
           console.log(`Email sent to ${recipient.email} (${recipient.id})`);
-          
-          // Add recipient to tracking
           processedRecipientIds.push(recipient.id);
           sentCount++;
-          
           return { success: true, recipient_id: recipient.id, email: recipient.email };
         } catch (error) {
-          console.error(`Error sending email to ${recipient.email}:`, error);
           failedCount++;
-          errors.push({ recipient_id: recipient.id, email: recipient.email, error: error.message });
-          return { success: false, recipient_id: recipient.id, email: recipient.email, error: error.message };
+          const errMsg = (error as Error).message || error;
+          errors.push({ recipient_id: recipient.id, email: recipient.email, error: errMsg });
+          console.error(`Error sending email to ${recipient.email}:`, errMsg);
+          return { success: false, recipient_id: recipient.id, email: recipient.email, error: errMsg };
         }
       });
-
-      // Wait for all emails in this batch to be processed
       await Promise.all(batchPromises);
-      
-      // Add a small delay between batches to avoid rate limits
       if (batchIndex < batchedRecipients.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
-    // Calculate execution time
     const executionTime = (Date.now() - startTime) / 1000;
 
-    // Update campaign status
     const campaignUpdateData: any = {
       status: sentCount > 0 ? (failedCount > 0 ? 'partial' : 'sent') : 'failed',
       sent_at: new Date().toISOString(),
@@ -209,16 +237,18 @@ const handler = async (req: Request): Promise<Response> => {
       failed_count: failedCount
     };
 
-    const { error: updateError } = await supabaseClient
-      .from('email_campaigns')
-      .update(campaignUpdateData)
-      .eq('id', campaignId);
-
-    if (updateError) {
-      console.error("Error updating campaign status:", updateError);
+    try {
+      const { error: updateError } = await supabaseClient
+        .from('email_campaigns')
+        .update(campaignUpdateData)
+        .eq('id', campaignId);
+      if (updateError) {
+        console.error("Error updating campaign status:", updateError);
+      }
+    } catch (updateErr) {
+      console.error("Exception updating campaign row:", updateErr);
     }
 
-    // Return summary
     return new Response(
       JSON.stringify({
         success: true,
@@ -234,11 +264,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in send-campaign-emails function:", error);
+    console.error("Edge Function top-level error:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: (error as Error).message || "Unexpected error"
       }),
       {
         status: 500,
@@ -257,7 +287,6 @@ function generateEmailContent(
   recipientName: string,
   campaignId: string
 ): string {
-  // Create unsubscribe link with campaign ID
   const unsubscribeUrl = `${Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com'}/unsubscribe?campaign=${campaignId}`;
   
   return `
