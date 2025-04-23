@@ -1,125 +1,61 @@
 
-/**
- * Defines structured message types for the career chat
- */
-
+// Define chat session related types
 export interface CareerChatMessage {
   id: string;
   session_id: string;
   message_type: "system" | "user" | "bot" | "recommendation" | "session_end";
   content: string;
-  metadata: Record<string, any>;
-  created_at: string;
-  status?: string;
-  delivery_metadata?: Record<string, any>;
+  metadata?: {
+    hasOptions?: boolean;
+    suggestions?: string[];
+    category?: string;
+    [key: string]: any;
+  };
+  delivery_metadata?: {
+    tokens?: number;
+    latency?: number;
+    [key: string]: any;
+  };
   message_index?: number;
-}
-
-export interface CareerAnalysisResult {
-  careers: CareerRecommendation[];
-  personalities: PersonalityInsight[];
-  mentors: MentorRecommendation[];
-}
-
-export interface CareerRecommendation {
-  id: string;
-  title: string;
-  score: number;
-  reasoning: string;
-  metadata?: Record<string, any>;
-  key_requirements?: string[];
-  education_paths?: string[];
-}
-
-export interface PersonalityInsight {
-  type: string;
-  title: string;
-  score: number;
-  description: string;
-  traits?: string[];
-  strengths?: string[];
-}
-
-export interface MentorRecommendation {
-  id: string;
-  name: string;
-  skills: string[];
-  position?: string;
-  experience?: number;
-  sessions?: number;
-  location?: string;
-  reasoning: string;
-}
-
-export interface HubStorageMetrics {
-  id: string;
-  hub_id: string;
-  total_storage_bytes: number;
-  file_count: number;
-  resources_count: number;
-  logo_count: number;
-  banner_count: number;
-  announcements_count: number;
-  updated_at: string;
-  last_calculated_at: string;
-}
-
-export interface HubMemberMetrics {
-  id: string;
-  hub_id: string;
-  total_members: number;
-  active_members: number;
-  updated_at: string;
-}
-
-export interface MemberGrowth {
-  year: number;
-  month: number;
-  new_members: number;
-  total_members: number;
-}
-
-export interface AnalyticsSummary {
-  active_users: number;
-  engagement_rate: number;
-  content_count: number;
-  growth_rate: number;
-}
-
-export interface ResourceEngagement {
-  resource_type: string;
-  views: number;
-  downloads: number;
-  shares: number;
-}
-
-export interface AnnouncementEngagement {
-  category: string;
-  views: number;
-  reactions: number;
-}
-
-export interface ChatSessionMetadata {
-  title?: string;
-  lastCategory?: string;
-  completedCategories?: string[];
-  startedAt?: string;
-  progress?: Record<string, number>;
-  questionCounts?: Record<string, number>;
-  overallProgress?: number;
-  isComplete?: boolean;
+  status?: string;
+  created_at?: string;
 }
 
 export interface CareerChatSession {
   id: string;
-  profile_id: string;
-  status: string;
-  created_at: string;
-  completed_at?: string;
-  title?: string;
+  profile_id?: string;
+  status?: string;
+  created_at?: string;
+  progress_data?: {
+    education: number;
+    skills: number;
+    workstyle: number;
+    goals: number;
+    overall: number;
+    [key: string]: number;
+  };
+  total_messages?: number;
   last_active_at?: string;
   session_metadata?: ChatSessionMetadata;
+  updated_at?: string;
   is_suspended?: boolean;
-  total_messages?: number;
-  progress_data?: Record<string, number>;
+  last_message_at?: string;
+}
+
+export interface ChatSessionMetadata {
+  startedAt?: string;
+  completedAt?: string;
+  isComplete?: boolean;
+  questionCounts?: {
+    education: number;
+    skills: number;
+    workstyle: number;
+    goals: number;
+    [key: string]: number;
+  };
+  overallProgress?: number;
+  categoryProgress?: {
+    [category: string]: number;
+  };
+  [key: string]: any;
 }

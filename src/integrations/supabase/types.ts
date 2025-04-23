@@ -3890,6 +3890,7 @@ export type Database = {
         | "branding_updated"
         | "member_confirmed"
         | "confirmed_hub_membership"
+      campaign_status: "pending" | "sending" | "sent" | "failed" | "partial"
       categories:
         | "Technology"
         | "Digital Tools"
@@ -4597,6 +4598,7 @@ export const Constants = {
         "member_confirmed",
         "confirmed_hub_membership",
       ],
+      campaign_status: ["pending", "sending", "sent", "failed", "partial"],
       categories: [
         "Technology",
         "Digital Tools",

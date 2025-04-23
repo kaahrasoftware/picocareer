@@ -1,263 +1,296 @@
+import React, { useState, useEffect } from 'react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { Loader2 } from 'lucide-react';
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookingForm } from "./booking/BookingForm";
-import { BookingConfirmation } from "./booking/BookingConfirmation";
-import { useBookSession } from "@/hooks/useBookSession";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { MeetingPlatform } from "@/types/calendar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { notifyAdmins } from "./booking/AdminNotification";
-import type { Database } from "@/types/database/database.types";
-
-interface BookSessionDialogProps {
-  mentor: {
+interface MentorSession {
+  id: string;
+  mentor_id: string;
+  mentee_id: string;
+  session_type_id: string;
+  scheduled_at: string;
+  status: string;
+  notes?: string;
+  meeting_platform?: string;
+  mentee_phone_number?: string;
+  mentee_telegram_username?: string;
+  created_at: string;
+  updated_at: string;
+  mentor?: {
     id: string;
-    name: string;
-    imageUrl: string;
+    full_name: string;
+    avatar_url?: string;
   };
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  session_type?: {
+    id: string;
+    profile_id: string;
+    type: string;
+    duration: number;
+    price: number;
+    token_cost: number;
+    description?: string;
+    custom_type_name?: string;
+    meeting_platform?: string[];
+    telegram_username?: string;
+    phone_number?: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
-type SessionType = Database['public']['Tables']['mentor_session_types']['Row'];
-type MentorSession = Database['public']['Tables']['mentor_sessions']['Row'];
+interface BookSessionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  sessionId: string | null;
+}
 
-export function BookSessionDialog({ mentor, open, onOpenChange }: BookSessionDialogProps) {
-  const [formData, setFormData] = useState<{
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  }>({
-    note: "",
-    meetingPlatform: "Google Meet"
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDialogProps) {
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [session, setSession] = useState<MentorSession | null>(null);
+  const [notes, setNotes] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const bookSession = useBookSession();
+  const { session: authSession } = useAuthSession();
 
-  const handleSubmit = async () => {
-    if (!formData.date || !formData.selectedTime || !formData.sessionType || !mentor.id) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return;
+  useEffect(() => {
+    if (sessionId) {
+      fetchSession(sessionId);
     }
+  }, [sessionId]);
 
-    if (formData.meetingPlatform === 'WhatsApp' && !formData.menteePhoneNumber) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide your phone number for WhatsApp sessions.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const fetchSession = async (id: string) => {
+  try {
+    // Use a manual type-safe approach to avoid TypeScript errors
+    const { data, error } = await supabase
+      .rpc('get_session_details', { session_id: id })
+      .single();
 
-    if (formData.meetingPlatform === 'Telegram' && !formData.menteeTelegramUsername) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide your Telegram username.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (formData.meetingPlatform === 'Phone Call' && !formData.menteePhoneNumber) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide your phone number for Phone Call sessions.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      console.log('Starting session booking process...', {
-        mentorId: mentor.id,
-        date: formData.date,
-        time: formData.selectedTime,
-        sessionType: formData.sessionType,
-        platform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername
-      });
-      
-      const sessionResult = await bookSession({
-        mentorId: mentor.id,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
-        note: formData.note,
-        meetingPlatform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername,
-      });
-
-      if (!sessionResult.success) {
-        console.error('Session booking failed:', sessionResult.error);
-        throw new Error(sessionResult.error || 'Failed to book session');
-      }
-
-      console.log('Session booked successfully:', sessionResult);
-
-      // Notify admins about the new session booking
-      const { data: sessionType } = await supabase
-        .from<'mentor_session_types', SessionType>('mentor_session_types')
-        .select('type')
-        .eq('id', formData.sessionType)
+    if (error) {
+      // Fallback to direct query if RPC doesn't exist
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('mentor_sessions')
+        .select('*')
+        .eq('id', id)
         .single();
 
-      await notifyAdmins({
-        mentorName: mentor.name,
-        menteeName: profile?.full_name || 'Unknown User',
-        sessionType: sessionType?.type || 'Unknown Session Type',
-        scheduledAt: formData.date
-      });
-
-      if (formData.meetingPlatform === 'Google Meet') {
-        console.log('Creating Google Meet link for session:', sessionResult.sessionId);
-        
-        try {
-          const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
-            body: { 
-              sessionId: sessionResult.sessionId 
-            }
-          });
-
-          console.log('Meet link creation response:', { data: meetData, error: meetError });
-
-          if (meetError) {
-            console.error('Error creating meet link:', meetError);
-            throw new Error(`Failed to create Google Meet link: ${meetError.message}`);
-          }
-
-          if (!meetData?.meetLink) {
-            console.error('No meet link returned:', meetData);
-            throw new Error('Failed to generate Google Meet link');
-          }
-
-          console.log('Meet link created successfully:', meetData.meetLink);
-
-          // Update session with meet link
-          const { error: updateError } = await supabase
-            .from<'mentor_sessions', MentorSession>('mentor_sessions')
-            .update({ meeting_link: meetData.meetLink })
-            .eq('id', sessionResult.sessionId);
-
-          if (updateError) {
-            console.error('Error updating session with meet link:', updateError);
-            throw new Error('Failed to update session with meet link');
-          }
-
-        } catch (meetLinkError: any) {
-          console.error('Detailed meet link error:', meetLinkError);
-          toast({
-            title: "Session Booked",
-            description: "Session booked successfully, but there was an issue creating the Google Meet link. The link will be sent to you via email.",
-            variant: "destructive"
-          });
-          // Continue with notifications despite meet link error
-        }
+      if (sessionError) {
+        console.error('Error fetching session:', sessionError);
+        return;
       }
 
-      try {
-        console.log('Setting up notifications...');
-        
-        await Promise.all([
-          supabase.functions.invoke('schedule-session-notifications', {
-            body: { sessionId: sessionResult.sessionId }
-          }),
-          supabase.functions.invoke('send-session-email', {
-            body: { 
-              sessionId: sessionResult.sessionId,
-              type: 'confirmation'
-            }
-          })
-        ]);
+      // Fetch related mentor data separately
+      const { data: mentorData } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', sessionData.mentor_id)
+        .single();
 
-        console.log('Notifications set up successfully');
-      } catch (notificationError) {
-        console.error('Error with notifications:', notificationError);
-        toast({
-          title: "Session Booked",
-          description: "Session booked successfully, but there was an issue sending notifications.",
-          variant: "destructive"
-        });
+      // Fetch session type data separately
+      const { data: sessionTypeData } = await supabase
+        .from('mentor_session_types')
+        .select('*')
+        .eq('id', sessionData.session_type_id)
+        .single();
+
+      // Combine the data
+      const completeSessionData = {
+        ...sessionData,
+        mentor: mentorData,
+        session_type: sessionTypeData
+      };
+
+      setSession(completeSessionData as any);
+      return;
+    }
+
+    setSession(data as any);
+  } catch (err) {
+    console.error('Failed to fetch session:', err);
+  }
+};
+
+  const handleBookSession = async () => {
+    if (!date) {
+      toast({
+        title: "Please select a date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!authSession?.user?.id) {
+      toast({
+        title: "Please sign in to book a session",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!session) {
+      toast({
+        title: "Session not loaded",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('mentor_sessions')
+        .update({
+          scheduled_at: date.toISOString(),
+          mentee_id: authSession.user.id,
+          notes: notes,
+          status: 'pending'
+        })
+        .eq('id', session.id);
+
+      if (error) {
+        throw error;
       }
 
       toast({
-        title: "Session Booked",
-        description: "Session booked successfully! Check your email for confirmation details.",
-        variant: "default"
+        title: "Session booked!",
+        description: "Your session has been booked successfully.",
       });
-
-      onOpenChange(false);
+      onClose();
     } catch (error: any) {
-      console.error('Booking error:', error);
       toast({
-        title: "Booking Error",
-        description: error.message || "Failed to book session. Please try again.",
-        variant: "destructive"
+        title: "Error booking session",
+        description: error.message,
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  const isValid = !!formData.date && !!formData.selectedTime && !!formData.sessionType && !!mentor.id;
+  if (!isOpen) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={mentor.imageUrl} alt={mentor.name} />
-              <AvatarFallback>{mentor.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <DialogTitle className="text-2xl font-bold">
-                Book a Session with {mentor.name}
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Fill in the details below to schedule your mentoring session
-              </p>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Book Session</AlertDialogTitle>
+          <AlertDialogDescription>
+            {session ? (
+              <>
+                <p>
+                  You are booking a session with {session?.mentor?.full_name}
+                </p>
+                <p>
+                  Session Type: {session?.session_type?.custom_type_name || session?.session_type?.type}
+                </p>
+                <p>
+                  Duration: {session?.session_type?.duration} minutes
+                </p>
+              </>
+            ) : (
+              "Loading session details..."
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        {session && (
+          <>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Scheduled Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !date && "text-muted-foreground"
+                        )}
+                      >
+                        {date ? format(date, "PPP") : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="center">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        disabled={(date) =>
+                          date < new Date()
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>Scheduled Time</Label>
+                  <Input
+                    type="time"
+                    value={date ? format(date, "HH:mm") : ""}
+                    onChange={(e) => {
+                      if (date) {
+                        const [hours, minutes] = e.target.value.split(":");
+                        const newDate = new Date(date);
+                        newDate.setHours(parseInt(hours));
+                        newDate.setMinutes(parseInt(minutes));
+                        setDate(newDate);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Textarea
+                  placeholder="Add any notes for the mentor"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
-        </DialogHeader>
-
-        <div className="mt-6">
-          <div className="bg-muted/30 rounded-lg p-6">
-            <BookingForm 
-              mentorId={mentor.id}
-              onFormChange={setFormData}
-            />
-          </div>
-
-          <div className="mt-6">
-            <BookingConfirmation
-              isSubmitting={isSubmitting}
-              onCancel={() => onOpenChange(false)}
-              onConfirm={handleSubmit}
-              isValid={isValid}
-              googleAuthError={false}
-            />
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </>
+        )}
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction disabled={submitting} onClick={handleBookSession}>
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Booking...
+              </>
+            ) : (
+              "Book Session"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
