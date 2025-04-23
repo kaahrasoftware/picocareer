@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,31 +13,16 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ContentTypeSelector } from "./email-campaign-form/ContentTypeSelector";
+import { ContentSelect } from "./email-campaign-form/ContentSelect";
+import { FrequencySelector } from "./email-campaign-form/FrequencySelector";
+import { ScheduleDateTimeInput } from "./email-campaign-form/ScheduleDateTimeInput";
+import { EmailPreview } from "./email-campaign-form/EmailPreview";
+import { RecipientTypeSelector } from "./email-campaign-form/RecipientTypeSelector";
+import { RecipientSelection } from "./email-campaign-form/RecipientSelection";
+import { CONTENT_TYPE_LABELS, ContentType } from "./email-campaign-form/utils";
 
-type ContentType = "scholarships" | "opportunities" | "careers" | "majors" | "schools" | "mentors" | "blogs";
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
-
-const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  scholarships: "Scholarship Spotlight",
-  opportunities: "Opportunity Spotlight",
-  careers: "Career Spotlight",
-  majors: "Major Spotlight",
-  schools: "School Spotlight",
-  mentors: "Mentor Spotlight",
-  blogs: "Blog Spotlight",
-};
-
-function getRandomIndexes(arrayLength: number, count: number) {
-  const result: number[] = [];
-  const min = Math.min(count, arrayLength);
-  while (result.length < min) {
-    const randomIndex = Math.floor(Math.random() * arrayLength);
-    if (!result.includes(randomIndex)) {
-      result.push(randomIndex);
-    }
-  }
-  return result;
-}
 
 export function EmailCampaignForm({ 
   adminId, 
@@ -276,152 +260,34 @@ export function EmailCampaignForm({
     <Card>
       <CardContent className="py-8">
         <form onSubmit={handleSubmit} className="grid gap-6">
-          <div>
-            <label htmlFor="contentType" className="block font-medium mb-1">Content Type</label>
-            <select
-              id="contentType"
-              value={contentType}
-              onChange={e => { 
-                setContentType(e.target.value as ContentType)
-                setRandomSelect(false);
-                setRandomCount(1);
-              }}
-              className="w-full border px-3 py-2 rounded"
-            >
-              {Object.keys(CONTENT_TYPE_LABELS).map(type => (
-                <option key={type} value={type}>{CONTENT_TYPE_LABELS[type as ContentType]}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="selectContent" className="block font-medium mb-1">Select Content</label>
-            {loadingContent ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="animate-spin w-4 h-4" /> Loading...
-              </div>
-            ) : (
-              <select
-                id="selectContent"
-                multiple
-                disabled={randomSelect}
-                value={selectedContentIds}
-                onChange={e => {
-                  const options = Array.from(e.target.selectedOptions, option => option.value);
-                  setSelectedContentIds(options);
-                }}
-                className="w-full border px-3 py-2 rounded min-h-[4rem]"
-                required={!randomSelect}
-                size={Math.min(Math.max(4, contentList.length), 8)}
-              >
-                {contentList.map(option => (
-                  <option key={option.id} value={option.id}>{option.title}</option>
-                ))}
-              </select>
-            )}
-            <div className="flex items-center space-x-4 mt-2">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={randomSelect}
-                  onChange={e => setRandomSelect(e.target.checked)}
-                  className="mr-2"
-                />
-                Select Random
-              </label>
-              {randomSelect && (
-                <input
-                  type="number"
-                  min={1}
-                  max={contentList.length || 1}
-                  value={randomCount}
-                  onChange={e => setRandomCount(Math.max(1, Math.min(Number(e.target.value), contentList.length || 1)))}
-                  className="w-20 border px-2 py-1 rounded"
-                  disabled={!randomSelect}
-                />
-              )}
-              {randomSelect && (
-                <span className="text-xs text-muted-foreground">
-                  (Selects {randomCount} random)
-                </span>
-              )}
-            </div>
-          </div>
-          <div>
-            <label htmlFor="frequency" className="block font-medium mb-1">Frequency</label>
-            <select id="frequency" value={frequency} onChange={e => setFrequency(e.target.value as any)} className="w-full border px-3 py-2 rounded">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="scheduledFor" className="block font-medium mb-1">Start Date/Time</label>
-            <input
-              id="scheduledFor"
-              type="datetime-local"
-              value={scheduledFor}
-              onChange={e => setScheduledFor(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
-              required
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Email Preview</label>
-            <div className="border bg-muted rounded px-3 py-4 text-sm">
-              {selectedContentIds.length === 0
-                ? "(Nothing selected)"
-                : selectedContentIds.map(id => {
-                    const content = contentList.find(c => c.id === id);
-                    return (
-                      <div key={id} className="mb-4 border-b last:border-b-0 pb-2 last:pb-0">
-                        {getEmailTemplate(content)}
-                      </div>
-                    );
-                  })}
-            </div>
-          </div>
-          <div>
-            <Label>Recipient Type</Label>
-            <Select 
-              value={recipientType} 
-              onValueChange={(value: RecipientType) => setRecipientType(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select recipient type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                <SelectItem value="mentees">Mentees Only</SelectItem>
-                <SelectItem value="mentors">Mentors Only</SelectItem>
-                <SelectItem value="selected">Select Specific Users</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <ContentTypeSelector contentType={contentType} setContentType={(v) => { setContentType(v); setRandomSelect(false); setRandomCount(1); }} />
 
+          <ContentSelect 
+            contentList={contentList}
+            selectedContentIds={selectedContentIds}
+            setSelectedContentIds={setSelectedContentIds}
+            loadingContent={loadingContent}
+            randomSelect={randomSelect}
+            setRandomSelect={setRandomSelect}
+            randomCount={randomCount}
+            setRandomCount={setRandomCount}
+            contentType={contentType}
+          />
+
+          <FrequencySelector frequency={frequency} setFrequency={setFrequency} />
+
+          <ScheduleDateTimeInput scheduledFor={scheduledFor} setScheduledFor={setScheduledFor} />
+
+          <EmailPreview selectedContentIds={selectedContentIds} contentList={contentList} contentType={contentType} />
+
+          <RecipientTypeSelector recipientType={recipientType} setRecipientType={setRecipientType} />
+            
           {recipientType === 'selected' && (
-            <div className="grid gap-2 max-h-64 overflow-y-auto border rounded p-2">
-              {recipientsList.map(recipient => (
-                <div key={recipient.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`recipient-${recipient.id}`}
-                    checked={selectedRecipients.includes(recipient.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedRecipients(prev => 
-                        checked 
-                          ? [...prev, recipient.id] 
-                          : prev.filter(id => id !== recipient.id)
-                      );
-                    }}
-                  />
-                  <Label 
-                    htmlFor={`recipient-${recipient.id}`}
-                    className="text-sm"
-                  >
-                    {recipient.full_name || recipient.email}
-                  </Label>
-                </div>
-              ))}
-            </div>
+            <RecipientSelection 
+              recipientsList={recipientsList}
+              selectedRecipients={selectedRecipients}
+              setSelectedRecipients={setSelectedRecipients}
+            />
           )}
           <Button type="submit" className="w-full" disabled={submitting || selectedContentIds.length === 0}>
             {submitting ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Create Campaign"}
