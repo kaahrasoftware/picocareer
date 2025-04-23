@@ -43,7 +43,13 @@ function getRandomIndexes(arrayLength: number, count: number) {
 /**
  * Form for admins to create and schedule content spotlight campaigns
  */
-export function EmailCampaignForm({ adminId }: { adminId: string }) {
+export function EmailCampaignForm({ 
+  adminId, 
+  onCampaignCreated 
+}: { 
+  adminId: string, 
+  onCampaignCreated?: () => void 
+}) {
   const [contentType, setContentType] = useState<ContentType>("scholarships");
   const [contentList, setContentList] = useState<ContentOption[]>([]);
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
@@ -57,7 +63,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [recipientsList, setRecipientsList] = useState<{ id: string; email: string; full_name?: string }[]>([]);
 
-  // Load the appropriate content list on contentType change
   useEffect(() => {
     let isMounted = true;
     async function loadContent() {
@@ -103,15 +108,12 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     return () => { isMounted = false; }
   }, [contentType]);
 
-  // Handle random selection logic
   useEffect(() => {
     if (randomSelect && contentList.length > 0) {
       const count = Math.min(randomCount, contentList.length);
       const randomIndexes = getRandomIndexes(contentList.length, count);
       setSelectedContentIds(randomIndexes.map(idx => contentList[idx].id));
     }
-  // Only re-run if randomSelect, contentList, or randomCount changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [randomSelect, contentList, randomCount]);
 
   function getEmailTemplate(content: ContentOption | undefined) {
@@ -134,7 +136,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     }
   }
 
-  // Load recipients based on recipient type
   useEffect(() => {
     async function loadRecipients() {
       let query = supabase
@@ -167,7 +168,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     if (recipientType !== 'selected') {
       loadRecipients();
     } else {
-      // If selected, load both mentees and mentors
       async function loadAllRecipients() {
         const { data: mentees } = await supabase
           .from('profiles')
@@ -195,7 +195,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
 
     setSubmitting(true);
     try {
-      // Prepare campaign data with recipient information
       const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
       
       const campaignInserts = selectedContents.map(content => {
@@ -217,7 +216,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
         };
       });
 
-      // Insert campaigns
       const { data: insertedCampaigns, error: campaignError } = await supabase
         .from('email_campaigns')
         .insert(campaignInserts)
@@ -225,7 +223,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
 
       if (campaignError) throw campaignError;
 
-      // If specific recipients were selected, create recipient records
       if (recipientType === 'selected' && insertedCampaigns) {
         const recipientRecords = insertedCampaigns.flatMap(campaign => 
           selectedRecipients.map(recipientId => ({
@@ -246,9 +243,12 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
         description: `Scheduled ${campaignInserts.length} campaign(s).` 
       });
       
-      // Reset form state
       setSelectedContentIds([]);
       setSelectedRecipients([]);
+      
+      if (onCampaignCreated) {
+        onCampaignCreated();
+      }
     } catch (err: any) {
       toast({ 
         title: "Error", 
@@ -386,7 +386,6 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
             </Select>
           </div>
 
-          {/* Individual Recipient Selection */}
           {recipientType === 'selected' && (
             <div className="grid gap-2 max-h-64 overflow-y-auto border rounded p-2">
               {recipientsList.map(recipient => (
