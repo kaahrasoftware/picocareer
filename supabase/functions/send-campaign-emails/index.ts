@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -188,6 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
       campaignId = json.campaignId;
       batchSize = json.batchSize ?? 50;
     } catch (error) {
+      console.error("Invalid JSON in request body:", error);
       return new Response(
         JSON.stringify({
           success: false,
@@ -201,6 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!campaignId) {
+      console.error("Missing campaignId in request.");
       return new Response(
         JSON.stringify({ success: false, error: "Campaign ID is required" }),
         {
@@ -223,6 +224,7 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (campaignError || !campaign) {
+      console.error("Campaign not found:", campaignError?.message);
       return new Response(
         JSON.stringify({ success: false, error: `Campaign not found: ${campaignError?.message || "Unknown error"}` }),
         {
@@ -260,31 +262,31 @@ const handler = async (req: Request): Promise<Response> => {
         recipients = queriedRecipients || [];
       }
     } catch (error) {
+      console.error("Error fetching recipients:", error);
       return new Response(
         JSON.stringify({ success: false, error: "Error fetching recipients: " + (error as Error).message }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (recipients.length === 0) {
+      console.warn("No recipients found for this campaign:", campaignId);
       return new Response(
-        JSON.stringify({ success: false, message: "No recipients found for this campaign" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: "No recipients found for this campaign" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // Get all content IDs from the campaign
     let contentIds: string[] = [];
-    if (campaign.content_type && campaign.content_id) {
-      contentIds = [campaign.content_id];
-    } else if (campaign.content_ids && Array.isArray(campaign.content_ids)) {
+    if (campaign.content_ids && Array.isArray(campaign.content_ids) && campaign.content_ids.length > 0) {
       contentIds = campaign.content_ids;
+    } else if (campaign.content_type && campaign.content_id) {
+      contentIds = [campaign.content_id];
     }
 
     if (contentIds.length === 0) {
+      console.error("No content IDs found in campaign:", campaignId);
       return new Response(
         JSON.stringify({ success: false, error: "No content IDs found in campaign" }),
         {
@@ -309,8 +311,11 @@ const handler = async (req: Request): Promise<Response> => {
         contentList = await fetchMentorDetails(supabaseClient, contentIds);
       } else if (campaign.content_type === 'blogs') {
         contentList = await fetchBlogDetails(supabaseClient, contentIds);
+      } else {
+        throw new Error(`Unknown content type: ${campaign.content_type}`);
       }
     } catch (error) {
+      console.error("Error fetching content details:", error);
       return new Response(
         JSON.stringify({ success: false, error: "Error fetching content details: " + (error as Error).message }),
         {
@@ -321,6 +326,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (contentList.length === 0) {
+      console.error("No content details found for the provided IDs:", contentIds);
       return new Response(
         JSON.stringify({ success: false, error: "No content details found for the provided IDs" }),
         {
@@ -343,7 +349,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Email subject
     const emailSubject = campaign.subject || `${contentTypeLabel} Spotlight: ${contentList.length > 1 ? `${contentList.length} New Items` : contentList[0].title || contentList[0].full_name || 'Featured Content'}`;
-    
+
     // Use Resend for email delivery only
     const batchedRecipients = [];
     for (let i = 0; i < recipients.length; i += batchSize) {
@@ -357,6 +363,7 @@ const handler = async (req: Request): Promise<Response> => {
     const startTime = Date.now();
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
 
+    // Processing email sending
     for (let batchIndex = 0; batchIndex < batchedRecipients.length; batchIndex++) {
       const batch = batchedRecipients[batchIndex];
       const batchPromises = batch.map(async (recipient) => {
@@ -378,7 +385,6 @@ const handler = async (req: Request): Promise<Response> => {
             subject: emailSubject,
             html: emailContent,
           });
-
           if (res.error) {
             throw new Error(res.error.message || JSON.stringify(res.error));
           }
@@ -390,11 +396,11 @@ const handler = async (req: Request): Promise<Response> => {
           failedCount++;
           const errMsg = (error as Error).message || error;
           errors.push({ recipient_id: recipient.id, email: recipient.email, error: errMsg });
+          console.error("Email send failure:", recipient.email, errMsg);
           return { success: false, recipient_id: recipient.id, email: recipient.email, error: errMsg };
         }
       });
       await Promise.all(batchPromises);
-      // Small delay between batches for rate limiting, except after the last batch
       if (batchIndex < batchedRecipients.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -415,11 +421,29 @@ const handler = async (req: Request): Promise<Response> => {
         .from('email_campaigns')
         .update(campaignUpdateData)
         .eq('id', campaignId);
-      // optionally log update errors
+      if (updateError) {
+        console.error("Failed to update campaign status:", updateError.message);
+      }
     } catch (_updateErr) {
-      // ignore update errors
+      // ignore update errors, already logged
     }
 
+    if (sentCount === 0) {
+      console.error("Zero emails sent for campaign:", campaignId, "errors:", errors);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to send emails to any recipients.",
+          details: errors
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+
+    // Success!
     return new Response(
       JSON.stringify({
         success: true,
@@ -434,7 +458,10 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
+
   } catch (error: any) {
+    // Top-level error handler
+    console.error("Unexpected error in send-campaign-emails:", error);
     return new Response(
       JSON.stringify({
         success: false,

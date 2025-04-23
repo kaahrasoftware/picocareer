@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -85,30 +84,36 @@ export function CampaignList({ adminId }: CampaignListProps) {
     if (!campaignId) return;
     setSendingCampaign(campaignId);
     try {
-      const { data, error } = await supabase.functions.invoke('send-campaign-emails', {
+      const { data, error, status, statusText } = await supabase.functions.invoke('send-campaign-emails', {
         body: { campaignId }
       });
 
-      if (error) throw error;
-
-      if (data && data.success) {
-        toast({
-          title: "Campaign sent successfully",
-          description: `Sent to ${data.sent} recipients (${data.failed} failed)`
-        });
-
-        loadCampaigns();
-      } else if (data && data.error) {
-        throw new Error(data.error);
-      } else {
-        throw new Error("Unexpected error: No response from email campaign function.");
+      if (error) {
+        console.error("Edge function error (network or permissions):", error, status, statusText);
+        throw error;
       }
+
+      if (!data || data.success !== true) {
+        console.error("Unsuccessful send-campaign-emails result:", data);
+        throw new Error(
+          (data && (data.error || data.message)) ||
+          "Unknown error: No valid response from email campaign function. Check edge logs."
+        );
+      }
+
+      toast({
+        title: "Campaign sent successfully",
+        description: `Sent to ${data.sent} recipients (${data.failed} failed)`
+      });
+
+      loadCampaigns();
     } catch (err: any) {
       toast({
         title: "Error sending campaign",
         description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
         variant: "destructive"
       });
+      console.error("Send campaign error (caught in handler):", err);
     } finally {
       setSendingCampaign(null);
     }
@@ -117,27 +122,32 @@ export function CampaignList({ adminId }: CampaignListProps) {
   const handleCheckScheduledCampaigns = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('check-scheduled-campaigns', {});
-      if (error) throw error;
-      if (data && data.success) {
-        toast({
-          title: "Checked scheduled campaigns",
-          description: data.campaigns_processed
-            ? `Processed ${data.campaigns_processed} campaigns`
-            : (data.message || "No campaigns due for sending")
-        });
-        loadCampaigns();
-      } else if (data && data.error) {
-        throw new Error(data.error);
-      } else {
-        throw new Error("Unexpected error: No response from campaign scheduler function.");
+      const { data, error, status, statusText } = await supabase.functions.invoke('check-scheduled-campaigns', {});
+      if (error) {
+        console.error("Check scheduled campaigns - network error:", error, status, statusText);
+        throw error;
       }
+      if (!data || data.success !== true) {
+        console.error("Unsuccessful check-scheduled-campaigns result:", data);
+        throw new Error(
+          (data && (data.error || data.message)) ||
+          "Unknown error: No valid response from campaign scheduler function. Check edge logs."
+        );
+      }
+      toast({
+        title: "Checked scheduled campaigns",
+        description: data.campaigns_processed
+          ? `Processed ${data.campaigns_processed} campaigns`
+          : (data.message || "No campaigns due for sending")
+      });
+      loadCampaigns();
     } catch (err: any) {
       toast({
         title: "Error checking scheduled campaigns",
         description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
         variant: "destructive"
       });
+      console.error("Check scheduled campaigns error:", err);
     } finally {
       setLoading(false);
     }
@@ -206,4 +216,3 @@ export function CampaignList({ adminId }: CampaignListProps) {
     </div>
   );
 }
-
