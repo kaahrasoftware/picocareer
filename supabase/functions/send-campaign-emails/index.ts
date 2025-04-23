@@ -59,11 +59,19 @@ async function fetchMajorDetails(supabase: any, contentIds: string[]) {
 async function fetchMentorDetails(supabase: any, contentIds: string[]) {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, bio, avatar_url, skills, careers(title)')
+    .select(`
+      id,
+      full_name,
+      bio,
+      avatar_url,
+      skills,
+      careers:position(title)
+    `)
     .in('id', contentIds)
     .eq('user_type', 'mentor');
 
   if (error) throw new Error(`Error fetching mentors: ${error.message}`);
+  
   // Map: flatten careers.title onto professional_title for compatibility with expected template
   // If position/careers join is missing, professional_title will be ""
   return (data || []).map((mentor: any) => ({
