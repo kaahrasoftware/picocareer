@@ -74,13 +74,13 @@ export function EmailCampaignForm({
           ({ data: content } = await supabase.from("scholarships").select("id, title").eq("status", "Active"));
           break;
         case "opportunities":
-          ({ data: content } = await supabase.from("opportunities").select("id, title").eq("status", "Approved"));
+          ({ data: content } = await supabase.from("opportunities").select("id, title").eq("status", "approved"));
           break;
         case "careers":
-          ({ data: content } = await supabase.from("careers").select("id, title").eq("status", "Approved"));
+          ({ data: content } = await supabase.from("careers").select("id, title").eq("status", "approved"));
           break;
         case "majors":
-          ({ data: content } = await supabase.from("majors").select("id, title").eq("status", "Approved"));
+          ({ data: content } = await supabase.from("majors").select("id, title").eq("status", "approved"));
           break;
         case "schools":
           ({ data: content } = await supabase.from("schools").select("id, name"));
@@ -88,10 +88,13 @@ export function EmailCampaignForm({
           break;
         case "mentors":
           ({ data: content } = await supabase.from("profiles").select("id, full_name").eq("user_type", "mentor"));
-          content = mapRows(content, "full_name");
+          content = (content || []).map(item => ({
+            id: item.id,
+            title: item.full_name || "Untitled"
+          }));
           break;
         case "blogs":
-          ({ data: content } = await supabase.from("blogs").select("id, title").eq("status", "Approved"));
+          ({ data: content } = await supabase.from("blogs").select("id, title").eq("status", "approved"));
           break;
         default: content = [];
       }
