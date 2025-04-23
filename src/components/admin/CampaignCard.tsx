@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -30,17 +31,17 @@ interface CampaignCardProps {
 function getStatusStyles(status: string) {
   switch (status) {
     case 'sent':
-      return 'bg-green-50/50 border-green-200 hover:bg-green-50/80';
+      return 'bg-gradient-to-br from-green-50/90 to-green-100/50 border-green-200 hover:bg-green-50/80';
     case 'sending':
-      return 'bg-blue-50/50 border-blue-200 hover:bg-blue-50/80';
+      return 'bg-gradient-to-br from-blue-50/90 to-blue-100/50 border-blue-200 hover:bg-blue-50/80';
     case 'pending':
-      return 'bg-yellow-50/50 border-yellow-200 hover:bg-yellow-50/80';
+      return 'bg-gradient-to-br from-amber-50/90 to-amber-100/50 border-amber-200 hover:bg-amber-50/80';
     case 'partial':
-      return 'bg-amber-50/50 border-amber-200 hover:bg-amber-50/80';
+      return 'bg-gradient-to-br from-orange-50/90 to-orange-100/50 border-orange-200 hover:bg-orange-50/80';
     case 'failed':
-      return 'bg-red-50/50 border-red-200 hover:bg-red-50/80';
+      return 'bg-gradient-to-br from-red-50/90 to-red-100/50 border-red-200 hover:bg-red-50/80';
     default:
-      return 'bg-gray-50/50 border-gray-200 hover:bg-gray-50/80';
+      return 'bg-gradient-to-br from-gray-50/90 to-gray-100/50 border-gray-200 hover:bg-gray-50/80';
   }
 }
 
@@ -48,42 +49,42 @@ function renderStatusBadge(campaign: Campaign) {
   switch (campaign.status) {
     case 'sent':
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200 flex items-center gap-1">
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
           <CheckCircle className="h-3 w-3" />
           Sent
         </Badge>
       );
     case 'sending':
       return (
-        <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 flex items-center gap-1">
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1">
           <Loader2 className="h-3 w-3 animate-spin" />
           Sending
         </Badge>
       );
     case 'pending':
       return (
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200 flex items-center gap-1">
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
           <Clock className="h-3 w-3" />
           Scheduled
         </Badge>
       );
     case 'partial':
       return (
-        <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 flex items-center gap-1">
+        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 flex items-center gap-1">
           <AlertTriangle className="h-3 w-3" />
           Partial
         </Badge>
       );
     case 'failed':
       return (
-        <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 flex items-center gap-1">
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
           <XCircle className="h-3 w-3" />
           Failed
         </Badge>
       );
     default:
       return (
-        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
           {campaign.status || 'Unknown'}
         </Badge>
       );
@@ -129,7 +130,7 @@ export function CampaignCard({ campaign, sendingCampaign, onSend }: CampaignCard
                 Sent ({campaign.sent_count} recipients)
               </div>
             ) : campaign.status === 'partial' ? (
-              <div className="text-sm text-amber-600 font-medium flex items-center gap-2">
+              <div className="text-sm text-orange-600 font-medium flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 Partially Sent ({campaign.sent_count}/{campaign.recipients_count})
               </div>
