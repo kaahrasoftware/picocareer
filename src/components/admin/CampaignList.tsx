@@ -84,12 +84,12 @@ export function CampaignList({ adminId }: CampaignListProps) {
     if (!campaignId) return;
     setSendingCampaign(campaignId);
     try {
-      const { data, error, status, statusText } = await supabase.functions.invoke('send-campaign-emails', {
+      const { data, error } = await supabase.functions.invoke('send-campaign-emails', {
         body: { campaignId }
       });
 
       if (error) {
-        console.error("Edge function error (network or permissions):", error, status, statusText);
+        console.error("Edge function error (network or permissions):", error);
         throw error;
       }
 
@@ -122,9 +122,9 @@ export function CampaignList({ adminId }: CampaignListProps) {
   const handleCheckScheduledCampaigns = async () => {
     setLoading(true);
     try {
-      const { data, error, status, statusText } = await supabase.functions.invoke('check-scheduled-campaigns', {});
+      const { data, error } = await supabase.functions.invoke('check-scheduled-campaigns', {});
       if (error) {
-        console.error("Check scheduled campaigns - network error:", error, status, statusText);
+        console.error("Check scheduled campaigns - network error:", error);
         throw error;
       }
       if (!data || data.success !== true) {

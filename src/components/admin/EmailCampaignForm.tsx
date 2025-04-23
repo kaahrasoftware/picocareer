@@ -21,35 +21,10 @@ import { EmailPreview } from "./email-campaign-form/EmailPreview";
 import { RecipientTypeSelector } from "./email-campaign-form/RecipientTypeSelector";
 import { RecipientSelection } from "./email-campaign-form/RecipientSelection";
 import { CONTENT_TYPE_LABELS, ContentType } from "./email-campaign-form/utils";
-import { getRandomIndexes } from "./email-campaign-form/helpers";
 import { useEmailCampaignFormState } from "./email-campaign-form/useEmailCampaignFormState";
 import { handleEmailCampaignFormSubmit } from "./email-campaign-form/useEmailCampaignFormSubmit";
 
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
-
-/**
- * Generates an array of random unique indexes within a given range
- * @param max The maximum index value (exclusive)
- * @param count Number of random indexes to generate
- * @returns Array of random unique indexes
- */
-function getRandomIndexes(max: number, count: number): number[] {
-  const indexes: number[] = [];
-  const available = Array.from({ length: max }, (_, i) => i);
-  
-  // Handle edge cases
-  if (count >= max) {
-    return available;
-  }
-  
-  for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * available.length);
-    const selected = available.splice(randomIndex, 1)[0];
-    indexes.push(selected);
-  }
-  
-  return indexes;
-}
 
 export function EmailCampaignForm({ 
   adminId, 
@@ -71,14 +46,12 @@ export function EmailCampaignForm({
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
 
-  // Refactored useEffect logic for loading content and recipients
   useEmailCampaignFormState({
     contentType, randomSelect, randomCount,
     setContentList, setSelectedContentIds, setLoadingContent,
     setRecipientsList, recipientType
   });
 
-  // Handle random content selection
   useEffect(() => {
     if (randomSelect && contentList.length > 0) {
       const count = Math.min(randomCount, contentList.length);
@@ -87,7 +60,6 @@ export function EmailCampaignForm({
     }
   }, [randomSelect, contentList, randomCount]);
 
-  // Form submit handler using the new handler function
   async function handleSubmit(e: React.FormEvent) {
     await handleEmailCampaignFormSubmit({
       e, adminId, contentList, selectedContentIds, frequency, scheduledFor,

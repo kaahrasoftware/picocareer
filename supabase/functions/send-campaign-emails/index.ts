@@ -19,7 +19,7 @@ interface CampaignEmailRequest {
 async function fetchScholarshipDetails(supabase: any, contentIds: string[]) {
   const { data, error } = await supabase
     .from('scholarships')
-    .select('id, title, description, deadline, award_amount, image_url')
+    .select('id, title, description, deadline, image_url')
     .in('id', contentIds);
   
   if (error) throw new Error(`Error fetching scholarships: ${error.message}`);
@@ -143,7 +143,6 @@ function getContentDetails(content: any, contentType: string): string {
     case 'scholarships':
       return `
         <p style="color: #4b5563; margin-bottom: 8px;">${content.description ? content.description.substring(0, 150) + '...' : 'No description available'}</p>
-        ${content.award_amount ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Award: ${content.award_amount}</p>` : ''}
         ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${new Date(content.deadline).toLocaleDateString()}</p>` : ''}
       `;
     case 'opportunities':
