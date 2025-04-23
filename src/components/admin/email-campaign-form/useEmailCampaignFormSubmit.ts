@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
@@ -73,7 +72,11 @@ export async function handleEmailCampaignFormSubmit({
       .select()
       .single();
 
-    if (campaignError) throw campaignError;
+    if (campaignError || !insertedCampaign) {
+      throw new Error(
+        `Failed to insert campaign: ${campaignError?.message || 'Unknown error'}`
+      );
+    }
 
     if (recipientType === 'selected' && insertedCampaign) {
       const recipientRecords = selectedRecipients.map(recipientId => ({
@@ -85,7 +88,9 @@ export async function handleEmailCampaignFormSubmit({
         .from('email_campaign_recipients')
         .insert(recipientRecords);
 
-      if (recipientError) throw recipientError;
+      if (recipientError) {
+        throw new Error(`Failed to insert recipients: ${recipientError.message}`);
+      }
     }
 
     toast({ 
@@ -101,10 +106,14 @@ export async function handleEmailCampaignFormSubmit({
     }
   } catch (err: any) {
     toast({ 
-      title: "Error", 
-      description: err.message, 
+      title: "Error sending campaign", 
+      description: err?.message || "Unknown error — please check that all fields and recipients are correct.",
       variant: "destructive" 
     });
+    // Optional: log error for debugging in future
+    if (typeof window !== 'undefined') {
+      console.error("Error sending campaign:", err);
+    }
   } finally {
     setSubmitting(false);
   }

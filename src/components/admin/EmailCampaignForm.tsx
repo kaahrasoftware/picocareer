@@ -54,7 +54,7 @@ export function EmailCampaignForm({
   });
 
   useEffect(() => {
-    if (randomSelect && contentList.length > 0) {
+    if (randomSelect && contentList.length > 0 && typeof getRandomIndexes === 'function') {
       const count = Math.min(randomCount, contentList.length);
       const randomIndexes = getRandomIndexes(contentList.length, count);
       setSelectedContentIds(randomIndexes.map(idx => contentList[idx].id));

@@ -1,21 +1,13 @@
-
 /**
- * Generates an array of random unique indexes within a given range
- * @param max The maximum index value (exclusive)
- * @param count Number of random indexes to generate
- * @returns Array of random unique indexes
+ * Returns an array of N unique random indexes from 0 to max-1
  */
-export function getRandomIndexes(max: number, count: number): number[] {
-  const indexes: number[] = [];
-  const available = Array.from({ length: max }, (_, i) => i);
-  
-  // Edge case: requesting as many or more than exist
-  if (count >= max) return available;
-  
-  for (let i = 0; i < count; i++) {
-    const randomIndex = Math.floor(Math.random() * available.length);
-    const selected = available.splice(randomIndex, 1)[0];
-    indexes.push(selected);
+export function getRandomIndexes(max: number, n: number): number[] {
+  if (n >= max) {
+    return Array.from({ length: max }, (_, i) => i);
   }
-  return indexes;
+  const results = new Set<number>();
+  while (results.size < n) {
+    results.add(Math.floor(Math.random() * max));
+  }
+  return Array.from(results);
 }
