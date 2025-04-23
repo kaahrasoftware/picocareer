@@ -1,6 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { google } from "npm:googleapis@126.0.1";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -148,29 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    let auth, gmail;
-    try {
-      auth = new google.auth.GoogleAuth({
-        credentials: {
-          client_email: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_EMAIL'),
-          private_key: Deno.env.get('GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-        },
-        scopes: ['https://www.googleapis.com/auth/gmail.send'],
-      });
-      gmail = google.gmail({ version: 'v1', auth });
-      await auth.actAs(Deno.env.get('GOOGLE_CALENDAR_EMAIL'));
-    } catch (gmailError) {
-      const msg = "Failed to configure Gmail API: " + (gmailError as Error).message;
-      console.error(msg);
-      return new Response(
-        JSON.stringify({ success: false, error: msg }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
+    // ======== SENDING EMAILS USING RESEND ========
     const batchedRecipients = [];
     for (let i = 0; i < recipients.length; i += batchSize) {
       batchedRecipients.push(recipients.slice(i, i + batchSize));
@@ -193,22 +174,18 @@ const handler = async (req: Request): Promise<Response> => {
             recipient.full_name || "Valued Member",
             campaign.id
           );
-          const str = [
-            'Content-Type: text/html; charset=utf-8',
-            'MIME-Version: 1.0',
-            `To: ${recipient.email}`,
-            'From: PicoCareer <info@picocareer.com>',
-            `Subject: ${campaign.subject || contentTitle}`,
-            '',
-            emailContent
-          ].join('\n');
-          const encodedMessage = btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-          const res = await gmail.users.messages.send({
-            userId: 'me',
-            requestBody: {
-              raw: encodedMessage,
-            },
+
+          const res = await resend.emails.send({
+            from: "PicoCareer <info@picocareer.com>",
+            to: [recipient.email],
+            subject: campaign.subject || contentTitle,
+            html: emailContent,
           });
+
+          if (res.error) {
+            throw new Error(res.error.message || JSON.stringify(res.error));
+          }
+
           console.log(`Email sent to ${recipient.email} (${recipient.id})`);
           processedRecipientIds.push(recipient.id);
           sentCount++;
@@ -314,3 +291,4 @@ function generateEmailContent(
 }
 
 serve(handler);
+

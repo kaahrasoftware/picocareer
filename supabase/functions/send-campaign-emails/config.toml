@@ -3,10 +3,14 @@
 template = "edge-runtime"
 
 [deploy]
-allowed_imports = ["https://esm.sh/@supabase/supabase-js@2.38.4", "npm:googleapis@126.0.1"]
+allowed_imports = [
+  "https://esm.sh/@supabase/supabase-js@2.38.4",
+  "npm:resend@2.0.0"
+]
 
 [env.local]
 PUBLIC_SITE_URL = "http://localhost:5173"
 
 [env.production]
 PUBLIC_SITE_URL = "https://picocareer.com"
+
