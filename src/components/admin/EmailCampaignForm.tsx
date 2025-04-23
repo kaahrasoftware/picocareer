@@ -1,13 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 type ContentType = "scholarships" | "opportunities" | "careers" | "majors" | "schools" | "mentors" | "blogs";
 type ContentOption = { id: string; title: string };
+type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   scholarships: "Scholarship Spotlight",
@@ -44,6 +53,9 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [randomSelect, setRandomSelect] = useState(false);
   const [randomCount, setRandomCount] = useState(1);
+  const [recipientType, setRecipientType] = useState<RecipientType>('all');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [recipientsList, setRecipientsList] = useState<{ id: string; email: string; full_name?: string }[]>([]);
 
   // Load the appropriate content list on contentType change
   useEffect(() => {
@@ -122,19 +134,74 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
     }
   }
 
+  // Load recipients based on recipient type
+  useEffect(() => {
+    async function loadRecipients() {
+      let query = supabase
+        .from('profiles')
+        .select('id, email, full_name');
+
+      switch (recipientType) {
+        case 'mentees':
+          query = query.eq('user_type', 'mentee');
+          break;
+        case 'mentors':
+          query = query.eq('user_type', 'mentor');
+          break;
+      }
+
+      const { data, error } = await query;
+      
+      if (error) {
+        toast({ 
+          title: "Error Loading Recipients", 
+          description: error.message, 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      setRecipientsList(data || []);
+    }
+
+    if (recipientType !== 'selected') {
+      loadRecipients();
+    } else {
+      // If selected, load both mentees and mentors
+      async function loadAllRecipients() {
+        const { data: mentees } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('user_type', 'mentee');
+
+        const { data: mentors } = await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('user_type', 'mentor');
+
+        setRecipientsList([...(mentees || []), ...(mentors || [])]);
+      }
+
+      loadAllRecipients();
+    }
+  }, [recipientType]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!contentType || !frequency || !scheduledFor || selectedContentIds.length === 0) {
       toast({ title: "Fill all required fields", variant: "destructive" });
       return;
     }
+
     setSubmitting(true);
     try {
-      // For each selected content, create an email campaign
+      // Prepare campaign data with recipient information
       const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
-      const inserts = selectedContents.map(content => {
+      
+      const campaignInserts = selectedContents.map(content => {
         const subject = `${CONTENT_TYPE_LABELS[contentType]}: ${content.title}`;
         const body = `${subject}\n\nVisit PicoCareer to learn more about this featured ${contentType.slice(0, -1)}.`;
+        
         return {
           scheduled_for: scheduledFor,
           frequency,
@@ -143,16 +210,54 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
           subject,
           body,
           admin_id: adminId,
+          recipient_type: recipientType,
+          recipient_filter: recipientType === 'selected' 
+            ? { profile_ids: selectedRecipients } 
+            : {}
         };
       });
-      const { error } = await supabase.from("email_campaigns").insert(inserts);
-      if (error) throw error;
-      toast({ title: "Campaign(s) created!", description: `Scheduled ${inserts.length} campaign(s).` });
+
+      // Insert campaigns
+      const { data: insertedCampaigns, error: campaignError } = await supabase
+        .from('email_campaigns')
+        .insert(campaignInserts)
+        .select();
+
+      if (campaignError) throw campaignError;
+
+      // If specific recipients were selected, create recipient records
+      if (recipientType === 'selected' && insertedCampaigns) {
+        const recipientRecords = insertedCampaigns.flatMap(campaign => 
+          selectedRecipients.map(recipientId => ({
+            campaign_id: campaign.id,
+            profile_id: recipientId
+          }))
+        );
+
+        const { error: recipientError } = await supabase
+          .from('email_campaign_recipients')
+          .insert(recipientRecords);
+
+        if (recipientError) throw recipientError;
+      }
+
+      toast({ 
+        title: "Campaign(s) created!", 
+        description: `Scheduled ${campaignInserts.length} campaign(s).` 
+      });
+      
+      // Reset form state
       setSelectedContentIds([]);
+      setSelectedRecipients([]);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ 
+        title: "Error", 
+        description: err.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   }
 
   return (
@@ -263,6 +368,50 @@ export function EmailCampaignForm({ adminId }: { adminId: string }) {
                   })}
             </div>
           </div>
+          <div>
+            <Label>Recipient Type</Label>
+            <Select 
+              value={recipientType} 
+              onValueChange={(value: RecipientType) => setRecipientType(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select recipient type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="mentees">Mentees Only</SelectItem>
+                <SelectItem value="mentors">Mentors Only</SelectItem>
+                <SelectItem value="selected">Select Specific Users</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Individual Recipient Selection */}
+          {recipientType === 'selected' && (
+            <div className="grid gap-2 max-h-64 overflow-y-auto border rounded p-2">
+              {recipientsList.map(recipient => (
+                <div key={recipient.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`recipient-${recipient.id}`}
+                    checked={selectedRecipients.includes(recipient.id)}
+                    onCheckedChange={(checked) => {
+                      setSelectedRecipients(prev => 
+                        checked 
+                          ? [...prev, recipient.id] 
+                          : prev.filter(id => id !== recipient.id)
+                      );
+                    }}
+                  />
+                  <Label 
+                    htmlFor={`recipient-${recipient.id}`}
+                    className="text-sm"
+                  >
+                    {recipient.full_name || recipient.email}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
           <Button type="submit" className="w-full" disabled={submitting || selectedContentIds.length === 0}>
             {submitting ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : "Create Campaign"}
             {submitting ? "Creating..." : ""}

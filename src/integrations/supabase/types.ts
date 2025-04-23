@@ -484,6 +484,52 @@ export type Database = {
           },
         ]
       }
+      email_campaign_recipients: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          email_subscription_id: string | null
+          id: string
+          profile_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          email_subscription_id?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          email_subscription_id?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_recipients_email_subscription_id_fkey"
+            columns: ["email_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "email_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_recipients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           admin_id: string
@@ -495,6 +541,8 @@ export type Database = {
           id: string
           last_error: string | null
           last_sent: string | null
+          recipient_filter: Json | null
+          recipient_type: string | null
           scheduled_for: string | null
           sent_count: number
           status: string
@@ -511,6 +559,8 @@ export type Database = {
           id?: string
           last_error?: string | null
           last_sent?: string | null
+          recipient_filter?: Json | null
+          recipient_type?: string | null
           scheduled_for?: string | null
           sent_count?: number
           status?: string
@@ -527,6 +577,8 @@ export type Database = {
           id?: string
           last_error?: string | null
           last_sent?: string | null
+          recipient_filter?: Json | null
+          recipient_type?: string | null
           scheduled_for?: string | null
           sent_count?: number
           status?: string
