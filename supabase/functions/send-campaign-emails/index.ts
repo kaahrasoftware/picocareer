@@ -1,5 +1,4 @@
 
-// Use Resend for campaign email delivery, no Google/Gmail refs should remain!
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -29,7 +28,6 @@ const handler = async (req: Request): Promise<Response> => {
       campaignId = json.campaignId;
       batchSize = json.batchSize ?? 50;
     } catch (error) {
-      console.error("Failed to parse request JSON", error);
       return new Response(
         JSON.stringify({
           success: false,
@@ -43,10 +41,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!campaignId) {
-      const message = "Campaign ID is required";
-      console.error(message);
       return new Response(
-        JSON.stringify({ success: false, error: message }),
+        JSON.stringify({ success: false, error: "Campaign ID is required" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -59,25 +55,16 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    let campaign;
-    let campaignError;
-    try {
-      const { data, error } = await supabaseClient
-        .from('email_campaigns')
-        .select('*')
-        .eq('id', campaignId)
-        .single();
-      campaign = data;
-      campaignError = error;
-    } catch (err) {
-      campaignError = err instanceof Error ? err : { message: String(err) };
-    }
+    // Load campaign details
+    const { data: campaign, error: campaignError } = await supabaseClient
+      .from('email_campaigns')
+      .select('*')
+      .eq('id', campaignId)
+      .single();
 
     if (campaignError || !campaign) {
-      const message = `Campaign not found: ${campaignError?.message || "Unknown error"}`;
-      console.error(message);
       return new Response(
-        JSON.stringify({ success: false, error: message }),
+        JSON.stringify({ success: false, error: `Campaign not found: ${campaignError?.message || "Unknown error"}` }),
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -85,6 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Get recipients
     let recipients: { id: string; email: string; full_name?: string }[] = [];
     try {
       if (campaign.recipient_type === 'selected' && campaign.recipient_filter?.profile_ids) {
@@ -112,10 +100,8 @@ const handler = async (req: Request): Promise<Response> => {
         recipients = queriedRecipients || [];
       }
     } catch (error) {
-      const msg = (error as Error).message || error;
-      console.error("Error fetching recipients:", msg);
       return new Response(
-        JSON.stringify({ success: false, error: "Error fetching recipients: " + msg }),
+        JSON.stringify({ success: false, error: "Error fetching recipients: " + (error as Error).message }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -124,16 +110,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (recipients.length === 0) {
-      const message = "No recipients found for this campaign";
-      console.error(message);
       return new Response(
-        JSON.stringify({ success: false, message }),
+        JSON.stringify({ success: false, message: "No recipients found for this campaign" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Found ${recipients.length} recipients for campaign ${campaignId}`);
-
+    // Get content title if campaign references content
     let contentTitle = campaign.subject || "";
     if (campaign.content_type && campaign.content_id) {
       const contentTable = campaign.content_type;
@@ -147,12 +130,12 @@ const handler = async (req: Request): Promise<Response> => {
         if (!contentError && content) {
           contentTitle = content[titleField] || contentTitle;
         }
-      } catch (contentErr) {
-        console.error("Error fetching campaign content:", contentErr);
+      } catch (_err) {
+        // ignore content fetch errors for the title
       }
     }
 
-    // SENDING EMAILS USING RESEND ONLY -- Google/Gmail code completely removed!
+    // Use Resend for email delivery only, no Gmail code
     const batchedRecipients = [];
     for (let i = 0; i < recipients.length; i += batchSize) {
       batchedRecipients.push(recipients.slice(i, i + batchSize));
@@ -166,7 +149,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (let batchIndex = 0; batchIndex < batchedRecipients.length; batchIndex++) {
       const batch = batchedRecipients[batchIndex];
-      console.log(`Processing batch ${batchIndex + 1}/${batchedRecipients.length} with ${batch.length} recipients`);
       const batchPromises = batch.map(async (recipient) => {
         try {
           const emailContent = generateEmailContent(
@@ -187,7 +169,6 @@ const handler = async (req: Request): Promise<Response> => {
             throw new Error(res.error.message || JSON.stringify(res.error));
           }
 
-          console.log(`Email sent to ${recipient.email} (${recipient.id})`);
           processedRecipientIds.push(recipient.id);
           sentCount++;
           return { success: true, recipient_id: recipient.id, email: recipient.email };
@@ -195,11 +176,11 @@ const handler = async (req: Request): Promise<Response> => {
           failedCount++;
           const errMsg = (error as Error).message || error;
           errors.push({ recipient_id: recipient.id, email: recipient.email, error: errMsg });
-          console.error(`Error sending email to ${recipient.email}:`, errMsg);
           return { success: false, recipient_id: recipient.id, email: recipient.email, error: errMsg };
         }
       });
       await Promise.all(batchPromises);
+      // Small delay between batches for rate limiting, except after the last batch
       if (batchIndex < batchedRecipients.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -220,11 +201,9 @@ const handler = async (req: Request): Promise<Response> => {
         .from('email_campaigns')
         .update(campaignUpdateData)
         .eq('id', campaignId);
-      if (updateError) {
-        console.error("Error updating campaign status:", updateError);
-      }
-    } catch (updateErr) {
-      console.error("Exception updating campaign row:", updateErr);
+      // optionally log update errors
+    } catch (_updateErr) {
+      // ignore update errors
     }
 
     return new Response(
@@ -242,7 +221,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Edge Function top-level error:", error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -256,9 +234,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-/**
- * Generates HTML content for email campaigns
- */
 function generateEmailContent(
   title: string,
   body: string,
@@ -266,21 +241,16 @@ function generateEmailContent(
   campaignId: string
 ): string {
   const unsubscribeUrl = `${Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com'}/unsubscribe?campaign=${campaignId}`;
-  
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
       <div style="background-color: #2a2a72; color: white; padding: 12px 20px; border-radius: 6px 6px 0 0; margin: -20px -20px 20px -20px;">
         <h1 style="margin: 0; font-size: 24px;">${title}</h1>
       </div>
-      
       <p style="margin-top: 0;">Hello ${recipientName},</p>
-      
       <div style="margin: 20px 0;">
         ${body}
       </div>
-      
       <p>Visit <a href="https://picocareer.com" style="color: #2a2a72; text-decoration: none; font-weight: bold;">PicoCareer</a> to learn more and explore related content.</p>
-      
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 12px; color: #666;">
         <p>&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
         <p>
