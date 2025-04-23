@@ -60,7 +60,7 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
       case 'majors':
         const { data: majors, error: majorError } = await supabase
           .from('majors')
-          .select('id, title, description, potential_salary, job_prospects, image_url')
+          .select('id, title, description, potential_salary, job_prospects')
           .in('id', contentIds);
         
         if (majorError) throw new Error(`Error fetching majors: ${majorError.message}`);
@@ -147,7 +147,6 @@ function getImageUrl(content: any, contentType: string): string | null {
       return content.cover_image_url;
     case 'scholarships':
     case 'careers':
-    case 'majors':
       return content.image_url;
     case 'opportunities':
       return content.cover_image_url;
@@ -155,6 +154,8 @@ function getImageUrl(content: any, contentType: string): string | null {
       return content.avatar_url;
     case 'schools':
       return content.banner_url || content.logo_url;
+    case 'majors':
+      return null;
     default:
       return null;
   }
