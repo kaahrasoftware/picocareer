@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
-import { getEmailSubject, generateEmailContent } from "../../utils/email-templates.ts";
+import { getEmailSubject, generateEmailContent, CONTENT_TYPE_LABELS } from "../../utils/email-templates/index.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -550,15 +550,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const contentTypeLabel = {
-      'scholarships': 'Scholarship',
-      'opportunities': 'Opportunity',
-      'careers': 'Career',
-      'majors': 'Major',
-      'schools': 'School',
-      'mentors': 'Mentor',
-      'blogs': 'Blog'
-    }[campaign.content_type] || 'Content';
+    const contentTypeLabel = CONTENT_TYPE_LABELS[campaign.content_type] || 'Content';
 
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
 

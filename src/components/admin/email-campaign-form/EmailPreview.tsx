@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
-import { generateEmailContent } from "@/utils/email-templates";
+import { generateEmailContent } from "../../../utils/email-templates";
 
 interface EmailPreviewProps {
   selectedContentIds: string[];
