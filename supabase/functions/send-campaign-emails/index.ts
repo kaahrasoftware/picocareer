@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
+import { getEmailSubject, generateEmailContent } from "../../utils/email-templates.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -624,14 +625,18 @@ const handler = async (req: Request): Promise<Response> => {
       'blogs': 'Blog'
     }[campaign.content_type] || 'Content';
 
-    const emailSubject = campaign.subject || `${contentTypeLabel} Spotlight: ${contentList.length > 1 ? `${contentList.length} New Items` : contentList[0].title || contentList[0].name || contentList[0].full_name || 'Featured Content'}`;
-
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
+
+    // Generate appropriate subject line
+    const emailSubject = campaign.subject || getEmailSubject(campaign.content_type);
+
+    // Get recipient's name if available
+    const recipientName = recipients[0]?.full_name || "Valued Member";
 
     const emailContent = generateEmailContent(
       emailSubject,
       campaign.body || `Check out these featured ${campaign.content_type}!`,
-      "Valued Member",
+      recipientName,
       campaign.id,
       contentList,
       campaign.content_type,
