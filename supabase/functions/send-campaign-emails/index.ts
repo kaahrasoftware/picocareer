@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
-import { getEmailSubject, generateEmailContent, CONTENT_TYPE_LABELS } from "../../utils/email-templates/index.ts";
+import { getEmailSubject, generateEmailContent } from "../../utils/email-templates/index.ts";
+import type { ContentItem } from "../../../src/types/database/email.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -17,7 +18,7 @@ interface CampaignEmailRequest {
   retryCount?: number;
 }
 
-async function fetchContentDetails(supabase: any, contentType: string, contentIds: string[]) {
+async function fetchContentDetails(supabase: any, contentType: string, contentIds: string[]): Promise<ContentItem[]> {
   if (!contentIds || contentIds.length === 0) {
     return [];
   }
@@ -25,13 +26,13 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
   console.log(`Fetching ${contentType} details for IDs:`, contentIds);
 
   try {
-    let data: any[] = [];
+    let data: ContentItem[] = [];
     
     switch (contentType) {
       case 'scholarships':
         const { data: scholarships, error: scholarshipError } = await supabase
           .from('scholarships')
-          .select('id, title, description, deadline, provider_name, amount')
+          .select('id, title, description, deadline, provider_name, amount, cover_image_url')
           .in('id', contentIds);
         
         if (scholarshipError) throw new Error(`Error fetching scholarships: ${scholarshipError.message}`);
@@ -131,156 +132,13 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
         throw new Error(`Unsupported content type: ${contentType}`);
     }
     
-    console.log(`Successfully fetched ${data.length} ${contentType} items`);
+    console.log(`Successfully fetched ${data.length} ${contentType} items:`, data);
     return data;
     
   } catch (error) {
     console.error(`Error fetching ${contentType} details:`, error);
     throw error;
   }
-}
-
-function getImageUrl(content: any, contentType: string): string | null {
-  if (!content) return null;
-  
-  switch (contentType) {
-    case 'blogs':
-    case 'opportunities':
-    case 'careers':
-      return content.cover_image_url;
-    case 'mentors':
-      return content.avatar_url;
-    case 'schools':
-      return content.banner_url || content.logo_url;
-    default:
-      return null;
-  }
-}
-
-function getContentUrl(id: string, contentType: string, siteUrl: string): string {
-  const baseUrl = siteUrl || 'https://picocareer.com';
-  
-  switch (contentType) {
-    case 'blogs':
-      return `${baseUrl}/blog/${id}`;
-    case 'scholarships':
-      return `${baseUrl}/scholarships/${id}`;
-    case 'opportunities':
-      return `${baseUrl}/opportunities/${id}`;
-    case 'careers':
-      return `${baseUrl}/career/${id}`;
-    case 'majors':
-      return `${baseUrl}/program/${id}`;
-    case 'mentors':
-      return `${baseUrl}/mentor/${id}`;
-    case 'schools':
-      return `${baseUrl}/school/${id}`;
-    default:
-      return baseUrl;
-  }
-}
-
-function getContentDetails(content: any, contentType: string): string {
-  if (!content) {
-    return `<p style="color: #4b5563;">No details available.</p>`;
-  }
-  
-  const truncateText = (text: string, maxLength = 150) => {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-  };
-  
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    try {
-      return new Date(dateStr).toLocaleDateString();
-    } catch (e) {
-      return dateStr;
-    }
-  };
-  
-  switch (contentType) {
-    case 'blogs':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.summary)}</p>
-        ${content.categories ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Categories: ${Array.isArray(content.categories) ? content.categories.join(', ') : content.categories}</p>` : ''}
-      `;
-      
-    case 'scholarships':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
-        ${content.provider_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>` : ''}
-        ${content.amount ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Amount: ${content.amount}</p>` : ''}
-        ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${formatDate(content.deadline)}</p>` : ''}
-      `;
-      
-    case 'opportunities':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
-        ${content.provider_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>` : ''}
-        ${content.compensation ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Compensation: ${content.compensation}</p>` : ''}
-        ${content.location ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">${content.location}${content.remote ? ' (Remote)' : ''}</p>` : ''}
-        ${content.deadline ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Deadline: ${formatDate(content.deadline)}</p>` : ''}
-      `;
-      
-    case 'careers':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
-        ${content.salary_range ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Salary Range: ${content.salary_range}</p>` : ''}
-        ${content.keywords && content.keywords.length > 0 ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Keywords: ${Array.isArray(content.keywords) ? content.keywords.slice(0, 5).join(', ') : ''}</p>` : ''}
-      `;
-      
-    case 'majors':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
-        ${content.job_prospects ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Job Prospects: ${content.job_prospects}</p>` : ''}
-        ${content.potential_salary ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Potential Salary: ${content.potential_salary}</p>` : ''}
-      `;
-      
-    case 'mentors':
-      return `
-        <p style="color: #4b5563; margin-bottom: 8px;">${truncateText(content.description)}</p>
-        ${content.career_title ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">${content.career_title}</p>` : ''}
-        ${content.company_name ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">at ${content.company_name}</p>` : ''}
-        ${content.skills ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Skills: ${Array.isArray(content.skills) ? content.skills.slice(0, 3).join(', ') + (content.skills.length > 3 ? '...' : '') : content.skills}</p>` : ''}
-      `;
-      
-    case 'schools':
-      return `
-        ${content.type ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Type: ${content.type}</p>` : ''}
-        ${content.location ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Location: ${content.location}</p>` : ''}
-        ${content.website ? `<p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">Website: <a href="${content.website}" style="color: #2a2a72;">${content.website}</a></p>` : ''}
-      `;
-      
-    default:
-      return `<p style="color: #4b5563;">No details available.</p>`;
-  }
-}
-
-function formatContentForEmail(content: any, contentType: string, siteUrl: string): string {
-  if (!content) return '';
-  
-  const imgSrc = getImageUrl(content, contentType);
-  const imgHtml = imgSrc 
-    ? `<img src="${imgSrc}" alt="${content.title || 'Content'}" style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;">`
-    : ''; 
-  
-  const contentTitle = content.title || content.name || content.full_name || 'Untitled';
-  const detailsHtml = getContentDetails(content, contentType);
-  const contentUrl = getContentUrl(content.id, contentType, siteUrl);
-  
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
-        ${imgHtml}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: #2a2a72;">${contentTitle}</h3>
-        ${detailsHtml}
-        <div style="margin-top: 16px;">
-          <a href="${contentUrl}" style="display: inline-block; background-color: #2a2a72; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: 600;">Learn More</a>
-        </div>
-      </div>
-    </div>
-  `;
 }
 
 async function processBatchSending(
@@ -521,9 +379,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    let contentList: any[] = [];
+    let contentList: ContentItem[] = [];
     try {
       contentList = await fetchContentDetails(supabaseClient, campaign.content_type, contentIds);
+      console.log("Fetched content list:", contentList);
     } catch (error) {
       console.error("Error fetching content details:", error);
       await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, `Error fetching content details: ${(error as Error).message}`);
@@ -550,25 +409,28 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const contentTypeLabel = CONTENT_TYPE_LABELS[campaign.content_type] || 'Content';
-
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
-
-    // Generate appropriate subject line
     const emailSubject = campaign.subject || getEmailSubject(campaign.content_type);
 
-    // Get recipient's name if available
-    const recipientName = recipients[0]?.full_name || "Valued Member";
+    // Generate email content using the shared template
+    console.log("Generating email content with:", {
+      title: emailSubject,
+      body: campaign.body || `Check out these featured ${campaign.content_type}!`,
+      contentList,
+      contentType: campaign.content_type
+    });
 
     const emailContent = generateEmailContent(
       emailSubject,
       campaign.body || `Check out these featured ${campaign.content_type}!`,
-      recipientName,
+      "Valued Member", // Will be replaced per recipient
       campaign.id,
       contentList,
       campaign.content_type,
       siteUrl
     );
+
+    console.log("Generated email content:", emailContent);
 
     const startTime = Date.now();
     

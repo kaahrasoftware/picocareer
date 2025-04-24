@@ -11,6 +11,12 @@ interface EmailPreviewProps {
 
 export function EmailPreview({ selectedContentIds, contentList, contentType }: EmailPreviewProps) {
   const selectedContents = contentList.filter(content => selectedContentIds.includes(content.id));
+  console.log("Generating email preview with:", {
+    selectedContents,
+    contentType,
+    origin: window.location.origin
+  });
+  
   const previewHtml = generateEmailContent(
     CONTENT_TYPE_LABELS[contentType],
     `Check out these featured ${contentType}!`,
@@ -20,6 +26,8 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
     contentType,
     window.location.origin
   );
+
+  console.log("Generated preview HTML:", previewHtml);
   
   return (
     <div>
