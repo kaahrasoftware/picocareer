@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
+import { generateEmailContent, getEmailSubject } from "./email-templates.ts";
+import type { ContentItem } from "../../../src/types/database/email";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -423,7 +425,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailContent = generateEmailContent(
       emailSubject,
       campaign.body || `Check out these featured ${campaign.content_type}!`,
-      "Valued Member", // Will be replaced per recipient
+      "Valued Member",
       campaign.id,
       contentList,
       campaign.content_type,

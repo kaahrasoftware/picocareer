@@ -1,7 +1,17 @@
+export type ContentItem = {
+  id: string;
+  title: string;
+  description?: string;
+  provider_name?: string;
+  amount?: number | string;
+  deadline?: string;
+  compensation?: string;
+  location?: string;
+  image_url?: string;
+  cover_image_url?: string;
+  [key: string]: any;
+};
 
-import type { ContentItem } from "../../../src/types/database/email";
-
-// Get styling based on content type
 export const getContentTypeStyles = (contentType: string) => {
   switch (contentType) {
     case 'scholarships':
@@ -78,8 +88,7 @@ export const getEmailSubject = (contentType: string, firstName: string = ''): st
   }
 };
 
-// Format content cards for email
-export function formatContentCard(content: ContentItem, contentType: string, siteUrl: string): string {
+export const formatContentCard = (content: ContentItem, contentType: string, siteUrl: string): string => {
   if (!content) return '';
   
   const styles = getContentTypeStyles(contentType);
@@ -120,8 +129,6 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
         detailsHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${content.location}</p>`;
       }
       break;
-      
-    // Add other content types as needed
   }
 
   return `
@@ -149,7 +156,7 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
       </div>
     </div>
   `;
-}
+};
 
 export const CONTENT_TYPE_LABELS: Record<string, string> = {
   scholarships: "Scholarship Spotlight",
@@ -161,7 +168,6 @@ export const CONTENT_TYPE_LABELS: Record<string, string> = {
   blogs: "Blog Spotlight",
 };
 
-// Main function to generate email content
 export function generateEmailContent(
   title: string,
   body: string,
