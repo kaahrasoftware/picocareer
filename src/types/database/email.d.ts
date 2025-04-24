@@ -1,3 +1,5 @@
+import type { Json } from './database.types';
+
 export interface EmailCampaign {
   id: string;
   admin_id: string;
@@ -40,14 +42,20 @@ export interface EmailSubscription {
   updated_at: string;
 }
 
-// Type definition for content items
 export interface ContentItem {
   id: string;
   title: string;
+  description?: string;
+  provider_name?: string;
+  amount?: number | string;
+  deadline?: string;
+  compensation?: string;
+  location?: string;
+  image_url?: string;
+  cover_image_url?: string;
   [key: string]: any;
 }
 
-// Define profile type specifically for email campaigns
 export interface ProfileForEmail {
   id: string;
   email: string;

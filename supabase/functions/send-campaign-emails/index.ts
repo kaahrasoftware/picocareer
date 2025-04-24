@@ -1,9 +1,6 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
-import { getEmailSubject, generateEmailContent } from "./email-templates.ts";
-import type { ContentItem } from "../../../src/types/database/email.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -33,11 +30,14 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
       case 'scholarships':
         const { data: scholarships, error: scholarshipError } = await supabase
           .from('scholarships')
-          .select('id, title, description, deadline, provider_name, amount, cover_image_url')
+          .select('id, title, description, deadline, provider_name, amount, image_url')
           .in('id', contentIds);
         
         if (scholarshipError) throw new Error(`Error fetching scholarships: ${scholarshipError.message}`);
-        data = scholarships || [];
+        data = scholarships?.map(s => ({
+          ...s,
+          cover_image_url: s.image_url // Map image_url to cover_image_url for consistency
+        })) || [];
         break;
         
       case 'opportunities':
@@ -413,7 +413,6 @@ const handler = async (req: Request): Promise<Response> => {
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
     const emailSubject = campaign.subject || getEmailSubject(campaign.content_type);
 
-    // Generate email content using the local template function
     console.log("Generating email content with:", {
       title: emailSubject,
       body: campaign.body || `Check out these featured ${campaign.content_type}!`,
