@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -73,6 +74,18 @@ export function useEmailCampaignFormState({
             content = content?.map(school => ({
               id: school.id,
               title: school.name
+            }));
+            break;
+            
+          case "mentors":
+            ({ data: content } = await supabase
+              .from("profiles")
+              .select("id, full_name")
+              .eq("user_type", "mentor")
+              .eq("status", "Approved"));
+            content = content?.map(mentor => ({
+              id: mentor.id,
+              title: mentor.full_name || 'Unknown Mentor'
             }));
             break;
             
