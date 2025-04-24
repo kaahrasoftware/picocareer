@@ -27,7 +27,7 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
     window.location.origin
   );
 
-  console.log("Generated preview HTML:", previewHtml);
+  console.log("Generated preview HTML length:", previewHtml.length);
   
   return (
     <div>

@@ -1,7 +1,8 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
-import { getEmailSubject, generateEmailContent } from "../../utils/email-templates/index.ts";
+import { getEmailSubject, generateEmailContent } from "./email-templates.ts";
 import type { ContentItem } from "../../../src/types/database/email.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
@@ -412,7 +413,7 @@ const handler = async (req: Request): Promise<Response> => {
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
     const emailSubject = campaign.subject || getEmailSubject(campaign.content_type);
 
-    // Generate email content using the shared template
+    // Generate email content using the local template function
     console.log("Generating email content with:", {
       title: emailSubject,
       body: campaign.body || `Check out these featured ${campaign.content_type}!`,
@@ -430,7 +431,9 @@ const handler = async (req: Request): Promise<Response> => {
       siteUrl
     );
 
-    console.log("Generated email content:", emailContent);
+    console.log("Generated email HTML length:", emailContent.length);
+    // Uncomment for detailed debugging:
+    // console.log("Generated email HTML first 500 chars:", emailContent.substring(0, 500));
 
     const startTime = Date.now();
     
