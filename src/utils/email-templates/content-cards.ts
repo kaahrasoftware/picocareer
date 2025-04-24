@@ -1,5 +1,6 @@
 
 import type { ContentItem } from "@/types/database/email";
+import { getContentTypeStyles } from "./styles";
 
 export function formatContentCard(content: ContentItem, contentType: string, siteUrl: string): string {
   if (!content) return '';
@@ -72,4 +73,3 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
     </div>
   `;
 }
-
