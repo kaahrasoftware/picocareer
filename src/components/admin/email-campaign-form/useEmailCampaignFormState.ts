@@ -78,11 +78,13 @@ export function useEmailCampaignFormState({
             break;
             
           case "mentors":
+            console.log('Fetching mentor profiles...');
             ({ data: content } = await supabase
               .from("profiles")
               .select("id, full_name")
               .eq("user_type", "mentor")
-              .eq("status", "Approved"));
+              .eq("onboarding_status", "Approved"));
+            console.log('Fetched mentors:', content);
             content = content?.map(mentor => ({
               id: mentor.id,
               title: mentor.full_name || 'Unknown Mentor'
@@ -107,6 +109,9 @@ export function useEmailCampaignFormState({
         }
       } catch (error) {
         console.error(`Error loading ${contentType} content:`, error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message);
+        }
         toast({
           title: "Error Loading Content",
           description: `Failed to load ${CONTENT_TYPE_LABELS[contentType]}. Please try again.`,
