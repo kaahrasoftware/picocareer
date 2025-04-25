@@ -602,6 +602,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_content_type_settings: {
+        Row: {
+          accent_color: string
+          admin_id: string
+          content_type: string
+          created_at: string
+          id: string
+          layout_settings: Json
+          primary_color: string
+          secondary_color: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          admin_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          layout_settings?: Json
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          admin_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          layout_settings?: Json
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_subscriptions: {
         Row: {
           created_at: string
