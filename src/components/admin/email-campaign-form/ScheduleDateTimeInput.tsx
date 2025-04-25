@@ -1,5 +1,7 @@
 
 import React from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface ScheduleDateTimeInputProps {
   scheduledFor: string;
@@ -9,15 +11,17 @@ interface ScheduleDateTimeInputProps {
 export function ScheduleDateTimeInput({ scheduledFor, setScheduledFor }: ScheduleDateTimeInputProps) {
   return (
     <div>
-      <label htmlFor="scheduledFor" className="block font-medium mb-1">Start Date/Time</label>
-      <input
+      <Label htmlFor="scheduledFor" className="block text-sm font-medium">Start Date/Time</Label>
+      <Input
         id="scheduledFor"
         type="datetime-local"
         value={scheduledFor}
         onChange={e => setScheduledFor(e.target.value)}
-        className="w-full border px-3 py-2 rounded"
-        required
+        className="mt-1 w-full"
       />
+      <p className="text-sm text-muted-foreground mt-1">
+        Select when this campaign should start sending.
+      </p>
     </div>
   );
 }

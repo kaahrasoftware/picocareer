@@ -1,5 +1,5 @@
+
 import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ContentType } from "./utils";
@@ -20,26 +20,33 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   const [isScheduling, setIsScheduling] = useState(false);
   const [recipients, setRecipients] = useState<{ id: string; email: string; full_name: string }[]>([]);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
+  const [recipientType, setRecipientType] = useState<"all" | "mentees" | "mentors" | "selected">("all");
 
-  const form = useForm<CampaignFormValues>({
-    defaultValues: {
-      name: "",
-      subject: "",
-      content_type: "scholarships",
-      recipient_type: "all",
-      recipient_ids: [],
-      content_ids: [],
-      scheduled_for: null,
-      frequency: "once",
+  const { data: contentList, isLoading } = useQuery({
+    queryKey: ["content-list", recipientType],
+    queryFn: async () => {
+      // Map the content type to the correct table name if needed
+      const tableName = recipientType === 'scholarships' ? 'scholarships' : 
+                        recipientType === 'opportunities' ? 'opportunities' :
+                        recipientType === 'careers' ? 'careers' :
+                        recipientType === 'events' ? 'events' : 'blogs';
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select("id, title");
+
+      if (error) {
+        console.error("Error fetching content:", error);
+        return [];
+      }
+      return data || [];
     },
   });
 
-  const { watch, setValue, reset } = form;
-
   const loadRecipients = useCallback(async () => {
-    if (!form.recipient_type) return;
+    if (!recipientType) return;
 
-    if (form.recipient_type === "selected") {
+    if (recipientType === "selected") {
       // Handle selected recipients - no need to load unless we use a query
       return;
     }
@@ -48,9 +55,9 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
     let query = baseQuery;
     
     // Filter by user type
-    if (form.recipient_type === "mentees") {
+    if (recipientType === "mentees") {
       query = baseQuery.eq("user_type", "mentee");
-    } else if (form.recipient_type === "mentors") {
+    } else if (recipientType === "mentors") {
       query = baseQuery.eq("user_type", "mentor");
     }
 
@@ -70,62 +77,47 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
         }))
       );
     }
-  }, [form.recipient_type]);
-
-  const { data: contentList, isLoading: loadingContent } = useQuery({
-    queryKey: ["content-list", watch("content_type")],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from(watch("content_type"))
-        .select("id, title");
-
-      if (error) {
-        console.error("Error fetching content:", error);
-        return [];
-      }
-      return data || [];
-    },
-  });
+  }, [recipientType]);
 
   const handleRecipientTypeChange = useCallback(
     (type: "all" | "mentees" | "mentors" | "selected") => {
-      setValue("recipient_type", type);
+      setRecipientType(type);
       setSelectedRecipientIds([]); // Clear selected IDs when recipient type changes
     },
-    [setValue]
+    []
   );
 
   const handleContentSelectionChange = (contentIds: string[]) => {
-    setValue("content_ids", contentIds);
+    // This would be called from the parent component
+    return contentIds;
   };
 
   const handleSelectedRecipientsChange = (ids: string[]) => {
     setSelectedRecipientIds(ids);
-    setValue("recipient_ids", ids);
   };
 
   const scheduleCampaign = async (values: CampaignFormValues) => {
     setIsScheduling(true);
     try {
-      const campaignData: Omit<Campaign, "id" | "created_at" | "updated_at"> = {
+      const campaignData: Partial<Campaign> = {
         admin_id: adminId,
         name: values.name,
         subject: values.subject,
         content_type: values.content_type,
         recipient_type: values.recipient_type,
-        recipient_ids: values.recipient_type === "selected" ? selectedRecipientIds : [],
+        recipient_ids: values.recipient_type === "selected" ? values.recipient_ids : [],
         content_ids: values.content_ids,
-        scheduled_for: values.scheduled_for?.toISOString() || null,
+        content_id: values.content_ids[0], // First ID for backward compatibility
+        scheduled_for: values.scheduled_for?.toISOString(),
         sent_at: null,
         sent_count: 0,
         recipients_count: recipients.length,
         failed_count: 0,
-        last_error: null,
-        last_checked_at: null,
+        status: "pending",
         frequency: values.frequency,
       };
 
-      const { data, error } = await supabase.from("email_campaigns").insert([campaignData]);
+      const { data, error } = await supabase.from("email_campaigns").insert(campaignData);
 
       if (error) {
         console.error("Error scheduling campaign:", error);
@@ -133,7 +125,6 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
         return;
       }
 
-      reset();
       onCampaignCreated();
       alert("Campaign scheduled successfully!");
     } finally {
@@ -142,12 +133,11 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   };
 
   return {
-    form,
     contentList,
     recipients,
     selectedRecipientIds,
     isScheduling,
-    loadingContent,
+    isLoading,
     handleRecipientTypeChange,
     handleContentSelectionChange,
     handleSelectedRecipientsChange,
