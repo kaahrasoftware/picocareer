@@ -25,6 +25,12 @@ export interface EmailContentTypeSettings {
     contentBlocks: string[];
     metadataDisplay: string[];
   };
+  content?: {
+    header_text?: string;
+    intro_text?: string;
+    cta_text?: string;
+    footer_text?: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -64,4 +70,16 @@ export interface ContentItem {
   location?: string;
   remote?: boolean;
   [key: string]: any;
+}
+
+export interface EmailTemplateContent {
+  id: string;
+  content_type: string;
+  admin_id: string;
+  header_text?: string;
+  intro_text?: string;
+  cta_text?: string;
+  footer_text?: string;
+  created_at: string;
+  updated_at: string;
 }

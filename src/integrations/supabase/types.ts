@@ -659,6 +659,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_template_content: {
+        Row: {
+          admin_id: string
+          content_type: string
+          created_at: string
+          cta_text: string | null
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          intro_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          content_type: string
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          intro_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          content_type?: string
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          intro_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_template_settings: {
         Row: {
           accent_color: string
@@ -4218,6 +4254,7 @@ export type Database = {
         | "Judging (J)"
         | "Perceiving (P)"
       document_type: "pdf" | "word" | "powerpoint" | "excel" | "other"
+      email_content_section: "header" | "intro" | "cta" | "footer"
       event_types:
         | "Coffee Time"
         | "Hackathon"
@@ -4931,6 +4968,7 @@ export const Constants = {
         "Perceiving (P)",
       ],
       document_type: ["pdf", "word", "powerpoint", "excel", "other"],
+      email_content_section: ["header", "intro", "cta", "footer"],
       event_types: ["Coffee Time", "Hackathon", "Panel", "Webinar", "Workshop"],
       feedback_type: ["mentor_feedback", "mentee_feedback"],
       hub_member_role: ["admin", "moderator", "member", "faculty", "student"],

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -19,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import type { EmailContentTypeSettings } from "@/types/database/email";
 import { ContentType } from "../email-campaign-form/utils";
+import { ContentEditorTab } from "./ContentEditorTab";
 
 interface ContentTypeTemplateEditorProps {
   adminId: string;
@@ -156,10 +156,11 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
           <ResizablePanel defaultSize={60}>
             <Card className="p-6 h-full">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid grid-cols-3 w-full">
+                <TabsList className="grid grid-cols-4 w-full">
                   <TabsTrigger value="colors">Colors & Branding</TabsTrigger>
                   <TabsTrigger value="layout">Layout Structure</TabsTrigger>
-                  <TabsTrigger value="content">Content Elements</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="elements">Content Elements</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="colors" className="space-y-4">
@@ -236,6 +237,17 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                 </TabsContent>
                 
                 <TabsContent value="content" className="space-y-4">
+                  <ContentEditorTab 
+                    adminId={adminId}
+                    contentType={contentType}
+                    onContentUpdate={() => {
+                      // Refresh preview
+                      loadCampaigns();
+                    }}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="elements" className="space-y-4">
                   <h3 className="text-lg font-semibold">Content Elements</h3>
                   <p className="text-sm text-gray-500 mb-4">
                     Choose which elements to display in your email content.

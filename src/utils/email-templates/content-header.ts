@@ -1,25 +1,30 @@
-import { getContentTypeStyles } from "./styles";
 
 export function generateContentHeader(
   contentType: string,
   totalAmount?: string,
-  recipientName?: string
+  recipientName?: string,
+  templateContent?: {
+    header_text?: string;
+    intro_text?: string;
+  }
 ) {
   const styles = getContentTypeStyles(contentType);
   const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hi there,';
-  const contentLabel = contentType.charAt(0).toUpperCase() + contentType.slice(1);
+  
+  const headerText = templateContent?.header_text || `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} Spotlight`;
+  const introText = templateContent?.intro_text || getContentTypeIntro(contentType);
 
   return `
     <div style="margin-bottom: 32px;">
       <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; color: ${styles.accent}; text-align: center;">
-        ${contentLabel} Spotlight
+        ${headerText}
       </h1>
       
       <p style="font-size: 16px; line-height: 1.6; color: #374151; margin: 0;">
         ${greeting}
       </p>
       <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-top: 16px;">
-        ${getContentTypeIntro(contentType)}
+        ${introText}
       </p>
     </div>
   `;
