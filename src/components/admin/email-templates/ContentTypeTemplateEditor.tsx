@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -38,7 +37,7 @@ interface FormData extends Omit<EmailContentTypeSettings, 'id' | 'admin_id' | 'c
 
 export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeTemplateEditorProps) {
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("colors");
+  const [loading, setLoading] = useState(true);
 
   const methods = useForm<FormData>({
     defaultValues: {
@@ -57,33 +56,38 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
     }
   });
 
-  const { register, setValue, watch, handleSubmit, reset } = methods;
+  const { watch, setValue, reset } = methods;
   const values = watch();
 
   useEffect(() => {
     const loadSettings = async () => {
-      const { data, error } = await supabase
-        .from('email_content_type_settings')
-        .select('*')
-        .eq('admin_id', adminId)
-        .eq('content_type', contentType)
-        .single();
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('email_content_type_settings')
+          .select('*')
+          .eq('admin_id', adminId)
+          .eq('content_type', contentType)
+          .single();
 
-      if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 means no rows returned
-          console.error('Error loading template settings:', error);
+        if (error) {
+          if (error.code !== 'PGRST116') { // No rows found
+            throw error;
+          }
+        } else if (data) {
+          reset({
+            content_type: contentType,
+            primary_color: data.primary_color,
+            secondary_color: data.secondary_color,
+            accent_color: data.accent_color,
+            layout_settings: data.layout_settings
+          });
         }
-        return;
-      }
-
-      if (data) {
-        reset({
-          content_type: contentType,
-          primary_color: data.primary_color,
-          secondary_color: data.secondary_color,
-          accent_color: data.accent_color,
-          layout_settings: data.layout_settings as FormData['layout_settings']
-        });
+      } catch (error) {
+        console.error('Error loading content type settings:', error);
+        toast.error('Failed to load content type settings');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -102,10 +106,11 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
           secondary_color: data.secondary_color,
           accent_color: data.accent_color,
           layout_settings: data.layout_settings
+        }, {
+          onConflict: 'admin_id,content_type'
         });
 
       if (error) throw error;
-
       toast.success('Template settings updated successfully');
     } catch (error: any) {
       toast.error('Failed to save template settings');

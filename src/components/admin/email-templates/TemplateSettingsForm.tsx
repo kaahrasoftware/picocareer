@@ -70,11 +70,22 @@ export function TemplateSettingsForm({ adminId }: { adminId: string }) {
           .eq('admin_id', adminId)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        if (data) {
+        if (error) {
+          if (error.code !== 'PGRST116') { // No rows found
+            throw error;
+          }
+          // If no settings exist, create them with default values
+          const { error: insertError } = await supabase
+            .from('email_template_settings')
+            .insert({
+              admin_id: adminId,
+              primary_color: methods.getValues('primary_color'),
+              secondary_color: methods.getValues('secondary_color'),
+              accent_color: methods.getValues('accent_color')
+            });
+          
+          if (insertError) throw insertError;
+        } else if (data) {
           setValue("logo_url", data.logo_url || "");
           setValue("primary_color", data.primary_color);
           setValue("secondary_color", data.secondary_color);
@@ -103,12 +114,10 @@ export function TemplateSettingsForm({ adminId }: { adminId: string }) {
           secondary_color: data.secondary_color,
           accent_color: data.accent_color
         }, { 
-          onConflict: 'admin_id',
-          returning: 'minimal' 
+          onConflict: 'admin_id'
         });
 
       if (error) throw error;
-
       toast.success("Email Template Settings Updated");
     } catch (error) {
       console.error("Error saving template settings:", error);
