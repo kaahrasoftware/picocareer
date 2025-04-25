@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -25,15 +24,38 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   const { data: contentList, isLoading } = useQuery({
     queryKey: ["content-list", recipientType],
     queryFn: async () => {
-      // Map the content type to the correct table name if needed
-      const tableName = recipientType === 'scholarships' ? 'scholarships' : 
-                        recipientType === 'opportunities' ? 'opportunities' :
-                        recipientType === 'careers' ? 'careers' :
-                        recipientType === 'events' ? 'events' : 'blogs';
+      let tableName = '';
+      switch (contentType) {
+        case 'scholarships':
+          tableName = 'scholarships';
+          break;
+        case 'opportunities':
+          tableName = 'opportunities';
+          break;
+        case 'careers':
+          tableName = 'careers';
+          break;
+        case 'events':
+          tableName = 'events';
+          break;
+        case 'blogs':
+          tableName = 'blogs';
+          break;
+        case 'majors':
+          tableName = 'majors';
+          break;
+        case 'mentors':
+          tableName = 'profiles';
+          break;
+        default:
+          tableName = 'blogs';
+      }
       
-      const { data, error } = await supabase
-        .from(tableName)
-        .select("id, title");
+      const query = tableName === 'profiles' 
+        ? supabase.from(tableName).select("id, full_name as title").eq('user_type', 'mentor')
+        : supabase.from(tableName).select("id, title");
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching content:", error);
@@ -99,9 +121,9 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   const scheduleCampaign = async (values: CampaignFormValues) => {
     setIsScheduling(true);
     try {
-      const campaignData: Partial<Campaign> = {
+      // Convert the values to match the Campaign type
+      const campaignData = {
         admin_id: adminId,
-        name: values.name,
         subject: values.subject,
         content_type: values.content_type,
         recipient_type: values.recipient_type,
@@ -115,9 +137,11 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
         failed_count: 0,
         status: "pending",
         frequency: values.frequency,
-      };
+      } as const;
 
-      const { data, error } = await supabase.from("email_campaigns").insert(campaignData);
+      const { data, error } = await supabase
+        .from("email_campaigns")
+        .insert(campaignData);
 
       if (error) {
         console.error("Error scheduling campaign:", error);
