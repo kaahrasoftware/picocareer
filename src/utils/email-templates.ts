@@ -1,3 +1,4 @@
+
 import { ContentItem } from "@/types/database/email";
 import { getContentTypeStyles } from "./email-templates/styles";
 import { formatContentCard } from "./email-templates/content-cards";
@@ -8,6 +9,29 @@ function calculateTotalAmount(contentItems: ContentItem[]): string {
     return sum + amount;
   }, 0);
   return total.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+export function getEmailSubject(contentType: string, firstName: string = ''): string {
+  const nameSection = firstName ? `${firstName}, ` : '';
+  
+  switch (contentType) {
+    case 'scholarships':
+      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities Await!`;
+    case 'opportunities':
+      return `🚀 Exclusive Career Opportunities Selected for You, ${nameSection}`;
+    case 'careers':
+      return `💼 Discover Your Next Career Move, ${nameSection}`;
+    case 'majors':
+      return `📚 Explore These Academic Paths, ${nameSection}`;
+    case 'schools':
+      return `🏛️ Top Educational Institutions for You, ${nameSection}`;
+    case 'mentors':
+      return `👋 Meet Your Potential Mentors, ${nameSection}`;
+    case 'blogs':
+      return `📖 Fresh Insights Curated for You, ${nameSection}`;
+    default:
+      return `New Content Updates for You, ${nameSection}`;
+  }
 }
 
 export function generateEmailContent(
@@ -80,4 +104,4 @@ export function generateEmailContent(
   `;
 }
 
-export { getEmailSubject, getContentTypeStyles };
+export { getContentTypeStyles };
