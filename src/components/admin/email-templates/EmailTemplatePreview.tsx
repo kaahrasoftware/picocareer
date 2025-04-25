@@ -27,10 +27,10 @@ export function EmailTemplatePreview({
   layoutSettings
 }: EmailTemplatePreviewProps) {
   const defaultSettings = {
-    headerStyle: 'centered',
+    headerStyle: 'centered' as const,
     showAuthor: true,
     showDate: true,
-    imagePosition: 'top',
+    imagePosition: 'top' as const,
     contentBlocks: ['title', 'image', 'description', 'cta'],
     metadataDisplay: ['category', 'date']
   };

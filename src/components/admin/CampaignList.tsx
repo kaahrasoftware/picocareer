@@ -26,6 +26,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
         .select(`
           id, 
           subject, 
+          name,
           content_type, 
           content_id, 
           content_ids,
@@ -49,10 +50,15 @@ export function CampaignList({ adminId }: CampaignListProps) {
 
       if (error) throw error;
       
-      // Map the data to ensure status is of correct type
+      // Ensure we have all required fields for the Campaign type
       const typedCampaigns: Campaign[] = (data || []).map(item => ({
         ...item,
-        status: (item.status as "planned" | "pending" | "sending" | "sent" | "failed" | "partial") || "planned"
+        name: item.name || item.subject || "Unnamed Campaign",
+        status: (item.status as Campaign['status']) || "draft",
+        sent_count: item.sent_count || 0,
+        recipients_count: item.recipients_count || 0,
+        failed_count: item.failed_count || 0,
+        frequency: item.frequency as Campaign['frequency'] || "once"
       }));
       
       setCampaigns(typedCampaigns);
@@ -146,6 +152,13 @@ export function CampaignList({ adminId }: CampaignListProps) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (adminId) {
+      loadCampaigns();
+    }
+    // eslint-disable-next-line
+  }, [adminId]);
 
   return (
     <div>

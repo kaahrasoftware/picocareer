@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { EmailCampaignForm, EmailTemplateSettingsTab } from "@/components/admin/EmailCampaignForm";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Navigate } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmailCampaignForm } from "@/components/admin/EmailCampaignForm";
+import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
@@ -47,7 +48,7 @@ export default function AdminEmailCampaigns() {
         </TabsContent>
 
         <TabsContent value="template-settings">
-          <EmailTemplateSettingsTab adminId={profile.id} />
+          <TemplateSettingsTab adminId={profile.id} />
         </TabsContent>
       </Tabs>
     </div>
