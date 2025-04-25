@@ -1,3 +1,4 @@
+
 export type ContentItem = {
   id: string;
   title: string;
@@ -98,57 +99,94 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
   let detailsHtml = '';
   if (content.description) {
     detailsHtml += `
-      <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
-        ${content.description.slice(0, 150)}${content.description.length > 150 ? '...' : ''}
-      </p>
+      <div style="color: #4b5563; margin-bottom: 16px; font-size: 15px; line-height: 1.5;">
+        ${content.description}
+      </div>
     `;
   }
 
-  // Add type-specific metadata
+  // Add type-specific metadata with improved styling
+  let metadataHtml = '';
   switch (contentType) {
     case 'scholarships':
       if (content.provider_name) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>`;
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Provider:</span>
+            <span style="color: #4b5563;"> ${content.provider_name}</span>
+          </div>
+        `;
       }
       if (content.amount) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Amount: ${content.amount}</p>`;
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Amount:</span>
+            <span style="color: #4b5563;"> $${typeof content.amount === 'number' ? content.amount.toLocaleString() : content.amount}</span>
+          </div>
+        `;
       }
       if (content.deadline) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280;">Deadline: ${new Date(content.deadline).toLocaleDateString()}</p>`;
+        const date = new Date(content.deadline);
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Deadline:</span>
+            <span style="color: #4b5563;"> ${date.toLocaleDateString('en-US', { 
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</span>
+          </div>
+        `;
       }
       break;
       
     case 'opportunities':
       if (content.provider_name) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>`;
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Provider:</span>
+            <span style="color: #4b5563;"> ${content.provider_name}</span>
+          </div>
+        `;
       }
       if (content.compensation) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Compensation: ${content.compensation}</p>`;
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Compensation:</span>
+            <span style="color: #4b5563;"> ${content.compensation}</span>
+          </div>
+        `;
       }
       if (content.location) {
-        detailsHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${content.location}</p>`;
+        metadataHtml += `
+          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+            <span style="font-weight: 600; color: #374151;">Location:</span>
+            <span style="color: #4b5563;"> ${content.location}</span>
+          </div>
+        `;
       }
       break;
   }
 
   return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
+    <div style="margin-bottom: 32px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
+      <div style="padding: 24px;">
         ${content.cover_image_url ? `
           <img 
             src="${content.cover_image_url}" 
             alt="${content.title || 'Content'}"
-            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
+            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 16px; max-width: 600px;"
           />
         ` : ''}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+        <h2 style="margin-top: 0; margin-bottom: 16px; font-size: 24px; color: ${styles.accent}; font-weight: 600;">
           ${content.title}
-        </h3>
+        </h2>
         ${detailsHtml}
-        <div style="margin-top: 16px;">
+        ${metadataHtml}
+        <div style="margin-top: 20px;">
           <a 
             href="${contentUrl}" 
-            style="display: inline-block; ${styles.gradient}; color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
+            style="display: inline-block; ${styles.gradient}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px;"
           >
             Learn More
           </a>
@@ -156,16 +194,6 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
       </div>
     </div>
   `;
-};
-
-export const CONTENT_TYPE_LABELS: Record<string, string> = {
-  scholarships: "Scholarship Spotlight",
-  opportunities: "Opportunity Spotlight",
-  careers: "Career Spotlight",
-  majors: "Major Spotlight",
-  schools: "School Spotlight",
-  mentors: "Mentor Spotlight",
-  blogs: "Blog Spotlight",
 };
 
 export function generateEmailContent(
@@ -198,33 +226,35 @@ export function generateEmailContent(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
     </head>
-    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="${styles.gradient}; color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
-          <div style="font-size: 32px; margin-bottom: 8px;">${styles.icon}</div>
-          <h1 style="margin: 0; font-size: 24px;">${title}</h1>
+    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9fafb;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
+        <div style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 16px;">${styles.icon}</div>
+          <h1 style="margin: 0; font-size: 32px; font-weight: 700;">${title}</h1>
         </div>
         
-        <p style="margin-top: 0; color: #374151; font-size: 16px;">Hello ${recipientName},</p>
+        <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
+          Hello ${recipientName},
+        </p>
         
-        <div style="margin: 20px 0; color: #374151; font-size: 16px;">
+        <div style="margin-bottom: 32px; color: #374151; font-size: 16px; line-height: 1.5;">
           ${body}
         </div>
         
-        <div style="margin: 30px 0;">
+        <div style="margin: 32px 0;">
           ${contentCardsHtml}
         </div>
         
-        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 30px; text-align: center;">
-          <p style="margin-top: 0; color: #4b5563;">
-            Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: bold;">PicoCareer</a> 
+        <div style="background-color: #f3f4f6; padding: 24px; border-radius: 12px; margin-top: 40px; text-align: center;">
+          <p style="margin-top: 0; margin-bottom: 0; color: #4b5563; font-size: 16px;">
+            Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: 600;">PicoCareer</a> 
             to discover more opportunities tailored to your interests.
           </p>
         </div>
         
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-          <p style="color: #6b7280; font-size: 12px;">&copy; ${currentYear} PicoCareer. All rights reserved.</p>
-          <p style="color: #6b7280; font-size: 12px;">
+        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+          <p style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">&copy; ${currentYear} PicoCareer. All rights reserved.</p>
+          <p style="color: #6b7280; font-size: 14px; margin-top: 0;">
             <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails
           </p>
         </div>
@@ -233,3 +263,13 @@ export function generateEmailContent(
     </html>
   `;
 }
+
+export const CONTENT_TYPE_LABELS: Record<string, string> = {
+  scholarships: "Scholarship Spotlight",
+  opportunities: "Opportunity Spotlight",
+  careers: "Career Spotlight",
+  majors: "Major Spotlight",
+  schools: "School Spotlight",
+  mentors: "Mentor Spotlight",
+  blogs: "Blog Spotlight",
+};
