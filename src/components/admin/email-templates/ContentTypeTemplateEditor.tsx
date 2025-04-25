@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/resizable";
 import { EmailTemplatePreview } from "./EmailTemplatePreview";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Move } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import type { EmailContentTypeSettings } from "@/types/database/email";
 import { ContentType } from "../email-campaign-form/utils";
 
@@ -38,6 +39,7 @@ interface FormData extends Omit<EmailContentTypeSettings, 'id' | 'admin_id' | 'c
 export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeTemplateEditorProps) {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("colors");
 
   const methods = useForm<FormData>({
     defaultValues: {
@@ -56,7 +58,7 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
     }
   });
 
-  const { watch, setValue, reset } = methods;
+  const { watch, setValue, handleSubmit, reset } = methods;
   const values = watch();
 
   useEffect(() => {
@@ -80,7 +82,7 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
             primary_color: data.primary_color,
             secondary_color: data.secondary_color,
             accent_color: data.accent_color,
-            layout_settings: data.layout_settings
+            layout_settings: data.layout_settings as FormData['layout_settings']
           });
         }
       } catch (error) {
@@ -137,6 +139,15 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
       setValue('layout_settings.metadataDisplay', currentMetadata.filter(field => field !== fieldName));
     }
   };
+
+  if (loading) {
+    return (
+      <Card className="p-6 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+        <p className="mt-2">Loading template settings...</p>
+      </Card>
+    );
+  }
 
   return (
     <FormProvider {...methods}>
@@ -253,14 +264,16 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                         <div className="flex items-center space-x-2">
                           <Switch 
                             id="show-author"
-                            {...register('layout_settings.showAuthor')}
+                            checked={values.layout_settings.showAuthor}
+                            onCheckedChange={(checked) => setValue('layout_settings.showAuthor', checked)}
                           />
                           <Label htmlFor="show-author">Show Author</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Switch 
                             id="show-date"
-                            {...register('layout_settings.showDate')}
+                            checked={values.layout_settings.showDate}
+                            onCheckedChange={(checked) => setValue('layout_settings.showDate', checked)}
                           />
                           <Label htmlFor="show-date">Show Date</Label>
                         </div>
