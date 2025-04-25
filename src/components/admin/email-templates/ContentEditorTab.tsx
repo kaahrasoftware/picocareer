@@ -20,8 +20,8 @@ interface ContentEditorTabProps {
 export function ContentEditorTab({ adminId, contentType, onContentUpdate }: ContentEditorTabProps) {
   const { register, handleSubmit, reset } = useForm<Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>>();
 
-  const { data: content, isLoading } = useQuery({
-    queryKey: ['email-template-content', contentType],
+  const { data: content, isLoading, isError } = useQuery({
+    queryKey: ['email-template-content', contentType, adminId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('email_template_content')
@@ -33,7 +33,8 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
       if (error && error.code !== 'PGRST116') throw error;
       return data as EmailTemplateContent;
     },
-    onSuccess: (data) => {
+    initialData: undefined,
+    onSettled: (data) => {
       if (data) {
         reset({
           header_text: data.header_text,
@@ -67,6 +68,14 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
     }
   };
 
+  if (isError) {
+    return (
+      <div className="p-4 text-center text-red-500">
+        Failed to load template content. Please try again.
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-6">
@@ -84,6 +93,7 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
             id="header_text"
             {...register('header_text')}
             placeholder="Enter header text"
+            defaultValue={content?.header_text || ''}
           />
         </div>
 
@@ -94,6 +104,7 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
             {...register('intro_text')}
             placeholder="Enter introduction text"
             rows={4}
+            defaultValue={content?.intro_text || ''}
           />
         </div>
 
@@ -103,6 +114,7 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
             id="cta_text"
             {...register('cta_text')}
             placeholder="Enter call to action text"
+            defaultValue={content?.cta_text || ''}
           />
         </div>
 
@@ -113,6 +125,7 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
             {...register('footer_text')}
             placeholder="Enter footer text"
             rows={3}
+            defaultValue={content?.footer_text || ''}
           />
         </div>
       </div>
