@@ -1,4 +1,3 @@
-
 import { getContentTypeStyles } from "./styles";
 
 export function generateContentHeader(
@@ -8,21 +7,15 @@ export function generateContentHeader(
 ) {
   const styles = getContentTypeStyles(contentType);
   const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hi there,';
+  const contentLabel = contentType.charAt(0).toUpperCase() + contentType.slice(1);
 
   return `
-    <div style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
-      <div style="font-size: 48px; margin-bottom: 16px;">${styles.icon}</div>
-      <h1 style="margin: 0 0 16px 0; font-size: 32px; font-weight: 700;">
-        ${getContentTypeHeading(contentType)}
-      </h1>
-      ${totalAmount ? `
-        <p style="margin: 16px 0 0 0; font-size: 20px; font-weight: 500;">
-          Total Value: ${totalAmount}
-        </p>
-      ` : ''}
-    </div>
     <div style="margin-bottom: 32px;">
-      <p style="font-size: 18px; line-height: 1.6; color: #374151; margin: 0;">
+      <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; color: ${styles.accent}; text-align: center;">
+        ${contentLabel} Spotlight
+      </h1>
+      
+      <p style="font-size: 16px; line-height: 1.6; color: #374151; margin: 0;">
         ${greeting}
       </p>
       <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-top: 16px;">
@@ -32,31 +25,10 @@ export function generateContentHeader(
   `;
 }
 
-function getContentTypeHeading(contentType: string): string {
-  switch (contentType) {
-    case 'scholarships':
-      return 'Exclusive Scholarship Opportunities';
-    case 'opportunities':
-      return 'Career Opportunities Selected for You';
-    case 'careers':
-      return 'Promising Career Paths';
-    case 'majors':
-      return 'Academic Paths for Your Future';
-    case 'schools':
-      return 'Top Educational Institutions';
-    case 'mentors':
-      return 'Meet Your Potential Mentors';
-    case 'blogs':
-      return 'Fresh Career Insights';
-    default:
-      return 'Personalized Recommendations';
-  }
-}
-
 function getContentTypeIntro(contentType: string): string {
   switch (contentType) {
     case 'scholarships':
-      return "We've found some exciting scholarship opportunities that match your profile. These opportunities could help fund your education and bring you closer to achieving your academic goals.";
+      return "We've curated some exciting scholarship opportunities that match your profile. Take a look at these opportunities to help fund your education journey.";
     case 'opportunities':
       return "We've curated these career opportunities based on your interests and skills. These positions could be your next career milestone.";
     case 'careers':
