@@ -64,6 +64,11 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
     }
   };
 
+  // Reset time selection when date changes
+  useEffect(() => {
+    setSelectedTime(undefined);
+  }, [date]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Left column - Calendar */}
