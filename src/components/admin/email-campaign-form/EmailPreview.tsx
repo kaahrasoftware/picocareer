@@ -18,17 +18,28 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
   const { data: templateSettings, isLoading: loadingSettings } = useQuery({
     queryKey: ['email-template-settings', contentType],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try to get content type specific settings
+      const { data: contentTypeSettings, error: contentTypeError } = await supabase
         .from('email_content_type_settings')
         .select('*')
         .eq('content_type', contentType)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+      if (contentTypeSettings) {
+        return contentTypeSettings as EmailContentTypeSettings;
       }
 
-      return data as EmailContentTypeSettings;
+      // If no content type specific settings, fall back to global template settings
+      const { data: globalSettings, error: globalError } = await supabase
+        .from('email_template_settings')
+        .select('*')
+        .single();
+
+      if (globalError && globalError.code !== 'PGRST116') {
+        throw globalError;
+      }
+
+      return globalSettings as EmailContentTypeSettings;
     }
   });
 

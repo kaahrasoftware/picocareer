@@ -1,5 +1,11 @@
 
-export function generateBaseTemplate(content: string, siteUrl: string, unsubscribeUrl: string) {
+export function generateBaseTemplate(
+  content: string,
+  siteUrl: string,
+  unsubscribeUrl: string,
+  styles: { primary: string; secondary: string; accent: string },
+  logoUrl: string
+) {
   const currentYear = new Date().getFullYear();
   
   return `
@@ -21,7 +27,7 @@ export function generateBaseTemplate(content: string, siteUrl: string, unsubscri
         <div class="container" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <div class="header" style="text-align: center; padding: 24px 40px; border-bottom: 1px solid #e5e7eb;">
-            <img src="${siteUrl}/logo.png" alt="PicoCareer Logo" style="height: 32px; width: auto;">
+            <img src="${logoUrl}" alt="Company Logo" style="height: 32px; width: auto; max-width: 200px;">
           </div>
           
           <!-- Main Content -->
@@ -32,11 +38,11 @@ export function generateBaseTemplate(content: string, siteUrl: string, unsubscri
           <!-- Footer -->
           <div class="footer" style="padding: 24px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center;">
             <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0 0 16px 0;">
-              Visit <a href="${siteUrl}" style="color: #8B5CF6; text-decoration: none;">PicoCareer</a> 
-              to discover more opportunities tailored to your interests.
+              Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none;">our website</a> 
+              for more information.
             </p>
             <p style="color: #9CA3AF; font-size: 12px; margin: 0 0 8px 0;">
-              © ${currentYear} PicoCareer. All rights reserved.
+              © ${currentYear} All rights reserved.
             </p>
             <p style="color: #9CA3AF; font-size: 12px; margin: 0;">
               <a href="${unsubscribeUrl}" style="color: #9CA3AF; text-decoration: underline;">

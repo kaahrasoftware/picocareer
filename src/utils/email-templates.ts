@@ -21,6 +21,9 @@ export function generateEmailContent(
     accent: templateSettings.accent_color
   } : getContentTypeStyles(contentType);
 
+  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
+  const logoUrl = templateSettings?.logo_url || `${siteUrl}/logo.png`;
+
   // Calculate total amount for scholarships
   const totalAmount = contentType === 'scholarships' 
     ? calculateTotalAmount(contentItems)
@@ -37,7 +40,7 @@ export function generateEmailContent(
       )).join('')
     : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
-  // Generate main content
+  // Generate main content with header
   const mainContent = `
     ${generateContentHeader(contentType, totalAmount, recipientName, styles)}
     
@@ -47,8 +50,7 @@ export function generateEmailContent(
   `;
 
   // Generate complete email using base template
-  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
-  return generateBaseTemplate(mainContent, siteUrl, unsubscribeUrl, styles);
+  return generateBaseTemplate(mainContent, siteUrl, unsubscribeUrl, styles, logoUrl);
 }
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
@@ -88,5 +90,5 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
   }
 }
 
-// Export the imported function so it's available to importers of this file
+// Export the imported functions
 export { getContentTypeStyles };
