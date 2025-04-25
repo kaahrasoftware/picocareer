@@ -107,6 +107,8 @@ export function useEmailCampaignFormState(
   };
 
   const validateFormValues = (values: CampaignFormValues): string | null => {
+    console.log("Validating form values:", values);
+
     if (!values.subject.trim()) {
       return "Subject is required";
     }
@@ -126,7 +128,9 @@ export function useEmailCampaignFormState(
   };
 
   const scheduleCampaign = async (values: CampaignFormValues) => {
+    console.log("Attempting to schedule campaign with values:", values);
     setIsScheduling(true);
+
     try {
       const validationError = validateFormValues(values);
       if (validationError) {
@@ -136,6 +140,8 @@ export function useEmailCampaignFormState(
       const recipientsCount = values.recipient_type === "selected" 
         ? values.recipient_ids.length 
         : recipients.length;
+
+      console.log("Calculated recipients count:", recipientsCount);
 
       const campaignData = {
         admin_id: adminId,
@@ -147,7 +153,7 @@ export function useEmailCampaignFormState(
           : null,
         recipient_ids: values.recipient_type === "selected" ? values.recipient_ids : [],
         content_ids: values.content_ids,
-        content_id: values.content_ids[0],
+        content_id: values.content_ids[0], // Keep first ID for backward compatibility
         scheduled_for: values.scheduled_for?.toISOString(),
         sent_at: null,
         sent_count: 0,
@@ -156,6 +162,8 @@ export function useEmailCampaignFormState(
         status: "pending",
         frequency: values.frequency,
       } as const;
+
+      console.log("Submitting campaign data:", campaignData);
 
       const { data, error } = await supabase
         .from("email_campaigns")
@@ -168,6 +176,7 @@ export function useEmailCampaignFormState(
         throw new Error(error.message);
       }
 
+      console.log("Campaign created successfully:", data);
       toast.success("Campaign scheduled successfully!");
       onCampaignCreated();
       return data;

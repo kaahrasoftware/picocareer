@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
 import { ContentTypeSelector } from './ContentTypeSelector';
@@ -27,8 +26,6 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const [scheduledFor, setScheduledFor] = useState('');
   const [recipientType, setRecipientType] = useState<'all' | 'mentees' | 'mentors' | 'selected'>('all');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
-  const [randomSelect, setRandomSelect] = useState(false);
-  const [randomCount, setRandomCount] = useState(3);
   
   const { 
     contentList, 
@@ -53,18 +50,35 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   }, [recipientType, handleRecipientTypeChange, loadRecipients]);
 
   const handleSubmit = async () => {
-    const formValues = {
-      name: subject,
-      subject,
-      content_type: contentType,
-      recipient_type: recipientType,
-      recipient_ids: recipientIds,
-      content_ids: contentIds,
-      scheduled_for: scheduledFor ? new Date(scheduledFor) : null,
-      frequency
-    };
-    
-    await scheduleCampaign(formValues);
+    try {
+      console.log("Form submission started with values:", {
+        subject,
+        contentType,
+        contentIds,
+        recipientType,
+        recipientIds,
+        scheduledFor,
+        frequency
+      });
+
+      const formValues = {
+        subject,
+        content_type: contentType,
+        recipient_type: recipientType,
+        recipient_ids: recipientIds,
+        content_ids: contentIds,
+        scheduled_for: scheduledFor ? new Date(scheduledFor) : null,
+        frequency
+      };
+      
+      const result = await scheduleCampaign(formValues);
+      if (onCampaignCreated && result) {
+        onCampaignCreated(result.id);
+      }
+    } catch (error) {
+      console.error("Form submission error:", error);
+      // Toast is already handled in scheduleCampaign
+    }
   };
 
   const hasRequiredFields = subject.trim() !== '' && 
