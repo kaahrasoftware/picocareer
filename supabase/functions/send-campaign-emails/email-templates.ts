@@ -1,6 +1,6 @@
 
-import { ContentItem } from "./types";
-import { getContentTypeStyles } from "./styles";
+import { ContentItem } from "./types.ts";
+import { getContentTypeStyles } from "./styles.ts";
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
   const total = contentItems.reduce((sum, item) => {

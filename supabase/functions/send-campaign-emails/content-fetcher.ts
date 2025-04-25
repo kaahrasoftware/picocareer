@@ -1,6 +1,6 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
-import { ContentItem } from "./types";
+import { ContentItem } from "./types.ts";
 
 export async function fetchContentDetails(supabase: any, contentType: string, contentIds: string[]): Promise<ContentItem[]> {
   if (!contentIds || contentIds.length === 0) {

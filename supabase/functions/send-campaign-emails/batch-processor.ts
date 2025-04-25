@@ -1,7 +1,7 @@
 
 import { Resend } from "npm:resend@2.0.0";
-import { ContentItem } from "./types";
-import { generateEmailContent, getEmailSubject } from "./email-templates";
+import { ContentItem } from "./types.ts";
+import { generateEmailContent, getEmailSubject } from "./email-templates.ts";
 
 export async function processBatchSending(
   recipients: { id: string; email: string; full_name?: string }[],
