@@ -1,4 +1,3 @@
-
 export type ContentItem = {
   id: string;
   title: string;
@@ -73,19 +72,42 @@ export const getEmailSubject = (contentType: string, firstName: string = ''): st
     case 'scholarships':
       return `🎓 Your Personalized Scholarship Opportunities Await${nameSection}!`;
     case 'opportunities':
-      return `🚀 Exclusive Career Opportunities Selected for You${nameSection}`;
+      return `🚀 Exciting Career Opportunities Selected Just for You${nameSection}`;
     case 'careers':
       return `💼 Discover Your Next Career Move${nameSection}`;
     case 'majors':
-      return `📚 Explore These Academic Paths${nameSection}`;
+      return `📚 Academic Paths Perfect for You${nameSection}`;
     case 'schools':
-      return `🏛️ Top Educational Institutions${nameSection}`;
+      return `🏛️ Top Educational Institutions Picked for You${nameSection}`;
     case 'mentors':
       return `👋 Meet Your Potential Mentors${nameSection}`;
     case 'blogs':
-      return `📖 Fresh Insights Curated for You${nameSection}`;
+      return `📖 Fresh Insights Curated Just for You${nameSection}`;
     default:
-      return `New Content Updates${nameSection}`;
+      return `Personalized Content Updates${nameSection}`;
+  }
+};
+
+const getWelcomeMessage = (contentType: string, recipientName: string = 'there'): string => {
+  const greeting = recipientName !== 'there' ? `Hi ${recipientName}` : 'Hello';
+  
+  switch (contentType) {
+    case 'scholarships':
+      return `${greeting}, we've found some amazing scholarship opportunities that align with your interests!`;
+    case 'opportunities':
+      return `${greeting}, we've curated these exciting opportunities just for you!`;
+    case 'careers':
+      return `${greeting}, explore these career paths that match your profile!`;
+    case 'majors':
+      return `${greeting}, discover these academic paths that could shape your future!`;
+    case 'schools':
+      return `${greeting}, check out these educational institutions that could be perfect for you!`;
+    case 'mentors':
+      return `${greeting}, meet these experienced mentors who could guide you on your journey!`;
+    case 'blogs':
+      return `${greeting}, we've handpicked these insightful articles just for you!`;
+    default:
+      return `${greeting}, here's your personalized content update!`;
   }
 };
 
@@ -99,7 +121,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
   let detailsHtml = '';
   if (content.description) {
     detailsHtml += `
-      <div style="color: #4b5563; margin-bottom: 16px; font-size: 15px; line-height: 1.5;">
+      <div style="color: #4b5563; margin: 16px 0; font-size: 16px; line-height: 1.6;">
         ${content.description}
       </div>
     `;
@@ -111,7 +133,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
     case 'scholarships':
       if (content.provider_name) {
         metadataHtml += `
-          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+          <div style="margin-bottom: 12px; padding: 10px 16px; background-color: #f9fafb; border-radius: 8px;">
             <span style="font-weight: 600; color: #374151;">Provider:</span>
             <span style="color: #4b5563;"> ${content.provider_name}</span>
           </div>
@@ -119,7 +141,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
       }
       if (content.amount) {
         metadataHtml += `
-          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+          <div style="margin-bottom: 12px; padding: 10px 16px; background-color: #f9fafb; border-radius: 8px;">
             <span style="font-weight: 600; color: #374151;">Amount:</span>
             <span style="color: #4b5563;"> $${typeof content.amount === 'number' ? content.amount.toLocaleString() : content.amount}</span>
           </div>
@@ -128,7 +150,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
       if (content.deadline) {
         const date = new Date(content.deadline);
         metadataHtml += `
-          <div style="margin-bottom: 8px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
+          <div style="margin-bottom: 12px; padding: 10px 16px; background-color: #f9fafb; border-radius: 8px;">
             <span style="font-weight: 600; color: #374151;">Deadline:</span>
             <span style="color: #4b5563;"> ${date.toLocaleDateString('en-US', { 
               year: 'numeric',
@@ -169,7 +191,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
   }
 
   return `
-    <div style="margin-bottom: 32px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
+    <div style="margin-bottom: 32px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
       <div style="padding: 24px;">
         ${content.cover_image_url ? `
           <img 
@@ -183,12 +205,14 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
         </h2>
         ${detailsHtml}
         ${metadataHtml}
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 24px;">
           <a 
             href="${contentUrl}" 
-            style="display: inline-block; ${styles.gradient}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px;"
+            style="display: inline-block; ${styles.gradient}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px; transition: opacity 0.2s ease;"
+            onmouseover="this.style.opacity='0.9'"
+            onmouseout="this.style.opacity='1'"
           >
-            Learn More
+            Learn More →
           </a>
         </div>
       </div>
@@ -199,7 +223,7 @@ export const formatContentCard = (content: ContentItem, contentType: string, sit
 export function generateEmailContent(
   title: string,
   body: string,
-  recipientName: string = 'Valued Member',
+  recipientName: string = 'there',
   campaignId: string,
   contentItems: ContentItem[],
   contentType: string,
@@ -208,6 +232,7 @@ export function generateEmailContent(
   const styles = getContentTypeStyles(contentType);
   const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
   const currentYear = new Date().getFullYear();
+  const welcomeMessage = getWelcomeMessage(contentType, recipientName);
 
   let contentCardsHtml = '';
   if (contentItems && contentItems.length > 0) {
@@ -234,12 +259,8 @@ export function generateEmailContent(
         </div>
         
         <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
-          Hello ${recipientName},
+          ${welcomeMessage}
         </p>
-        
-        <div style="margin-bottom: 32px; color: #374151; font-size: 16px; line-height: 1.5;">
-          ${body}
-        </div>
         
         <div style="margin: 32px 0;">
           ${contentCardsHtml}
@@ -263,13 +284,3 @@ export function generateEmailContent(
     </html>
   `;
 }
-
-export const CONTENT_TYPE_LABELS: Record<string, string> = {
-  scholarships: "Scholarship Spotlight",
-  opportunities: "Opportunity Spotlight",
-  careers: "Career Spotlight",
-  majors: "Major Spotlight",
-  schools: "School Spotlight",
-  mentors: "Mentor Spotlight",
-  blogs: "Blog Spotlight",
-};
