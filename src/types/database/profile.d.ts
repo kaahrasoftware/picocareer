@@ -17,20 +17,21 @@ export interface Profile {
   years_of_experience?: number;
   languages?: string[];
   skills?: string[];
-  tools_used?: string[];
-  fields_of_interest?: string[];
   keywords?: string[];
+  fields_of_interest?: string[];
+  top_mentor?: boolean;
   created_at: string;
   updated_at: string;
-  top_mentor?: boolean;
-  total_booked_sessions?: number;
-  onboarding_status?: string;
+  X_url?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  website_url?: string;
+  instagram_url?: string;
+  facebook_url?: string;
+  youtube_url?: string;
+  tiktok_url?: string;
   background_check_consent?: boolean;
-}
-
-export interface ExtendedProfile extends Profile {
-  company_name?: string;
-  school_name?: string;
-  academic_major?: string;
-  career_title?: string;
+  onboarding_status?: string;
+  total_booked_sessions?: number;
+  tools_used?: string[];
 }

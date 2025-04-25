@@ -33,8 +33,9 @@ export interface UseMessageSenderReturn {
 export interface QuestionCounts {
   education: number;
   skills: number;
-  work_preferences: number;
+  workstyle: number;
   goals: number;
+  [key: string]: number;
 }
 
 export type MessageType = 'user' | 'system' | 'bot' | 'recommendation' | 'session_end';

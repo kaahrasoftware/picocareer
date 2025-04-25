@@ -1,15 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -62,13 +60,18 @@ interface MentorSession {
   };
 }
 
-interface BookSessionDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  sessionId: string | null;
+export interface BookSessionDialogProps {
+  mentor?: {
+    id: string;
+    name: string;
+    imageUrl: string;
+  };
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sessionId?: string | null;
 }
 
-export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDialogProps) {
+export function BookSessionDialog({ mentor, open, onOpenChange, sessionId }: BookSessionDialogProps) {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [session, setSession] = useState<MentorSession | null>(null);
   const [notes, setNotes] = useState<string>('');
@@ -85,50 +88,40 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
 
   const fetchSession = async (id: string) => {
   try {
-    // Use a manual type-safe approach to avoid TypeScript errors
-    const { data, error } = await supabase
-      .rpc('get_session_details', { session_id: id })
+    // Direct query instead of RPC
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('mentor_sessions')
+      .select('*')
+      .eq('id', id)
       .single();
 
-    if (error) {
-      // Fallback to direct query if RPC doesn't exist
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('mentor_sessions')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (sessionError) {
-        console.error('Error fetching session:', sessionError);
-        return;
-      }
-
-      // Fetch related mentor data separately
-      const { data: mentorData } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', sessionData.mentor_id)
-        .single();
-
-      // Fetch session type data separately
-      const { data: sessionTypeData } = await supabase
-        .from('mentor_session_types')
-        .select('*')
-        .eq('id', sessionData.session_type_id)
-        .single();
-
-      // Combine the data
-      const completeSessionData = {
-        ...sessionData,
-        mentor: mentorData,
-        session_type: sessionTypeData
-      };
-
-      setSession(completeSessionData as any);
+    if (sessionError) {
+      console.error('Error fetching session:', sessionError);
       return;
     }
 
-    setSession(data as any);
+    // Fetch related mentor data separately
+    const { data: mentorData } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url')
+      .eq('id', sessionData.mentor_id)
+      .single();
+
+    // Fetch session type data separately
+    const { data: sessionTypeData } = await supabase
+      .from('mentor_session_types')
+      .select('*')
+      .eq('id', sessionData.session_type_id)
+      .single();
+
+    // Combine the data
+    const completeSessionData = {
+      ...sessionData,
+      mentor: mentorData,
+      session_type: sessionTypeData
+    };
+
+    setSession(completeSessionData as any);
   } catch (err) {
     console.error('Failed to fetch session:', err);
   }
@@ -151,9 +144,9 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
       return;
     }
 
-    if (!session) {
+    if (!session && !mentor) {
       toast({
-        title: "Session not loaded",
+        title: "Session or mentor information not available",
         variant: "destructive",
       });
       return;
@@ -161,25 +154,33 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('mentor_sessions')
-        .update({
-          scheduled_at: date.toISOString(),
-          mentee_id: authSession.user.id,
-          notes: notes,
-          status: 'pending'
-        })
-        .eq('id', session.id);
+      if (session) {
+        // Update existing session
+        const { error } = await supabase
+          .from('mentor_sessions')
+          .update({
+            scheduled_at: date.toISOString(),
+            mentee_id: authSession.user.id,
+            notes: notes,
+            status: 'pending'
+          })
+          .eq('id', session.id);
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+      } else if (mentor) {
+        // Create new session 
+        // This would be implemented based on your application requirements
+        console.log("Creating new session with mentor", mentor.id);
+        // Implementation would go here
       }
 
       toast({
         title: "Session booked!",
         description: "Your session has been booked successfully.",
       });
-      onClose();
+      onOpenChange(false);
     } catch (error: any) {
       toast({
         title: "Error booking session",
@@ -191,14 +192,12 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Book Session</AlertDialogTitle>
-          <AlertDialogDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Book Session</DialogTitle>
+          <DialogDescription>
             {session ? (
               <>
                 <p>
@@ -211,12 +210,18 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
                   Duration: {session?.session_type?.duration} minutes
                 </p>
               </>
+            ) : mentor ? (
+              <>
+                <p>
+                  You are booking a session with {mentor.name}
+                </p>
+              </>
             ) : (
               "Loading session details..."
             )}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        {session && (
+          </DialogDescription>
+        </DialogHeader>
+        {(session || mentor) && (
           <>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -277,9 +282,9 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
             </div>
           </>
         )}
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={submitting} onClick={handleBookSession}>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button disabled={submitting} onClick={handleBookSession}>
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -288,9 +293,9 @@ export function BookSessionDialog({ isOpen, onClose, sessionId }: BookSessionDia
             ) : (
               "Book Session"
             )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

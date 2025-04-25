@@ -1,11 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import ReactQuill, { Quill } from 'react-quill';
+import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import ImageUploader from 'quill-image-uploader';
-
-Quill.register('modules/imageUploader', ImageUploader);
 
 interface FormRichEditorProps {
   value: string;
@@ -29,54 +27,75 @@ export function FormRichEditor({ value, onChange, placeholder, uploadConfig }: F
     setIsMounted(true);
   }, []);
 
-  const imageHandler = async (image: File) => {
+  // Function to handle image upload manually
+  const handleImageUpload = () => {
     if (!uploadConfig) {
       toast({
         title: "Upload Configuration Missing",
         description: "Please provide upload configuration to enable image uploads.",
         variant: "destructive",
       });
-      return null;
+      return;
     }
+    
+    // Create an input element 
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
 
-    const { bucket, folderPath } = uploadConfig;
-    const imageName = `${Date.now()}-${image.name}`;
-    const fullPath = `${folderPath}${imageName}`;
+    input.onchange = async () => {
+      if (!input.files || !input.files[0]) return;
+      
+      const file = input.files[0];
+      const { bucket, folderPath } = uploadConfig;
+      const imageName = `${Date.now()}-${file.name}`;
+      const fullPath = `${folderPath}${imageName}`;
 
-    try {
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(fullPath, image, {
-          cacheControl: '3600',
-          upsert: false
+      try {
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(fullPath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (error) {
+          throw error;
+        }
+
+        const imageUrl = `${bucketUrl}${bucket}/${fullPath}`;
+        
+        // Insert the image into the editor
+        const editor = quillRef.current?.getEditor();
+        if (editor) {
+          const range = editor.getSelection();
+          const index = range ? range.index : 0;
+          editor.insertEmbed(index, 'image', imageUrl);
+          editor.setSelection(index + 1, 0);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Image Upload Failed",
+          description: error.message,
+          variant: "destructive",
         });
-
-      if (error) {
-        throw error;
       }
-
-      const imageUrl = `${bucketUrl}${bucket}/${fullPath}`;
-      return imageUrl;
-    } catch (error: any) {
-      toast({
-        title: "Image Upload Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return null;
-    }
+    };
   };
 
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, false] }],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-    imageUploader: {
-      upload: imageHandler,
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: handleImageUpload
+      }
     }
   };
 

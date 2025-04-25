@@ -4,152 +4,145 @@ import { getContentTypeStyles } from "./styles.ts";
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
   const total = contentItems.reduce((sum, item) => {
-    const amount = typeof item.amount === 'number' ? item.amount : 0;
-    return sum + amount;
+    return sum + (item.amount || 0);
   }, 0);
-  return total.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  
+  return new Intl.NumberFormat('en-US', { 
+    style: 'currency', 
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(total);
 }
 
-export function formatContentCard(content: ContentItem, contentType: string, siteUrl: string): string {
-  if (!content) return '';
+export function getEmailSubject(contentType: string, recipientFirstName: string = ''): string {
+  const greeting = recipientFirstName ? `${recipientFirstName}, check out` : 'Check out';
   
-  const styles = getContentTypeStyles(contentType);
-  const contentUrl = `${siteUrl}/${contentType}/${content.id}`;
-  const description = content.description?.slice(0, 300) + (content.description?.length > 300 ? '...' : '');
-
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-      <div style="padding: 24px;">
-        ${content.cover_image_url ? `
-          <img 
-            src="${content.cover_image_url}" 
-            alt="${content.title || 'Content'}"
-            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 16px; max-width: 600px;"
-          />
-        ` : ''}
-        
-        <h2 style="margin: 0 0 16px 0; font-size: 24px; color: ${styles.accent};">
-          ${content.title}
-        </h2>
-
-        ${description ? `
-          <div style="color: #4b5563; margin: 16px 0; font-size: 16px; line-height: 1.6;">
-            ${description}
-          </div>
-        ` : ''}
-
-        ${content.provider_name ? `
-          <div style="margin-bottom: 12px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
-            <span style="font-weight: 600; color: #374151;">Provider:</span>
-            <span style="color: #4b5563;"> ${content.provider_name}</span>
-          </div>
-        ` : ''}
-
-        ${typeof content.amount !== 'undefined' ? `
-          <div style="margin-bottom: 12px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
-            <span style="font-weight: 600; color: #374151;">Amount:</span>
-            <span style="font-weight: 600; color: #16a34a;"> ${typeof content.amount === 'number' 
-              ? content.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
-              : content.amount}</span>
-          </div>
-        ` : ''}
-
-        ${content.deadline ? `
-          <div style="margin-bottom: 12px; padding: 8px 12px; background-color: #f9fafb; border-radius: 6px;">
-            <span style="font-weight: 600; color: #374151;">Deadline:</span>
-            <span style="font-weight: 600; color: #dc2626;"> ${new Date(content.deadline).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</span>
-          </div>
-        ` : ''}
-
-        <div style="margin-top: 24px;">
-          <a 
-            href="${contentUrl}" 
-            style="display: inline-block; ${styles.gradient}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 500; text-align: center;"
-          >
-            Apply Now →
-          </a>
-        </div>
-      </div>
-    </div>
-  `;
+  switch(contentType) {
+    case 'scholarships':
+      return `${greeting} these scholarship opportunities`;
+    case 'opportunities':
+      return `${greeting} these career opportunities`;
+    case 'careers':
+      return `${greeting} these promising career paths`;
+    case 'majors':
+      return `${greeting} these academic majors that align with your interests`;
+    case 'schools':
+      return `${greeting} these recommended schools`;
+    case 'mentors':
+      return `${greeting} these mentors who can help guide your career journey`;
+    case 'blogs':
+      return `${greeting} these insightful career articles`;
+    default:
+      return `PicoCareer Newsletter: Personalized opportunities for you`;
+  }
 }
 
 export function generateEmailContent(
-  title: string,
-  body: string,
-  recipientName: string = '',
+  subject: string,
+  introduction: string,
+  recipientName: string,
   campaignId: string,
   contentItems: ContentItem[],
   contentType: string,
   siteUrl: string
 ): string {
-  const styles = getContentTypeStyles(contentType);
-  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
-  const currentYear = new Date().getFullYear();
-  const firstName = recipientName.split(' ')[0] || 'there';
-  const totalAmount = calculateTotalAmount(contentItems);
-
-  let contentCardsHtml = '';
-  if (contentItems && contentItems.length > 0) {
-    contentCardsHtml = contentItems.map(item => formatContentCard(item, contentType, siteUrl)).join('');
-  } else {
-    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No content available at this time.</p>';
-  }
-
+  const personalizedIntro = recipientName 
+    ? `Hi ${recipientName.split(' ')[0]},` 
+    : 'Hi there,';
+  
+  const { cardStyles, headerStyles, contentTypeLabel } = getContentTypeStyles(contentType);
+  
+  const trackingParams = `utm_source=email&utm_medium=campaign&utm_campaign=${campaignId}`;
+  const contentCards = contentItems.map(item => generateContentCard(item, contentType, cardStyles, siteUrl, trackingParams)).join('');
+  
+  const totalAmount = contentType === 'scholarships' 
+    ? `<p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Total Available: ${calculateTotalAmount(contentItems)}</p>` 
+    : '';
+  
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${title}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>${subject}</title>
       <style>
-        @media only screen and (max-width: 600px) {
-          .container { width: 100% !important; padding: 16px !important; }
-          .header { padding: 24px !important; }
-          .header h1 { font-size: 24px !important; }
-          .content { padding: 16px !important; }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          margin: 0;
+          padding: 0;
+          background-color: #f9f9f9;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #ffffff;
+        }
+        .header {
+          text-align: center;
+          padding: 20px 0;
+        }
+        .content {
+          padding: 20px 0;
+        }
+        .footer {
+          text-align: center;
+          padding: 20px 0;
+          font-size: 12px;
+          color: #666;
+          border-top: 1px solid #eee;
+        }
+        .card {
+          margin-bottom: 20px;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .button {
+          display: inline-block;
+          padding: 10px 20px;
+          background-color: #8B5CF6;
+          color: white;
+          text-decoration: none;
+          border-radius: 5px;
+          font-weight: bold;
+          margin-top: 10px;
+        }
+        .button:hover {
+          background-color: #7C3AED;
         }
       </style>
     </head>
-    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
-      <div class="container" style="max-width: 600px; margin: 0 auto; padding: 24px;">
-        <div class="header" style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">${styles.icon}</div>
-          <h1 style="margin: 0; font-size: 32px; font-weight: 700;">${title}</h1>
-          ${totalAmount !== '$0' ? `
-            <p style="margin: 16px 0 0 0; font-size: 20px;">
-              Worth ${totalAmount} in Total Funding
-            </p>
-          ` : ''}
+    <body>
+      <div class="container">
+        <div class="header">
+          <img src="${siteUrl}/logo.png" alt="PicoCareer Logo" style="max-width: 150px;">
+          <h2 style="color: #8B5CF6; margin-top: 10px;">${headerStyles.title}</h2>
         </div>
         
-        <div class="content" style="background-color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-          <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
-            Hi ${firstName},<br><br>
-            We've found some exciting opportunities that match your profile! Take a look at these carefully selected items that could help you achieve your goals.
-          </p>
+        <div class="content">
+          <p>${personalizedIntro}</p>
+          <p>${introduction}</p>
           
-          <div style="margin: 32px 0;">
-            ${contentCardsHtml}
+          ${contentCards}
+          ${totalAmount}
+          
+          <p>Want to discover more ${contentTypeLabel}? Visit our platform!</p>
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${siteUrl}/${contentType}?${trackingParams}" class="button">Explore More ${contentTypeLabel}</a>
           </div>
         </div>
         
-        <div style="background-color: #f3f4f6; padding: 24px; border-radius: 12px; margin-top: 32px; text-align: center;">
-          <p style="margin: 0; color: #4b5563; font-size: 16px;">
-            Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: 600;">PicoCareer</a> 
-            to discover more opportunities tailored to your interests.
-          </p>
-        </div>
-        
-        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-          <p style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">&copy; ${currentYear} PicoCareer. All rights reserved.</p>
-          <p style="color: #6b7280; font-size: 14px; margin-top: 0;">
-            <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails
+        <div class="footer">
+          <p>You're receiving this email because you subscribed to PicoCareer updates.</p>
+          <p>&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
+          <p>
+            <a href="${siteUrl}/preferences?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Manage Preferences</a> | 
+            <a href="${siteUrl}/unsubscribe?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Unsubscribe</a>
           </p>
         </div>
       </div>
@@ -158,25 +151,118 @@ export function generateEmailContent(
   `;
 }
 
-export function getEmailSubject(contentType: string, firstName: string = ''): string {
-  const nameSection = firstName ? `${firstName}, ` : '';
+function generateContentCard(
+  item: ContentItem, 
+  contentType: string, 
+  styles: any, 
+  siteUrl: string,
+  trackingParams: string
+): string {
+  const imageUrl = item.cover_image_url || item.image_url || `${siteUrl}/placeholder_${contentType}.jpg`;
+  const title = item.title || '';
+  const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
   
-  switch (contentType) {
+  const detailUrl = `${siteUrl}/${contentType.slice(0, -1)}/${item.id}?${trackingParams}`;
+  
+  let metaInfo = '';
+  
+  switch(contentType) {
     case 'scholarships':
-      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities!`;
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.provider_name || 'Scholarship Provider'}
+          ${item.amount ? ` • $${Number(item.amount).toLocaleString()}` : ''}
+        </p>
+        ${item.deadline ? `<p style="color: #e53e3e; margin: 0;">Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>` : ''}
+      `;
+      break;
+      
     case 'opportunities':
-      return `🚀 ${nameSection}Exclusive Career Opportunities Selected for You`;
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.provider_name || 'Opportunity Provider'}
+          ${item.compensation ? ` • ${item.compensation}` : ''}
+        </p>
+        <p style="color: #718096; margin: 5px 0;">
+          ${item.location || 'Location not specified'}
+          ${item.remote ? ' • Remote' : ''}
+          ${item.deadline ? ` • Deadline: ${new Date(item.deadline).toLocaleDateString()}` : ''}
+        </p>
+      `;
+      break;
+      
     case 'careers':
-      return `💼 ${nameSection}Discover Your Next Career Move`;
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.salary_range ? `Salary: ${item.salary_range}` : ''}
+        </p>
+      `;
+      break;
+      
     case 'majors':
-      return `📚 ${nameSection}Explore These Academic Paths`;
-    case 'schools':
-      return `🏛️ ${nameSection}Top Educational Institutions for You`;
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.potential_salary ? `Potential Salary: ${item.potential_salary}` : ''}
+        </p>
+        <p style="color: #718096; margin: 5px 0;">
+          ${item.job_prospects ? `Job Prospects: ${item.job_prospects}` : ''}
+        </p>
+      `;
+      break;
+      
     case 'mentors':
-      return `👋 ${nameSection}Meet Your Potential Mentors`;
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.career_title ? item.career_title : item.position || 'Mentor'}
+          ${item.company_name ? ` at ${item.company_name}` : ''}
+        </p>
+        <p style="color: #718096; margin: 5px 0;">
+          ${Array.isArray(item.skills) && item.skills.length > 0 
+            ? `Skills: ${item.skills.slice(0, 3).join(', ')}${item.skills.length > 3 ? '...' : ''}`
+            : ''}
+        </p>
+      `;
+      break;
+      
+    case 'schools':
+      metaInfo = `
+        <p style="font-weight: bold; margin: 10px 0 5px;">
+          ${item.type || 'Education Institution'}
+        </p>
+        <p style="color: #718096; margin: 5px 0;">
+          ${item.location || ''}
+        </p>
+      `;
+      break;
+      
     case 'blogs':
-      return `📖 ${nameSection}Fresh Insights Curated for You`;
-    default:
-      return `${nameSection}New Content Updates for You`;
+      metaInfo = `
+        <p style="color: #718096; margin: 10px 0 5px;">
+          ${new Date(item.created_at || '').toLocaleDateString()}
+        </p>
+      `;
+      break;
   }
+  
+  return `
+    <div class="card" style="${styles.card}">
+      <div style="display: flex; flex-direction: row;">
+        <div style="flex: 0 0 120px;">
+          <img 
+            src="${imageUrl}" 
+            alt="${title}" 
+            style="width: 120px; height: 120px; object-fit: cover;"
+          />
+        </div>
+        <div style="flex: 1; padding: 15px;">
+          <h3 style="margin: 0 0 10px; color: #4A5568;">${title}</h3>
+          ${metaInfo}
+          <p style="margin: 5px 0 15px; color: #4A5568;">${description}</p>
+          <a href="${detailUrl}" style="color: #8B5CF6; font-weight: bold; text-decoration: none;">
+            View Details →
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
 }

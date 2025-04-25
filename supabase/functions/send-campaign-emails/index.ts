@@ -1,214 +1,174 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+// Main entry point for the send-campaign-emails function
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { fetchContentDetails } from "./content-fetcher.ts";
 import { processBatchSending } from "./batch-processor.ts";
 import { updateCampaignStatus, getRecipients } from "./campaign-manager.ts";
+import { Campaign } from "./types.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://picocareer.com";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CampaignEmailRequest {
-  campaignId: string;
-  batchSize?: number;
-  retryCount?: number;
-}
-
-const handler = async (req: Request): Promise<Response> => {
+serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
-
+  
   try {
-    let campaignId: string, batchSize: number, retryCount: number;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const resend = new Resend(RESEND_API_KEY);
+    
+    let campaignId: string;
     
     try {
-      const json = await req.json();
-      campaignId = json.campaignId;
-      batchSize = json.batchSize ?? 50;
-      retryCount = json.retryCount ?? 0;
+      const body = await req.json();
+      campaignId = body.campaignId;
     } catch (error) {
-      console.error("Invalid JSON in request body:", error);
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Invalid JSON request body."
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ success: false, error: "Invalid request body" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
-
+    
     if (!campaignId) {
-      console.error("Missing campaignId in request.");
       return new Response(
         JSON.stringify({ success: false, error: "Campaign ID is required" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { data: campaign, error: campaignError } = await supabaseClient
-      .from('email_campaigns')
-      .select('*')
-      .eq('id', campaignId)
-      .single();
-
-    if (campaignError || !campaign) {
-      console.error("Campaign not found:", campaignError?.message);
-      return new Response(
-        JSON.stringify({ success: false, error: `Campaign not found: ${campaignError?.message || "Unknown error"}` }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    await supabaseClient
-      .from('email_campaigns')
-      .update({ 
-        status: 'processing', 
-        last_checked_at: new Date().toISOString()
-      })
-      .eq('id', campaignId);
-
-    let recipients = [];
-    try {
-      recipients = await getRecipients(supabaseClient, campaign);
-    } catch (error) {
-      console.error("Error fetching recipients:", error);
-      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, `Error fetching recipients: ${(error as Error).message}`);
-      
-      return new Response(
-        JSON.stringify({ success: false, error: "Error fetching recipients: " + (error as Error).message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (recipients.length === 0) {
-      console.warn("No recipients found for this campaign:", campaignId);
-      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, 0, "No recipients found for this campaign");
-      
-      return new Response(
-        JSON.stringify({ success: false, error: "No recipients found for this campaign" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    let contentIds: string[] = [];
-    if (campaign.content_ids && Array.isArray(campaign.content_ids) && campaign.content_ids.length > 0) {
-      contentIds = campaign.content_ids;
-    } else if (campaign.content_type && campaign.content_id) {
-      contentIds = [campaign.content_id];
-    }
-
-    if (contentIds.length === 0) {
-      console.error("No content IDs found in campaign:", campaignId);
-      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, "No content IDs found in campaign");
-      
-      return new Response(
-        JSON.stringify({ success: false, error: "No content IDs found in campaign" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    let contentList = [];
-    try {
-      contentList = await fetchContentDetails(supabaseClient, campaign.content_type, contentIds);
-      console.log("Fetched content list:", contentList);
-    } catch (error) {
-      console.error("Error fetching content details:", error);
-      await updateCampaignStatus(supabaseClient, campaignId, 'failed', 0, 0, recipients.length, `Error fetching content details: ${(error as Error).message}`);
-      
-      return new Response(
-        JSON.stringify({ success: false, error: "Error fetching content details: " + (error as Error).message }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
-    const startTime = Date.now();
     
-    const { sent, failed, errors } = await processBatchSending(
-      recipients, 
+    const { data: campaign, error: campaignError } = await supabase
+      .from("email_campaigns")
+      .select("*")
+      .eq("id", campaignId)
+      .single();
+      
+    if (campaignError || !campaign) {
+      return new Response(
+        JSON.stringify({ success: false, error: `Campaign not found: ${campaignError?.message}` }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      );
+    }
+    
+    const typedCampaign = campaign as Campaign;
+    
+    console.log(`Processing campaign: ${typedCampaign.id} - ${typedCampaign.subject}`);
+    
+    // Update campaign to sending status
+    await updateCampaignStatus(
+      supabase, 
+      typedCampaign.id, 
+      "sending", 
+      typedCampaign.sent_count, 
+      typedCampaign.failed_count,
+      typedCampaign.recipients_count || 0
+    );
+    
+    // Get content for the campaign
+    let contentIds = typedCampaign.content_ids || [];
+    if (typedCampaign.content_id && !contentIds.includes(typedCampaign.content_id)) {
+      contentIds = [typedCampaign.content_id, ...contentIds];
+    }
+    
+    // Fetch content details
+    const contentList = await fetchContentDetails(
+      supabase, 
+      typedCampaign.content_type, 
+      contentIds
+    );
+    
+    if (contentList.length === 0) {
+      await updateCampaignStatus(
+        supabase, 
+        typedCampaign.id, 
+        "failed", 
+        0, 
+        0, 
+        0, 
+        "No content found for the specified IDs"
+      );
+      
+      return new Response(
+        JSON.stringify({ success: false, error: "No content found for the specified IDs" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+    
+    // Get recipients
+    const recipients = await getRecipients(supabase, typedCampaign);
+    
+    if (recipients.length === 0) {
+      await updateCampaignStatus(
+        supabase, 
+        typedCampaign.id, 
+        "failed", 
+        0, 
+        0, 
+        0, 
+        "No recipients found"
+      );
+      
+      return new Response(
+        JSON.stringify({ success: false, error: "No recipients found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+    
+    // Process sending in batches
+    console.log(`Sending to ${recipients.length} recipients in batches`);
+    const batchSize = 20;
+    const result = await processBatchSending(
+      recipients,
       contentList,
-      campaign,
+      typedCampaign,
       batchSize,
-      siteUrl,
-      supabaseClient,
+      SITE_URL,
+      supabase,
       resend
     );
-
-    const executionTime = (Date.now() - startTime) / 1000;
-
-    const status = sent > 0 ? (failed > 0 ? 'partial' : 'sent') : 'failed';
-    await updateCampaignStatus(supabaseClient, campaignId, status, sent, failed, recipients.length);
-
-    if (sent === 0) {
-      console.error("Zero emails sent for campaign:", campaignId, "errors:", errors);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Failed to send emails to any recipients.",
-          details: errors
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
+    
+    // Update campaign with results
+    const finalStatus = result.failed === 0 ? "sent" : 
+                       result.sent === 0 ? "failed" : "partial";
+    
+    await updateCampaignStatus(
+      supabase,
+      typedCampaign.id,
+      finalStatus,
+      result.sent,
+      result.failed,
+      recipients.length,
+      result.errors.length > 0 ? JSON.stringify(result.errors.slice(0, 5)) : undefined
+    );
+    
     return new Response(
       JSON.stringify({
         success: true,
-        campaign_id: campaignId,
-        total_recipients: recipients.length,
-        sent,
-        failed,
-        execution_time_seconds: executionTime,
-        errors: errors.length > 0 ? errors : undefined
+        campaign: typedCampaign.id,
+        sent: result.sent,
+        failed: result.failed,
+        total: recipients.length,
+        status: finalStatus
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
-  } catch (error: any) {
-    console.error("Unexpected error in send-campaign-emails:", error);
+    
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Campaign email sending failed:", errorMessage);
+    
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: (error as Error).message || "Unexpected error"
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: false, error: errorMessage }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
-};
-
-serve(handler);
+});

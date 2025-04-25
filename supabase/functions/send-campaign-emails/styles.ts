@@ -1,52 +1,56 @@
-export const getContentTypeStyles = (contentType: string) => {
-  switch (contentType) {
-    case 'scholarships':
-      return {
-        gradient: 'background: linear-gradient(135deg, #9333ea, #6b21a8)',
-        accent: '#9333ea',
-        icon: '🎓'
-      };
-    case 'opportunities':
-      return {
-        gradient: 'background: linear-gradient(135deg, #2563eb, #1d4ed8)',
-        accent: '#2563eb',
-        icon: '🚀'
-      };
-    case 'careers':
-      return {
-        gradient: 'background: linear-gradient(135deg, #0d9488, #0f766e)',
-        accent: '#0d9488',
-        icon: '💼'
-      };
-    case 'majors':
-      return {
-        gradient: 'background: linear-gradient(135deg, #4f46e5, #4338ca)',
-        accent: '#4f46e5',
-        icon: '📚'
-      };
-    case 'schools':
-      return {
-        gradient: 'background: linear-gradient(135deg, #0ea5e9, #0284c7)',
-        accent: '#0ea5e9',
-        icon: '🏛️'
-      };
-    case 'mentors':
-      return {
-        gradient: 'background: linear-gradient(135deg, #d97706, #b45309)',
-        accent: '#d97706',
-        icon: '👋'
-      };
-    case 'blogs':
-      return {
-        gradient: 'background: linear-gradient(135deg, #e11d48, #be123c)',
-        accent: '#e11d48',
-        icon: '📖'
-      };
-    default:
-      return {
-        gradient: 'background: linear-gradient(135deg, #6b7280, #4b5563)',
-        accent: '#6b7280',
-        icon: '📎'
-      };
-  }
-};
+
+export function getContentTypeStyles(contentType: string) {
+  const styles = {
+    scholarships: {
+      card: 'border-left: 4px solid #F6E05E;',
+      title: 'Scholarship Opportunities',
+    },
+    opportunities: {
+      card: 'border-left: 4px solid #68D391;',
+      title: 'Career Opportunities',
+    },
+    careers: {
+      card: 'border-left: 4px solid #4299E1;',
+      title: 'Career Spotlight',
+    },
+    majors: {
+      card: 'border-left: 4px solid #ED64A6;',
+      title: 'Academic Major Recommendations',
+    },
+    schools: {
+      card: 'border-left: 4px solid #9F7AEA;',
+      title: 'School Recommendations',
+    },
+    mentors: {
+      card: 'border-left: 4px solid #F687B3;',
+      title: 'Meet Our Mentors',
+    },
+    blogs: {
+      card: 'border-left: 4px solid #B794F4;',
+      title: 'Latest Career Insights',
+    },
+  };
+
+  const defaultStyle = {
+    card: 'border-left: 4px solid #8B5CF6;',
+    title: 'Personalized Recommendations',
+  };
+
+  const style = styles[contentType as keyof typeof styles] || defaultStyle;
+
+  const contentTypeLabels = {
+    scholarships: "Scholarships",
+    opportunities: "Opportunities",
+    careers: "Careers",
+    majors: "Academic Majors",
+    schools: "Schools",
+    mentors: "Mentors",
+    blogs: "Articles"
+  };
+
+  return {
+    cardStyles: { card: style.card },
+    headerStyles: { title: style.title },
+    contentTypeLabel: contentTypeLabels[contentType as keyof typeof contentTypeLabels] || "Recommendations"
+  };
+}

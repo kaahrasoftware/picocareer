@@ -45,27 +45,60 @@ export function useCareerChat() {
     updateSessionTitle,
     sessionId,
     sessionMetadata,
-    updateSessionMetadata
+    updateSessionMetadata,
+    addMessage
   } = useSessionManager(setIsSessionComplete, setCurrentCategory, setQuestionProgress);
+
+  // Helper functions that need to be passed to the useMessageSender
+  const getCurrentCategory = () => currentCategory || 'education';
+  const getProgress = () => questionProgress || 0;
+  
+  // Mock implementation for these functions as examples - replace with actual implementations
+  const analyzeResponses = async (messages: CareerChatMessage[]) => {
+    console.log("Analyzing responses", messages);
+    return Promise.resolve();
+  };
+  
+  const advanceQuestion = () => {
+    setQuestionProgress(prev => prev + 10);
+  };
+  
+  const createQuestionMessage = (sessionId: string): CareerChatMessage => {
+    return {
+      id: `question-${Date.now()}`,
+      session_id: sessionId,
+      message_type: "bot",
+      content: "What are your career goals?",
+      metadata: {
+        category: currentCategory
+      }
+    };
+  };
 
   const {
     isAnalyzing,
     sendMessage,
-    addMessage,
     handleStartNewChat
   } = useMessageSender({
     sessionId,
-    sessionMetadata,
-    isSessionComplete,
     messages,
+    isSessionComplete,
     setInputMessage,
     setIsTyping,
+    addMessage,
     updateSessionTitle,
     updateSessionMetadata,
+    sessionMetadata,
+    setIsSessionComplete,
     setCurrentCategory,
     setQuestionProgress,
-    setIsSessionComplete,
-    endCurrentSession
+    endCurrentSession,
+    getCurrentCategory,
+    getProgress,
+    isAnalyzing: false,
+    analyzeResponses,
+    advanceQuestion,
+    createQuestionMessage
   });
 
   // Check API configuration

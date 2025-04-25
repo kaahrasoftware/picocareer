@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -38,14 +39,23 @@ export function CampaignList({ adminId }: CampaignListProps) {
           recipients_count,
           created_at,
           last_error,
-          last_checked_at
+          last_checked_at,
+          admin_id,
+          updated_at
         `)
         .eq('admin_id', adminId)
         .order('scheduled_for', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      setCampaigns(data || []);
+      
+      // Map the data to ensure status is of correct type
+      const typedCampaigns: Campaign[] = (data || []).map(item => ({
+        ...item,
+        status: (item.status as "planned" | "pending" | "sending" | "sent" | "failed" | "partial") || "planned"
+      }));
+      
+      setCampaigns(typedCampaigns);
     } catch (err: any) {
       toast({
         title: "Error loading campaigns",

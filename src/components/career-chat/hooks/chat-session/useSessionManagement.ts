@@ -36,17 +36,22 @@ export function useSessionManagement(
         .insert(endMessage);
       
       // Update session status and metadata
-      const updatedMetadata = {
-        ...(sessionMetadata || {}),
-        completedAt: new Date().toISOString(),
-        isComplete: true
-      };
+      const updatedMetadata = sessionMetadata ? 
+        {
+          ...sessionMetadata,
+          completedAt: new Date().toISOString(),
+          isComplete: true
+        } : 
+        {
+          completedAt: new Date().toISOString(),
+          isComplete: true
+        };
       
       await supabase
         .from('career_chat_sessions')
         .update({
           status: 'completed',
-          session_metadata: updatedMetadata as any, // Cast to any to avoid type issues
+          session_metadata: updatedMetadata,
           last_active_at: new Date().toISOString()
         })
         .eq('id', sessionId);
@@ -82,7 +87,24 @@ export function useSessionManagement(
       
       if (error) throw error;
       
-      setPastSessions(data || []);
+      // Convert data to proper type
+      const typedSessions: CareerChatSession[] = (data || []).map(session => {
+        // Ensure progress_data has the correct structure
+        const progressData = typeof session.progress_data === 'object' ? 
+          session.progress_data as any : 
+          { education: 0, skills: 0, workstyle: 0, goals: 0, overall: 0 };
+          
+        return {
+          id: session.id,
+          status: session.status,
+          created_at: session.created_at,
+          session_metadata: session.session_metadata as unknown as ChatSessionMetadata,
+          progress_data: progressData,
+          total_messages: session.total_messages
+        };
+      });
+      
+      setPastSessions(typedSessions);
     } catch (error) {
       console.error("Error fetching past sessions:", error);
     }
@@ -117,10 +139,21 @@ export function useSessionManagement(
         .eq('session_id', targetSessionId)
         .order('message_index', { ascending: true });
       
-      // Update UI state
-      setSessionId(targetSessionId);
-      setMessages(messages as unknown as CareerChatMessage[]);
-      setSessionMetadata(session.session_metadata as unknown as ChatSessionMetadata);
+      if (messages) {
+        // Convert message_type to the proper type
+        const typedMessages = messages.map(msg => {
+          const typedMsg = { 
+            ...msg,
+            message_type: msg.message_type as "system" | "user" | "bot" | "recommendation" | "session_end"
+          };
+          return typedMsg as unknown as CareerChatMessage;
+        });
+        
+        // Update UI state
+        setSessionId(targetSessionId);
+        setMessages(typedMessages);
+        setSessionMetadata(session.session_metadata as unknown as ChatSessionMetadata);
+      }
       
     } catch (error) {
       console.error("Error resuming session:", error);
@@ -158,8 +191,9 @@ export function useSessionManagement(
       
       if (!session) return;
       
+      const currentMetadata = session.session_metadata || {};
       const updatedMetadata = {
-        ...(session.session_metadata || {}),
+        ...currentMetadata,
         title
       };
       
@@ -183,22 +217,21 @@ export function useSessionManagement(
   };
   
   const updateSessionMetadata = async (metadata: Partial<ChatSessionMetadata>) => {
-    if (!sessionId || !sessionMetadata) return;
+    if (!sessionId) return;
     
     try {
-      const updatedMetadata = {
-        ...sessionMetadata,
-        ...metadata
-      };
+      const updatedMetadata = sessionMetadata ? 
+        { ...sessionMetadata, ...metadata } : 
+        metadata;
       
       await supabase
         .from('career_chat_sessions')
         .update({
-          session_metadata: updatedMetadata as any // Cast to any to avoid type issues
+          session_metadata: updatedMetadata
         })
         .eq('id', sessionId);
       
-      setSessionMetadata(updatedMetadata);
+      setSessionMetadata(updatedMetadata as ChatSessionMetadata);
     } catch (error) {
       console.error("Error updating session metadata:", error);
     }

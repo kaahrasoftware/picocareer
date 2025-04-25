@@ -82,13 +82,19 @@ export function useSessionInitialization(
           .order('message_index', { ascending: true });
           
         if (sessionMessages) {
-          chatMessages = sessionMessages;
+          // Convert message_type to the proper enum type
+          chatMessages = sessionMessages.map(msg => {
+            return {
+              ...msg,
+              message_type: msg.message_type as "system" | "user" | "bot" | "recommendation" | "session_end"
+            } as CareerChatMessage;
+          });
         }
       }
     }
     
-    // If no existing session or forcing new, create a new one
-    if (!chatSession && forceNew) {
+    // If no existing session, create a new one
+    if (!chatSession) {
       // Initial metadata
       const initialMetadata: ChatSessionMetadata = {
         startedAt: new Date().toISOString(),
@@ -104,12 +110,39 @@ export function useSessionInitialization(
       
       // Create a new session
       chatSession = await createChatSession(profileId, initialMetadata);
+      
+      if (chatSession) {
+        const sessionId = chatSession.id;
+        
+        // Add initial system message
+        const welcomeMessage: CareerChatMessage = {
+          id: uuidv4(),
+          session_id: sessionId,
+          message_type: "system",
+          content: 'Hi there! I\'m Pico, your career advisor. I\'m here to help you explore career paths that align with your interests, skills, and goals. What would you like to discuss today?',
+          metadata: {
+            hasOptions: true,
+            suggestions: [
+              'I want to explore career options',
+              'I need help with my resume',
+              'I have questions about a specific career',
+              'I want to change careers'
+            ]
+          },
+          created_at: new Date().toISOString()
+        };
+        
+        const savedMessage = await addMessage(welcomeMessage);
+        if (savedMessage) {
+          chatMessages = [savedMessage];
+        }
+      }
     }
     
     if (chatSession) {
       setSessionId(chatSession.id);
       setMessages(chatMessages);
-      setSessionMetadata(chatSession.session_metadata || null);
+      setSessionMetadata(chatSession.session_metadata as unknown as ChatSessionMetadata || null);
     }
     setIsLoading(false);
   };
