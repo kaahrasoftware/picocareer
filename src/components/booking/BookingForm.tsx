@@ -7,10 +7,9 @@ import { SessionTypeSelector } from "./SessionTypeSelector";
 import { SessionNote } from "./SessionNote";
 import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
-import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { Input } from "@/components/ui/input";
 
 interface BookingFormProps {
   mentorId: string;
@@ -23,9 +22,10 @@ interface BookingFormProps {
     menteePhoneNumber?: string;
     menteeTelegramUsername?: string;
   }) => void;
+  onSuccess: () => void;
 }
 
-export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
+export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormProps) {
   const [date, setDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
@@ -33,22 +33,12 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
   const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [telegramUsername, setTelegramUsername] = useState("");
-  const { session } = useAuthSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
   const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
 
-  // Reset meeting platform when session type changes
-  useEffect(() => {
-    if (availablePlatforms.length > 0) {
-      setMeetingPlatform(availablePlatforms[0]);
-      setPhoneNumber("");
-      setTelegramUsername("");
-    }
-  }, [sessionType, availablePlatforms]);
-
-  // Update parent component whenever form values change
   useEffect(() => {
     onFormChange({
       date,
@@ -61,6 +51,19 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
     });
   }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
 
+  const handleSubmit = async () => {
+    if (!date || !selectedTime || !sessionType) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onSuccess();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {/* Left column - Calendar */}
@@ -70,102 +73,89 @@ export function BookingForm({ mentorId, onFormChange }: BookingFormProps) {
           onDateSelect={setDate}
           mentorId={mentorId}
         />
-        
-        <div className="mt-4">
-          <RequestAvailabilityButton
-            mentorId={mentorId}
-            userId={session?.user?.id}
-            onRequestComplete={() => {}}
-          />
-        </div>
       </div>
 
       {/* Right column - Form elements */}
       <div className="space-y-4">
-        <div className="bg-white/5 rounded-lg p-4 transition-all duration-300">
-          <h3 className="text-lg font-semibold mb-4">Session Details</h3>
-          <div className="space-y-6">
-            <div className="bg-white/5 rounded-lg p-4">
-              <SessionTypeSelector
-                sessionTypes={sessionTypes}
-                onSessionTypeSelect={(type) => {
-                  setSessionType(type);
-                  setMeetingPlatform(availablePlatforms[0] || "Google Meet");
-                }}
-              />
-            </div>
-
-            {sessionType && availablePlatforms.length > 0 && (
-              <div 
-                className="bg-white/5 rounded-lg p-4 transform transition-all duration-300 ease-in-out"
-                style={{
-                  opacity: sessionType ? 1 : 0,
-                  transform: sessionType ? 'translateY(0)' : 'translateY(-10px)'
-                }}
-              >
-                <MeetingPlatformSelector
-                  value={meetingPlatform}
-                  onValueChange={setMeetingPlatform}
-                  onGoogleAuthErrorClear={() => {}}
-                  availablePlatforms={availablePlatforms}
-                />
-
-                {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
-                  <div className="mt-4">
-                    <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      placeholder="+1234567890"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-
-                {meetingPlatform === "Telegram" && (
-                  <div className="mt-4">
-                    <Label htmlFor="telegramUsername">Telegram Username</Label>
-                    <Input
-                      id="telegramUsername"
-                      type="text"
-                      placeholder="@username"
-                      value={telegramUsername}
-                      onChange={(e) => {
-                        let username = e.target.value;
-                        if (!username.startsWith('@') && username !== '') {
-                          username = '@' + username;
-                        }
-                        setTelegramUsername(username);
-                      }}
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {date && (
-              <div className="bg-white/5 rounded-lg p-4">
-                <TimeSlotSelector
-                  date={date}
-                  mentorId={mentorId}
-                  selectedTime={selectedTime}
-                  onTimeSelect={setSelectedTime}
-                  selectedSessionType={selectedSessionTypeDetails}
-                />
-              </div>
-            )}
-
-            <div className="bg-white/5 rounded-lg p-4">
-              <SessionNote
-                note={note}
-                onNoteChange={setNote}
-              />
-            </div>
+        {sessionTypes.length > 0 && (
+          <div className="bg-white/5 rounded-lg p-4">
+            <SessionTypeSelector
+              sessionTypes={sessionTypes}
+              onSessionTypeSelect={setSessionType}
+            />
           </div>
+        )}
+
+        {date && sessionType && (
+          <div className="bg-white/5 rounded-lg p-4">
+            <TimeSlotSelector
+              date={date}
+              mentorId={mentorId}
+              selectedTime={selectedTime}
+              onTimeSelect={setSelectedTime}
+              selectedSessionType={selectedSessionTypeDetails}
+            />
+          </div>
+        )}
+
+        {sessionType && availablePlatforms.length > 0 && (
+          <div className="bg-white/5 rounded-lg p-4">
+            <MeetingPlatformSelector
+              value={meetingPlatform}
+              onValueChange={setMeetingPlatform}
+              availablePlatforms={availablePlatforms}
+            />
+
+            {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
+              <div className="mt-4">
+                <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {meetingPlatform === "Telegram" && (
+              <div className="mt-4">
+                <Label htmlFor="telegramUsername">Telegram Username</Label>
+                <Input
+                  id="telegramUsername"
+                  type="text"
+                  placeholder="@username"
+                  value={telegramUsername}
+                  onChange={(e) => {
+                    let username = e.target.value;
+                    if (!username.startsWith('@') && username !== '') {
+                      username = '@' + username;
+                    }
+                    setTelegramUsername(username);
+                  }}
+                  className="mt-1"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="bg-white/5 rounded-lg p-4">
+          <SessionNote
+            note={note}
+            onNoteChange={setNote}
+          />
         </div>
+
+        <Button
+          className="w-full"
+          disabled={!date || !selectedTime || !sessionType || isSubmitting}
+          onClick={handleSubmit}
+        >
+          {isSubmitting ? "Booking..." : "Book Session"}
+        </Button>
       </div>
     </div>
   );
