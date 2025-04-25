@@ -1,4 +1,3 @@
-
 import { ContentItem } from "@/types/database/email";
 import { getContentTypeStyles } from "./email-templates/styles";
 import { formatContentCard } from "./email-templates/content-cards";
@@ -16,7 +15,7 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
   
   switch (contentType) {
     case 'scholarships':
-      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities Await!`;
+      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities!`;
     case 'opportunities':
       return `🚀 Exclusive Career Opportunities Selected for You, ${nameSection}`;
     case 'careers':
@@ -63,10 +62,18 @@ export function generateEmailContent(
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
+      <style>
+        @media only screen and (max-width: 600px) {
+          .container { width: 100% !important; padding: 16px !important; }
+          .header { padding: 24px !important; }
+          .header h1 { font-size: 24px !important; }
+          .content { padding: 16px !important; }
+        }
+      </style>
     </head>
     <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
-        <div style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
+      <div class="container" style="max-width: 600px; margin: 0 auto; padding: 24px;">
+        <div class="header" style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">${styles.icon}</div>
           <h1 style="margin: 0; font-size: 32px; font-weight: 700;">Exclusive Scholarship Opportunities</h1>
           ${totalAmount !== '$0' ? `
@@ -76,17 +83,19 @@ export function generateEmailContent(
           ` : ''}
         </div>
         
-        <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
-          Hi ${firstName},<br><br>
-          We've found some exciting scholarship opportunities that match your profile! These scholarships could help fund your education and bring you closer to achieving your academic goals.
-        </p>
-        
-        <div style="margin: 32px 0;">
-          ${contentCardsHtml}
+        <div class="content" style="background-color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
+            Hi ${firstName},<br><br>
+            We've found some exciting scholarship opportunities that match your profile! These scholarships could help fund your education and bring you closer to achieving your academic goals.
+          </p>
+          
+          <div style="margin: 32px 0;">
+            ${contentCardsHtml}
+          </div>
         </div>
         
-        <div style="background-color: #f3f4f6; padding: 24px; border-radius: 12px; margin-top: 40px; text-align: center;">
-          <p style="margin-top: 0; margin-bottom: 0; color: #4b5563; font-size: 16px;">
+        <div style="background-color: #f3f4f6; padding: 24px; border-radius: 12px; margin-top: 32px; text-align: center;">
+          <p style="margin: 0; color: #4b5563; font-size: 16px;">
             Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: 600;">PicoCareer</a> 
             to discover more scholarship opportunities tailored to your interests.
           </p>
