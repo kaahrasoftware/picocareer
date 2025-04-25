@@ -18,12 +18,12 @@ export interface EmailContentTypeSettings {
   secondary_color: string;
   accent_color: string;
   layout_settings: {
-    headerStyle?: 'centered' | 'banner' | 'minimal';
-    showAuthor?: boolean;
-    showDate?: boolean;
-    imagePosition?: 'top' | 'inline' | 'side';
-    contentBlocks?: string[];
-    metadataDisplay?: string[];
+    headerStyle: 'centered' | 'banner' | 'minimal';
+    showAuthor: boolean;
+    showDate: boolean;
+    imagePosition: 'top' | 'inline' | 'side';
+    contentBlocks: string[];
+    metadataDisplay: string[];
   };
   created_at: string;
   updated_at: string;
@@ -48,4 +48,18 @@ export interface Campaign {
   frequency: 'once' | 'daily' | 'weekly' | 'monthly';
   created_at: string;
   updated_at: string;
+}
+
+export interface ContentItem {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  image_url?: string;
+  provider_name?: string;
+  deadline?: string;
+  amount?: number;
+  location?: string;
+  remote?: boolean;
+  [key: string]: any;
 }
