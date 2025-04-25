@@ -1,4 +1,3 @@
-
 export const getContentTypeStyles = (contentType: string) => {
   switch (contentType) {
     case 'scholarships':
@@ -53,11 +52,11 @@ export const getContentTypeStyles = (contentType: string) => {
 };
 
 export const getEmailSubject = (contentType: string, firstName: string = ''): string => {
-  const nameSection = firstName ? `, ${firstName}` : '';
+  const nameSection = firstName ? `${firstName}, ` : '';
   
   switch (contentType) {
     case 'scholarships':
-      return `🎓 Your Personalized Scholarship Opportunities Await${nameSection}!`;
+      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities Await!`;
     case 'opportunities':
       return `🚀 Exclusive Career Opportunities Selected for You${nameSection}`;
     case 'careers':
@@ -74,4 +73,3 @@ export const getEmailSubject = (contentType: string, firstName: string = ''): st
       return `New Content Updates${nameSection}`;
   }
 };
-
