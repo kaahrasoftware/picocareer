@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
@@ -34,77 +34,75 @@ export function useEmailCampaignFormState({
       setLoadingContent(true);
       setContentList([]);
       setSelectedContentIds([]);
-      let content: {id: string, title: string}[] = [];
       
       try {
+        let data;
+        
         switch (contentType) {
           case "scholarships":
-            ({ data: content } = await supabase
+            ({ data } = await supabase
               .from("scholarships")
               .select("id, title")
               .eq("status", "Active"));
             break;
             
           case "opportunities":
-            ({ data: content } = await supabase
+            ({ data } = await supabase
               .from("opportunities")
               .select("id, title")
               .eq("status", "Active"));
             break;
             
           case "careers":
-            ({ data: content } = await supabase
+            ({ data } = await supabase
               .from("careers")
               .select("id, title")
               .eq("status", "Approved"));
             break;
             
           case "majors":
-            ({ data: content } = await supabase
+            ({ data } = await supabase
               .from("majors")
               .select("id, title")
               .eq("status", "Approved"));
             break;
             
           case "schools":
-            ({ data: content } = await supabase
+            const { data: schools } = await supabase
               .from("schools")
               .select("id, name")
-              .eq("status", "Approved"));
-            content = content?.map(school => ({
+              .eq("status", "Approved");
+            data = schools?.map(school => ({
               id: school.id,
               title: school.name
             }));
             break;
             
           case "mentors":
-            console.log('Fetching mentor profiles...');
-            ({ data: content } = await supabase
+            const { data: mentors } = await supabase
               .from("profiles")
               .select("id, full_name")
               .eq("user_type", "mentor")
-              .eq("onboarding_status", "Approved"));
-            console.log('Fetched mentors:', content);
-            content = content?.map(mentor => ({
+              .eq("onboarding_status", "Approved");
+            data = mentors?.map(mentor => ({
               id: mentor.id,
               title: mentor.full_name || 'Unknown Mentor'
             }));
             break;
             
           case "blogs":
-            ({ data: content } = await supabase
+            ({ data } = await supabase
               .from("blogs")
               .select("id, title")
               .eq("status", "Approved"));
             break;
             
           default:
-            content = [];
+            data = [];
         }
 
-        if (isMounted) {
-          console.log(`Loaded ${contentType} content:`, content);
-          setContentList(content || []);
+        if (isMounted && data) {
+          setContentList(data);
           setLoadingContent(false);
         }
       } catch (error) {
@@ -126,70 +124,40 @@ export function useEmailCampaignFormState({
     
     loadContent();
     return () => { isMounted = false; }
-  }, [contentType]);
-
-  useEffect(() => {
-    setSelectedContentIds(prev => {
-      return prev; // intentionally not resetting outside of randomSelect change or contentList population
-    });
-  }, [setSelectedContentIds]);
-
-  useEffect(() => {
-    setSelectedContentIds(prev => {
-      return prev;
-    });
-  }, [setSelectedContentIds]);
+  }, [contentType, setContentList, setSelectedContentIds, setLoadingContent]);
 
   // Recipient loading logic
   useEffect(() => {
     async function loadRecipients() {
-      let query = supabase
-        .from('profiles')
-        .select('id, email, full_name');
+      try {
+        let query = supabase
+          .from('profiles')
+          .select('id, email, full_name');
 
-      switch (recipientType) {
-        case 'mentees':
-          query = query.eq('user_type', 'mentee');
-          break;
-        case 'mentors':
-          query = query.eq('user_type', 'mentor');
-          break;
-      }
+        switch (recipientType) {
+          case 'mentees':
+            query = query.eq('user_type', 'mentee');
+            break;
+          case 'mentors':
+            query = query.eq('user_type', 'mentor');
+            break;
+        }
 
-      const { data, error } = await query;
-      
-      if (error) {
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        setRecipientsList(data || []);
+      } catch (error) {
+        console.error('Error loading recipients:', error);
         toast({ 
           title: "Error Loading Recipients", 
-          description: error.message, 
+          description: error instanceof Error ? error.message : "Unknown error occurred",
           variant: "destructive" 
         });
         setRecipientsList([]);
-        return;
       }
-
-      setRecipientsList(data || []);
     }
 
-    if (recipientType !== 'selected') {
-      loadRecipients();
-    } else {
-      async function loadAllRecipients() {
-        const { data: mentees } = await supabase
-          .from('profiles')
-          .select('id, email, full_name')
-          .eq('user_type', 'mentee');
-
-        const { data: mentors } = await supabase
-          .from('profiles')
-          .select('id, email, full_name')
-          .eq('user_type', 'mentor');
-
-        setRecipientsList([...(mentees || []), ...(mentors || [])]);
-      }
-
-      loadAllRecipients();
-    }
-    // eslint-disable-next-line
+    loadRecipients();
   }, [recipientType, setRecipientsList]);
 }

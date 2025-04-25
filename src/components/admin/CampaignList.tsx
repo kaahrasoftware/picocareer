@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CampaignCard } from "./CampaignCard";
@@ -6,25 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import type { Campaign } from "@/types/database/email";
-
-type Campaign = {
-  id: string;
-  subject: string;
-  content_type: string;
-  content_id: string;
-  content_ids: string[];
-  frequency: string;
-  scheduled_for: string;
-  status: string;
-  sent_at: string | null;
-  recipient_type: string;
-  sent_count: number;
-  failed_count: number;
-  recipients_count: number;
-  created_at: string;
-  last_error: string | null;
-  last_checked_at: string | null;
-};
 
 interface CampaignListProps {
   adminId: string;

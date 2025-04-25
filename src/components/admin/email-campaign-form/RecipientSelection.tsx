@@ -9,7 +9,11 @@ interface RecipientSelectionProps {
   setSelectedRecipients: (ids: string[]) => void;
 }
 
-export function RecipientSelection({ recipientsList, selectedRecipients, setSelectedRecipients }: RecipientSelectionProps) {
+export function RecipientSelection({ 
+  recipientsList, 
+  selectedRecipients, 
+  setSelectedRecipients 
+}: RecipientSelectionProps) {
   return (
     <div className="grid gap-2 max-h-64 overflow-y-auto border rounded p-2">
       {recipientsList.map(recipient => (
@@ -18,11 +22,11 @@ export function RecipientSelection({ recipientsList, selectedRecipients, setSele
             id={`recipient-${recipient.id}`}
             checked={selectedRecipients.includes(recipient.id)}
             onCheckedChange={(checked) => {
-              setSelectedRecipients(prev => 
-                checked 
-                  ? [...prev, recipient.id] 
-                  : prev.filter(id => id !== recipient.id)
-              );
+              if (checked) {
+                setSelectedRecipients([...selectedRecipients, recipient.id]);
+              } else {
+                setSelectedRecipients(selectedRecipients.filter(id => id !== recipient.id));
+              }
             }}
           />
           <Label 
