@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -6,7 +7,6 @@ import type { Campaign } from "@/types/database/email";
 import { toast } from "sonner";
 
 interface CampaignFormValues {
-  name: string;
   subject: string;
   content_type: ContentType;
   recipient_type: "all" | "mentees" | "mentors" | "selected";
@@ -17,7 +17,7 @@ interface CampaignFormValues {
 }
 
 export function useEmailCampaignFormState(
-  adminId: string, 
+  adminId: string,
   contentType: ContentType,
   onCampaignCreated: () => void
 ) {
@@ -93,8 +93,9 @@ export function useEmailCampaignFormState(
     (type: "all" | "mentees" | "mentors" | "selected") => {
       setRecipientType(type);
       setSelectedRecipientIds([]);
+      loadRecipients();
     },
-    []
+    [loadRecipients]
   );
 
   const handleContentSelectionChange = (contentIds: string[]) => {
@@ -105,20 +106,31 @@ export function useEmailCampaignFormState(
     setSelectedRecipientIds(ids);
   };
 
+  const validateFormValues = (values: CampaignFormValues): string | null => {
+    if (!values.subject.trim()) {
+      return "Subject is required";
+    }
+    if (!values.content_ids.length) {
+      return "Please select at least one content item";
+    }
+    if (values.recipient_type === "selected" && !values.recipient_ids.length) {
+      return "Please select at least one recipient";
+    }
+    if (!values.scheduled_for) {
+      return "Please select a scheduled date and time";
+    }
+    if (values.scheduled_for <= new Date()) {
+      return "Scheduled time must be in the future";
+    }
+    return null;
+  };
+
   const scheduleCampaign = async (values: CampaignFormValues) => {
     setIsScheduling(true);
     try {
-      if (!values.subject.trim()) {
-        throw new Error("Subject is required");
-      }
-      if (!values.content_ids.length) {
-        throw new Error("Please select at least one content item");
-      }
-      if (values.recipient_type === "selected" && !values.recipient_ids.length) {
-        throw new Error("Please select at least one recipient");
-      }
-      if (!values.scheduled_for) {
-        throw new Error("Please select a scheduled date and time");
+      const validationError = validateFormValues(values);
+      if (validationError) {
+        throw new Error(validationError);
       }
 
       const recipientsCount = values.recipient_type === "selected" 
@@ -147,17 +159,22 @@ export function useEmailCampaignFormState(
 
       const { data, error } = await supabase
         .from("email_campaigns")
-        .insert(campaignData);
+        .insert(campaignData)
+        .select("id")
+        .single();
 
       if (error) {
-        throw error;
+        console.error("Database error:", error);
+        throw new Error(error.message);
       }
 
       toast.success("Campaign scheduled successfully!");
       onCampaignCreated();
+      return data;
     } catch (error: any) {
       console.error("Error scheduling campaign:", error);
       toast.error(error.message || "Could not schedule campaign. Please try again.");
+      throw error;
     } finally {
       setIsScheduling(false);
     }
