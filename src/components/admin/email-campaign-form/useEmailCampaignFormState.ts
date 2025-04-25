@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ContentType } from "./utils";
 import type { Campaign } from "@/types/database/email";
+import { toast } from "sonner";
 
 interface CampaignFormValues {
   name: string;
@@ -32,7 +33,6 @@ export function useEmailCampaignFormState(
 
       let query;
       
-      // Special handling for mentors
       if (contentType === 'mentors') {
         query = supabase
           .from('profiles')
@@ -59,14 +59,12 @@ export function useEmailCampaignFormState(
     if (!recipientType) return;
 
     if (recipientType === "selected") {
-      // Handle selected recipients - no need to load unless we use a query
       return;
     }
     
     const baseQuery = supabase.from("profiles").select("id, email, first_name, last_name, full_name, avatar_url, user_type");
     let query = baseQuery;
     
-    // Filter by user type
     if (recipientType === "mentees") {
       query = baseQuery.eq("user_type", "mentee");
     } else if (recipientType === "mentors") {
@@ -110,18 +108,38 @@ export function useEmailCampaignFormState(
   const scheduleCampaign = async (values: CampaignFormValues) => {
     setIsScheduling(true);
     try {
+      if (!values.subject.trim()) {
+        throw new Error("Subject is required");
+      }
+      if (!values.content_ids.length) {
+        throw new Error("Please select at least one content item");
+      }
+      if (values.recipient_type === "selected" && !values.recipient_ids.length) {
+        throw new Error("Please select at least one recipient");
+      }
+      if (!values.scheduled_for) {
+        throw new Error("Please select a scheduled date and time");
+      }
+
+      const recipientsCount = values.recipient_type === "selected" 
+        ? values.recipient_ids.length 
+        : recipients.length;
+
       const campaignData = {
         admin_id: adminId,
         subject: values.subject,
         content_type: values.content_type,
         recipient_type: values.recipient_type,
+        recipient_filter: values.recipient_type === "selected" 
+          ? { profile_ids: values.recipient_ids }
+          : null,
         recipient_ids: values.recipient_type === "selected" ? values.recipient_ids : [],
         content_ids: values.content_ids,
         content_id: values.content_ids[0],
         scheduled_for: values.scheduled_for?.toISOString(),
         sent_at: null,
         sent_count: 0,
-        recipients_count: recipients.length,
+        recipients_count: recipientsCount,
         failed_count: 0,
         status: "pending",
         frequency: values.frequency,
@@ -132,13 +150,14 @@ export function useEmailCampaignFormState(
         .insert(campaignData);
 
       if (error) {
-        console.error("Error scheduling campaign:", error);
-        alert("Could not schedule campaign. Please try again.");
-        return;
+        throw error;
       }
 
+      toast.success("Campaign scheduled successfully!");
       onCampaignCreated();
-      alert("Campaign scheduled successfully!");
+    } catch (error: any) {
+      console.error("Error scheduling campaign:", error);
+      toast.error(error.message || "Could not schedule campaign. Please try again.");
     } finally {
       setIsScheduling(false);
     }
