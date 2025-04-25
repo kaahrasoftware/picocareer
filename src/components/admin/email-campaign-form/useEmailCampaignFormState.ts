@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -10,7 +9,7 @@ type FormState = {
   subject: string;
   contentType: ContentType;
   contentIds: string[];
-  frequency: "once" | "daily" | "weekly" | "monthly";
+  frequency: "daily" | "weekly" | "monthly";
   scheduledFor: string;
   recipientType: RecipientType;
   recipientIds: string[];
@@ -25,8 +24,8 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
     subject: "",
     contentType: "blogs",
     contentIds: [],
-    frequency: "once",
-    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16), // Default to 1hr from now
+    frequency: "daily",
+    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
     recipientType: 'all',
     recipientIds: []
   });
@@ -39,7 +38,6 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
     setFormState(prev => ({ ...prev, ...updates }));
   };
 
-  // Load content based on content type
   useEffect(() => {
     let isMounted = true;
     async function loadContent() {
@@ -113,7 +111,7 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
 
         if (isMounted && data) {
           setContentList(data);
-          setFormState(prev => ({ ...prev, contentIds: [] })); // Reset selection on content type change
+          setFormState(prev => ({ ...prev, contentIds: [] }));
         }
       } catch (error) {
         console.error(`Error loading ${formState.contentType} content:`, error);
@@ -136,7 +134,6 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
     return () => { isMounted = false; }
   }, [formState.contentType, adminId]);
 
-  // Load recipients based on recipient type
   useEffect(() => {
     async function loadRecipients() {
       if (formState.recipientType !== 'selected') {
@@ -149,7 +146,6 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
           .from('profiles')
           .select('id, email, full_name');
 
-        // Use conditional checks instead of direct comparison
         if (formState.recipientType === 'mentees') {
           query = query.eq('user_type', 'mentee');
         } else if (formState.recipientType === 'mentors') {
