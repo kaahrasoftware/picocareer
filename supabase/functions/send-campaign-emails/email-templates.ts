@@ -1,5 +1,5 @@
 
-import { ContentItem } from "./types.ts";
+import { ContentItem, EmailContentTypeSettings } from "./types.ts";
 import { getContentTypeStyles } from "./styles.ts";
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
@@ -45,20 +45,75 @@ export function generateEmailContent(
   campaignId: string,
   contentItems: ContentItem[],
   contentType: string,
-  siteUrl: string
+  siteUrl: string,
+  templateSettings?: EmailContentTypeSettings | null
 ): string {
   const personalizedIntro = recipientName 
     ? `Hi ${recipientName.split(' ')[0]},` 
     : 'Hi there,';
   
-  const { cardStyles, headerStyles, contentTypeLabel } = getContentTypeStyles(contentType);
+  // Use template settings colors if available, otherwise fall back to default styles
+  let primaryColor = '#8B5CF6';
+  let secondaryColor = '#7C3AED';
+  let accentColor = '#6D28D9';
+  let headerStyle = 'centered';
+  let showAuthor = true;
+  let showDate = true;
+  let imagePosition = 'top';
+  
+  if (templateSettings) {
+    primaryColor = templateSettings.primary_color || primaryColor;
+    secondaryColor = templateSettings.secondary_color || secondaryColor;
+    accentColor = templateSettings.accent_color || accentColor;
+    
+    if (templateSettings.layout_settings) {
+      headerStyle = templateSettings.layout_settings.headerStyle || headerStyle;
+      showAuthor = templateSettings.layout_settings.showAuthor !== false;
+      showDate = templateSettings.layout_settings.showDate !== false;
+      imagePosition = templateSettings.layout_settings.imagePosition || imagePosition;
+    }
+  } else {
+    // Fall back to content type default styles if no template settings
+    const defaultStyles = getContentTypeStyles(contentType);
+    primaryColor = defaultStyles.accent;
+    accentColor = defaultStyles.accent;
+  }
+
+  const customStyles = {
+    card: `border-left: 4px solid ${accentColor};`,
+    title: `${contentType.charAt(0).toUpperCase()}${contentType.slice(1, -1)} Recommendations`,
+    headerBg: headerStyle === 'banner' ? `background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});` : '',
+    headerColor: headerStyle === 'banner' ? 'white' : primaryColor,
+    accentColor: accentColor
+  };
+  
+  const { cardStyles, contentTypeLabel } = getContentTypeStyles(contentType);
   
   const trackingParams = `utm_source=email&utm_medium=campaign&utm_campaign=${campaignId}`;
-  const contentCards = contentItems.map(item => generateContentCard(item, contentType, cardStyles, siteUrl, trackingParams)).join('');
+  
+  // Generate content cards with template settings
+  const contentCards = contentItems.map(item => 
+    generateContentCard(
+      item, 
+      contentType, 
+      customStyles, 
+      siteUrl, 
+      trackingParams, 
+      {
+        showAuthor,
+        showDate,
+        imagePosition,
+        accentColor
+      }
+    )
+  ).join('');
   
   const totalAmount = contentType === 'scholarships' 
     ? `<p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Total Available: ${calculateTotalAmount(contentItems)}</p>` 
     : '';
+
+  // Get logo URL from template settings if available  
+  const logoUrl = templateSettings?.logo_url || `${siteUrl}/logo.png`;
   
   return `
     <!DOCTYPE html>
@@ -83,8 +138,9 @@ export function generateEmailContent(
           background-color: #ffffff;
         }
         .header {
-          text-align: center;
+          text-align: ${headerStyle === 'centered' ? 'center' : 'left'};
           padding: 20px 0;
+          ${customStyles.headerBg}
         }
         .content {
           padding: 20px 0;
@@ -101,11 +157,12 @@ export function generateEmailContent(
           border-radius: 8px;
           overflow: hidden;
           box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          ${customStyles.card}
         }
         .button {
           display: inline-block;
           padding: 10px 20px;
-          background-color: #8B5CF6;
+          background-color: ${accentColor};
           color: white;
           text-decoration: none;
           border-radius: 5px;
@@ -113,15 +170,15 @@ export function generateEmailContent(
           margin-top: 10px;
         }
         .button:hover {
-          background-color: #7C3AED;
+          opacity: 0.9;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <img src="${siteUrl}/logo.png" alt="PicoCareer Logo" style="max-width: 150px;">
-          <h2 style="color: #8B5CF6; margin-top: 10px;">${headerStyles.title}</h2>
+          <img src="${logoUrl}" alt="PicoCareer Logo" style="max-width: 150px;">
+          <h2 style="color: ${customStyles.headerColor}; margin-top: 10px;">${customStyles.title}</h2>
         </div>
         
         <div class="content">
@@ -141,8 +198,8 @@ export function generateEmailContent(
           <p>You're receiving this email because you subscribed to PicoCareer updates.</p>
           <p>&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
           <p>
-            <a href="${siteUrl}/preferences?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Manage Preferences</a> | 
-            <a href="${siteUrl}/unsubscribe?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Unsubscribe</a>
+            <a href="${siteUrl}/preferences?${trackingParams}" style="color: ${accentColor}; text-decoration: none;">Manage Preferences</a> | 
+            <a href="${siteUrl}/unsubscribe?${trackingParams}" style="color: ${accentColor}; text-decoration: none;">Unsubscribe</a>
           </p>
         </div>
       </div>
@@ -156,7 +213,13 @@ function generateContentCard(
   contentType: string, 
   styles: any, 
   siteUrl: string,
-  trackingParams: string
+  trackingParams: string,
+  options: {
+    showAuthor: boolean,
+    showDate: boolean,
+    imagePosition: string,
+    accentColor: string
+  }
 ): string {
   const imageUrl = item.cover_image_url || item.image_url || `${siteUrl}/placeholder_${contentType}.jpg`;
   const title = item.title || '';
@@ -243,22 +306,42 @@ function generateContentCard(
       `;
       break;
   }
+
+  // Layout adjustments based on image position
+  const imageLayout = options.imagePosition === 'side' 
+    ? `display: flex; flex-direction: row;` 
+    : 'display: block;';
+  
+  const imageWidth = options.imagePosition === 'side' 
+    ? 'flex: 0 0 120px;' 
+    : (options.imagePosition === 'inline' ? 'width: 60%; margin: 0 auto;' : 'width: 100%;');
+  
+  const contentWidth = options.imagePosition === 'side' 
+    ? 'flex: 1; padding: 15px;'
+    : 'padding: 15px;';
   
   return `
-    <div class="card" style="${styles.card}">
-      <div style="display: flex; flex-direction: row;">
-        <div style="flex: 0 0 120px;">
-          <img 
-            src="${imageUrl}" 
-            alt="${title}" 
-            style="width: 120px; height: 120px; object-fit: cover;"
-          />
-        </div>
-        <div style="flex: 1; padding: 15px;">
+    <div class="card" style="margin-bottom: 24px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; ${styles.card}">
+      <div style="${imageLayout}">
+        ${options.imagePosition !== 'side' ? 
+          `<div style="${imageWidth}">
+            <img src="${imageUrl}" alt="${title}" style="width: 100%; height: auto; object-fit: cover;" />
+          </div>` : 
+          ''
+        }
+        
+        ${options.imagePosition === 'side' ? 
+          `<div style="${imageWidth}">
+            <img src="${imageUrl}" alt="${title}" style="width: 100%; height: 120px; object-fit: cover;" />
+          </div>` : 
+          ''
+        }
+        
+        <div style="${contentWidth}">
           <h3 style="margin: 0 0 10px; color: #4A5568;">${title}</h3>
           ${metaInfo}
           <p style="margin: 5px 0 15px; color: #4A5568;">${description}</p>
-          <a href="${detailUrl}" style="color: #8B5CF6; font-weight: bold; text-decoration: none;">
+          <a href="${detailUrl}" style="color: ${options.accentColor}; font-weight: bold; text-decoration: none;">
             View Details →
           </a>
         </div>

@@ -1,187 +1,157 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
+import { useQuery } from "@tanstack/react-query";
+import { ContentType } from "./utils";
+import type { Campaign } from "@/types/database/email";
 
-type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
-
-type FormState = {
+interface CampaignFormValues {
+  name: string;
   subject: string;
-  contentType: ContentType;
-  contentIds: string[];
-  frequency: "daily" | "weekly" | "monthly";
-  scheduledFor: string;
-  recipientType: RecipientType;
-  recipientIds: string[];
-};
-
-interface UseEmailCampaignFormStateProps {
-  adminId: string;
+  content_type: ContentType;
+  recipient_type: "all" | "mentees" | "mentors" | "selected";
+  recipient_ids: string[];
+  content_ids: string[];
+  scheduled_for: Date | null;
+  frequency: "once" | "daily" | "weekly" | "monthly";
 }
 
-export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormStateProps) => {
-  const [formState, setFormState] = useState<FormState>({
-    subject: "",
-    contentType: "blogs",
-    contentIds: [],
-    frequency: "daily",
-    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
-    recipientType: 'all',
-    recipientIds: []
+export function useEmailCampaignFormState(adminId: string, onCampaignCreated: () => void) {
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [recipients, setRecipients] = useState<{ id: string; email: string; full_name: string }[]>([]);
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
+
+  const form = useForm<CampaignFormValues>({
+    defaultValues: {
+      name: "",
+      subject: "",
+      content_type: "scholarships",
+      recipient_type: "all",
+      recipient_ids: [],
+      content_ids: [],
+      scheduled_for: null,
+      frequency: "once",
+    },
   });
-  
-  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
-  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const updateFormState = (updates: Partial<FormState>) => {
-    setFormState(prev => ({ ...prev, ...updates }));
-  };
+  const { watch, setValue, reset } = form;
 
-  useEffect(() => {
-    let isMounted = true;
-    async function loadContent() {
-      setIsLoading(true);
-      
-      try {
-        let data;
-        
-        switch (formState.contentType) {
-          case "scholarships":
-            ({ data } = await supabase
-              .from("scholarships")
-              .select("id, title")
-              .eq("status", "Active"));
-            break;
-            
-          case "opportunities":
-            ({ data } = await supabase
-              .from("opportunities")
-              .select("id, title")
-              .eq("status", "Active"));
-            break;
-            
-          case "careers":
-            ({ data } = await supabase
-              .from("careers")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          case "majors":
-            ({ data } = await supabase
-              .from("majors")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          case "schools":
-            const { data: schools } = await supabase
-              .from("schools")
-              .select("id, name")
-              .eq("status", "Approved");
-            data = schools?.map(school => ({
-              id: school.id,
-              title: school.name
-            }));
-            break;
-            
-          case "mentors":
-            const { data: mentors } = await supabase
-              .from("profiles")
-              .select("id, full_name")
-              .eq("user_type", "mentor")
-              .eq("onboarding_status", "Approved");
-            data = mentors?.map(mentor => ({
-              id: mentor.id,
-              title: mentor.full_name || 'Unknown Mentor'
-            }));
-            break;
-            
-          case "blogs":
-            ({ data } = await supabase
-              .from("blogs")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          default:
-            data = [];
-        }
+  const loadRecipients = useCallback(async () => {
+    if (!form.recipient_type) return;
 
-        if (isMounted && data) {
-          setContentList(data);
-          setFormState(prev => ({ ...prev, contentIds: [] }));
-        }
-      } catch (error) {
-        console.error(`Error loading ${formState.contentType} content:`, error);
-        toast({
-          title: "Error Loading Content",
-          description: `Failed to load ${CONTENT_TYPE_LABELS[formState.contentType]}. Please try again.`,
-          variant: "destructive"
-        });
-        if (isMounted) {
-          setContentList([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+    if (form.recipient_type === "selected") {
+      // Handle selected recipients - no need to load unless we use a query
+      return;
     }
     
-    loadContent();
-    return () => { isMounted = false; }
-  }, [formState.contentType, adminId]);
-
-  useEffect(() => {
-    async function loadRecipients() {
-      if (formState.recipientType !== 'selected') {
-        setRecipientsList([]);
-        return;
-      }
-      
-      try {
-        let query = supabase
-          .from('profiles')
-          .select('id, email, full_name');
-
-        if (formState.recipientType === 'mentees') {
-          query = query.eq('user_type', 'mentee');
-        } else if (formState.recipientType === 'mentors') {
-          query = query.eq('user_type', 'mentor');
-        }
-
-        const { data, error } = await query;
-        
-        if (error) throw error;
-        setRecipientsList(data || []);
-      } catch (error) {
-        console.error('Error loading recipients:', error);
-        toast({ 
-          title: "Error Loading Recipients", 
-          description: error instanceof Error ? error.message : "Unknown error occurred",
-          variant: "destructive" 
-        });
-        setRecipientsList([]);
-      }
+    const baseQuery = supabase.from("profiles").select("id, email, first_name, last_name, full_name, avatar_url, user_type");
+    let query = baseQuery;
+    
+    // Filter by user type
+    if (form.recipient_type === "mentees") {
+      query = baseQuery.eq("user_type", "mentee");
+    } else if (form.recipient_type === "mentors") {
+      query = baseQuery.eq("user_type", "mentor");
     }
 
-    loadRecipients();
-  }, [formState.recipientType]);
+    const { data, error } = await query;
 
-  const hasRequiredFields = 
-    formState.subject?.trim() !== "" && 
-    formState.contentIds.length > 0 && 
-    formState.scheduledFor && 
-    (formState.recipientType !== 'selected' || formState.recipientIds.length > 0);
+    if (error) {
+      console.error("Error fetching recipients:", error);
+      return;
+    }
+
+    if (data) {
+      setRecipients(
+        data.map((profile) => ({
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+        }))
+      );
+    }
+  }, [form.recipient_type]);
+
+  const { data: contentList, isLoading: loadingContent } = useQuery({
+    queryKey: ["content-list", watch("content_type")],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(watch("content_type"))
+        .select("id, title");
+
+      if (error) {
+        console.error("Error fetching content:", error);
+        return [];
+      }
+      return data || [];
+    },
+  });
+
+  const handleRecipientTypeChange = useCallback(
+    (type: "all" | "mentees" | "mentors" | "selected") => {
+      setValue("recipient_type", type);
+      setSelectedRecipientIds([]); // Clear selected IDs when recipient type changes
+    },
+    [setValue]
+  );
+
+  const handleContentSelectionChange = (contentIds: string[]) => {
+    setValue("content_ids", contentIds);
+  };
+
+  const handleSelectedRecipientsChange = (ids: string[]) => {
+    setSelectedRecipientIds(ids);
+    setValue("recipient_ids", ids);
+  };
+
+  const scheduleCampaign = async (values: CampaignFormValues) => {
+    setIsScheduling(true);
+    try {
+      const campaignData: Omit<Campaign, "id" | "created_at" | "updated_at"> = {
+        admin_id: adminId,
+        name: values.name,
+        subject: values.subject,
+        content_type: values.content_type,
+        recipient_type: values.recipient_type,
+        recipient_ids: values.recipient_type === "selected" ? selectedRecipientIds : [],
+        content_ids: values.content_ids,
+        scheduled_for: values.scheduled_for?.toISOString() || null,
+        sent_at: null,
+        sent_count: 0,
+        recipients_count: recipients.length,
+        failed_count: 0,
+        last_error: null,
+        last_checked_at: null,
+        frequency: values.frequency,
+      };
+
+      const { data, error } = await supabase.from("email_campaigns").insert([campaignData]);
+
+      if (error) {
+        console.error("Error scheduling campaign:", error);
+        alert("Could not schedule campaign. Please try again.");
+        return;
+      }
+
+      reset();
+      onCampaignCreated();
+      alert("Campaign scheduled successfully!");
+    } finally {
+      setIsScheduling(false);
+    }
+  };
 
   return {
-    formState,
+    form,
     contentList,
-    updateFormState,
-    isLoading,
-    hasRequiredFields,
-    recipientsList
+    recipients,
+    selectedRecipientIds,
+    isScheduling,
+    loadingContent,
+    handleRecipientTypeChange,
+    handleContentSelectionChange,
+    handleSelectedRecipientsChange,
+    scheduleCampaign,
+    loadRecipients
   };
-};
+}

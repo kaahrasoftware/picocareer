@@ -1,26 +1,29 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { ContentType } from "../email-campaign-form/utils";
 import type { EmailTemplateContent } from "@/types/database/email";
 
 interface ContentEditorTabProps {
   adminId: string;
-  contentType: string;
+  contentType: ContentType;
   onContentUpdate: () => void;
 }
 
 export function ContentEditorTab({ adminId, contentType, onContentUpdate }: ContentEditorTabProps) {
-  const { register, handleSubmit, reset } = useForm<Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: content, isLoading, isError } = useQuery({
+  // Fetch existing content
+  const { data: templateContent, isLoading } = useQuery({
     queryKey: ['email-template-content', contentType, adminId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,106 +36,130 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
       if (error && error.code !== 'PGRST116') throw error;
       return data as EmailTemplateContent;
     },
-    initialData: undefined,
-    onSettled: (data) => {
-      if (data) {
-        reset({
-          header_text: data.header_text,
-          intro_text: data.intro_text,
-          cta_text: data.cta_text,
-          footer_text: data.footer_text,
-        });
+    meta: {
+      onError: (error) => {
+        console.error('Error fetching template content:', error);
       }
     }
   });
 
-  const onSubmit = async (formData: Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>) => {
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<EmailTemplateContent>({
+    defaultValues: {
+      content_type: contentType,
+      admin_id: adminId,
+      header_text: '',
+      intro_text: '',
+      cta_text: '',
+      footer_text: ''
+    }
+  });
+
+  // Update form with fetched data
+  React.useEffect(() => {
+    if (templateContent) {
+      reset({
+        content_type: templateContent.content_type,
+        admin_id: templateContent.admin_id,
+        header_text: templateContent.header_text || '',
+        intro_text: templateContent.intro_text || '',
+        cta_text: templateContent.cta_text || '',
+        footer_text: templateContent.footer_text || ''
+      });
+    }
+  }, [templateContent, reset]);
+
+  // Save content
+  const saveContent = async (data: Partial<EmailTemplateContent>) => {
+    setIsSubmitting(true);
     try {
+      const payload = {
+        ...data,
+        content_type: contentType,
+        admin_id: adminId
+      };
+
+      // Upsert content (create if not exists, update if exists)
       const { error } = await supabase
         .from('email_template_content')
-        .upsert({
-          content_type: contentType,
-          admin_id: adminId,
-          ...formData
-        }, {
-          onConflict: 'content_type,admin_id'
+        .upsert(payload, { 
+          onConflict: 'admin_id,content_type',
+          ignoreDuplicates: false 
         });
 
       if (error) throw error;
       
-      toast.success("Template content updated successfully");
-      onContentUpdate();
+      toast.success('Template content saved successfully');
+      onContentUpdate(); // Notify parent to refresh preview
     } catch (error) {
       console.error('Error saving template content:', error);
-      toast.error("Failed to save template content");
+      toast.error('Failed to save template content');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (isError) {
-    return (
-      <div className="p-4 text-center text-red-500">
-        Failed to load template content. Please try again.
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-6">
+      <div className="flex justify-center p-4">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-4">
+    <Card className="p-4">
+      <form onSubmit={handleSubmit(saveContent)} className="space-y-4">
         <div>
           <Label htmlFor="header_text">Header Text</Label>
           <Input
             id="header_text"
             {...register('header_text')}
-            placeholder="Enter header text"
-            defaultValue={content?.header_text || ''}
+            placeholder="e.g., Latest Blog Posts"
           />
         </div>
-
+        
         <div>
           <Label htmlFor="intro_text">Introduction Text</Label>
           <Textarea
             id="intro_text"
             {...register('intro_text')}
-            placeholder="Enter introduction text"
+            placeholder="Brief introduction to the email content"
             rows={4}
-            defaultValue={content?.intro_text || ''}
           />
         </div>
-
+        
         <div>
           <Label htmlFor="cta_text">Call to Action Text</Label>
           <Input
             id="cta_text"
             {...register('cta_text')}
-            placeholder="Enter call to action text"
-            defaultValue={content?.cta_text || ''}
+            placeholder="e.g., Read More"
           />
         </div>
-
+        
         <div>
           <Label htmlFor="footer_text">Footer Text</Label>
           <Textarea
             id="footer_text"
             {...register('footer_text')}
-            placeholder="Enter footer text"
+            placeholder="Additional information or disclaimer text"
             rows={3}
-            defaultValue={content?.footer_text || ''}
           />
         </div>
-      </div>
 
-      <Button type="submit" className="w-full">
-        Save Content
-      </Button>
-    </form>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : "Save Content"}
+        </Button>
+      </form>
+    </Card>
   );
 }

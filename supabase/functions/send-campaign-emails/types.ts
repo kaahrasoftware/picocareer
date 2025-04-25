@@ -16,6 +16,7 @@ export interface ContentItem {
   remote?: boolean;
   skills?: string[];
   avatar_url?: string; // For mentor profiles
+  created_at?: string;
   [key: string]: any; // Allow other properties
 }
 
@@ -50,4 +51,30 @@ export interface Campaign {
   updated_at: string;
   last_error?: string;
   last_checked_at?: string;
+}
+
+export interface EmailContentTypeSettings {
+  id: string;
+  admin_id: string;
+  content_type: string;
+  logo_url?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  layout_settings?: {
+    headerStyle: 'centered' | 'banner' | 'minimal';
+    showAuthor: boolean;  
+    showDate: boolean;
+    imagePosition: 'top' | 'inline' | 'side';
+    contentBlocks: string[];
+    metadataDisplay: string[];
+  };
+  content?: {
+    header_text?: string;
+    intro_text?: string;
+    cta_text?: string;
+    footer_text?: string;
+  };
+  created_at?: string;
+  updated_at?: string;
 }
