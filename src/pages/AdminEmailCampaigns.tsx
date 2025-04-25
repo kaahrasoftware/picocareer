@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EmailCampaignForm } from "@/components/admin/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -7,6 +7,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { Navigate } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmailTemplateSettingsTab } from "@/components/admin/EmailCampaignForm";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
@@ -23,7 +24,7 @@ export default function AdminEmailCampaigns() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="templates">Template Settings</TabsTrigger>
+          <TabsTrigger value="template-settings">Template Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="campaigns">
@@ -47,8 +48,8 @@ export default function AdminEmailCampaigns() {
           </div>
         </TabsContent>
 
-        <TabsContent value="templates">
-          <TemplateSettingsTab />
+        <TabsContent value="template-settings">
+          <EmailTemplateSettingsTab adminId={profile.id} />
         </TabsContent>
       </Tabs>
     </div>

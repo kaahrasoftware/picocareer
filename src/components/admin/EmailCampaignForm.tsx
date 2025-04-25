@@ -1,135 +1,124 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
+import React, { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import { ColorPicker } from "@/components/hub/management/sections/branding/ColorPicker";
+import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ContentTypeSelector } from "./email-campaign-form/ContentTypeSelector";
-import { ContentSelect } from "./email-campaign-form/ContentSelect";
-import { FrequencySelector } from "./email-campaign-form/FrequencySelector";
-import { ScheduleDateTimeInput } from "./email-campaign-form/ScheduleDateTimeInput";
-import { EmailPreview } from "./email-campaign-form/EmailPreview";
-import { RecipientTypeSelector } from "./email-campaign-form/RecipientTypeSelector";
-import { RecipientSelection } from "./email-campaign-form/RecipientSelection";
-import { CONTENT_TYPE_LABELS, ContentType } from "./email-campaign-form/utils";
-import { getRandomIndexes } from "./email-campaign-form/helpers";
-import { useEmailCampaignFormState } from "./email-campaign-form/useEmailCampaignFormState";
-import { handleEmailCampaignFormSubmit } from "./email-campaign-form/useEmailCampaignFormSubmit";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ColorPreview } from "@/components/hub/management/sections/branding/ColorPreview";
 
-type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
+interface EmailTemplateSettingsFormData {
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+}
 
-export function EmailCampaignForm({ 
-  adminId, 
-  onCampaignCreated 
-}: { 
-  adminId: string, 
-  onCampaignCreated?: () => void 
-}) {
-  const [contentType, setContentType] = useState<ContentType>("scholarships");
-  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
-  const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
-  const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
-  const [scheduledFor, setScheduledFor] = useState<string>(""); 
-  const [loadingContent, setLoadingContent] = useState(false);
+export function EmailTemplateSettingsTab({ adminId }: { adminId: string }) {
   const [submitting, setSubmitting] = useState(false);
-  const [randomSelect, setRandomSelect] = useState(false);
-  const [randomCount, setRandomCount] = useState(1);
-  const [recipientType, setRecipientType] = useState<RecipientType>('all');
-  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
-
-  useEmailCampaignFormState({
-    contentType, randomSelect, randomCount,
-    setContentList, setSelectedContentIds, setLoadingContent,
-    setRecipientsList, recipientType
+  const form = useForm<EmailTemplateSettingsFormData>({
+    defaultValues: {
+      logo_url: "",
+      primary_color: "#9b87f5",
+      secondary_color: "#7E69AB", 
+      accent_color: "#8B5CF6"
+    }
   });
 
-  useEffect(() => {
-    if (randomSelect && contentList.length > 0 && typeof getRandomIndexes === 'function') {
-      const count = Math.min(randomCount, contentList.length);
-      const randomIndexes = getRandomIndexes(contentList.length, count);
-      setSelectedContentIds(randomIndexes.map(idx => contentList[idx].id));
-    }
-  }, [randomSelect, contentList, randomCount]);
+  const { watch } = form;
+  const primaryColor = watch("primary_color");
+  const secondaryColor = watch("secondary_color");
+  const accentColor = watch("accent_color");
 
-  async function handleSubmit(e: React.FormEvent) {
-    await handleEmailCampaignFormSubmit({
-      e, adminId, contentList, selectedContentIds, frequency, scheduledFor,
-      contentType, recipientType, selectedRecipients, onCampaignCreated,
-      setSubmitting, setSelectedContentIds, setSelectedRecipients
-    });
-  }
+  const onSubmit = async (data: EmailTemplateSettingsFormData) => {
+    setSubmitting(true);
+    try {
+      // Upsert template settings
+      const { error } = await supabase
+        .from('email_template_settings')
+        .upsert({
+          admin_id: adminId,
+          logo_url: data.logo_url,
+          primary_color: data.primary_color,
+          secondary_color: data.secondary_color,
+          accent_color: data.accent_color
+        }, { 
+          onConflict: 'admin_id' 
+        });
+
+      if (error) throw error;
+
+      toast.success("Email Template Settings Updated");
+    } catch (error) {
+      console.error("Error saving template settings:", error);
+      toast.error("Failed to save template settings");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden bg-white/50 backdrop-blur-sm border border-gray-100 shadow-sm">
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="grid gap-6">
-          <ContentTypeSelector 
-            contentType={contentType} 
-            setContentType={(v) => { 
-              setContentType(v); 
-              setRandomSelect(false); 
-              setRandomCount(1); 
-            }} 
-          />
+    <Card className="p-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Email Template Design</h3>
+          <div className="space-y-6">
+            <ImageUpload
+              control={form.control}
+              name="logo_url"
+              label="Company Logo"
+              description="Upload your company logo (recommended size: 150x40px)"
+              bucket="email-assets"
+              folderPath="logos"
+            />
 
-          <ContentSelect 
-            contentList={contentList}
-            selectedContentIds={selectedContentIds}
-            setSelectedContentIds={setSelectedContentIds}
-            loadingContent={loadingContent}
-            randomSelect={randomSelect}
-            setRandomSelect={setRandomSelect}
-            randomCount={randomCount}
-            setRandomCount={setRandomCount}
-            contentType={contentType}
-          />
+            <div className="grid gap-6 pt-2">
+              <ColorPicker
+                value={primaryColor}
+                onChange={(value) => form.setValue("primary_color", value)}
+                label="Primary Color"
+                description="Main brand color used in headers and buttons"
+              />
+              
+              <ColorPicker
+                value={secondaryColor}
+                onChange={(value) => form.setValue("secondary_color", value)}
+                label="Secondary Color"
+                description="Used for gradients and backgrounds"
+              />
+              
+              <ColorPicker
+                value={accentColor}
+                onChange={(value) => form.setValue("accent_color", value)}
+                label="Accent Color"
+                description="Used for links and call-to-action buttons"
+              />
+            </div>
 
-          <FrequencySelector frequency={frequency} setFrequency={setFrequency} />
-
-          <ScheduleDateTimeInput scheduledFor={scheduledFor} setScheduledFor={setScheduledFor} />
-
-          <div className="border rounded-lg p-4 bg-white/80">
-            <EmailPreview 
-              selectedContentIds={selectedContentIds} 
-              contentList={contentList} 
-              contentType={contentType} 
+            <ColorPreview
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              accentColor={accentColor}
             />
           </div>
+        </div>
 
-          <RecipientTypeSelector recipientType={recipientType} setRecipientType={setRecipientType} />
-            
-          {recipientType === 'selected' && (
-            <RecipientSelection 
-              recipientsList={recipientsList}
-              selectedRecipients={selectedRecipients}
-              setSelectedRecipients={setSelectedRecipients}
-            />
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-200"
-            disabled={submitting || selectedContentIds.length === 0}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                Creating...
-              </>
-            ) : "Create Campaign"}
-          </Button>
-        </form>
-      </CardContent>
+        <Button 
+          type="submit" 
+          disabled={submitting}
+          className="w-full"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : "Save Template Settings"}
+        </Button>
+      </form>
     </Card>
   );
 }
