@@ -1,4 +1,6 @@
 
+import { getContentTypeStyles } from "../email-templates/styles";
+
 export function generateContentHeader(
   contentType: string,
   totalAmount?: string,
