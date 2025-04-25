@@ -149,13 +149,11 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
           .from('profiles')
           .select('id, email, full_name');
 
-        switch (formState.recipientType) {
-          case 'mentees':
-            query = query.eq('user_type', 'mentee');
-            break;
-          case 'mentors':
-            query = query.eq('user_type', 'mentor');
-            break;
+        // Use conditional checks instead of direct comparison
+        if (formState.recipientType === 'mentees') {
+          query = query.eq('user_type', 'mentee');
+        } else if (formState.recipientType === 'mentors') {
+          query = query.eq('user_type', 'mentor');
         }
 
         const { data, error } = await query;

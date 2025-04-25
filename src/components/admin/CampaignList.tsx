@@ -26,7 +26,6 @@ export function CampaignList({ adminId }: CampaignListProps) {
         .select(`
           id, 
           subject, 
-          name,
           content_type, 
           content_id, 
           content_ids,
@@ -53,7 +52,9 @@ export function CampaignList({ adminId }: CampaignListProps) {
       // Ensure we have all required fields for the Campaign type
       const typedCampaigns: Campaign[] = (data || []).map(item => ({
         ...item,
-        name: item.name || item.subject || "Unnamed Campaign",
+        // Use subject as name since name field doesn't exist in database
+        name: item.subject || "Unnamed Campaign",
+        subject: item.subject || "Unnamed Campaign",
         status: (item.status as Campaign['status']) || "draft",
         sent_count: item.sent_count || 0,
         recipients_count: item.recipients_count || 0,

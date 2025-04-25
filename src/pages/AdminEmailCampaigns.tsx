@@ -5,7 +5,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { Navigate } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmailCampaignForm } from "@/components/admin/EmailCampaignForm";
+import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
 
 export default function AdminEmailCampaigns() {

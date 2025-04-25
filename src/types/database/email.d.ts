@@ -32,7 +32,7 @@ export interface EmailContentTypeSettings {
 export interface Campaign {
   id: string;
   admin_id: string;
-  name: string;
+  name?: string; // Making name optional since it doesn't exist in the database
   subject: string;
   content_type: 'blog' | 'event' | 'news' | 'update' | 'promotion' | 'scholarships' | 'opportunities' | 'careers' | 'majors' | 'schools' | 'mentors' | 'blogs';
   status: 'draft' | 'scheduled' | 'sent' | 'failed' | 'sending' | 'pending' | 'partial';
