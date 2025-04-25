@@ -1,11 +1,15 @@
-
 import React from "react";
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { CONTENT_TYPE_LABELS, ContentType } from "../email-campaign-form/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { EmailTemplateContent } from "@/types/database/email";
 
 interface EmailTemplatePreviewProps {
   contentType: ContentType;
+  adminId: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -21,11 +25,27 @@ interface EmailTemplatePreviewProps {
 
 export function EmailTemplatePreview({
   contentType,
+  adminId,
   primaryColor,
   secondaryColor,
   accentColor,
   layoutSettings
 }: EmailTemplatePreviewProps) {
+  const { data: templateContent, isLoading: loadingContent } = useQuery({
+    queryKey: ['email-template-content', contentType, adminId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_template_content')
+        .select('*')
+        .eq('content_type', contentType)
+        .eq('admin_id', adminId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as EmailTemplateContent;
+    }
+  });
+
   const defaultSettings = {
     headerStyle: 'centered' as const,
     showAuthor: true,
@@ -41,6 +61,16 @@ export function EmailTemplatePreview({
   const sampleContent = useMemo(() => {
     return generateSampleContent(contentType);
   }, [contentType]);
+
+  if (loadingContent) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 p-4 rounded-md border">
@@ -59,66 +89,40 @@ export function EmailTemplatePreview({
           }}
         >
           <h2 className="text-xl font-bold" style={{ color: settings.headerStyle === 'banner' ? 'white' : primaryColor }}>
-            {CONTENT_TYPE_LABELS[contentType]}
+            {templateContent?.header_text || CONTENT_TYPE_LABELS[contentType]}
           </h2>
           {settings.headerStyle === 'minimal' && <div className="h-1 w-20 mt-2" style={{ backgroundColor: accentColor }}></div>}
         </div>
         
         {/* Email Content */}
         <div className="p-4">
-          {/* Content rendering based on layout settings */}
-          {settings.contentBlocks?.includes('title') && (
-            <h3 className="text-lg font-bold mb-2">{sampleContent.title}</h3>
+          {/* Intro Text */}
+          {templateContent?.intro_text && (
+            <p className="text-gray-700 text-sm mb-4">
+              {templateContent.intro_text}
+            </p>
           )}
-          
-          {settings.showAuthor && settings.metadataDisplay?.includes('author') && (
-            <div className="text-sm text-gray-600 mb-2">
-              By {sampleContent.author}
-            </div>
-          )}
-          
-          {settings.showDate && settings.metadataDisplay?.includes('date') && (
-            <div className="text-sm text-gray-600 mb-3">
-              {sampleContent.date}
-            </div>
-          )}
-          
-          {settings.contentBlocks?.includes('image') && (
-            <div className={`mb-4 ${getImageContainerClass(settings.imagePosition)}`}>
-              <div 
-                className={`bg-gray-200 rounded ${getImageSizeClass(settings.imagePosition)}`}
-                style={{ 
-                  height: settings.imagePosition === 'side' ? '80px' : '120px'
-                }}
-              >
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  [Image]
-                </div>
-              </div>
-              
-              {settings.imagePosition === 'side' && (
-                <div className="flex-1 pl-4">
-                  {settings.contentBlocks?.includes('description') && (
-                    <p className="text-sm text-gray-700">{sampleContent.description}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-          
-          {settings.imagePosition !== 'side' && settings.contentBlocks?.includes('description') && (
-            <p className="text-sm text-gray-700 mb-4">{sampleContent.description}</p>
-          )}
-          
-          {settings.contentBlocks?.includes('cta') && (
-            <div className="mt-4">
+
+          {/* Sample Content Card */}
+          <div className="border rounded-lg p-4 mb-4">
+            <h3 className="font-medium text-lg mb-2">{sampleContent.title}</h3>
+            <p className="text-gray-600 text-sm">{sampleContent.description}</p>
+            
+            {settings.contentBlocks?.includes('cta') && templateContent?.cta_text && (
               <button
-                className="px-4 py-2 rounded text-white text-sm"
+                className="mt-4 px-4 py-2 rounded text-white text-sm"
                 style={{ backgroundColor: accentColor }}
               >
-                Read More
+                {templateContent.cta_text}
               </button>
-            </div>
+            )}
+          </div>
+
+          {/* Footer Text */}
+          {templateContent?.footer_text && (
+            <p className="text-gray-500 text-sm text-center mt-6">
+              {templateContent.footer_text}
+            </p>
           )}
         </div>
         
