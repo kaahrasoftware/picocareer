@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
 import { ContentTypeSelector } from './ContentTypeSelector';
@@ -26,6 +27,8 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const [scheduledFor, setScheduledFor] = useState('');
   const [recipientType, setRecipientType] = useState<'all' | 'mentees' | 'mentors' | 'selected'>('all');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
+  const [randomSelect, setRandomSelect] = useState(false);
+  const [randomCount, setRandomCount] = useState(3);
   
   const { 
     contentList, 
