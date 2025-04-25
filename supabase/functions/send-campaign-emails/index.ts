@@ -146,13 +146,12 @@ async function fetchContentDetails(supabase: any, contentType: string, contentId
 
 async function processBatchSending(
   recipients: { id: string; email: string; full_name?: string }[],
-  emailSubject: string,
-  emailContent: string,
-  campaignId: string,
+  contentList: ContentItem[],
+  campaign: any,
   batchSize: number,
+  siteUrl: string,
   supabaseClient: any
 ): Promise<{ sent: number, failed: number, errors: any[] }> {
-  
   let sentCount = 0;
   let failedCount = 0;
   const errors = [];
@@ -167,6 +166,19 @@ async function processBatchSending(
         if (!recipient.email || !recipient.email.includes('@')) {
           throw new Error(`Invalid email format: ${recipient.email}`);
         }
+        
+        const recipientName = recipient.full_name?.split(' ')[0] || '';
+        const emailSubject = campaign.subject || getEmailSubject(campaign.content_type, recipientName);
+        
+        const emailContent = generateEmailContent(
+          emailSubject,
+          campaign.body || `Check out these featured ${campaign.content_type}!`,
+          recipientName,
+          campaign.id,
+          contentList,
+          campaign.content_type,
+          siteUrl
+        );
         
         const res = await resend.emails.send({
           from: "PicoCareer <info@picocareer.com>",
@@ -413,37 +425,15 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const siteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://picocareer.com';
-    const emailSubject = campaign.subject || getEmailSubject(campaign.content_type);
-
-    console.log("Generating email content with:", {
-      title: emailSubject,
-      body: campaign.body || `Check out these featured ${campaign.content_type}!`,
-      contentList,
-      contentType: campaign.content_type
-    });
-
-    const emailContent = generateEmailContent(
-      emailSubject,
-      campaign.body || `Check out these featured ${campaign.content_type}!`,
-      "Valued Member",
-      campaign.id,
-      contentList,
-      campaign.content_type,
-      siteUrl
-    );
-
-    console.log("Generated email HTML length:", emailContent.length);
-    // Uncomment for detailed debugging:
-    // console.log("Generated email HTML first 500 chars:", emailContent.substring(0, 500));
-
+    
     const startTime = Date.now();
     
     const { sent, failed, errors } = await processBatchSending(
       recipients, 
-      emailSubject, 
-      emailContent, 
-      campaign.id,
+      contentList,
+      campaign,
       batchSize,
+      siteUrl,
       supabaseClient
     );
 
