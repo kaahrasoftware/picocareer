@@ -1,30 +1,6 @@
 
-// Import types and helper functions
-import type { ContentItem } from "../../../src/types/database/email";
+import { ContentItem } from "../../../src/types/database/email";
 import { getContentTypeStyles } from "./styles";
-
-export function getEmailSubject(contentType: string, firstName: string = ''): string {
-  const nameSection = firstName ? `${firstName}, ` : '';
-  
-  switch (contentType) {
-    case 'scholarships':
-      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities!`;
-    case 'opportunities':
-      return `🚀 Exclusive Career Opportunities Selected for You${nameSection}`;
-    case 'careers':
-      return `💼 Discover Your Next Career Move${nameSection}`;
-    case 'majors':
-      return `📚 Explore These Academic Paths${nameSection}`;
-    case 'schools':
-      return `🏛️ Top Educational Institutions${nameSection}`;
-    case 'mentors':
-      return `👋 Meet Your Potential Mentors${nameSection}`;
-    case 'blogs':
-      return `📖 Fresh Insights Curated for You${nameSection}`;
-    default:
-      return `New Content Updates${nameSection}`;
-  }
-}
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
   const total = contentItems.reduce((sum, item) => {
@@ -39,11 +15,10 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
   
   const styles = getContentTypeStyles(contentType);
   const contentUrl = `${siteUrl}/${contentType}/${content.id}`;
-  
   const description = content.description?.slice(0, 300) + (content.description?.length > 300 ? '...' : '');
-  
+
   return `
-    <div style="margin-bottom: 32px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
       <div style="padding: 24px;">
         ${content.cover_image_url ? `
           <img 
@@ -53,7 +28,7 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
           />
         ` : ''}
         
-        <h2 style="margin: 0 0 16px 0; font-size: 24px; color: ${styles.accent}; font-weight: 600;">
+        <h2 style="margin: 0 0 16px 0; font-size: 24px; color: ${styles.accent};">
           ${content.title}
         </h2>
 
@@ -93,7 +68,7 @@ export function formatContentCard(content: ContentItem, contentType: string, sit
         <div style="margin-top: 24px;">
           <a 
             href="${contentUrl}" 
-            style="display: inline-block; ${styles.gradient}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 16px; transition: opacity 0.2s ease;"
+            style="display: inline-block; ${styles.gradient}; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 500; text-align: center;"
           >
             Apply Now →
           </a>
@@ -122,7 +97,7 @@ export function generateEmailContent(
   if (contentItems && contentItems.length > 0) {
     contentCardsHtml = contentItems.map(item => formatContentCard(item, contentType, siteUrl)).join('');
   } else {
-    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
+    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No content available at this time.</p>';
   }
 
   return `
@@ -145,7 +120,7 @@ export function generateEmailContent(
       <div class="container" style="max-width: 600px; margin: 0 auto; padding: 24px;">
         <div class="header" style="${styles.gradient}; color: white; padding: 32px; border-radius: 16px; margin-bottom: 32px; text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">${styles.icon}</div>
-          <h1 style="margin: 0; font-size: 32px; font-weight: 700;">Exclusive Scholarship Opportunities</h1>
+          <h1 style="margin: 0; font-size: 32px; font-weight: 700;">${title}</h1>
           ${totalAmount !== '$0' ? `
             <p style="margin: 16px 0 0 0; font-size: 20px;">
               Worth ${totalAmount} in Total Funding
@@ -156,7 +131,7 @@ export function generateEmailContent(
         <div class="content" style="background-color: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
           <p style="margin-top: 0; margin-bottom: 24px; color: #374151; font-size: 18px; line-height: 1.5;">
             Hi ${firstName},<br><br>
-            We've found some exciting scholarship opportunities that match your profile! These scholarships could help fund your education and bring you closer to achieving your academic goals.
+            We've found some exciting opportunities that match your profile! Take a look at these carefully selected items that could help you achieve your goals.
           </p>
           
           <div style="margin: 32px 0;">
@@ -167,7 +142,7 @@ export function generateEmailContent(
         <div style="background-color: #f3f4f6; padding: 24px; border-radius: 12px; margin-top: 32px; text-align: center;">
           <p style="margin: 0; color: #4b5563; font-size: 16px;">
             Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: 600;">PicoCareer</a> 
-            to discover more scholarship opportunities tailored to your interests.
+            to discover more opportunities tailored to your interests.
           </p>
         </div>
         
@@ -181,4 +156,27 @@ export function generateEmailContent(
     </body>
     </html>
   `;
+}
+
+export function getEmailSubject(contentType: string, firstName: string = ''): string {
+  const nameSection = firstName ? `${firstName}, ` : '';
+  
+  switch (contentType) {
+    case 'scholarships':
+      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities!`;
+    case 'opportunities':
+      return `🚀 ${nameSection}Exclusive Career Opportunities Selected for You`;
+    case 'careers':
+      return `💼 ${nameSection}Discover Your Next Career Move`;
+    case 'majors':
+      return `📚 ${nameSection}Explore These Academic Paths`;
+    case 'schools':
+      return `🏛️ ${nameSection}Top Educational Institutions for You`;
+    case 'mentors':
+      return `👋 ${nameSection}Meet Your Potential Mentors`;
+    case 'blogs':
+      return `📖 ${nameSection}Fresh Insights Curated for You`;
+    default:
+      return `${nameSection}New Content Updates for You`;
+  }
 }
