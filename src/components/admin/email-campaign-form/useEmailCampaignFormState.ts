@@ -15,45 +15,34 @@ interface CampaignFormValues {
   frequency: "once" | "daily" | "weekly" | "monthly";
 }
 
-export function useEmailCampaignFormState(adminId: string, onCampaignCreated: () => void) {
+export function useEmailCampaignFormState(
+  adminId: string, 
+  contentType: ContentType,
+  onCampaignCreated: () => void
+) {
   const [isScheduling, setIsScheduling] = useState(false);
   const [recipients, setRecipients] = useState<{ id: string; email: string; full_name: string }[]>([]);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [recipientType, setRecipientType] = useState<"all" | "mentees" | "mentors" | "selected">("all");
 
   const { data: contentList, isLoading } = useQuery({
-    queryKey: ["content-list", recipientType],
+    queryKey: ["content-list", contentType],
     queryFn: async () => {
-      let tableName = '';
-      switch (contentType) {
-        case 'scholarships':
-          tableName = 'scholarships';
-          break;
-        case 'opportunities':
-          tableName = 'opportunities';
-          break;
-        case 'careers':
-          tableName = 'careers';
-          break;
-        case 'events':
-          tableName = 'events';
-          break;
-        case 'blogs':
-          tableName = 'blogs';
-          break;
-        case 'majors':
-          tableName = 'majors';
-          break;
-        case 'mentors':
-          tableName = 'profiles';
-          break;
-        default:
-          tableName = 'blogs';
-      }
+      if (!contentType) return [];
+
+      let query;
       
-      const query = tableName === 'profiles' 
-        ? supabase.from(tableName).select("id, full_name as title").eq('user_type', 'mentor')
-        : supabase.from(tableName).select("id, title");
+      // Special handling for mentors
+      if (contentType === 'mentors') {
+        query = supabase
+          .from('profiles')
+          .select('id, full_name as title')
+          .eq('user_type', 'mentor');
+      } else {
+        query = supabase
+          .from(contentType)
+          .select('id, title');
+      }
 
       const { data, error } = await query;
 
@@ -61,6 +50,7 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
         console.error("Error fetching content:", error);
         return [];
       }
+
       return data || [];
     },
   });
@@ -104,13 +94,12 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   const handleRecipientTypeChange = useCallback(
     (type: "all" | "mentees" | "mentors" | "selected") => {
       setRecipientType(type);
-      setSelectedRecipientIds([]); // Clear selected IDs when recipient type changes
+      setSelectedRecipientIds([]);
     },
     []
   );
 
   const handleContentSelectionChange = (contentIds: string[]) => {
-    // This would be called from the parent component
     return contentIds;
   };
 
@@ -121,7 +110,6 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
   const scheduleCampaign = async (values: CampaignFormValues) => {
     setIsScheduling(true);
     try {
-      // Convert the values to match the Campaign type
       const campaignData = {
         admin_id: adminId,
         subject: values.subject,
@@ -129,7 +117,7 @@ export function useEmailCampaignFormState(adminId: string, onCampaignCreated: ()
         recipient_type: values.recipient_type,
         recipient_ids: values.recipient_type === "selected" ? values.recipient_ids : [],
         content_ids: values.content_ids,
-        content_id: values.content_ids[0], // First ID for backward compatibility
+        content_id: values.content_ids[0],
         scheduled_for: values.scheduled_for?.toISOString(),
         sent_at: null,
         sent_count: 0,

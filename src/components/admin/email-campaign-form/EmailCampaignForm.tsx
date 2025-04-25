@@ -40,7 +40,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     handleSelectedRecipientsChange,
     scheduleCampaign,
     loadRecipients
-  } = useEmailCampaignFormState(adminId, () => {
+  } = useEmailCampaignFormState(adminId, contentType, () => {
     if (onCampaignCreated) {
       onCampaignCreated("success");
     }
@@ -90,17 +90,24 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         setContentType={setContentType}
       />
 
-      <ContentSelect
-        contentType={contentType}
-        contentList={contentList || []}
-        selectedContentIds={contentIds}
-        setSelectedContentIds={setContentIds}
-        loadingContent={isLoading}
-        randomSelect={randomSelect}
-        setRandomSelect={setRandomSelect}
-        randomCount={randomCount}
-        setRandomCount={setRandomCount}
-      />
+      {isLoading ? (
+        <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Loading content...</span>
+        </div>
+      ) : (
+        <ContentSelect
+          contentType={contentType}
+          contentList={contentList || []}
+          selectedContentIds={contentIds}
+          setSelectedContentIds={setContentIds}
+          loadingContent={isLoading}
+          randomSelect={randomSelect}
+          setRandomSelect={setRandomSelect}
+          randomCount={randomCount}
+          setRandomCount={setRandomCount}
+        />
+      )}
 
       <FrequencySelector
         frequency={frequency}
