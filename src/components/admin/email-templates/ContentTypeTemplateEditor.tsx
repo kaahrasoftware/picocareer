@@ -40,7 +40,6 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("colors");
-  const [previewKey, setPreviewKey] = useState(0);
 
   const methods = useForm<FormData>({
     defaultValues: {
@@ -139,10 +138,6 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
     } else if (!checked && currentMetadata.includes(fieldName)) {
       setValue('layout_settings.metadataDisplay', currentMetadata.filter(field => field !== fieldName));
     }
-  };
-
-  const handleContentUpdate = () => {
-    setPreviewKey(prev => prev + 1);
   };
 
   if (loading) {
@@ -245,7 +240,10 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                   <ContentEditorTab 
                     adminId={adminId}
                     contentType={contentType}
-                    onContentUpdate={handleContentUpdate}
+                    onContentUpdate={() => {
+                      // Refresh preview
+                      loadCampaigns();
+                    }}
                   />
                 </TabsContent>
                 
@@ -334,15 +332,17 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
           
           <ResizablePanel defaultSize={40}>
             <div className="h-full flex flex-col p-6 bg-gray-50">
+              <h3 className="text-lg font-semibold mb-4">Live Preview</h3>
               <EmailTemplatePreview 
-                key={previewKey}
                 contentType={contentType}
-                adminId={adminId}
                 primaryColor={values.primary_color}
                 secondaryColor={values.secondary_color}
                 accentColor={values.accent_color}
                 layoutSettings={values.layout_settings}
               />
+              <div className="mt-4 p-3 bg-white rounded border text-xs text-gray-500">
+                <p>This is a preview of how your email template will look. The actual email may vary slightly depending on the email client.</p>
+              </div>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

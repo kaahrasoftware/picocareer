@@ -1,204 +1,187 @@
-
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { ContentType } from "./utils";
-import type { Campaign } from "@/types/database/email";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
+import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
 
-interface CampaignFormValues {
+type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
+
+type FormState = {
   subject: string;
-  content_type: ContentType;
-  recipient_type: "all" | "mentees" | "mentors" | "selected";
-  recipient_ids: string[];
-  content_ids: string[];
-  scheduled_for: Date | null;
-  frequency: "once" | "daily" | "weekly" | "monthly";
+  contentType: ContentType;
+  contentIds: string[];
+  frequency: "daily" | "weekly" | "monthly";
+  scheduledFor: string;
+  recipientType: RecipientType;
+  recipientIds: string[];
+};
+
+interface UseEmailCampaignFormStateProps {
+  adminId: string;
 }
 
-export function useEmailCampaignFormState(
-  adminId: string,
-  contentType: ContentType,
-  onCampaignCreated: () => void
-) {
-  const [isScheduling, setIsScheduling] = useState(false);
-  const [recipients, setRecipients] = useState<{ id: string; email: string; full_name: string }[]>([]);
-  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
-  const [recipientType, setRecipientType] = useState<"all" | "mentees" | "mentors" | "selected">("all");
-
-  const { data: contentList, isLoading } = useQuery({
-    queryKey: ["content-list", contentType],
-    queryFn: async () => {
-      if (!contentType) return [];
-
-      let query;
-      
-      if (contentType === 'mentors') {
-        query = supabase
-          .from('profiles')
-          .select('id, full_name as title')
-          .eq('user_type', 'mentor');
-      } else {
-        query = supabase
-          .from(contentType)
-          .select('id, title');
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching content:", error);
-        return [];
-      }
-
-      return data || [];
-    },
+export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormStateProps) => {
+  const [formState, setFormState] = useState<FormState>({
+    subject: "",
+    contentType: "blogs",
+    contentIds: [],
+    frequency: "daily",
+    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
+    recipientType: 'all',
+    recipientIds: []
   });
+  
+  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
+  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const loadRecipients = useCallback(async () => {
-    if (!recipientType) return;
+  const updateFormState = (updates: Partial<FormState>) => {
+    setFormState(prev => ({ ...prev, ...updates }));
+  };
 
-    if (recipientType === "selected") {
-      return;
+  useEffect(() => {
+    let isMounted = true;
+    async function loadContent() {
+      setIsLoading(true);
+      
+      try {
+        let data;
+        
+        switch (formState.contentType) {
+          case "scholarships":
+            ({ data } = await supabase
+              .from("scholarships")
+              .select("id, title")
+              .eq("status", "Active"));
+            break;
+            
+          case "opportunities":
+            ({ data } = await supabase
+              .from("opportunities")
+              .select("id, title")
+              .eq("status", "Active"));
+            break;
+            
+          case "careers":
+            ({ data } = await supabase
+              .from("careers")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          case "majors":
+            ({ data } = await supabase
+              .from("majors")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          case "schools":
+            const { data: schools } = await supabase
+              .from("schools")
+              .select("id, name")
+              .eq("status", "Approved");
+            data = schools?.map(school => ({
+              id: school.id,
+              title: school.name
+            }));
+            break;
+            
+          case "mentors":
+            const { data: mentors } = await supabase
+              .from("profiles")
+              .select("id, full_name")
+              .eq("user_type", "mentor")
+              .eq("onboarding_status", "Approved");
+            data = mentors?.map(mentor => ({
+              id: mentor.id,
+              title: mentor.full_name || 'Unknown Mentor'
+            }));
+            break;
+            
+          case "blogs":
+            ({ data } = await supabase
+              .from("blogs")
+              .select("id, title")
+              .eq("status", "Approved"));
+            break;
+            
+          default:
+            data = [];
+        }
+
+        if (isMounted && data) {
+          setContentList(data);
+          setFormState(prev => ({ ...prev, contentIds: [] }));
+        }
+      } catch (error) {
+        console.error(`Error loading ${formState.contentType} content:`, error);
+        toast({
+          title: "Error Loading Content",
+          description: `Failed to load ${CONTENT_TYPE_LABELS[formState.contentType]}. Please try again.`,
+          variant: "destructive"
+        });
+        if (isMounted) {
+          setContentList([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
     
-    const baseQuery = supabase.from("profiles").select("id, email, first_name, last_name, full_name, avatar_url, user_type");
-    let query = baseQuery;
-    
-    if (recipientType === "mentees") {
-      query = baseQuery.eq("user_type", "mentee");
-    } else if (recipientType === "mentors") {
-      query = baseQuery.eq("user_type", "mentor");
-    }
+    loadContent();
+    return () => { isMounted = false; }
+  }, [formState.contentType, adminId]);
 
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Error fetching recipients:", error);
-      return;
-    }
-
-    if (data) {
-      setRecipients(
-        data.map((profile) => ({
-          id: profile.id,
-          email: profile.email,
-          full_name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
-        }))
-      );
-    }
-  }, [recipientType]);
-
-  const handleRecipientTypeChange = useCallback(
-    (type: "all" | "mentees" | "mentors" | "selected") => {
-      setRecipientType(type);
-      setSelectedRecipientIds([]);
-      loadRecipients();
-    },
-    [loadRecipients]
-  );
-
-  const handleContentSelectionChange = (contentIds: string[]) => {
-    return contentIds;
-  };
-
-  const handleSelectedRecipientsChange = (ids: string[]) => {
-    setSelectedRecipientIds(ids);
-  };
-
-  const validateFormValues = (values: CampaignFormValues): string | null => {
-    console.log("Validating form values:", values);
-
-    if (!values.subject.trim()) {
-      return "Subject is required";
-    }
-    if (!values.content_ids.length) {
-      return "Please select at least one content item";
-    }
-    if (values.recipient_type === "selected" && !values.recipient_ids.length) {
-      return "Please select at least one recipient";
-    }
-    if (!values.scheduled_for) {
-      return "Please select a scheduled date and time";
-    }
-    if (values.scheduled_for <= new Date()) {
-      return "Scheduled time must be in the future";
-    }
-    return null;
-  };
-
-  const scheduleCampaign = async (values: CampaignFormValues) => {
-    console.log("Attempting to schedule campaign with values:", values);
-    setIsScheduling(true);
-
-    try {
-      const validationError = validateFormValues(values);
-      if (validationError) {
-        throw new Error(validationError);
+  useEffect(() => {
+    async function loadRecipients() {
+      if (formState.recipientType !== 'selected') {
+        setRecipientsList([]);
+        return;
       }
+      
+      try {
+        let query = supabase
+          .from('profiles')
+          .select('id, email, full_name');
 
-      const recipientsCount = values.recipient_type === "selected" 
-        ? values.recipient_ids.length 
-        : recipients.length;
+        if (formState.recipientType === 'mentees') {
+          query = query.eq('user_type', 'mentee');
+        } else if (formState.recipientType === 'mentors') {
+          query = query.eq('user_type', 'mentor');
+        }
 
-      console.log("Calculated recipients count:", recipientsCount);
-
-      const campaignData = {
-        admin_id: adminId,
-        subject: values.subject,
-        content_type: values.content_type,
-        recipient_type: values.recipient_type,
-        recipient_filter: values.recipient_type === "selected" 
-          ? { profile_ids: values.recipient_ids }
-          : null,
-        recipient_ids: values.recipient_type === "selected" ? values.recipient_ids : [],
-        content_ids: values.content_ids,
-        content_id: values.content_ids[0], // Keep first ID for backward compatibility
-        scheduled_for: values.scheduled_for?.toISOString(),
-        sent_at: null,
-        sent_count: 0,
-        recipients_count: recipientsCount,
-        failed_count: 0,
-        status: "pending",
-        frequency: values.frequency,
-      } as const;
-
-      console.log("Submitting campaign data:", campaignData);
-
-      const { data, error } = await supabase
-        .from("email_campaigns")
-        .insert(campaignData)
-        .select("id")
-        .single();
-
-      if (error) {
-        console.error("Database error:", error);
-        throw new Error(error.message);
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        setRecipientsList(data || []);
+      } catch (error) {
+        console.error('Error loading recipients:', error);
+        toast({ 
+          title: "Error Loading Recipients", 
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive" 
+        });
+        setRecipientsList([]);
       }
-
-      console.log("Campaign created successfully:", data);
-      toast.success("Campaign scheduled successfully!");
-      onCampaignCreated();
-      return data;
-    } catch (error: any) {
-      console.error("Error scheduling campaign:", error);
-      toast.error(error.message || "Could not schedule campaign. Please try again.");
-      throw error;
-    } finally {
-      setIsScheduling(false);
     }
-  };
+
+    loadRecipients();
+  }, [formState.recipientType]);
+
+  const hasRequiredFields = 
+    formState.subject?.trim() !== "" && 
+    formState.contentIds.length > 0 && 
+    formState.scheduledFor && 
+    (formState.recipientType !== 'selected' || formState.recipientIds.length > 0);
 
   return {
+    formState,
     contentList,
-    recipients,
-    selectedRecipientIds,
-    isScheduling,
+    updateFormState,
     isLoading,
-    handleRecipientTypeChange,
-    handleContentSelectionChange,
-    handleSelectedRecipientsChange,
-    scheduleCampaign,
-    loadRecipients
+    hasRequiredFields,
+    recipientsList
   };
-}
+};

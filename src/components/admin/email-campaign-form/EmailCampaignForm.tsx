@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
+import { useEmailCampaignFormSubmit } from './useEmailCampaignFormSubmit';
 import { ContentTypeSelector } from './ContentTypeSelector';
 import { ContentSelect } from './ContentSelect';
 import { RecipientTypeSelector } from './RecipientTypeSelector';
@@ -12,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
-import { ContentType } from './utils';
 
 interface EmailCampaignFormProps {
   adminId: string;
@@ -20,74 +20,22 @@ interface EmailCampaignFormProps {
 }
 
 const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampaignCreated }) => {
-  const [subject, setSubject] = useState('');
-  const [contentType, setContentType] = useState<ContentType>('scholarships');
-  const [contentIds, setContentIds] = useState<string[]>([]);
-  const [frequency, setFrequency] = useState<"daily" | "weekly" | "monthly">('daily');
-  const [scheduledFor, setScheduledFor] = useState('');
-  const [recipientType, setRecipientType] = useState<'all' | 'mentees' | 'mentors' | 'selected'>('all');
-  const [recipientIds, setRecipientIds] = useState<string[]>([]);
-  const [randomSelect, setRandomSelect] = useState(false);
-  const [randomCount, setRandomCount] = useState(3);
-  
-  const { 
-    contentList, 
-    recipients, 
-    isLoading, 
-    isScheduling,
-    handleRecipientTypeChange,
-    handleContentSelectionChange,
-    handleSelectedRecipientsChange,
-    scheduleCampaign,
-    loadRecipients
-  } = useEmailCampaignFormState(adminId, contentType, () => {
-    if (onCampaignCreated) {
-      onCampaignCreated("success");
+  const {
+    formState,
+    contentList,
+    updateFormState,
+    isLoading,
+    hasRequiredFields,
+    recipientsList
+  } = useEmailCampaignFormState({ adminId });
+
+  const { isSubmitting, handleSubmit } = useEmailCampaignFormSubmit({
+    adminId,
+    formState,
+    onSuccess: (campaignId) => {
+      onCampaignCreated?.(campaignId);
     }
   });
-
-  // Effect to load recipients when recipient type changes
-  useEffect(() => {
-    handleRecipientTypeChange(recipientType);
-    loadRecipients();
-  }, [recipientType, handleRecipientTypeChange, loadRecipients]);
-
-  const handleSubmit = async () => {
-    try {
-      console.log("Form submission started with values:", {
-        subject,
-        contentType,
-        contentIds,
-        recipientType,
-        recipientIds,
-        scheduledFor,
-        frequency
-      });
-
-      const formValues = {
-        subject,
-        content_type: contentType,
-        recipient_type: recipientType,
-        recipient_ids: recipientIds,
-        content_ids: contentIds,
-        scheduled_for: scheduledFor ? new Date(scheduledFor) : null,
-        frequency
-      };
-      
-      const result = await scheduleCampaign(formValues);
-      if (onCampaignCreated && result) {
-        onCampaignCreated(result.id);
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
-      // Toast is already handled in scheduleCampaign
-    }
-  };
-
-  const hasRequiredFields = subject.trim() !== '' && 
-    contentIds.length > 0 && 
-    scheduledFor !== '' && 
-    (recipientType !== 'selected' || recipientIds.length > 0);
 
   return (
     <div className="space-y-6">
@@ -96,75 +44,68 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         <Input
           id="subject"
           placeholder="Enter email subject"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
+          value={formState.subject}
+          onChange={(e) => updateFormState({ subject: e.target.value })}
           className="mt-1"
         />
       </div>
 
       <ContentTypeSelector
-        contentType={contentType}
-        setContentType={setContentType}
+        contentType={formState.contentType}
+        setContentType={(contentType) => updateFormState({ contentType })}
       />
 
-      {isLoading ? (
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Loading content...</span>
-        </div>
-      ) : (
-        <ContentSelect
-          contentType={contentType}
-          contentList={contentList || []}
-          selectedContentIds={contentIds}
-          setSelectedContentIds={setContentIds}
-          loadingContent={isLoading}
-          randomSelect={randomSelect}
-          setRandomSelect={setRandomSelect}
-          randomCount={randomCount}
-          setRandomCount={setRandomCount}
-        />
-      )}
+      <ContentSelect
+        contentType={formState.contentType}
+        contentList={contentList}
+        selectedContentIds={formState.contentIds}
+        setSelectedContentIds={(contentIds) => updateFormState({ contentIds })}
+        loadingContent={isLoading}
+        randomSelect={false}
+        setRandomSelect={() => {}}
+        randomCount={3}
+        setRandomCount={() => {}}
+      />
 
       <FrequencySelector
-        frequency={frequency}
-        setFrequency={setFrequency}
+        frequency={formState.frequency}
+        setFrequency={(frequency) => updateFormState({ frequency })}
       />
 
       <ScheduleDateTimeInput
-        scheduledFor={scheduledFor}
-        setScheduledFor={setScheduledFor}
+        scheduledFor={formState.scheduledFor}
+        setScheduledFor={(scheduledFor) => updateFormState({ scheduledFor })}
       />
 
       <RecipientTypeSelector
-        recipientType={recipientType}
-        setRecipientType={setRecipientType}
+        recipientType={formState.recipientType}
+        setRecipientType={(recipientType) => updateFormState({ recipientType })}
       />
 
-      {recipientType === 'selected' && (
+      {formState.recipientType === 'selected' && (
         <RecipientSelection
-          recipientsList={recipients}
-          selectedRecipients={recipientIds}
-          setSelectedRecipients={setRecipientIds}
+          recipientsList={recipientsList}
+          selectedRecipients={formState.recipientIds}
+          setSelectedRecipients={(recipientIds) => updateFormState({ recipientIds })}
         />
       )}
 
-      {contentIds.length > 0 && (
+      {formState.contentIds.length > 0 && (
         <div className="mt-8">
           <EmailPreview 
-            selectedContentIds={contentIds}
-            contentList={contentList || []}
-            contentType={contentType}
+            selectedContentIds={formState.contentIds}
+            contentList={contentList}
+            contentType={formState.contentType}
           />
         </div>
       )}
 
       <Button
-        onClick={handleSubmit}
-        disabled={isScheduling || !hasRequiredFields || isLoading}
+        onClick={() => handleSubmit()}
+        disabled={isSubmitting || !hasRequiredFields || isLoading}
         className="w-full mt-6"
       >
-        {isScheduling ? (
+        {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Creating Campaign...

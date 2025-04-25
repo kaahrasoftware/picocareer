@@ -1,8 +1,6 @@
 
 import React from "react";
 import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ContentTypeSelectorProps {
   contentType: ContentType;
@@ -12,24 +10,19 @@ interface ContentTypeSelectorProps {
 export function ContentTypeSelector({ contentType, setContentType }: ContentTypeSelectorProps) {
   return (
     <div>
-      <Label htmlFor="contentType" className="block text-sm font-medium">Content Type</Label>
-      <Select
+      <label htmlFor="contentType" className="block font-medium mb-1">Content Type</label>
+      <select
+        id="contentType"
         value={contentType}
-        onValueChange={(value) => setContentType(value as ContentType)}
+        onChange={e => { 
+          setContentType(e.target.value as ContentType);
+        }}
+        className="w-full border px-3 py-2 rounded"
       >
-        <SelectTrigger className="w-full mt-1">
-          <SelectValue placeholder="Select content type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Object.keys(CONTENT_TYPE_LABELS).map((type) => (
-              <SelectItem key={type} value={type}>
-                {CONTENT_TYPE_LABELS[type as ContentType]}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+        {Object.keys(CONTENT_TYPE_LABELS).map(type => (
+          <option key={type} value={type}>{CONTENT_TYPE_LABELS[type as ContentType]}</option>
+        ))}
+      </select>
     </div>
   );
 }
