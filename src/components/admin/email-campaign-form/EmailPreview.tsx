@@ -2,6 +2,10 @@
 import React from "react";
 import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
 import { generateEmailContent } from "../../../utils/email-templates";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { EmailContentTypeSettings } from "@/types/database/email";
 
 interface EmailPreviewProps {
   selectedContentIds: string[];
@@ -10,13 +14,30 @@ interface EmailPreviewProps {
 }
 
 export function EmailPreview({ selectedContentIds, contentList, contentType }: EmailPreviewProps) {
-  const selectedContents = contentList.filter(content => selectedContentIds.includes(content.id));
-  console.log("Generating email preview with:", {
-    selectedContents,
-    contentType,
-    origin: window.location.origin
+  // Fetch template settings for this content type
+  const { data: templateSettings, isLoading: loadingSettings } = useQuery({
+    queryKey: ['email-template-settings', contentType],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('email_content_type_settings')
+        .select('*')
+        .eq('content_type', contentType)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data as EmailContentTypeSettings;
+    }
   });
-  
+
+  const selectedContents = contentList.filter(content => selectedContentIds.includes(content.id));
+
+  if (loadingSettings) {
+    return <Skeleton className="w-full h-[300px]" />;
+  }
+
   const previewHtml = generateEmailContent(
     CONTENT_TYPE_LABELS[contentType],
     `Check out these featured ${contentType}!`,
@@ -24,10 +45,9 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
     "preview-campaign-id",
     selectedContents,
     contentType,
-    window.location.origin
+    window.location.origin,
+    templateSettings
   );
-
-  console.log("Generated preview HTML length:", previewHtml.length);
   
   return (
     <div>
