@@ -5,7 +5,7 @@ import { generateEmailContent } from "../../../utils/email-templates";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { EmailContentTypeSettings } from "@/types/database/email";
+import type { EmailContentTypeSettings, EmailTemplateSettings } from "@/types/database/email";
 
 interface EmailPreviewProps {
   selectedContentIds: string[];
@@ -14,7 +14,6 @@ interface EmailPreviewProps {
 }
 
 export function EmailPreview({ selectedContentIds, contentList, contentType }: EmailPreviewProps) {
-  // Fetch template settings for this content type
   const { data: templateSettings, isLoading: loadingSettings } = useQuery({
     queryKey: ['email-template-settings', contentType],
     queryFn: async () => {
@@ -39,7 +38,19 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
         throw globalError;
       }
 
-      return globalSettings as EmailContentTypeSettings;
+      // Cast and merge with default values
+      return {
+        ...globalSettings,
+        content_type: contentType,
+        layout_settings: {
+          headerStyle: 'centered',
+          showAuthor: true,
+          showDate: true,
+          imagePosition: 'top',
+          contentBlocks: ['title', 'image', 'description', 'cta'],
+          metadataDisplay: ['category', 'date', 'author']
+        }
+      } as EmailContentTypeSettings;
     }
   });
 

@@ -7,6 +7,8 @@ export function generateBaseTemplate(
   logoUrl: string
 ) {
   const currentYear = new Date().getFullYear();
+  const defaultLogoUrl = `${siteUrl}/logo-default.png`;
+  const safeLogoUrl = logoUrl || defaultLogoUrl;
   
   return `
     <!DOCTYPE html>
@@ -27,7 +29,7 @@ export function generateBaseTemplate(
         <div class="container" style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <div class="header" style="text-align: center; padding: 24px 40px; border-bottom: 1px solid #e5e7eb;">
-            <img src="${logoUrl}" alt="Company Logo" style="height: 32px; width: auto; max-width: 200px;">
+            <img src="${safeLogoUrl}" alt="Company Logo" style="height: 32px; width: auto; max-width: 200px;">
           </div>
           
           <!-- Main Content -->

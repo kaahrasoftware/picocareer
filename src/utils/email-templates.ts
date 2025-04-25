@@ -22,7 +22,7 @@ export function generateEmailContent(
   } : getContentTypeStyles(contentType);
 
   const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
-  const logoUrl = templateSettings?.logo_url || `${siteUrl}/logo.png`;
+  const logoUrl = templateSettings?.logo_url || `${siteUrl}/logo-default.png`;
 
   // Calculate total amount for scholarships
   const totalAmount = contentType === 'scholarships' 

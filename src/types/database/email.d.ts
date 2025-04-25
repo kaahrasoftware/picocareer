@@ -1,4 +1,3 @@
-
 export interface EmailTemplateSettings {
   id: string;
   admin_id: string;
@@ -14,12 +13,13 @@ export interface EmailContentTypeSettings {
   id: string;
   admin_id: string;
   content_type: string;
+  logo_url?: string;
   primary_color: string;
   secondary_color: string;
   accent_color: string;
   layout_settings: {
     headerStyle: 'centered' | 'banner' | 'minimal';
-    showAuthor: boolean;
+    showAuthor: boolean;  
     showDate: boolean;
     imagePosition: 'top' | 'inline' | 'side';
     contentBlocks: string[];
