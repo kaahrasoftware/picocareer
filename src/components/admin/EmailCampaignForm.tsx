@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,15 @@ interface EmailTemplateSettingsFormData {
   primary_color: string;
   secondary_color: string;
   accent_color: string;
+}
+
+export interface EmailCampaignFormProps {
+  adminId: string;
+  onCampaignCreated?: () => void;
+}
+
+export function EmailCampaignForm({ adminId, onCampaignCreated }: EmailCampaignFormProps) {
+  return <div>Email Campaign Form Content</div>;
 }
 
 export function EmailTemplateSettingsTab({ adminId }: { adminId: string }) {

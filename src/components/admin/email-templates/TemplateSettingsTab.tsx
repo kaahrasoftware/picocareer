@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ColorPicker } from "@/components/hub/management/sections/branding/ColorPicker";

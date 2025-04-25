@@ -1,13 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { EmailCampaignForm } from "@/components/admin/EmailCampaignForm";
-import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { EmailCampaignForm, EmailTemplateSettingsTab } from "@/components/admin/EmailCampaignForm";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Navigate } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EmailTemplateSettingsTab } from "@/components/admin/EmailCampaignForm";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
