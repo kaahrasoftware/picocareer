@@ -24,6 +24,7 @@ export function ContentSelect({
   setRandomSelect,
   randomCount,
   setRandomCount,
+  contentType,
 }: ContentSelectProps) {
   return (
     <div>

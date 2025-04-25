@@ -1,44 +1,54 @@
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
+import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
 
 type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
 
-interface UseEmailCampaignFormStateProps {
+type FormState = {
+  subject: string;
   contentType: ContentType;
-  randomSelect: boolean;
-  randomCount: number;
-  setContentList: React.Dispatch<React.SetStateAction<{id: string, title: string}[]>>;
-  setSelectedContentIds: React.Dispatch<React.SetStateAction<string[]>>;
-  setLoadingContent: React.Dispatch<React.SetStateAction<boolean>>;
-  setRecipientsList: React.Dispatch<React.SetStateAction<{id: string, email: string, full_name?: string}[]>>;
+  contentIds: string[];
+  frequency: "once" | "daily" | "weekly" | "monthly";
+  scheduledFor: string;
   recipientType: RecipientType;
+  recipientIds: string[];
+};
+
+interface UseEmailCampaignFormStateProps {
+  adminId: string;
 }
 
-export function useEmailCampaignFormState({
-  contentType,
-  randomSelect,
-  randomCount,
-  setContentList,
-  setSelectedContentIds,
-  setLoadingContent,
-  setRecipientsList,
-  recipientType
-}: UseEmailCampaignFormStateProps) {
+export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormStateProps) => {
+  const [formState, setFormState] = useState<FormState>({
+    subject: "",
+    contentType: "blogs",
+    contentIds: [],
+    frequency: "once",
+    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16), // Default to 1hr from now
+    recipientType: 'all',
+    recipientIds: []
+  });
   
+  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
+  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const updateFormState = (updates: Partial<FormState>) => {
+    setFormState(prev => ({ ...prev, ...updates }));
+  };
+
+  // Load content based on content type
   useEffect(() => {
     let isMounted = true;
     async function loadContent() {
-      setLoadingContent(true);
-      setContentList([]);
-      setSelectedContentIds([]);
+      setIsLoading(true);
       
       try {
         let data;
         
-        switch (contentType) {
+        switch (formState.contentType) {
           case "scholarships":
             ({ data } = await supabase
               .from("scholarships")
@@ -103,38 +113,43 @@ export function useEmailCampaignFormState({
 
         if (isMounted && data) {
           setContentList(data);
-          setLoadingContent(false);
+          setFormState(prev => ({ ...prev, contentIds: [] })); // Reset selection on content type change
         }
       } catch (error) {
-        console.error(`Error loading ${contentType} content:`, error);
-        if (error instanceof Error) {
-          console.error('Error details:', error.message);
-        }
+        console.error(`Error loading ${formState.contentType} content:`, error);
         toast({
           title: "Error Loading Content",
-          description: `Failed to load ${CONTENT_TYPE_LABELS[contentType]}. Please try again.`,
+          description: `Failed to load ${CONTENT_TYPE_LABELS[formState.contentType]}. Please try again.`,
           variant: "destructive"
         });
         if (isMounted) {
           setContentList([]);
-          setLoadingContent(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
         }
       }
     }
     
     loadContent();
     return () => { isMounted = false; }
-  }, [contentType, setContentList, setSelectedContentIds, setLoadingContent]);
+  }, [formState.contentType, adminId]);
 
-  // Recipient loading logic
+  // Load recipients based on recipient type
   useEffect(() => {
     async function loadRecipients() {
+      if (formState.recipientType !== 'selected') {
+        setRecipientsList([]);
+        return;
+      }
+      
       try {
         let query = supabase
           .from('profiles')
           .select('id, email, full_name');
 
-        switch (recipientType) {
+        switch (formState.recipientType) {
           case 'mentees':
             query = query.eq('user_type', 'mentee');
             break;
@@ -159,5 +174,20 @@ export function useEmailCampaignFormState({
     }
 
     loadRecipients();
-  }, [recipientType, setRecipientsList]);
-}
+  }, [formState.recipientType]);
+
+  const hasRequiredFields = 
+    formState.subject?.trim() !== "" && 
+    formState.contentIds.length > 0 && 
+    formState.scheduledFor && 
+    (formState.recipientType !== 'selected' || formState.recipientIds.length > 0);
+
+  return {
+    formState,
+    contentList,
+    updateFormState,
+    isLoading,
+    hasRequiredFields,
+    recipientsList
+  };
+};

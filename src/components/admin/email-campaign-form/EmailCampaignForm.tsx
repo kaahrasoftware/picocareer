@@ -26,6 +26,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     updateFormState,
     isLoading,
     hasRequiredFields,
+    recipientsList
   } = useEmailCampaignFormState({ adminId });
 
   const { isSubmitting, handleSubmit } = useEmailCampaignFormSubmit({
@@ -50,37 +51,44 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       </div>
 
       <ContentTypeSelector
-        value={formState.contentType}
-        onChange={(contentType) => updateFormState({ contentType })}
+        contentType={formState.contentType}
+        setContentType={(contentType) => updateFormState({ contentType })}
       />
 
       <ContentSelect
         contentType={formState.contentType}
-        selectedIds={formState.contentIds}
-        onSelectionChange={(contentIds) => updateFormState({ contentIds })}
+        contentList={contentList}
+        selectedContentIds={formState.contentIds}
+        setSelectedContentIds={(contentIds) => updateFormState({ contentIds })}
+        loadingContent={isLoading}
+        randomSelect={false}
+        setRandomSelect={() => {}}
+        randomCount={3}
+        setRandomCount={() => {}}
       />
 
       <FrequencySelector
-        value={formState.frequency}
-        onChange={(frequency) => updateFormState({ frequency })}
+        frequency={formState.frequency}
+        setFrequency={(frequency) => updateFormState({ frequency })}
       />
 
       <ScheduleDateTimeInput
-        value={formState.scheduledFor}
-        onChange={(scheduledFor) => updateFormState({ scheduledFor })}
-        frequency={formState.frequency}
+        scheduledFor={formState.scheduledFor}
+        setScheduledFor={(scheduledFor) => updateFormState({ scheduledFor })}
       />
 
       <RecipientTypeSelector
-        value={formState.recipientType}
-        onChange={(recipientType) => updateFormState({ recipientType })}
+        recipientType={formState.recipientType}
+        setRecipientType={(recipientType) => updateFormState({ recipientType })}
       />
 
-      <RecipientSelection
-        recipientType={formState.recipientType}
-        selectedIds={formState.recipientIds}
-        onSelectionChange={(recipientIds) => updateFormState({ recipientIds })}
-      />
+      {formState.recipientType === 'selected' && (
+        <RecipientSelection
+          recipientsList={recipientsList}
+          selectedRecipients={formState.recipientIds}
+          setSelectedRecipients={(recipientIds) => updateFormState({ recipientIds })}
+        />
+      )}
 
       {formState.contentIds.length > 0 && (
         <div className="mt-8">
