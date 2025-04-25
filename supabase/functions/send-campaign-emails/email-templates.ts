@@ -1,5 +1,5 @@
 
-import { ContentItem } from "../../../src/types/database/email";
+import { ContentItem } from "./types";
 import { getContentTypeStyles } from "./styles";
 
 function calculateTotalAmount(contentItems: ContentItem[]): string {
