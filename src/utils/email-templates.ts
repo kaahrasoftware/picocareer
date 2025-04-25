@@ -1,7 +1,9 @@
+
 import { ContentItem } from "@/types/database/email";
 import { formatContentCard } from "./email-templates/content-cards";
 import { generateBaseTemplate } from "./email-templates/base-template";
 import { generateContentHeader } from "./email-templates/content-header";
+import { getContentTypeStyles } from "./email-templates/styles";
 
 export function generateEmailContent(
   title: string,
@@ -73,4 +75,5 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
   }
 }
 
+// Export the imported function so it's available to importers of this file
 export { getContentTypeStyles };
