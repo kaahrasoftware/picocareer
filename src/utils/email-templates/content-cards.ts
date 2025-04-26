@@ -1,4 +1,3 @@
-
 import type { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 
 interface EmailStyles {
@@ -33,9 +32,7 @@ export function formatContentCard(
     <img 
       src="${item.cover_image_url || item.image_url}"
       alt="${item.title}"
-      style="
-        ${getImageStyles(layout.imagePosition)}
-      "
+      style="${getImageStyles(layout.imagePosition)}"
     />
   ` : '';
 
@@ -66,21 +63,37 @@ export function formatContentCard(
     `
   };
 
-  // Generate content based on block order - safely handle possible undefined contentBlocks
-  const orderedContent = contentBlocks
-    .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
-    .join('');
+  let contentHtml = '';
 
-  const wrapperStyle = layout.imagePosition === 'side'
-    ? `display: flex; gap: 16px; align-items: start;`
-    : '';
+  if (layout.imagePosition === 'side') {
+    // Special handling for side layout
+    const imageContent = contentBlockMapping['image']();
+    const otherBlocks = contentBlocks
+      .filter(block => block !== 'image')
+      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
+      .join('');
+
+    contentHtml = `
+      <div style="display: flex; gap: 16px; align-items: start;">
+        <div style="flex-shrink: 0; width: 200px;">
+          ${imageContent}
+        </div>
+        <div style="flex: 1;">
+          ${otherBlocks}
+        </div>
+      </div>
+    `;
+  } else {
+    // Standard layout
+    contentHtml = contentBlocks
+      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
+      .join('');
+  }
 
   return `
     <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; 
                 overflow: hidden; background-color: white; padding: 16px;">
-      <div style="${wrapperStyle}">
-        ${orderedContent}
-      </div>
+      ${contentHtml}
     </div>
   `;
 }
@@ -88,12 +101,12 @@ export function formatContentCard(
 function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
   switch (position) {
     case 'side':
-      return 'width: 200px; height: auto; border-radius: 8px; margin-right: 16px; flex-shrink: 0;';
+      return 'width: 100%; height: auto; border-radius: 8px; margin-right: 16px;';
     case 'inline':
       return 'width: 60%; height: auto; border-radius: 8px; margin: 12px auto; display: block;';
     case 'top':
     default:
-      return 'width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;';
+      return 'width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;';
   }
 }
 
