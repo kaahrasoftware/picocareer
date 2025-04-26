@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { ContentItem } from "./types.ts";
 
@@ -39,11 +38,25 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
       case 'careers':
         const { data: careers, error: careerError } = await supabase
           .from('careers')
-          .select('id, title, description, salary_range, cover_image_url, keywords')
+          .select(`
+            id,
+            title,
+            description,
+            salary_range,
+            image_url,
+            position,
+            location,
+            remote,
+            company_name
+          `)
           .in('id', contentIds);
         
         if (careerError) throw new Error(`Error fetching careers: ${careerError.message}`);
-        data = careers || [];
+        
+        data = careers?.map(career => ({
+          ...career,
+          cover_image_url: career.image_url
+        })) || [];
         break;
         
       case 'majors':
