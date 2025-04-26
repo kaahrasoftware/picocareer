@@ -1,6 +1,6 @@
 
 import { Resend } from "npm:resend@2.0.0";
-import { ContentItem } from "./types.ts";
+import { ContentItem, EmailTemplateSettings } from "./types.ts";
 import { generateEmailContent, getEmailSubject } from "./email-templates.ts";
 
 // Sleep function for rate limiting
@@ -19,7 +19,29 @@ export async function processBatchSending(
   let failedCount = 0;
   const errors = [];
   const processedRecipientIds: string[] = [];
-  const retryDelayMs = 1100; // Slightly over 1 second to be safe with rate limits
+  const retryDelayMs = 1100; // Slightly over 1 second to respect rate limits
+  
+  // Fetch template settings
+  const { data: templateSettings, error: templateError } = await supabaseClient
+    .from('email_template_settings')
+    .select('*')
+    .eq('admin_id', campaign.admin_id)
+    .single();
+
+  // Fetch content type specific settings
+  const { data: contentTypeSettings, error: contentTypeError } = await supabaseClient
+    .from('email_content_type_settings')
+    .select('*')
+    .eq('admin_id', campaign.admin_id)
+    .eq('content_type', campaign.content_type)
+    .single();
+    
+  // Use content type specific settings if available, otherwise fall back to global template settings
+  const settings = contentTypeSettings || templateSettings || {
+    primary_color: '#8B5CF6',
+    secondary_color: '#7C3AED',
+    accent_color: '#6D28D9'
+  };
   
   // Process in smaller batches of 2 (respecting rate limit)
   const microBatchSize = 2;
@@ -50,7 +72,8 @@ export async function processBatchSending(
             campaign.id,
             contentList,
             campaign.content_type,
-            siteUrl
+            siteUrl,
+            settings
           );
           
           const res = await resend.emails.send({

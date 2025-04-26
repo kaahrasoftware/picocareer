@@ -1,4 +1,3 @@
-
 export interface ContentItem {
   id: string;
   title: string;
@@ -50,4 +49,24 @@ export interface Campaign {
   updated_at: string;
   last_error?: string;
   last_checked_at?: string;
+}
+
+export interface EmailTemplateSettings {
+  id: string;
+  admin_id: string;
+  logo_url?: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  content_type?: string;
+  layout_settings?: {
+    headerStyle: 'centered' | 'banner' | 'minimal';
+    showAuthor: boolean;
+    showDate: boolean;
+    imagePosition: 'top' | 'inline' | 'side';
+    contentBlocks: string[];
+    metadataDisplay: string[];
+  };
+  created_at: string;
+  updated_at: string;
 }

@@ -1,148 +1,73 @@
 
-import { ContentItem } from "./types.ts";
+import { ContentItem, EmailTemplateSettings } from "./types.ts";
 import { getContentTypeStyles } from "./styles.ts";
 
-function calculateTotalAmount(contentItems: ContentItem[]): string {
-  const total = contentItems.reduce((sum, item) => {
-    return sum + (item.amount || 0);
-  }, 0);
-  
-  return new Intl.NumberFormat('en-US', { 
-    style: 'currency', 
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(total);
-}
-
-export function getEmailSubject(contentType: string, recipientFirstName: string = ''): string {
-  const greeting = recipientFirstName ? `${recipientFirstName}, check out` : 'Check out';
-  
-  switch(contentType) {
-    case 'scholarships':
-      return `${greeting} these scholarship opportunities`;
-    case 'opportunities':
-      return `${greeting} these career opportunities`;
-    case 'careers':
-      return `${greeting} these promising career paths`;
-    case 'majors':
-      return `${greeting} these academic majors that align with your interests`;
-    case 'schools':
-      return `${greeting} these recommended schools`;
-    case 'mentors':
-      return `${greeting} these mentors who can help guide your career journey`;
-    case 'blogs':
-      return `${greeting} these insightful career articles`;
-    default:
-      return `PicoCareer Newsletter: Personalized opportunities for you`;
-  }
-}
-
 export function generateEmailContent(
-  subject: string,
-  introduction: string,
-  recipientName: string,
+  title: string,
+  body: string,
+  recipientName: string = '',
   campaignId: string,
   contentItems: ContentItem[],
   contentType: string,
-  siteUrl: string
+  siteUrl: string,
+  templateSettings: EmailTemplateSettings
 ): string {
-  const personalizedIntro = recipientName 
-    ? `Hi ${recipientName.split(' ')[0]},` 
-    : 'Hi there,';
-  
-  const { cardStyles, headerStyles, contentTypeLabel } = getContentTypeStyles(contentType);
-  
-  const trackingParams = `utm_source=email&utm_medium=campaign&utm_campaign=${campaignId}`;
-  const contentCards = contentItems.map(item => generateContentCard(item, contentType, cardStyles, siteUrl, trackingParams)).join('');
-  
-  const totalAmount = contentType === 'scholarships' 
-    ? `<p style="font-size: 18px; font-weight: bold; margin: 20px 0;">Total Available: ${calculateTotalAmount(contentItems)}</p>` 
-    : '';
-  
+  const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
+  const defaultLogoUrl = `${siteUrl}/logo-default.png`;
+  const currentYear = new Date().getFullYear();
+
+  // Use template settings colors or fall back to content type defaults
+  const defaultStyles = getContentTypeStyles(contentType);
+  const styles = {
+    primary: templateSettings.primary_color || defaultStyles.accent,
+    secondary: templateSettings.secondary_color || defaultStyles.accent,
+    accent: templateSettings.accent_color || defaultStyles.accent,
+  };
+
+  let contentCardsHtml = '';
+  if (contentItems && contentItems.length > 0) {
+    contentItems.forEach(item => {
+      contentCardsHtml += generateContentCard(item, contentType, styles, siteUrl);
+    });
+  } else {
+    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
+  }
+
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>${subject}</title>
-      <style>
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          line-height: 1.6;
-          color: #333;
-          margin: 0;
-          padding: 0;
-          background-color: #f9f9f9;
-        }
-        .container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 20px;
-          background-color: #ffffff;
-        }
-        .header {
-          text-align: center;
-          padding: 20px 0;
-        }
-        .content {
-          padding: 20px 0;
-        }
-        .footer {
-          text-align: center;
-          padding: 20px 0;
-          font-size: 12px;
-          color: #666;
-          border-top: 1px solid #eee;
-        }
-        .card {
-          margin-bottom: 20px;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .button {
-          display: inline-block;
-          padding: 10px 20px;
-          background-color: #8B5CF6;
-          color: white;
-          text-decoration: none;
-          border-radius: 5px;
-          font-weight: bold;
-          margin-top: 10px;
-        }
-        .button:hover {
-          background-color: #7C3AED;
-        }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${title}</title>
     </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <img src="${siteUrl}/logo.png" alt="PicoCareer Logo" style="max-width: 150px;">
-          <h2 style="color: #8B5CF6; margin-top: 10px;">${headerStyles.title}</h2>
+    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">${title}</h1>
         </div>
         
-        <div class="content">
-          <p>${personalizedIntro}</p>
-          <p>${introduction}</p>
-          
-          ${contentCards}
-          ${totalAmount}
-          
-          <p>Want to discover more ${contentTypeLabel}? Visit our platform!</p>
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="${siteUrl}/${contentType}?${trackingParams}" class="button">Explore More ${contentTypeLabel}</a>
-          </div>
+        <p style="margin-top: 0; color: #374151; font-size: 16px;">Hello ${recipientName},</p>
+        
+        <div style="margin: 20px 0; color: #374151; font-size: 16px;">
+          ${body}
         </div>
         
-        <div class="footer">
-          <p>You're receiving this email because you subscribed to PicoCareer updates.</p>
-          <p>&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
-          <p>
-            <a href="${siteUrl}/preferences?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Manage Preferences</a> | 
-            <a href="${siteUrl}/unsubscribe?${trackingParams}" style="color: #8B5CF6; text-decoration: none;">Unsubscribe</a>
+        <div style="margin: 30px 0;">
+          ${contentCardsHtml}
+        </div>
+        
+        <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 30px; text-align: center;">
+          <p style="margin-top: 0; color: #4b5563;">
+            Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: bold;">PicoCareer</a> 
+            to discover more opportunities tailored to your interests.
+          </p>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
+          <p style="color: #6b7280; font-size: 12px;">&copy; ${currentYear} PicoCareer. All rights reserved.</p>
+          <p style="color: #6b7280; font-size: 12px;">
+            <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails
           </p>
         </div>
       </div>
@@ -152,117 +77,64 @@ export function generateEmailContent(
 }
 
 function generateContentCard(
-  item: ContentItem, 
-  contentType: string, 
-  styles: any, 
-  siteUrl: string,
-  trackingParams: string
+  item: ContentItem,
+  contentType: string,
+  styles: { primary: string; secondary: string; accent: string },
+  siteUrl: string
 ): string {
   const imageUrl = item.cover_image_url || item.image_url || `${siteUrl}/placeholder_${contentType}.jpg`;
   const title = item.title || '';
   const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
-  
-  const detailUrl = `${siteUrl}/${contentType.slice(0, -1)}/${item.id}?${trackingParams}`;
-  
-  let metaInfo = '';
-  
-  switch(contentType) {
-    case 'scholarships':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.provider_name || 'Scholarship Provider'}
-          ${item.amount ? ` • $${Number(item.amount).toLocaleString()}` : ''}
-        </p>
-        ${item.deadline ? `<p style="color: #e53e3e; margin: 0;">Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>` : ''}
-      `;
-      break;
-      
-    case 'opportunities':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.provider_name || 'Opportunity Provider'}
-          ${item.compensation ? ` • ${item.compensation}` : ''}
-        </p>
-        <p style="color: #718096; margin: 5px 0;">
-          ${item.location || 'Location not specified'}
-          ${item.remote ? ' • Remote' : ''}
-          ${item.deadline ? ` • Deadline: ${new Date(item.deadline).toLocaleDateString()}` : ''}
-        </p>
-      `;
-      break;
-      
-    case 'careers':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.salary_range ? `Salary: ${item.salary_range}` : ''}
-        </p>
-      `;
-      break;
-      
-    case 'majors':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.potential_salary ? `Potential Salary: ${item.potential_salary}` : ''}
-        </p>
-        <p style="color: #718096; margin: 5px 0;">
-          ${item.job_prospects ? `Job Prospects: ${item.job_prospects}` : ''}
-        </p>
-      `;
-      break;
-      
-    case 'mentors':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.career_title ? item.career_title : item.position || 'Mentor'}
-          ${item.company_name ? ` at ${item.company_name}` : ''}
-        </p>
-        <p style="color: #718096; margin: 5px 0;">
-          ${Array.isArray(item.skills) && item.skills.length > 0 
-            ? `Skills: ${item.skills.slice(0, 3).join(', ')}${item.skills.length > 3 ? '...' : ''}`
-            : ''}
-        </p>
-      `;
-      break;
-      
-    case 'schools':
-      metaInfo = `
-        <p style="font-weight: bold; margin: 10px 0 5px;">
-          ${item.type || 'Education Institution'}
-        </p>
-        <p style="color: #718096; margin: 5px 0;">
-          ${item.location || ''}
-        </p>
-      `;
-      break;
-      
-    case 'blogs':
-      metaInfo = `
-        <p style="color: #718096; margin: 10px 0 5px;">
-          ${new Date(item.created_at || '').toLocaleDateString()}
-        </p>
-      `;
-      break;
-  }
-  
+  const detailUrl = `${siteUrl}/${contentType}/${item.id}`;
+
   return `
-    <div class="card" style="${styles.card}">
-      <div style="display: flex; flex-direction: row;">
-        <div style="flex: 0 0 120px;">
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
+      <div style="padding: 16px;">
+        ${item.cover_image_url ? `
           <img 
-            src="${imageUrl}" 
-            alt="${title}" 
-            style="width: 120px; height: 120px; object-fit: cover;"
+            src="${item.cover_image_url}" 
+            alt="${title}"
+            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
           />
-        </div>
-        <div style="flex: 1; padding: 15px;">
-          <h3 style="margin: 0 0 10px; color: #4A5568;">${title}</h3>
-          ${metaInfo}
-          <p style="margin: 5px 0 15px; color: #4A5568;">${description}</p>
-          <a href="${detailUrl}" style="color: #8B5CF6; font-weight: bold; text-decoration: none;">
-            View Details →
+        ` : ''}
+        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+          ${title}
+        </h3>
+        <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
+          ${description}
+        </p>
+        <div style="margin-top: 16px;">
+          <a 
+            href="${detailUrl}" 
+            style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
+          >
+            Learn More
           </a>
         </div>
       </div>
     </div>
   `;
+}
+
+export function getEmailSubject(contentType: string, firstName: string = ''): string {
+  const nameSection = firstName ? `${firstName}, ` : '';
+  
+  switch (contentType) {
+    case 'scholarships':
+      return `🎓 ${nameSection}Your Personalized Scholarship Opportunities!`;
+    case 'opportunities':
+      return `🚀 Exclusive Career Opportunities Selected for You, ${nameSection}`;
+    case 'careers':
+      return `💼 Discover Your Next Career Move, ${nameSection}`;
+    case 'majors':
+      return `📚 Explore These Academic Paths, ${nameSection}`;
+    case 'schools':
+      return `🏛️ Top Educational Institutions for You, ${nameSection}`;
+    case 'mentors':
+      return `👋 Meet Your Potential Mentors, ${nameSection}`;
+    case 'blogs':
+      return `📖 Fresh Insights Curated for You, ${nameSection}`;
+    default:
+      return `New Content Updates for You, ${nameSection}`;
+  }
 }
