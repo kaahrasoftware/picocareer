@@ -1,4 +1,3 @@
-
 import { ContentItem, EmailTemplateSettings } from "./types.ts";
 import { getContentTypeStyles } from "./styles.ts";
 
@@ -14,24 +13,33 @@ export function generateEmailContent(
 ): string {
   const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
   const defaultLogoUrl = `${siteUrl}/logo-default.png`;
-  const currentYear = new Date().getFullYear();
 
-  // Use template settings colors or fall back to content type defaults
-  const defaultStyles = getContentTypeStyles(contentType);
-  const styles = {
-    primary: templateSettings.primary_color || defaultStyles.accent,
-    secondary: templateSettings.secondary_color || defaultStyles.accent,
-    accent: templateSettings.accent_color || defaultStyles.accent,
+  // Get content type specific settings or fall back to global settings
+  const settings = {
+    primary_color: templateSettings.primary_color,
+    secondary_color: templateSettings.secondary_color,
+    accent_color: templateSettings.accent_color,
+    logo_url: templateSettings.logo_url || defaultLogoUrl,
+    layout_settings: {
+      headerStyle: 'centered' as const,
+      showAuthor: false,
+      showDate: true,
+      imagePosition: 'top' as const,
+      contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+      metadataDisplay: ['date', 'category']
+    }
   };
 
-  let contentCardsHtml = '';
-  if (contentItems && contentItems.length > 0) {
-    contentItems.forEach(item => {
-      contentCardsHtml += generateContentCard(item, contentType, styles, siteUrl);
-    });
-  } else {
-    contentCardsHtml = '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
-  }
+  const header = generateHeader(
+    title,
+    settings.layout_settings.headerStyle,
+    settings,
+    settings.logo_url
+  );
+
+  const contentCardsHtml = contentItems.length > 0
+    ? contentItems.map(item => formatContentCard(item, contentType, settings, settings.layout_settings)).join('')
+    : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
   return `
     <!DOCTYPE html>
@@ -43,7 +51,7 @@ export function generateEmailContent(
     </head>
     <body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9fb;">
       <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
+        <div style="background: linear-gradient(135deg, ${settings.primary_color}, ${settings.secondary_color}); color: white; padding: 24px; border-radius: 12px; margin-bottom: 24px; text-align: center;">
           <h1 style="margin: 0; font-size: 24px;">${title}</h1>
         </div>
         
@@ -59,13 +67,13 @@ export function generateEmailContent(
         
         <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 30px; text-align: center;">
           <p style="margin-top: 0; color: #4b5563;">
-            Visit <a href="${siteUrl}" style="color: ${styles.accent}; text-decoration: none; font-weight: bold;">PicoCareer</a> 
+            Visit <a href="${siteUrl}" style="color: ${settings.accent_color}; text-decoration: none; font-weight: bold;">PicoCareer</a> 
             to discover more opportunities tailored to your interests.
           </p>
         </div>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-          <p style="color: #6b7280; font-size: 12px;">&copy; ${currentYear} PicoCareer. All rights reserved.</p>
+          <p style="color: #6b7280; font-size: 12px;">&copy; ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
           <p style="color: #6b7280; font-size: 12px;">
             <a href="${unsubscribeUrl}" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a> from these emails
           </p>
@@ -166,5 +174,40 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
       return `📖 Fresh Insights Curated for You, ${nameSection}`;
     default:
       return `New Content Updates for You, ${nameSection}`;
+  }
+}
+
+function generateHeader(
+  title: string,
+  headerStyle: 'centered' | 'banner' | 'minimal',
+  styles: any,
+  logoUrl?: string
+) {
+  switch (headerStyle) {
+    case 'banner':
+      return `
+        <div style="background: linear-gradient(135deg, ${styles.primary_color}, ${styles.secondary_color}); color: white; padding: 32px; text-align: center; margin-bottom: 24px;">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
+          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">${title}</h1>
+        </div>
+      `;
+      
+    case 'minimal':
+      return `
+        <div style="padding: 24px; margin-bottom: 24px;">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 32px; margin-bottom: 16px;">` : ''}
+          <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
+          <div style="width: 50px; height: 3px; background-color: ${styles.accent_color}; margin-top: 12px;"></div>
+        </div>
+      `;
+      
+    case 'centered':
+    default:
+      return `
+        <div style="text-align: center; padding: 24px; margin-bottom: 24px;">
+          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
+          <h1 style="margin: 0; font-size: 26px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
+        </div>
+      `;
   }
 }
