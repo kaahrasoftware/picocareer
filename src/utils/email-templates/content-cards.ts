@@ -1,3 +1,4 @@
+
 import type { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 
 interface EmailStyles {
@@ -6,56 +7,130 @@ interface EmailStyles {
   accent: string;
 }
 
-function formatMetadata(
+export function formatContentCard(
   item: ContentItem,
   contentType: string,
-  settings: EmailContentTypeSettings,
-  styles: EmailStyles
+  styles: EmailStyles,
+  settings?: EmailContentTypeSettings['layout_settings']
 ): string {
+  if (!item) return '';
+
+  // Default settings if none provided
+  const layout = settings || {
+    headerStyle: 'centered',
+    showAuthor: true,
+    showDate: true,
+    imagePosition: 'top',
+    contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+    metadataDisplay: ['category', 'date', 'author']
+  };
+
+  const imageHtml = (item.cover_image_url || item.image_url) ? `
+    <img 
+      src="${item.cover_image_url || item.image_url}"
+      alt="${item.title}"
+      style="
+        ${getImageStyles(layout.imagePosition)}
+      "
+    />
+  ` : '';
+
+  const contentBlocks: { [key: string]: () => string } = {
+    title: () => `
+      <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+        ${item.title}
+      </h3>
+    `,
+    image: () => imageHtml,
+    description: () => item.description ? `
+      <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
+        ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
+      </p>
+    ` : '',
+    metadata: () => generateMetadata(item, contentType, layout.metadataDisplay),
+    cta: () => `
+      <div style="margin-top: 16px;">
+        <a 
+          href="#" 
+          style="display: inline-block; background-color: ${styles.accent}; color: white; 
+                padding: 8px 16px; text-decoration: none; border-radius: 6px; 
+                font-size: 14px; font-weight: 500;"
+        >
+          Learn More
+        </a>
+      </div>
+    `
+  };
+
+  // Generate content based on block order
+  const orderedContent = layout.contentBlocks
+    .map(block => contentBlocks[block] ? contentBlocks[block]() : '')
+    .join('');
+
+  const wrapperStyle = layout.imagePosition === 'side'
+    ? `display: flex; gap: 16px; align-items: start;`
+    : '';
+
+  return `
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; 
+                overflow: hidden; background-color: white; padding: 16px;">
+      <div style="${wrapperStyle}">
+        ${orderedContent}
+      </div>
+    </div>
+  `;
+}
+
+function getImageStyles(position: 'top' | 'inline' | 'side'): string {
+  switch (position) {
+    case 'side':
+      return 'width: 200px; height: auto; border-radius: 8px; margin-right: 16px; flex-shrink: 0;';
+    case 'inline':
+      return 'width: 60%; height: auto; border-radius: 8px; margin: 12px auto; display: block;';
+    case 'top':
+    default:
+      return 'width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;';
+  }
+}
+
+function generateMetadata(
+  item: ContentItem,
+  contentType: string,
+  metadataDisplay?: string[]
+): string {
+  if (!metadataDisplay?.length) return '';
+
   const metadataItems: string[] = [];
 
-  if (settings.layout_settings?.metadataDisplay?.includes('date') && item.created_at) {
-    metadataItems.push(new Date(item.created_at).toLocaleDateString());
+  if (metadataDisplay.includes('date') && item.created_at) {
+    metadataItems.push(`📅 ${new Date(item.created_at).toLocaleDateString()}`);
   }
 
-  switch (contentType) {
-    case 'careers':
-      if (item.salary_range) {
-        metadataItems.push(`💰 ${item.salary_range}`);
-      }
-      if (item.industry) {
-        metadataItems.push(`🏢 ${item.industry}`);
-      }
-      if (item.location) {
-        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
-        metadataItems.push(`📍 ${locationText}`);
-      }
-      break;
+  if (metadataDisplay.includes('author') && item.author_name) {
+    metadataItems.push(`👤 ${item.author_name}`);
+  }
 
+  // Content type specific metadata
+  switch (contentType) {
     case 'scholarships':
-      if (item.amount) {
+      if (metadataDisplay.includes('amount') && item.amount) {
         metadataItems.push(`💰 $${item.amount}`);
       }
-      if (item.provider_name) {
+      if (metadataDisplay.includes('provider') && item.provider_name) {
         metadataItems.push(`🏢 ${item.provider_name}`);
       }
-      if (item.deadline) {
+      if (metadataDisplay.includes('deadline') && item.deadline) {
         metadataItems.push(`⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}`);
       }
       break;
-
+      
     case 'opportunities':
-      if (item.provider_name) {
-        metadataItems.push(`🏢 ${item.provider_name}`);
-      }
-      if (item.compensation) {
+      if (metadataDisplay.includes('compensation') && item.compensation) {
         metadataItems.push(`💰 ${item.compensation}`);
       }
-      if (item.location) {
-        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+      if (metadataDisplay.includes('location') && item.location) {
+        const locationText = item.remote ? `${item.location} (Remote)` : item.location;
         metadataItems.push(`📍 ${locationText}`);
-      } else if (item.remote) {
-        metadataItems.push(`🌐 Remote`);
       }
       break;
   }
@@ -65,87 +140,4 @@ function formatMetadata(
       ${metadataItems.join(' • ')}
     </div>
   ` : '';
-}
-
-export function formatContentCard(
-  item: ContentItem,
-  contentType: string,
-  styles: EmailStyles,
-  settings: EmailContentTypeSettings
-): string {
-  if (!item) return '';
-
-  const imageHtml = item.cover_image_url || item.image_url ? `
-    <img 
-      src="${item.cover_image_url || item.image_url}"
-      alt="${item.title}"
-      style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; 
-             ${settings.layout_settings?.imagePosition === 'side' ? 'max-width: 200px;' : 'max-width: 100%;'}"
-    />
-  ` : '';
-
-  let contentHtml = '';
-  const blocks = settings.layout_settings?.contentBlocks || ['title', 'image', 'description', 'metadata', 'cta'];
-  
-  blocks.forEach(block => {
-    switch (block) {
-      case 'title':
-        contentHtml += `
-          <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: ${styles.primary};">
-            ${item.title}
-          </h3>
-        `;
-        break;
-      case 'image':
-        if (settings.layout_settings?.imagePosition === 'top') {
-          contentHtml += imageHtml;
-        }
-        break;
-      case 'description':
-        if (item.description) {
-          const desc = item.description.length > 150 
-            ? item.description.substring(0, 147) + '...' 
-            : item.description;
-          contentHtml += `
-            <p style="margin: 8px 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
-              ${desc}
-            </p>
-          `;
-        }
-        break;
-      case 'metadata':
-        contentHtml += formatMetadata(item, contentType, settings, styles);
-        break;
-      case 'cta':
-        contentHtml += `
-          <div style="margin-top: 16px;">
-            <a 
-              href="#" 
-              style="display: inline-block; background-color: ${styles.accent}; color: white; 
-                     padding: 8px 16px; text-decoration: none; border-radius: 6px; 
-                     font-size: 14px; font-weight: 500;"
-            >
-              Learn More
-            </a>
-          </div>
-        `;
-        break;
-    }
-  });
-
-  const wrapperStyle = settings.layout_settings?.imagePosition === 'side'
-    ? 'display: flex; align-items: start; gap: 16px;'
-    : '';
-
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; 
-                overflow: hidden; background-color: white; padding: 16px;">
-      <div style="${wrapperStyle}">
-        ${settings.layout_settings?.imagePosition === 'side' ? imageHtml : ''}
-        <div style="flex: 1;">
-          ${contentHtml}
-        </div>
-      </div>
-    </div>
-  `;
 }

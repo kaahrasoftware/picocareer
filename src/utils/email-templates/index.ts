@@ -1,3 +1,4 @@
+
 import { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 import { formatContentCard } from "./content-cards";
 import { generateHeader } from "./header-templates";
@@ -26,7 +27,12 @@ export function generateEmailContent(
   );
 
   const contentCardsHtml = contentItems.length > 0
-    ? contentItems.map(item => formatContentCard(item, contentType, styles, settings)).join('')
+    ? contentItems.map(item => formatContentCard(
+        item, 
+        contentType, 
+        styles, 
+        settings.layout_settings
+      )).join('')
     : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
   const introText = settings.content?.intro_text || body;
