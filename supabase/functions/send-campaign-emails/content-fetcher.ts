@@ -1,3 +1,4 @@
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { ContentItem } from "./types.ts";
 
@@ -44,7 +45,8 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
             description,
             salary_range,
             image_url,
-            company_name,
+            industry,
+            growth_potential,
             location,
             remote
           `)
