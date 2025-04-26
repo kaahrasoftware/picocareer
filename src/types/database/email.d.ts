@@ -1,3 +1,4 @@
+
 export interface EmailTemplateSettings {
   id: string;
   admin_id: string;
@@ -40,7 +41,7 @@ export interface Campaign {
   admin_id: string;
   name?: string;
   subject: string;
-  content_type: 'blogs' | 'careers' | 'majors' | 'schools' | 'mentors' | 'opportunities' | 'scholarships' | 'event' | 'news' | 'update' | 'promotion';
+  content_type: string; // Using string type to avoid type mismatches
   status: 'draft' | 'scheduled' | 'sent' | 'failed' | 'sending' | 'pending' | 'partial';
   recipient_type: string;
   recipient_ids?: string[];

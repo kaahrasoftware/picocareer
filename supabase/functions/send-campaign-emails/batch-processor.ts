@@ -21,12 +21,26 @@ export async function processBatchSending(
   const processedRecipientIds: string[] = [];
   const retryDelayMs = 1100; // Slightly over 1 second to respect rate limits
   
+  // Verify that we have content to send
+  if (!contentList || contentList.length === 0) {
+    throw new Error(`No content items available to send for campaign type: ${campaign.content_type}`);
+  }
+  
+  // Log content items for debugging
+  console.log(`Content items for ${campaign.content_type} campaign:`, 
+    contentList.map(item => ({ id: item.id, title: item.title, hasImage: Boolean(item.cover_image_url || item.image_url) }))
+  );
+  
   // Fetch template settings
   const { data: templateSettings, error: templateError } = await supabaseClient
     .from('email_template_settings')
     .select('*')
     .eq('admin_id', campaign.admin_id)
     .single();
+
+  if (templateError && templateError.code !== 'PGRST116') {
+    console.warn("Template settings error:", templateError);
+  }
 
   // Fetch content type specific settings
   const { data: contentTypeSettings, error: contentTypeError } = await supabaseClient
@@ -35,6 +49,10 @@ export async function processBatchSending(
     .eq('admin_id', campaign.admin_id)
     .eq('content_type', campaign.content_type)
     .single();
+    
+  if (contentTypeError && contentTypeError.code !== 'PGRST116') {
+    console.warn("Content type settings error:", contentTypeError);
+  }
     
   // Use content type specific settings if available, otherwise fall back to global template settings
   const settings = contentTypeSettings || templateSettings || {

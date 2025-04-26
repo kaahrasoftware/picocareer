@@ -1,3 +1,4 @@
+
 export interface ContentItem {
   id: string;
   title: string;
@@ -29,7 +30,7 @@ export interface Campaign {
   admin_id: string;
   subject?: string;
   body?: string;
-  content_type: string;
+  content_type: string; // Using string type to accommodate all content types
   content_id: string;
   content_ids?: string[];
   recipient_type: string;

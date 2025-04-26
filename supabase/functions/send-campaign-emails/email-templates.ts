@@ -82,17 +82,46 @@ function generateContentCard(
   styles: { primary: string; secondary: string; accent: string },
   siteUrl: string
 ): string {
-  const imageUrl = item.cover_image_url || item.image_url || `${siteUrl}/placeholder_${contentType}.jpg`;
+  // Get the appropriate image URL, with fallbacks
+  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || `${siteUrl}/placeholder_${contentType}.jpg`;
   const title = item.title || '';
   const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
   const detailUrl = `${siteUrl}/${contentType}/${item.id}`;
 
+  // Add specific metadata based on content type
+  let metadata = '';
+  
+  switch(contentType) {
+    case 'careers':
+      if (item.salary_range) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
+      if (item.company_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
+      if (item.location) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
+      break;
+      
+    case 'scholarships':
+      if (item.amount) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
+      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+      if (item.deadline) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
+      break;
+      
+    case 'opportunities':
+      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+      if (item.compensation) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
+      if (item.location) {
+        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
+      } else if (item.remote) {
+        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🌐 Remote</p>`;
+      }
+      break;
+  }
+
   return `
     <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
       <div style="padding: 16px;">
-        ${item.cover_image_url ? `
+        ${imageUrl ? `
           <img 
-            src="${item.cover_image_url}" 
+            src="${imageUrl}" 
             alt="${title}"
             style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
           />
@@ -100,6 +129,7 @@ function generateContentCard(
         <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
           ${title}
         </h3>
+        ${metadata}
         <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
           ${description}
         </p>
