@@ -17,59 +17,77 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
   const { data: templateSettings, isLoading: loadingSettings } = useQuery({
     queryKey: ['email-template-settings', contentType],
     queryFn: async () => {
-      // First try to get content type specific settings
-      const { data: contentTypeSettings, error: contentTypeError } = await supabase
-        .from('email_content_type_settings')
-        .select('*')
-        .eq('content_type', contentType)
-        .single();
+      try {
+        // First try to get content type specific settings
+        const { data: contentTypeSettings, error: contentTypeError } = await supabase
+          .from('email_content_type_settings')
+          .select('*')
+          .eq('content_type', contentType)
+          .single();
 
-      if (contentTypeSettings) {
-        return contentTypeSettings as EmailContentTypeSettings;
-      }
-
-      // If no content type specific settings, fall back to global template settings
-      const { data: globalSettings, error: globalError } = await supabase
-        .from('email_template_settings')
-        .select('*')
-        .single();
-
-      if (globalError && globalError.code !== 'PGRST116') {
-        throw globalError;
-      }
-
-      // Cast and merge with default values
-      return {
-        ...globalSettings,
-        content_type: contentType,
-        layout_settings: {
-          headerStyle: 'centered',
-          showAuthor: true,
-          showDate: true,
-          imagePosition: 'top',
-          contentBlocks: ['title', 'image', 'description', 'cta'],
-          metadataDisplay: ['category', 'date', 'author']
+        if (contentTypeSettings) {
+          return contentTypeSettings as EmailContentTypeSettings;
         }
-      } as EmailContentTypeSettings;
+
+        // If no content type specific settings, fall back to global template settings
+        const { data: globalSettings, error: globalError } = await supabase
+          .from('email_template_settings')
+          .select('*')
+          .single();
+
+        if (globalError && globalError.code !== 'PGRST116') {
+          console.error("Error fetching template settings:", globalError);
+          return null;
+        }
+
+        // Cast and merge with default values
+        return {
+          ...globalSettings,
+          content_type: contentType,
+          primary_color: globalSettings?.primary_color || "#4f46e5",
+          secondary_color: globalSettings?.secondary_color || "#3730a3",
+          accent_color: globalSettings?.accent_color || "#4f46e5",
+          layout_settings: {
+            headerStyle: 'centered',
+            showAuthor: true,
+            showDate: true,
+            imagePosition: 'top',
+            contentBlocks: ['title', 'image', 'description', 'cta'],
+            metadataDisplay: ['category', 'date', 'author']
+          }
+        } as EmailContentTypeSettings;
+      } catch (error) {
+        console.error("Error in template settings query:", error);
+        return null;
+      }
     }
   });
 
-  const selectedContents = contentList.filter(content => selectedContentIds.includes(content.id));
+  // Safely select content items from the list
+  const selectedContents = Array.isArray(contentList) 
+    ? contentList.filter(content => selectedContentIds.includes(content.id))
+    : [];
 
   if (loadingSettings) {
     return <Skeleton className="w-full h-[300px]" />;
   }
 
-  const previewHtml = generateEmailContent(
-    CONTENT_TYPE_LABELS[contentType],
-    `Check out these featured ${contentType}!`,
-    "Preview User",
-    "preview-campaign-id",
-    selectedContents,
-    contentType,
-    window.location.origin,
-    templateSettings
-  );
+  let previewHtml = '';
+  try {
+    previewHtml = generateEmailContent(
+      CONTENT_TYPE_LABELS[contentType],
+      `Check out these featured ${contentType}!`,
+      "Preview User",
+      "preview-campaign-id",
+      selectedContents,
+      contentType,
+      window.location.origin,
+      templateSettings || undefined
+    );
+  } catch (error) {
+    console.error("Error generating email preview:", error);
+    previewHtml = '<div>Error generating preview</div>';
+  }
   
   return (
     <div>

@@ -25,6 +25,10 @@ export function formatContentCard(
     metadataDisplay: ['category', 'date', 'author']
   };
 
+  // Ensure the layout.contentBlocks exists before trying to use it
+  const contentBlocks = layout.contentBlocks || ['title', 'image', 'description', 'metadata', 'cta'];
+  const metadataDisplay = layout.metadataDisplay || ['category', 'date', 'author'];
+  
   const imageHtml = (item.cover_image_url || item.image_url) ? `
     <img 
       src="${item.cover_image_url || item.image_url}"
@@ -35,7 +39,7 @@ export function formatContentCard(
     />
   ` : '';
 
-  const contentBlocks: { [key: string]: () => string } = {
+  const contentBlockMapping: { [key: string]: () => string } = {
     title: () => `
       <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
         ${item.title}
@@ -47,7 +51,7 @@ export function formatContentCard(
         ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
       </p>
     ` : '',
-    metadata: () => generateMetadata(item, contentType, layout.metadataDisplay),
+    metadata: () => generateMetadata(item, contentType, metadataDisplay),
     cta: () => `
       <div style="margin-top: 16px;">
         <a 
@@ -62,9 +66,9 @@ export function formatContentCard(
     `
   };
 
-  // Generate content based on block order
-  const orderedContent = layout.contentBlocks
-    .map(block => contentBlocks[block] ? contentBlocks[block]() : '')
+  // Generate content based on block order - safely handle possible undefined contentBlocks
+  const orderedContent = contentBlocks
+    .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
     .join('');
 
   const wrapperStyle = layout.imagePosition === 'side'
@@ -81,7 +85,7 @@ export function formatContentCard(
   `;
 }
 
-function getImageStyles(position: 'top' | 'inline' | 'side'): string {
+function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
   switch (position) {
     case 'side':
       return 'width: 200px; height: auto; border-radius: 8px; margin-right: 16px; flex-shrink: 0;';
@@ -98,7 +102,7 @@ function generateMetadata(
   contentType: string,
   metadataDisplay?: string[]
 ): string {
-  if (!metadataDisplay?.length) return '';
+  if (!metadataDisplay || !metadataDisplay.length) return '';
 
   const metadataItems: string[] = [];
 

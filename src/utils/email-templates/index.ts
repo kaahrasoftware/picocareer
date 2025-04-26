@@ -11,33 +11,49 @@ export function generateEmailContent(
   contentItems: ContentItem[],
   contentType: string,
   siteUrl: string,
-  settings: EmailContentTypeSettings
+  settings?: EmailContentTypeSettings
 ): string {
-  const styles = {
+  const styles = settings ? {
     primary: settings.primary_color,
     secondary: settings.secondary_color,
     accent: settings.accent_color
+  } : {
+    primary: "#4f46e5",
+    secondary: "#3730a3",
+    accent: "#4f46e5"
+  };
+
+  const layoutSettings = settings?.layout_settings || {
+    headerStyle: 'centered',
+    showAuthor: true,
+    showDate: true,
+    imagePosition: 'top',
+    contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+    metadataDisplay: ['category', 'date', 'author']
   };
 
   const header = generateHeader(
-    settings.content?.header_text || title,
-    settings.layout_settings?.headerStyle || 'centered',
+    settings?.content?.header_text || title,
+    layoutSettings.headerStyle || 'centered',
     styles,
-    settings.logo_url
+    settings?.logo_url
   );
 
-  const contentCardsHtml = contentItems.length > 0
-    ? contentItems.map(item => formatContentCard(
+  // Ensure contentItems is an array before attempting to map over it
+  const safeContentItems = Array.isArray(contentItems) ? contentItems : [];
+
+  const contentCardsHtml = safeContentItems.length > 0
+    ? safeContentItems.map(item => formatContentCard(
         item, 
         contentType, 
         styles, 
-        settings.layout_settings
+        layoutSettings
       )).join('')
     : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
-  const introText = settings.content?.intro_text || body;
-  const ctaText = settings.content?.cta_text || 'Check out more content on our website';
-  const footerText = settings.content?.footer_text || `© ${new Date().getFullYear()} All rights reserved.`;
+  const introText = settings?.content?.intro_text || body;
+  const ctaText = settings?.content?.cta_text || 'Check out more content on our website';
+  const footerText = settings?.content?.footer_text || `© ${new Date().getFullYear()} All rights reserved.`;
 
   return `
     <!DOCTYPE html>
