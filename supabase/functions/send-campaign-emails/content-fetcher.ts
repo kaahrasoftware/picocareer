@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { ContentItem } from "./types.ts";
 
@@ -45,10 +44,9 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
             description,
             salary_range,
             image_url,
-            position,
+            company_name,
             location,
-            remote,
-            company_name
+            remote
           `)
           .in('id', contentIds);
         
@@ -96,7 +94,7 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
           id: mentor.id,
           title: mentor.full_name || '',
           description: mentor.bio || '',
-          cover_image_url: mentor.avatar_url, // Standardize to cover_image_url
+          cover_image_url: mentor.avatar_url,
           avatar_url: mentor.avatar_url,
           skills: mentor.skills,
           position: mentor.position || '',
