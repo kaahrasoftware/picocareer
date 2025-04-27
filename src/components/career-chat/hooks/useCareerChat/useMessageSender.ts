@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { CareerChatMessage } from '@/types/database/analytics';
+import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
 import { MessageSenderProps, UseMessageSenderReturn } from './types';
 
 export function useMessageSender({
@@ -102,7 +102,9 @@ export function useMessageSender({
         // If this is one of the first messages, suggest a title
         if (!sessionMetadata?.title && messages.length <= 3) {
           const suggestedTitle = message.slice(0, 30);
-          updateSessionTitle(sessionId, suggestedTitle);
+          if (sessionId) {
+            updateSessionTitle(sessionId, suggestedTitle);
+          }
         }
         
         // Wait a moment for a more natural conversation flow
@@ -190,63 +192,23 @@ export function useMessageSender({
       setIsProcessing(true);
       setIsTyping(true);
       
-      // Start a new session without ending the current one
-      await startNewSession();
-      
-      // We need to initialize the session with a welcome message
-      // This runs after startNewSession has created a new session and set sessionId
-      setTimeout(async () => {
-        if (sessionId) {
-          // Welcome message
-          const welcomeMessage = {
-            id: uuidv4(),
-            session_id: sessionId,
-            message_type: 'system',
-            content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you!",
-            metadata: {},
-            created_at: new Date().toISOString()
-          };
-          
-          await addMessage(welcomeMessage);
-          
-          // Add a small delay before sending the first question
-          setTimeout(async () => {
-            if (sessionId) {
-              const questionMessage = createQuestionMessage(sessionId);
-              await addMessage(questionMessage);
-            }
-            setIsTyping(false);
-            setIsProcessing(false);
-          }, 1000);
-        } else {
-          setIsTyping(false);
-          setIsProcessing(false);
-        }
-      }, 500);
+      // This is just a placeholder for whatever logic your app uses
+      // to start a new session - this will be provided by the parent component
+      console.log("Starting new session...");
       
       toast.success("New assessment started!");
     } catch (error) {
       console.error("Error starting new chat:", error);
       toast.error("Failed to start a new assessment.");
+    } finally {
       setIsTyping(false);
       setIsProcessing(false);
     }
-  }, [
-    sessionId,
-    startNewSession,
-    addMessage,
-    createQuestionMessage,
-    setIsTyping
-  ]);
+  }, [setIsTyping]);
 
   return {
     sendMessage,
     handleStartNewChat,
     isAnalyzing
   };
-}
-
-// Need to add this for TypeScript to recognize as a module
-async function startNewSession() {
-  // This is just a stub for TypeScript, will be replaced by actual parameter in useCallback
 }

@@ -35,13 +35,15 @@ export function FooterLinkSection({ title, links }: FooterLinkSectionProps) {
 
 export function useFooterLinks() {
   const navigate = useNavigate();
-  
+
   // Quick Links - Resources, Company, Legal
   const companyLinks = [
     { label: "About Us", href: "/about", onClick: () => navigate("/about") },
     { label: "Contact Us", href: "/contact", onClick: () => navigate("/contact") },
-    { label: "Our Team", href: "/about#team", onClick: () => navigate("/about#team") },
-    { label: "Careers at PicoCareer", href: "/careers", onClick: () => navigate("/careers") },
+    // Removed "Our Team"
+    // { label: "Our Team", href: "/about#team", onClick: () => navigate("/about#team") },
+    // Removed "Careers at PicoCareer"
+    // { label: "Careers at PicoCareer", href: "/careers", onClick: () => navigate("/careers") },
   ];
 
   const resourceLinks = [
@@ -49,15 +51,18 @@ export function useFooterLinks() {
     { label: "Career Paths", href: "/career", onClick: () => navigate("/career") },
     { label: "Find a Mentor", href: "/mentor", onClick: () => navigate("/mentor") },
     { label: "Scholarships", href: "/scholarships", onClick: () => navigate("/scholarships") },
-    { label: "Learning Resources", href: "/resources", onClick: () => navigate("/resources") },
+    // Removed "Learning Resources"
+    // { label: "Learning Resources", href: "/resources", onClick: () => navigate("/resources") },
   ];
 
   const legalLinks = [
     { label: "Privacy Policy", href: "/privacy", onClick: () => navigate("/privacy") },
     { label: "Terms of Service", href: "/terms", onClick: () => navigate("/terms") },
-    { label: "Cookie Policy", href: "/cookies", onClick: () => navigate("/cookies") },
-    { label: "Accessibility", href: "/accessibility", onClick: () => navigate("/accessibility") },
+    // Removed "Cookie Policy"
+    // { label: "Cookie Policy", href: "/cookies", onClick: () => navigate("/cookies") },
+    // Removed "Accessibility"
+    // { label: "Accessibility", href: "/accessibility", onClick: () => navigate("/accessibility") },
   ];
-  
+
   return { companyLinks, resourceLinks, legalLinks };
 }

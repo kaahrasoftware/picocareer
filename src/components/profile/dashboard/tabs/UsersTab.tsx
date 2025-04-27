@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { UserProfileDetailsDialog } from "@/components/admin/UserProfileDetailsDialog";
 import type { OnboardingStatus, UserType } from "@/types/database/enums";
+import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
+import { endOfDay, startOfDay } from "date-fns";
+import { MentorPerformanceTab } from "./MentorPerformanceTab";
 
 interface User {
   id: string;
@@ -40,11 +43,14 @@ export function UsersTab() {
   const [selectedStatus, setSelectedStatus] = useState<"all" | OnboardingStatus>("all");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [usersTabValue, setUsersTabValue] = useState<string>("overview");
 
   const { data: users = [], isLoading, refetch } = useQuery({
-    queryKey: ['dashboard-users', selectedUserType, selectedStatus],
+    queryKey: ['dashboard-users', selectedUserType, selectedStatus, startDate, endDate],
     queryFn: async () => {
-      console.log('Fetching users with filters:', { selectedUserType, selectedStatus });
+      console.log('Fetching users with filters:', { selectedUserType, selectedStatus, startDate, endDate });
       
       let query = supabase
         .from('profiles')
@@ -65,6 +71,14 @@ export function UsersTab() {
         query = query.eq('onboarding_status', selectedStatus);
       }
 
+      if (startDate) {
+        query = query.gte('created_at', startOfDay(startDate).toISOString());
+      }
+
+      if (endDate) {
+        query = query.lte('created_at', endOfDay(endDate).toISOString());
+      }
+
       const { data, error } = await query;
 
       if (error) {
@@ -77,7 +91,6 @@ export function UsersTab() {
     }
   });
 
-  // Calculate statistics
   const stats = useMemo(() => {
     const totalUsers = users.length;
     const totalMentors = users.filter(user => user.user_type === 'mentor').length;
@@ -151,6 +164,11 @@ export function UsersTab() {
     setSelectedUserId(null);
   };
 
+  const handleDateRangeChange = (start: Date | undefined, end: Date | undefined) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
   const columns = [
     {
       accessorKey: "full_name",
@@ -218,9 +236,15 @@ export function UsersTab() {
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs 
+        defaultValue="overview" 
+        className="w-full"
+        value={usersTabValue}
+        onValueChange={setUsersTabValue}
+      >
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">Users Overview</TabsTrigger>
+          <TabsTrigger value="mentor-performance">Mentor Performance</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <Card className="p-4">
@@ -268,9 +292,15 @@ export function UsersTab() {
                   <SelectItem value="Rejected" className={statusColors["Rejected"]}>Rejected</SelectItem>
                 </SelectContent>
               </Select>
+
+              <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
             </div>
             {users && <DataTable columns={columns} data={users} />}
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="mentor-performance">
+          <MentorPerformanceTab />
         </TabsContent>
       </Tabs>
 

@@ -409,6 +409,86 @@ export interface Database {
           }
         ]
       }
+      email_campaigns: {
+        Row: {
+          last_sent: string | null
+          scheduled_for: string | null
+          updated_at: string
+          created_at: string
+          id: string
+          last_error: string | null
+          body: string | null
+          recipient_type: string | null
+          last_checked_at: string | null
+          recipients_count: number
+          failed_count: number
+          frequency: string
+          status: string
+          content_type: string
+          subject: string | null
+          sent_at: string | null
+          recipient_filter: any | null
+          admin_id: string
+          sent_count: number
+          content_id: string
+          content_ids: string[]
+        }
+        Insert: {
+          last_sent?: string | null
+          scheduled_for?: string | null
+          updated_at?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          body?: string | null
+          recipient_type?: string | null
+          last_checked_at?: string | null
+          recipients_count?: number
+          failed_count?: number
+          frequency: string
+          status?: string
+          content_type: string
+          subject?: string | null
+          sent_at?: string | null
+          recipient_filter?: any | null
+          admin_id: string
+          sent_count?: number
+          content_id: string
+          content_ids?: string[]
+        }
+        Update: {
+          last_sent?: string | null
+          scheduled_for?: string | null
+          updated_at?: string
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          body?: string | null
+          recipient_type?: string | null
+          last_checked_at?: string | null
+          recipients_count?: number
+          failed_count?: number
+          frequency?: string
+          status?: string
+          content_type?: string
+          subject?: string | null
+          sent_at?: string | null
+          recipient_filter?: any | null
+          admin_id?: string
+          sent_count?: number
+          content_id?: string
+          content_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -484,6 +484,160 @@ export type Database = {
           },
         ]
       }
+      email_campaign_recipients: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          email_subscription_id: string | null
+          id: string
+          profile_id: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          email_subscription_id?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          email_subscription_id?: string | null
+          id?: string
+          profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_recipients_email_subscription_id_fkey"
+            columns: ["email_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "email_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaign_recipients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          admin_id: string
+          body: string | null
+          content_id: string
+          content_ids: string[] | null
+          content_type: string
+          created_at: string
+          failed_count: number
+          frequency: string
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          last_sent: string | null
+          recipient_filter: Json | null
+          recipient_type: string | null
+          recipients_count: number
+          scheduled_for: string | null
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          body?: string | null
+          content_id: string
+          content_ids?: string[] | null
+          content_type: string
+          created_at?: string
+          failed_count?: number
+          frequency: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_sent?: string | null
+          recipient_filter?: Json | null
+          recipient_type?: string | null
+          recipients_count?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          body?: string | null
+          content_id?: string
+          content_ids?: string[] | null
+          content_type?: string
+          created_at?: string
+          failed_count?: number
+          frequency?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_sent?: string | null
+          recipient_filter?: Json | null
+          recipient_type?: string | null
+          recipients_count?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_content_type_settings: {
+        Row: {
+          accent_color: string
+          admin_id: string
+          content_type: string
+          created_at: string
+          id: string
+          layout_settings: Json
+          primary_color: string
+          secondary_color: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          admin_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          layout_settings?: Json
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          admin_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          layout_settings?: Json
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_subscriptions: {
         Row: {
           created_at: string
@@ -504,6 +658,83 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      email_template_content: {
+        Row: {
+          admin_id: string
+          content_type: string
+          created_at: string
+          cta_text: string | null
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          intro_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          content_type: string
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          intro_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          content_type?: string
+          created_at?: string
+          cta_text?: string | null
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          intro_text?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_template_settings: {
+        Row: {
+          accent_color: string
+          admin_id: string
+          created_at: string
+          id: string
+          logo_url: string | null
+          primary_color: string
+          secondary_color: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_template_settings_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_registrations: {
         Row: {
@@ -2266,6 +2497,7 @@ export type Database = {
           author_id: string | null
           categories: string[] | null
           compensation: string | null
+          cover_image_url: string | null
           created_at: string
           deadline: string | null
           description: string
@@ -2285,6 +2517,7 @@ export type Database = {
           author_id?: string | null
           categories?: string[] | null
           compensation?: string | null
+          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description: string
@@ -2304,6 +2537,7 @@ export type Database = {
           author_id?: string | null
           categories?: string[] | null
           compensation?: string | null
+          cover_image_url?: string | null
           created_at?: string
           deadline?: string | null
           description?: string
@@ -2771,6 +3005,7 @@ export type Database = {
           eligibility_criteria: Json | null
           featured: boolean | null
           id: string
+          image_url: string | null
           provider_name: string
           renewable: boolean | null
           required_documents: string[] | null
@@ -2800,6 +3035,7 @@ export type Database = {
           eligibility_criteria?: Json | null
           featured?: boolean | null
           id?: string
+          image_url?: string | null
           provider_name: string
           renewable?: boolean | null
           required_documents?: string[] | null
@@ -2829,6 +3065,7 @@ export type Database = {
           eligibility_criteria?: Json | null
           featured?: boolean | null
           id?: string
+          image_url?: string | null
           provider_name?: string
           renewable?: boolean | null
           required_documents?: string[] | null
@@ -3766,6 +4003,7 @@ export type Database = {
         | "branding_updated"
         | "member_confirmed"
         | "confirmed_hub_membership"
+      campaign_status: "pending" | "sending" | "sent" | "failed" | "partial"
       categories:
         | "Technology"
         | "Digital Tools"
@@ -4016,6 +4254,7 @@ export type Database = {
         | "Judging (J)"
         | "Perceiving (P)"
       document_type: "pdf" | "word" | "powerpoint" | "excel" | "other"
+      email_content_section: "header" | "intro" | "cta" | "footer"
       event_types:
         | "Coffee Time"
         | "Hackathon"
@@ -4473,6 +4712,7 @@ export const Constants = {
         "member_confirmed",
         "confirmed_hub_membership",
       ],
+      campaign_status: ["pending", "sending", "sent", "failed", "partial"],
       categories: [
         "Technology",
         "Digital Tools",
@@ -4728,6 +4968,7 @@ export const Constants = {
         "Perceiving (P)",
       ],
       document_type: ["pdf", "word", "powerpoint", "excel", "other"],
+      email_content_section: ["header", "intro", "cta", "footer"],
       event_types: ["Coffee Time", "Hackathon", "Panel", "Webinar", "Workshop"],
       feedback_type: ["mentor_feedback", "mentee_feedback"],
       hub_member_role: ["admin", "moderator", "member", "faculty", "student"],

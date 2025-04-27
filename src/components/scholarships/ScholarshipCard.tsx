@@ -11,6 +11,7 @@ import { ScholarshipDetailsDialog } from "./ScholarshipDetailsDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+
 interface ScholarshipCardProps {
   scholarship: {
     id: string;
@@ -43,26 +44,25 @@ interface ScholarshipCardProps {
 // Helper function to get card gradient based on category
 const getCardGradient = (category: string[], featured: boolean) => {
   if (featured) {
-    return "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 border-amber-200 dark:border-amber-700/50";
+    return "bg-gradient-to-br from-[#FFF8E1] to-[#FFE7C5] border-amber-100";
   }
 
-  // Different gradients based on primary category
   const primaryCategory = category[0]?.toLowerCase() || "";
   if (primaryCategory.includes("stem") || primaryCategory.includes("science") || primaryCategory.includes("engineering")) {
-    return "bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/30 dark:to-blue-800/20 border-blue-200 dark:border-blue-700/50";
+    return "bg-gradient-to-br from-[#EBF3FF] to-[#F3F9FF] border-[#CFE1F6]";
   } else if (primaryCategory.includes("art") || primaryCategory.includes("music") || primaryCategory.includes("creative")) {
-    return "bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/30 dark:to-purple-800/20 border-purple-200 dark:border-purple-700/50";
+    return "bg-gradient-to-br from-[#F3EAFD] to-[#F6F4FB] border-[#ECDDFB]";
   } else if (primaryCategory.includes("business") || primaryCategory.includes("entrepreneur") || primaryCategory.includes("finance")) {
-    return "bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-emerald-800/20 border-emerald-200 dark:border-emerald-700/50";
+    return "bg-gradient-to-br from-[#ECFDF5] to-[#F7FBF6] border-[#BBE7D7]";
   } else if (primaryCategory.includes("health") || primaryCategory.includes("medical") || primaryCategory.includes("nursing")) {
-    return "bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-red-800/20 border-red-200 dark:border-red-700/50";
+    return "bg-gradient-to-br from-[#FFECEF] to-[#FFF5F7] border-[#F8B8C6]";
   } else if (primaryCategory.includes("minority") || primaryCategory.includes("diversity") || primaryCategory.includes("inclusion")) {
-    return "bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-800/20 border-orange-200 dark:border-orange-700/50";
+    return "bg-gradient-to-br from-[#FFF7EA] to-[#FFF9ED] border-[#F9DDB1]";
   }
 
-  // Default gradient
-  return "bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-800/20 border-indigo-200 dark:border-indigo-700/50";
+  return "bg-gradient-to-br from-[#F1F0FB] to-[#E5DEFF] border-[#E5DEFF]";
 };
+
 export function ScholarshipCard({
   scholarship,
   compact = false
@@ -79,7 +79,6 @@ export function ScholarshipCard({
   const [recentBookmarks, setRecentBookmarks] = useLocalStorage<string[]>("recent-scholarship-bookmarks", []);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Check if scholarship is bookmarked
   useEffect(() => {
     const checkBookmarkStatus = async () => {
       if (!user) return;
@@ -91,10 +90,8 @@ export function ScholarshipCard({
         if (error) throw error;
         setIsBookmarked(!!data);
 
-        // Check if this is in recently bookmarked list
         if (recentBookmarks.includes(scholarship.id)) {
           setRecentlyBookmarked(true);
-          // Remove from recent bookmarks after animation
           setTimeout(() => {
             setRecentlyBookmarked(false);
             setRecentBookmarks(prev => prev.filter(id => id !== scholarship.id));
@@ -106,6 +103,7 @@ export function ScholarshipCard({
     };
     checkBookmarkStatus();
   }, [user, scholarship.id, recentBookmarks, setRecentBookmarks]);
+
   const handleBookmark = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (!user) {
@@ -125,7 +123,6 @@ export function ScholarshipCard({
         });
         setIsBookmarked(true);
 
-        // Add to recent bookmarks for animation
         setRecentBookmarks(prev => [...prev, scholarship.id]);
         setRecentlyBookmarked(true);
         toast({
@@ -133,7 +130,6 @@ export function ScholarshipCard({
           description: "This scholarship has been added to your bookmarks."
         });
 
-        // Remove animation after delay
         setTimeout(() => {
           setRecentlyBookmarked(false);
         }, 2000);
@@ -154,10 +150,8 @@ export function ScholarshipCard({
     }
   };
 
-  // Get card gradient based on category
   const cardGradient = getCardGradient(scholarship.category, scholarship.featured);
 
-  // Format deadline display
   const getDeadlineDisplay = () => {
     if (!scholarship.deadline) return null;
     const deadlineDate = new Date(scholarship.deadline);
@@ -169,7 +163,6 @@ export function ScholarshipCard({
       addSuffix: true
     });
 
-    // If deadline is within 2 weeks, show as urgent
     const twoWeeksFromNow = new Date();
     twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
     if (deadlineDate <= twoWeeksFromNow) {
@@ -177,10 +170,12 @@ export function ScholarshipCard({
     }
     return <span>Due {timeUntil}</span>;
   };
+
   const openDetailsDialog = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setDetailsDialogOpen(true);
   };
+
   if (compact) {
     return <>
         <Card className={cn("h-full transition-all duration-300 overflow-hidden border cursor-pointer group", cardGradient, "transform hover:translate-y-[-4px] hover:shadow-lg", isHovered && "ring-2 ring-primary/40")} onClick={openDetailsDialog} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -227,16 +222,15 @@ export function ScholarshipCard({
             </Button>
           </CardFooter>
           
-          {/* Subtle highlight effect on hover */}
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           
-          {/* Featured indicator */}
-          {scholarship.featured && <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-r-[40px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />}
+          <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-r-[40px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />
         </Card>
 
         <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
       </>;
   }
+
   return <>
       <Card className={cn("h-full transition-all duration-300 overflow-hidden border cursor-pointer group", cardGradient, "transform hover:translate-y-[-4px] hover:shadow-lg", isHovered && "ring-2 ring-primary/40")} onClick={openDetailsDialog} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
         <CardHeader className="relative pt-6 pb-3">
@@ -307,7 +301,6 @@ export function ScholarshipCard({
               </Badge>}
           </div>
           
-          {/* Eligibility preview (simplified) */}
           {scholarship.eligibility_criteria && <div className="mt-4 text-xs text-muted-foreground">
               
               <ul className="list-disc list-inside space-y-0.5 pl-1">
@@ -330,10 +323,8 @@ export function ScholarshipCard({
             </Button>}
         </CardFooter>
         
-        {/* Subtle highlight effect on hover */}
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         
-        {/* Featured indicator */}
         {scholarship.featured && <div className="absolute top-0 right-0 w-0 h-0 border-t-[60px] border-r-[60px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />}
       </Card>
 

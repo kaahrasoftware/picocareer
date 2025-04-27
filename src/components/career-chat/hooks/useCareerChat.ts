@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
@@ -301,6 +300,56 @@ export function useCareerChat() {
     }
   };
 
+  // Complete the session
+  const completeSession = async () => {
+    if (!sessionId) return;
+
+    const updatedMetadata: Partial<ChatSessionMetadata> = {
+      isComplete: true,
+      completedAt: new Date().toISOString(),
+    };
+    
+    try {
+      await updateSessionMetadata(updatedMetadata);
+      await endCurrentSession();
+    } catch (error) {
+      console.error("Error completing session:", error);
+    }
+  };
+
+  // Update category progress
+  const updateCategoryProgress = (category: string, increment: number = 1) => {
+    if (!sessionMetadata) return;
+    
+    const currentCounts = sessionMetadata.questionCounts || {
+      education: 0,
+      skills: 0,
+      workstyle: 0,
+      goals: 0
+    };
+    
+    const updatedCounts = {
+      ...currentCounts,
+      [category]: (currentCounts[category] || 0) + increment
+    };
+    
+    // Calculate overall progress (simple average for now)
+    const categoryKeys = Object.keys(updatedCounts);
+    const totalProgress = categoryKeys.reduce((sum, key) => sum + (updatedCounts[key] || 0), 0);
+    const overallProgress = Math.min(100, Math.round((totalProgress / (categoryKeys.length * 3)) * 100));
+    
+    const updatedMetadata: Partial<ChatSessionMetadata> = {
+      questionCounts: updatedCounts,
+      overallProgress,
+      categoryProgress: {
+        ...(sessionMetadata.categoryProgress || {}),
+        [category]: Math.min(100, ((updatedCounts[category] || 0) / 3) * 100)
+      }
+    };
+    
+    updateSessionMetadata(updatedMetadata);
+  };
+
   return {
     messages,
     inputMessage,
@@ -324,6 +373,8 @@ export function useCareerChat() {
     addMessage,
     isSessionComplete,
     handleStartNewChat,
-    handleBeginAssessment
+    handleBeginAssessment,
+    completeSession,
+    updateCategoryProgress
   };
 }

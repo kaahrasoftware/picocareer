@@ -10,7 +10,7 @@ export async function createChatSession(profileId: string, initialMetadata: Chat
       .insert({
         profile_id: profileId,
         status: 'active',
-        session_metadata: initialMetadata,
+        session_metadata: initialMetadata as any, // Cast to any to resolve type issues
         progress_data: {
           education: 0,
           skills: 0,
@@ -82,12 +82,13 @@ export function useSessionInitialization(
           .order('message_index', { ascending: true });
           
         if (sessionMessages) {
-          chatMessages = sessionMessages;
+          // Cast messages to the proper type
+          chatMessages = sessionMessages as unknown as CareerChatMessage[];
         }
       }
     }
     
-    // If no existing session or forcing new, create a new one
+    // If no existing session, create a new one
     if (!chatSession) {
       // Initial metadata
       const initialMetadata: ChatSessionMetadata = {
@@ -112,7 +113,7 @@ export function useSessionInitialization(
         const welcomeMessage: CareerChatMessage = {
           id: uuidv4(),
           session_id: sessionId,
-          message_type: 'system',
+          message_type: "system",
           content: 'Hi there! I\'m Pico, your career advisor. I\'m here to help you explore career paths that align with your interests, skills, and goals. What would you like to discuss today?',
           metadata: {
             hasOptions: true,
@@ -136,7 +137,7 @@ export function useSessionInitialization(
     if (chatSession) {
       setSessionId(chatSession.id);
       setMessages(chatMessages);
-      setSessionMetadata(chatSession.session_metadata || null);
+      setSessionMetadata(chatSession.session_metadata as unknown as ChatSessionMetadata || null);
     }
     setIsLoading(false);
   };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
@@ -25,13 +24,13 @@ export function PageLoader({
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array(count).fill(0).map((_, i) => (
-              <div key={i} className="border rounded-lg p-4 space-y-3">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-20 w-full" />
+              <div key={i} className="border rounded-lg p-4 space-y-3 bg-[#F1F0FB]"> {/* very light background */}
+                <Skeleton className="h-4 w-3/4 bg-[#E5DEFF]" />
+                <Skeleton className="h-10 w-full bg-[#E5DEFF]" />
+                <Skeleton className="h-20 w-full bg-[#E5DEFF]" />
                 <div className="flex space-x-2 pt-2">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-16 bg-[#D6BCFA]" />
+                  <Skeleton className="h-5 w-16 bg-[#D6BCFA]" />
                 </div>
               </div>
             ))}
@@ -74,11 +73,11 @@ export function PageLoader({
         
       default:
         return (
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-[250px]" />
-            <Skeleton className="h-4 w-[350px]" />
+          <div className="space-y-4 bg-[#F1F0FB] p-3 rounded-lg">
+            <Skeleton className="h-8 w-[250px] bg-[#E5DEFF]" />
+            <Skeleton className="h-4 w-[350px] bg-[#E5DEFF]" />
             <div className="h-[2px] my-6" />
-            <Skeleton className="h-64 w-full rounded-lg" />
+            <Skeleton className="h-64 w-full rounded-lg bg-[#E5DEFF]" />
           </div>
         );
     }
