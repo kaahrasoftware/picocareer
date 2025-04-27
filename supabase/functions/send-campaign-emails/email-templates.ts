@@ -15,7 +15,7 @@ function getDialogUrl(contentType: string, id: string, siteUrl: string): string 
     case 'opportunities':
       return `${siteUrl}/opportunities?dialog=true&opportunityId=${id}`;
     default:
-      return `${siteUrl}/${contentType}/${id}`;
+      throw new Error(`Unsupported content type: ${contentType}`);
   }
 }
 
