@@ -23,68 +23,149 @@ function generateContentCard(
   item: ContentItem,
   contentType: string,
   styles: { primary: string; secondary: string; accent: string },
+  settings?: EmailTemplateSettings,
   siteUrl: string
 ): string {
   // Get the appropriate image URL, with fallbacks
   const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || `${siteUrl}/placeholder_${contentType}.jpg`;
-  const title = item.title || '';
-  const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
   const detailUrl = getDialogUrl(contentType, item.id, siteUrl);
-
-  // Add specific metadata based on content type
-  let metadata = '';
   
-  switch(contentType) {
-    case 'careers':
-      if (item.salary_range) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
-      if (item.company_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
-      if (item.location) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
-      break;
-      
-    case 'scholarships':
-      if (item.amount) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
-      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-      if (item.deadline) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
-      break;
-      
-    case 'opportunities':
-      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-      if (item.compensation) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
-      if (item.location) {
-        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
-        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
-      }
-      break;
+  // Only show content blocks that are enabled in settings
+  const layoutSettings = settings?.layout_settings || {
+    headerStyle: 'centered',
+    showAuthor: true,
+    showDate: true,
+    imagePosition: 'top',
+    contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+    metadataDisplay: ['category', 'date', 'author']
+  };
+
+  const showImage = layoutSettings.contentBlocks.includes('image');
+  const showTitle = layoutSettings.contentBlocks.includes('title');
+  const showDescription = layoutSettings.contentBlocks.includes('description');
+  const showCta = layoutSettings.contentBlocks.includes('cta');
+  
+  // Generate metadata based on content type and settings
+  let metadata = '';
+  if (layoutSettings.contentBlocks.includes('metadata')) {
+    switch(contentType) {
+      case 'careers':
+        if (layoutSettings.metadataDisplay.includes('salary') && item.salary_range) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('company') && item.company_name) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('location') && item.location) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
+        }
+        break;
+        
+      case 'scholarships':
+        if (layoutSettings.metadataDisplay.includes('amount') && item.amount) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('provider') && item.provider_name) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('deadline') && item.deadline) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
+        }
+        break;
+        
+      case 'opportunities':
+        if (layoutSettings.metadataDisplay.includes('provider') && item.provider_name) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('compensation') && item.compensation) {
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
+        }
+        if (layoutSettings.metadataDisplay.includes('location') && item.location) {
+          const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
+        }
+        break;
+    }
+
+    // Add author and date if enabled
+    if (layoutSettings.showAuthor && layoutSettings.metadataDisplay.includes('author') && item.author_name) {
+      metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">✍️ ${item.author_name}</p>`;
+    }
+    if (layoutSettings.showDate && layoutSettings.metadataDisplay.includes('date') && item.created_at) {
+      metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📅 ${new Date(item.created_at).toLocaleDateString()}</p>`;
+    }
   }
 
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
-        ${imageUrl ? `
-          <img 
-            src="${imageUrl}" 
-            alt="${title}"
-            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
-          />
-        ` : ''}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
-          ${title}
-        </h3>
-        ${metadata}
-        <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
-          ${description}
-        </p>
-        <div style="margin-top: 16px;">
-          <a 
-            href="${detailUrl}" 
-            style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
-          >
-            Learn More
-          </a>
+  // Generate image HTML based on position setting
+  const imageHtml = showImage && imageUrl ? `
+    <img 
+      src="${imageUrl}" 
+      alt="${item.title || ''}"
+      style="${getImageStyles(layoutSettings.imagePosition)}"
+    />
+  ` : '';
+
+  // Build content card based on layout settings
+  const contentHtml = `
+    <div style="padding: 16px;">
+      ${layoutSettings.imagePosition === 'top' ? imageHtml : ''}
+      
+      <div style="display: ${layoutSettings.imagePosition === 'side' ? 'flex' : 'block'}; gap: 16px;">
+        ${layoutSettings.imagePosition === 'side' ? imageHtml : ''}
+        
+        <div style="flex: 1;">
+          ${showTitle ? `
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+              ${item.title || ''}
+            </h3>
+          ` : ''}
+          
+          ${metadata}
+          
+          ${showDescription && item.description ? `
+            <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
+              ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
+            </p>
+          ` : ''}
+          
+          ${layoutSettings.imagePosition === 'inline' ? imageHtml : ''}
+          
+          ${showCta ? `
+            <div style="margin-top: 16px;">
+              <a 
+                href="${detailUrl}" 
+                style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); 
+                       color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; 
+                       font-weight: 500;"
+              >
+                ${settings?.content?.cta_text || 'Learn More'}
+              </a>
+            </div>
+          ` : ''}
         </div>
       </div>
     </div>
   `;
+
+  return `
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; 
+                overflow: hidden; background-color: white;">
+      ${contentHtml}
+    </div>
+  `;
+}
+
+function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
+  const baseStyles = 'border-radius: 8px;';
+  switch (position) {
+    case 'side':
+      return `${baseStyles} width: 200px; height: auto; margin: 0;`;
+    case 'inline':
+      return `${baseStyles} width: 60%; height: auto; margin: 12px auto; display: block;`;
+    case 'top':
+    default:
+      return `${baseStyles} width: 100%; height: auto; margin-bottom: 12px; max-width: 600px;`;
+  }
 }
 
 export function generateEmailContent(
@@ -116,6 +197,41 @@ export function generateEmailContent(
     }
   };
 
+  function generateHeader(
+    title: string,
+    headerStyle: 'centered' | 'banner' | 'minimal',
+    styles: any,
+    logoUrl?: string
+  ) {
+    switch (headerStyle) {
+      case 'banner':
+        return `
+          <div style="background: linear-gradient(135deg, ${styles.primary_color}, ${styles.secondary_color}); color: white; padding: 32px; text-align: center; margin-bottom: 24px;">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
+            <h1 style="margin: 0; font-size: 28px; font-weight: 600;">${title}</h1>
+          </div>
+        `;
+        
+      case 'minimal':
+        return `
+          <div style="padding: 24px; margin-bottom: 24px;">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 32px; margin-bottom: 16px;">` : ''}
+            <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
+            <div style="width: 50px; height: 3px; background-color: ${styles.accent_color}; margin-top: 12px;"></div>
+          </div>
+        `;
+        
+      case 'centered':
+      default:
+        return `
+          <div style="text-align: center; padding: 24px; margin-bottom: 24px;">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
+            <h1 style="margin: 0; font-size: 26px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
+          </div>
+        `;
+    }
+  }
+
   const header = generateHeader(
     title,
     settings.layout_settings.headerStyle,
@@ -124,7 +240,7 @@ export function generateEmailContent(
   );
 
   const contentCardsHtml = contentItems.length > 0
-    ? contentItems.map(item => generateContentCard(item, contentType, settings, siteUrl)).join('')
+    ? contentItems.map(item => generateContentCard(item, contentType, settings, templateSettings, siteUrl)).join('')
     : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
   return `
@@ -190,40 +306,5 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
       return `📖 Fresh Insights Curated for You, ${nameSection}`;
     default:
       return `New Content Updates for You, ${nameSection}`;
-  }
-}
-
-function generateHeader(
-  title: string,
-  headerStyle: 'centered' | 'banner' | 'minimal',
-  styles: any,
-  logoUrl?: string
-) {
-  switch (headerStyle) {
-    case 'banner':
-      return `
-        <div style="background: linear-gradient(135deg, ${styles.primary_color}, ${styles.secondary_color}); color: white; padding: 32px; text-align: center; margin-bottom: 24px;">
-          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
-          <h1 style="margin: 0; font-size: 28px; font-weight: 600;">${title}</h1>
-        </div>
-      `;
-      
-    case 'minimal':
-      return `
-        <div style="padding: 24px; margin-bottom: 24px;">
-          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 32px; margin-bottom: 16px;">` : ''}
-          <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
-          <div style="width: 50px; height: 3px; background-color: ${styles.accent_color}; margin-top: 12px;"></div>
-        </div>
-      `;
-      
-    case 'centered':
-    default:
-      return `
-        <div style="text-align: center; padding: 24px; margin-bottom: 24px;">
-          ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="height: 40px; margin-bottom: 16px;">` : ''}
-          <h1 style="margin: 0; font-size: 26px; font-weight: 600; color: ${styles.primary_color};">${title}</h1>
-        </div>
-      `;
   }
 }
