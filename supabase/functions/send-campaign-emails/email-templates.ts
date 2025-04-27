@@ -26,11 +26,9 @@ function generateContentCard(
   settings?: EmailTemplateSettings,
   siteUrl: string
 ): string {
-  // Get the appropriate image URL, with fallbacks
   const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || `${siteUrl}/placeholder_${contentType}.jpg`;
   const detailUrl = getDialogUrl(contentType, item.id, siteUrl);
   
-  // Only show content blocks that are enabled in settings
   const layoutSettings = settings?.layout_settings || {
     headerStyle: 'centered',
     showAuthor: true,
@@ -44,59 +42,9 @@ function generateContentCard(
   const showTitle = layoutSettings.contentBlocks.includes('title');
   const showDescription = layoutSettings.contentBlocks.includes('description');
   const showCta = layoutSettings.contentBlocks.includes('cta');
-  
-  // Generate metadata based on content type and settings
-  let metadata = '';
-  if (layoutSettings.contentBlocks.includes('metadata')) {
-    switch(contentType) {
-      case 'careers':
-        if (layoutSettings.metadataDisplay.includes('salary') && item.salary_range) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('company') && item.company_name) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('location') && item.location) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
-        }
-        break;
-        
-      case 'scholarships':
-        if (layoutSettings.metadataDisplay.includes('amount') && item.amount) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('provider') && item.provider_name) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('deadline') && item.deadline) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
-        }
-        break;
-        
-      case 'opportunities':
-        if (layoutSettings.metadataDisplay.includes('provider') && item.provider_name) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('compensation') && item.compensation) {
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
-        }
-        if (layoutSettings.metadataDisplay.includes('location') && item.location) {
-          const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
-          metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
-        }
-        break;
-    }
 
-    // Add author and date if enabled
-    if (layoutSettings.showAuthor && layoutSettings.metadataDisplay.includes('author') && item.author_name) {
-      metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">✍️ ${item.author_name}</p>`;
-    }
-    if (layoutSettings.showDate && layoutSettings.metadataDisplay.includes('date') && item.created_at) {
-      metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📅 ${new Date(item.created_at).toLocaleDateString()}</p>`;
-    }
-  }
+  const metadata = generateMetadata(item, contentType, layoutSettings.metadataDisplay);
 
-  // Generate image HTML based on position setting
   const imageHtml = showImage && imageUrl ? `
     <img 
       src="${imageUrl}" 
@@ -105,7 +53,6 @@ function generateContentCard(
     />
   ` : '';
 
-  // Build content card based on layout settings
   const contentHtml = `
     <div style="padding: 16px;">
       ${layoutSettings.imagePosition === 'top' ? imageHtml : ''}
@@ -115,7 +62,8 @@ function generateContentCard(
         
         <div style="flex: 1;">
           ${showTitle ? `
-            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent}; 
+                       font-weight: 600; line-height: 1.4;">
               ${item.title || ''}
             </h3>
           ` : ''}
@@ -123,7 +71,7 @@ function generateContentCard(
           ${metadata}
           
           ${showDescription && item.description ? `
-            <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
+            <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.6;">
               ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
             </p>
           ` : ''}
@@ -134,9 +82,13 @@ function generateContentCard(
             <div style="margin-top: 16px;">
               <a 
                 href="${detailUrl}" 
-                style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); 
-                       color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; 
-                       font-weight: 500;"
+                style="display: inline-block; 
+                       background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); 
+                       color: white; padding: 12px 24px; text-decoration: none; 
+                       border-radius: 6px; font-weight: 500; font-size: 14px;
+                       transition: opacity 0.2s ease;"
+                onmouseover="this.style.opacity='0.9'"
+                onmouseout="this.style.opacity='1'"
               >
                 ${settings?.content?.cta_text || 'Learn More'}
               </a>
@@ -149,23 +101,84 @@ function generateContentCard(
 
   return `
     <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; 
-                overflow: hidden; background-color: white;">
+                overflow: hidden; background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
       ${contentHtml}
     </div>
   `;
 }
 
 function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
-  const baseStyles = 'border-radius: 8px;';
+  const baseStyles = 'border-radius: 8px; object-fit: cover;';
   switch (position) {
     case 'side':
-      return `${baseStyles} width: 200px; height: auto; margin: 0;`;
+      return `${baseStyles} width: 200px; height: 140px; margin: 0;`;
     case 'inline':
       return `${baseStyles} width: 60%; height: auto; margin: 12px auto; display: block;`;
     case 'top':
     default:
-      return `${baseStyles} width: 100%; height: auto; margin-bottom: 12px; max-width: 600px;`;
+      return `${baseStyles} width: 100%; height: auto; margin-bottom: 12px; max-height: 300px;`;
   }
+}
+
+function generateMetadata(item: ContentItem, contentType: string, metadataDisplay: string[] = []): string {
+  const metadataItems: string[] = [];
+
+  switch(contentType) {
+    case 'scholarships':
+      if (metadataDisplay.includes('amount') && item.amount) {
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          💰 $${item.amount.toLocaleString()}
+        </span>`);
+      }
+      if (metadataDisplay.includes('provider') && item.provider_name) {
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          🏢 ${item.provider_name}
+        </span>`);
+      }
+      if (metadataDisplay.includes('deadline') && item.deadline) {
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          ⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}
+        </span>`);
+      }
+      break;
+      
+    case 'opportunities':
+      if (metadataDisplay.includes('provider') && item.provider_name) {
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          🏢 ${item.provider_name}
+        </span>`);
+      }
+      if (metadataDisplay.includes('compensation') && item.compensation) {
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          💰 ${item.compensation}
+        </span>`);
+      }
+      if (metadataDisplay.includes('location') && item.location) {
+        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+        metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+          📍 ${locationText}
+        </span>`);
+      }
+      break;
+  }
+
+  if (metadataDisplay.includes('author') && item.author_name) {
+    metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+      ✍️ ${item.author_name}
+    </span>`);
+  }
+  
+  if (metadataDisplay.includes('date') && item.created_at) {
+    metadataItems.push(`<span style="display: inline-flex; align-items: center; gap: 4px;">
+      📅 ${new Date(item.created_at).toLocaleDateString()}
+    </span>`);
+  }
+
+  return metadataItems.length ? `
+    <div style="color: #6b7280; font-size: 14px; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 12px;">
+      ${metadataItems.join('')}
+    </div>
+  ` : '';
 }
 
 export function generateEmailContent(
@@ -176,17 +189,16 @@ export function generateEmailContent(
   contentItems: ContentItem[],
   contentType: string,
   siteUrl: string,
-  templateSettings: EmailTemplateSettings
+  templateSettings?: EmailTemplateSettings
 ): string {
   const unsubscribeUrl = `${siteUrl}/unsubscribe?campaign=${campaignId}`;
   const defaultLogoUrl = `${siteUrl}/logo-default.png`;
 
-  // Get content type specific settings or fall back to global settings
   const settings = {
-    primary_color: templateSettings.primary_color,
-    secondary_color: templateSettings.secondary_color,
-    accent_color: templateSettings.accent_color,
-    logo_url: templateSettings.logo_url || defaultLogoUrl,
+    primary_color: templateSettings?.primary_color || '#007bff',
+    secondary_color: templateSettings?.secondary_color || '#0056b3',
+    accent_color: templateSettings?.accent_color || '#28a745',
+    logo_url: templateSettings?.logo_url || defaultLogoUrl,
     layout_settings: {
       headerStyle: 'centered' as const,
       showAuthor: false,
