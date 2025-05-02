@@ -12,6 +12,7 @@ import { GuideButton } from "@/components/guide/GuideButton";
 import { usePageLoading } from "@/hooks/usePageLoading";
 import { LoadingBar } from "@/components/ui/loading-bar";
 import { useEffect, useState } from "react";
+import { MobileMenuProvider } from "@/context/MobileMenuContext";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -28,20 +29,25 @@ export function MainLayout({ children }: LayoutProps) {
     setMounted(true);
   }, []);
 
+  // Empty function as a fallback for when we're not in mobile mode
+  const noopCloseMobileMenu = () => {};
+
   return (
     <GuideProvider>
-      <div className="min-h-screen flex flex-col">
-        <LoadingBar isLoading={isLoading} progress={progress} />
-        <MenuSidebar />
-        <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
-          {children || <Outlet />}
-        </main>
-        <Footer />
-        <GoToTopButton />
-        {session && isMentor && <FloatingActionButton />}
-        <WelcomeDialog />
-        <GuideButton floating={true} />
-      </div>
+      <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+        <div className="min-h-screen flex flex-col">
+          <LoadingBar isLoading={isLoading} progress={progress} />
+          <MenuSidebar />
+          <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
+            {children || <Outlet />}
+          </main>
+          <Footer />
+          <GoToTopButton />
+          {session && isMentor && <FloatingActionButton />}
+          <WelcomeDialog />
+          <GuideButton floating={true} />
+        </div>
+      </MobileMenuProvider>
     </GuideProvider>
   );
 }
@@ -54,13 +60,18 @@ export function AuthLayout({ children }: LayoutProps) {
     setMounted(true);
   }, []);
 
+  // Empty function as a fallback for when we're not in mobile mode
+  const noopCloseMobileMenu = () => {};
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <LoadingBar isLoading={isLoading} progress={progress} />
-      <MenuSidebar />
-      <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
-        {children || <Outlet />}
-      </main>
-    </div>
+    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+      <div className="min-h-screen flex flex-col">
+        <LoadingBar isLoading={isLoading} progress={progress} />
+        <MenuSidebar />
+        <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
+          {children || <Outlet />}
+        </main>
+      </div>
+    </MobileMenuProvider>
   );
 }

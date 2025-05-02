@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +17,7 @@ import {
   Wallet 
 } from "lucide-react";
 import type { Profile } from "@/types/database/profiles";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 
 interface ProfileTabsProps {
   profile: Profile | null;
@@ -28,10 +30,16 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const defaultTab = tabFromUrl || 'profile';
+  const { closeMobileMenu } = useMobileMenu();
 
   if (!profile) {
     return null;
   }
+
+  const handleTabChange = (value: string) => {
+    onTabChange(value);
+    closeMobileMenu();
+  };
 
   // Calculate number of tabs to display for grid
   const numTabs = [
@@ -47,7 +55,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
     <Tabs 
       defaultValue={defaultTab}
       className="col-span-5"
-      onValueChange={onTabChange}
+      onValueChange={handleTabChange}
     >
       <TabsList className="grid w-full" style={{ 
         gridTemplateColumns: `repeat(${numTabs}, minmax(0, 1fr))`

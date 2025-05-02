@@ -1,5 +1,91 @@
 import { ContentItem, EmailTemplateSettings } from "./types.ts";
-import { getContentTypeStyles } from "./styles.ts";
+
+function getDialogUrl(contentType: string, id: string, siteUrl: string): string {
+  switch (contentType) {
+    case 'blogs':
+      return `${siteUrl}/blog?dialog=true&blogId=${id}`;
+    case 'careers':
+      return `${siteUrl}/career?dialog=true&careerId=${id}`;
+    case 'majors':
+      return `${siteUrl}/program?dialog=true&majorId=${id}`;
+    case 'mentors':
+      return `${siteUrl}/mentor?dialog=true&mentorId=${id}`;
+    case 'scholarships':
+      return `${siteUrl}/scholarships?dialog=true&scholarshipId=${id}`;
+    case 'opportunities':
+      return `${siteUrl}/opportunities?dialog=true&opportunityId=${id}`;
+    default:
+      return `${siteUrl}/${contentType}/${id}`;
+  }
+}
+
+function generateContentCard(
+  item: ContentItem,
+  contentType: string,
+  styles: { primary: string; secondary: string; accent: string },
+  siteUrl: string
+): string {
+  // Get the appropriate image URL, with fallbacks
+  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || `${siteUrl}/placeholder_${contentType}.jpg`;
+  const title = item.title || '';
+  const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
+  const detailUrl = getDialogUrl(contentType, item.id, siteUrl);
+
+  // Add specific metadata based on content type
+  let metadata = '';
+  
+  switch(contentType) {
+    case 'careers':
+      if (item.salary_range) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
+      if (item.company_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
+      if (item.location) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
+      break;
+      
+    case 'scholarships':
+      if (item.amount) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
+      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+      if (item.deadline) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
+      break;
+      
+    case 'opportunities':
+      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
+      if (item.compensation) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
+      if (item.location) {
+        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
+      }
+      break;
+  }
+
+  return `
+    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
+      <div style="padding: 16px;">
+        ${imageUrl ? `
+          <img 
+            src="${imageUrl}" 
+            alt="${title}"
+            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
+          />
+        ` : ''}
+        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+          ${title}
+        </h3>
+        ${metadata}
+        <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
+          ${description}
+        </p>
+        <div style="margin-top: 16px;">
+          <a 
+            href="${detailUrl}" 
+            style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
+          >
+            Learn More
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 export function generateEmailContent(
   title: string,
@@ -38,7 +124,7 @@ export function generateEmailContent(
   );
 
   const contentCardsHtml = contentItems.length > 0
-    ? contentItems.map(item => formatContentCard(item, contentType, settings, settings.layout_settings)).join('')
+    ? contentItems.map(item => generateContentCard(item, contentType, settings, siteUrl)).join('')
     : '<p style="text-align: center; padding: 20px; color: #6b7280;">No items to display.</p>';
 
   return `
@@ -81,76 +167,6 @@ export function generateEmailContent(
       </div>
     </body>
     </html>
-  `;
-}
-
-function generateContentCard(
-  item: ContentItem,
-  contentType: string,
-  styles: { primary: string; secondary: string; accent: string },
-  siteUrl: string
-): string {
-  // Get the appropriate image URL, with fallbacks
-  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || `${siteUrl}/placeholder_${contentType}.jpg`;
-  const title = item.title || '';
-  const description = item.description ? (item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description) : '';
-  const detailUrl = `${siteUrl}/${contentType}/${item.id}`;
-
-  // Add specific metadata based on content type
-  let metadata = '';
-  
-  switch(contentType) {
-    case 'careers':
-      if (item.salary_range) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.salary_range}</p>`;
-      if (item.company_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.company_name}</p>`;
-      if (item.location) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${item.location}</p>`;
-      break;
-      
-    case 'scholarships':
-      if (item.amount) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 $${item.amount}</p>`;
-      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-      if (item.deadline) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
-      break;
-      
-    case 'opportunities':
-      if (item.provider_name) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🏢 ${item.provider_name}</p>`;
-      if (item.compensation) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💰 ${item.compensation}</p>`;
-      if (item.location) {
-        const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
-        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
-      } else if (item.remote) {
-        metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🌐 Remote</p>`;
-      }
-      break;
-  }
-
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
-        ${imageUrl ? `
-          <img 
-            src="${imageUrl}" 
-            alt="${title}"
-            style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
-          />
-        ` : ''}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
-          ${title}
-        </h3>
-        ${metadata}
-        <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
-          ${description}
-        </p>
-        <div style="margin-top: 16px;">
-          <a 
-            href="${detailUrl}" 
-            style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
-          >
-            Learn More
-          </a>
-        </div>
-      </div>
-    </div>
   `;
 }
 

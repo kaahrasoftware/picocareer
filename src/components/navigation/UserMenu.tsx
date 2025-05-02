@@ -14,7 +14,8 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Calendar, User, Bookmark, GraduationCap, Settings } from "lucide-react";
+import { Calendar, User, Bookmark, GraduationCap, Settings, Wallet } from "lucide-react";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 
 export function UserMenu() {
   const navigate = useNavigate();
@@ -23,6 +24,12 @@ export function UserMenu() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useUserProfile(session);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const { closeMobileMenu } = useMobileMenu();
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    closeMobileMenu(); // Close mobile menu when navigating
+  };
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
@@ -40,6 +47,9 @@ export function UserMenu() {
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
+      
+      // Close mobile menu before navigating
+      closeMobileMenu();
       
       // Navigate after signing out
       navigate("/auth");
@@ -68,6 +78,7 @@ export function UserMenu() {
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
+  const isAdmin = profile.user_type === 'admin';
 
   return (
     <DropdownMenu>
@@ -92,25 +103,49 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/profile")} className="flex items-center gap-2">
+        <DropdownMenuItem 
+          onClick={() => handleNavigate("/profile")} 
+          className="flex items-center gap-2"
+        >
           <User className="h-4 w-4" />
           Profile
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/profile?tab=calendar")} className="flex items-center gap-2">
+        <DropdownMenuItem 
+          onClick={() => handleNavigate("/profile?tab=calendar")} 
+          className="flex items-center gap-2"
+        >
           <Calendar className="h-4 w-4" />
           Calendar
         </DropdownMenuItem>
         {isMentor && (
-          <DropdownMenuItem onClick={() => navigate("/profile?tab=mentor")} className="flex items-center gap-2">
+          <DropdownMenuItem 
+            onClick={() => handleNavigate("/profile?tab=mentor")} 
+            className="flex items-center gap-2"
+          >
             <GraduationCap className="h-4 w-4" />
             Mentor
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => navigate("/profile?tab=bookmarks")} className="flex items-center gap-2">
+        <DropdownMenuItem 
+          onClick={() => handleNavigate("/profile?tab=bookmarks")} 
+          className="flex items-center gap-2"
+        >
           <Bookmark className="h-4 w-4" />
           Bookmarks
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/profile?tab=settings")} className="flex items-center gap-2">
+        {isAdmin && (
+          <DropdownMenuItem 
+            onClick={() => handleNavigate("/profile?tab=wallet")} 
+            className="flex items-center gap-2"
+          >
+            <Wallet className="h-4 w-4" />
+            Wallet
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem 
+          onClick={() => handleNavigate("/profile?tab=settings")} 
+          className="flex items-center gap-2"
+        >
           <Settings className="h-4 w-4" />
           Settings
         </DropdownMenuItem>

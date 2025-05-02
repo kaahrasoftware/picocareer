@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 import { useMarkNotificationRead } from "@/hooks/useMarkNotificationRead";
+import { MobileMenuProvider } from "@/context/MobileMenuContext";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export function MenuSidebar() {
   const [isInitialized, setIsInitialized] = useState(false);
   const isMobile = useIsMobile();
   const markNotificationRead = useMarkNotificationRead();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -42,6 +44,10 @@ export function MenuSidebar() {
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
+  };
+  
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   // Show loading state until auth is initialized
@@ -84,16 +90,21 @@ export function MenuSidebar() {
             >
               Sign in
             </Button>
-            <Sheet>
+            <Sheet 
+              open={isMobileMenuOpen} 
+              onOpenChange={setIsMobileMenuOpen}
+            >
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col gap-6 pt-6">
-                  <MainNavigation />
-                </div>
+                <MobileMenuProvider closeMobileMenu={closeMobileMenu} isOpen={isMobileMenuOpen}>
+                  <div className="flex flex-col gap-6 pt-6">
+                    <MainNavigation />
+                  </div>
+                </MobileMenuProvider>
               </SheetContent>
             </Sheet>
           </div>
@@ -134,17 +145,22 @@ export function MenuSidebar() {
                 Sign in
               </Button>
             )}
-            <Sheet>
+            <Sheet 
+              open={isMobileMenuOpen} 
+              onOpenChange={setIsMobileMenuOpen}
+            >
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col gap-6 pt-6">
-                  <MainNavigation />
-                  {session?.user && profile && <UserMenu />}
-                </div>
+                <MobileMenuProvider closeMobileMenu={closeMobileMenu} isOpen={isMobileMenuOpen}>
+                  <div className="flex flex-col gap-6 pt-6">
+                    <MainNavigation />
+                    {session?.user && profile && <UserMenu />}
+                  </div>
+                </MobileMenuProvider>
               </SheetContent>
             </Sheet>
           </div>

@@ -6,11 +6,31 @@ interface EmailStyles {
   accent: string;
 }
 
+function getDialogUrl(contentType: string, id: string, siteUrl: string): string {
+  switch (contentType) {
+    case 'blogs':
+      return `${siteUrl}/blog?dialog=true&blogId=${id}`;
+    case 'careers':
+      return `${siteUrl}/career?dialog=true&careerId=${id}`;
+    case 'majors':
+      return `${siteUrl}/program?dialog=true&majorId=${id}`;
+    case 'mentors':
+      return `${siteUrl}/mentor?dialog=true&mentorId=${id}`;
+    case 'scholarships':
+      return `${siteUrl}/scholarships?dialog=true&scholarshipId=${id}`;
+    case 'opportunities':
+      return `${siteUrl}/opportunities?dialog=true&opportunityId=${id}`;
+    default:
+      return `${siteUrl}/${contentType}/${id}`;
+  }
+}
+
 export function formatContentCard(
   item: ContentItem,
   contentType: string,
   styles: EmailStyles,
-  settings?: EmailContentTypeSettings['layout_settings']
+  settings?: EmailContentTypeSettings['layout_settings'],
+  siteUrl: string = 'https://picocareer.com'
 ): string {
   if (!item) return '';
 
@@ -24,10 +44,6 @@ export function formatContentCard(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  // Ensure the layout.contentBlocks exists before trying to use it
-  const contentBlocks = layout.contentBlocks || ['title', 'image', 'description', 'metadata', 'cta'];
-  const metadataDisplay = layout.metadataDisplay || ['category', 'date', 'author'];
-  
   const imageHtml = (item.cover_image_url || item.image_url) ? `
     <img 
       src="${item.cover_image_url || item.image_url}"
@@ -48,19 +64,22 @@ export function formatContentCard(
         ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
       </p>
     ` : '',
-    metadata: () => generateMetadata(item, contentType, metadataDisplay),
-    cta: () => `
-      <div style="margin-top: 16px;">
-        <a 
-          href="#" 
-          style="display: inline-block; background-color: ${styles.accent}; color: white; 
-                padding: 8px 16px; text-decoration: none; border-radius: 6px; 
-                font-size: 14px; font-weight: 500;"
-        >
-          Learn More
-        </a>
-      </div>
-    `
+    metadata: () => generateMetadata(item, contentType, layout.metadataDisplay),
+    cta: () => {
+      const dialogUrl = getDialogUrl(contentType, item.id, siteUrl);
+      return `
+        <div style="margin-top: 16px;">
+          <a 
+            href="${dialogUrl}" 
+            style="display: inline-block; background-color: ${styles.accent}; color: white; 
+                  padding: 8px 16px; text-decoration: none; border-radius: 6px; 
+                  font-size: 14px; font-weight: 500;"
+          >
+            Learn More
+          </a>
+        </div>
+      `;
+    }
   };
 
   let contentHtml = '';
@@ -68,7 +87,7 @@ export function formatContentCard(
   if (layout.imagePosition === 'side') {
     // Special handling for side layout
     const imageContent = contentBlockMapping['image']();
-    const otherBlocks = contentBlocks
+    const otherBlocks = layout.contentBlocks
       .filter(block => block !== 'image')
       .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
       .join('');
@@ -85,7 +104,7 @@ export function formatContentCard(
     `;
   } else {
     // Standard layout
-    contentHtml = contentBlocks
+    contentHtml = layout.contentBlocks
       .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
       .join('');
   }

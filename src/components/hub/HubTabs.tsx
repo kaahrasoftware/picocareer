@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { HubOnboardingGuideDialog } from "./HubOnboardingGuideDialog";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 import { 
   Dialog, 
   DialogContent, 
@@ -52,6 +53,7 @@ export function HubTabs({
   const [isConfirming, setIsConfirming] = useState(false);
   const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
   const [showGuideDialog, setShowGuideDialog] = useState(false);
+  const { closeMobileMenu } = useMobileMenu();
 
   const handleConfirmMembership = async () => {
     try {
@@ -110,8 +112,12 @@ export function HubTabs({
     setShowGuideDialog(true);
   };
 
+  const handleTabChange = () => {
+    closeMobileMenu();
+  };
+
   return <>
-    <Tabs defaultValue="overview" className="w-full">
+    <Tabs defaultValue="overview" className="w-full" onValueChange={handleTabChange}>
       <TabsList className="w-full justify-start">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         {session && <TabsTrigger value="chat">Channels</TabsTrigger>}
