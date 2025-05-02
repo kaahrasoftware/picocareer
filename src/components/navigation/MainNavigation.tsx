@@ -9,15 +9,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 
 export function MainNavigation() {
   const location = useLocation();
   const currentPath = location.pathname;
   const isMobile = useIsMobile();
+  const { closeMobileMenu } = useMobileMenu();
 
   const isActive = (path: string) => {
     if (path === "/" && currentPath !== "/") return false;
     return currentPath.startsWith(path);
+  };
+
+  const handleNavigation = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isMobile) {
+      // Only close the mobile menu in mobile mode
+      closeMobileMenu();
+    }
   };
 
   const navItems = [
@@ -52,6 +61,7 @@ export function MainNavigation() {
                 isActive(path) && "bg-primary/20 text-primary",
                 className
               )}
+              onClick={handleNavigation}
             >
               {label}
             </Link>
@@ -68,6 +78,7 @@ export function MainNavigation() {
                     "px-4 py-2 rounded-md transition-colors block w-full",
                     isActive(path) && "bg-primary/20 text-primary"
                   )}
+                  onClick={handleNavigation}
                 >
                   {label}
                 </Link>

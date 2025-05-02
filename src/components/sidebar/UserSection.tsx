@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Session } from "@supabase/supabase-js";
 import { LogOut } from "lucide-react";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 
 interface UserSectionProps {
   session: Session | null;
@@ -20,12 +22,29 @@ export function UserSection({
   onProfileClick, 
   onAuthClick 
 }: UserSectionProps) {
+  const { closeMobileMenu } = useMobileMenu();
+
+  const handleProfileClick = () => {
+    onProfileClick();
+    closeMobileMenu();
+  };
+
+  const handleSignOut = () => {
+    onSignOut();
+    closeMobileMenu();
+  };
+
+  const handleAuthClick = () => {
+    onAuthClick();
+    closeMobileMenu();
+  };
+  
   if (session?.user) {
     return (
       <>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4`}>
           <button
-            onClick={onProfileClick}
+            onClick={handleProfileClick}
             className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden flex-shrink-0"
           >
             <Avatar className="w-8 h-8">
@@ -43,7 +62,7 @@ export function UserSection({
         <Button
           variant="outline"
           className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}
-          onClick={onSignOut}
+          onClick={handleSignOut}
           data-sidebar="menu-button"
         >
           <div className={`flex items-center justify-center w-5 min-w-[1.25rem] ${isCollapsed ? 'mx-auto' : 'ml-1'}`}>
@@ -60,7 +79,7 @@ export function UserSection({
   return (
     <Button
       className="px-6"
-      onClick={onAuthClick}
+      onClick={handleAuthClick}
     >
       Sign in
     </Button>
