@@ -5,19 +5,21 @@ import {
   Users, 
   BookOpen,
   GraduationCap,
-  Settings
+  Settings,
+  Calendar
 } from "lucide-react";
 import { OverviewTab } from "./dashboard/tabs/OverviewTab";
 import { UsersTab } from "./dashboard/tabs/UsersTab";
 import { AppSettingsTab } from "./dashboard/tabs/AppSettingsTab";
 import { AcademicResourcesTab } from "./dashboard/tabs/AcademicResourcesTab";
 import { ContentResourcesTab } from "./dashboard/tabs/ContentResourcesTab";
+import { EventManagementTab } from "./dashboard/tabs/EventManagementTab";
 
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-5 gap-4">
+        <TabsList className="grid grid-cols-6 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Overview
@@ -25,6 +27,10 @@ export function DashboardTab() {
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
             Users
+          </TabsTrigger>
+          <TabsTrigger value="events" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Events
           </TabsTrigger>
           <TabsTrigger value="academic-resources" className="gap-2">
             <GraduationCap className="h-4 w-4" />
@@ -46,6 +52,10 @@ export function DashboardTab() {
         
         <TabsContent value="users">
           <UsersTab />
+        </TabsContent>
+
+        <TabsContent value="events">
+          <EventManagementTab />
         </TabsContent>
 
         <TabsContent value="academic-resources">

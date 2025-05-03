@@ -2,7 +2,7 @@
 import React from 'react';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { StatsCard } from '@/components/profile/dashboard/StatsCard';
-import { Calendar, Users, Award, Video } from 'lucide-react';
+import { Calendar, Award, Clock, Video } from 'lucide-react';
 
 export function EventDashboardStats() {
   const { data: events = [], isLoading, error } = usePaginatedQuery<any>({
@@ -56,25 +56,25 @@ export function EventDashboardStats() {
       <StatsCard 
         title="Total Events" 
         value={totalEvents} 
-        icon={<Calendar className="text-primary" />} 
+        icon={<Calendar className="text-primary" />}
         loading={isLoading}
       />
       <StatsCard 
         title="Upcoming Events" 
         value={upcomingEvents} 
-        icon={<Award className="text-green-500" />} 
+        icon={<Award className="text-green-500" />}
         loading={isLoading}
       />
       <StatsCard 
         title="Past Events" 
         value={pastEvents} 
-        icon={<Calendar className="text-amber-500" />} 
+        icon={<Clock className="text-amber-500" />}
         loading={isLoading}
       />
       <StatsCard 
         title="Most Popular Type" 
         value={mostPopularType} 
-        icon={<Video className="text-blue-500" />} 
+        icon={<Video className="text-blue-500" />}
         loading={isLoading}
         valueClassName="text-sm"
       />
