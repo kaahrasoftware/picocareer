@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -43,6 +41,20 @@ export function ScholarshipDetailsDialog({
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<any>({});
 
+  // Safe JSON rendering utility function
+  const safeRenderJson = (data: any): string => {
+    try {
+      if (!data) return "";
+      if (typeof data === "string") {
+        return data;
+      }
+      return JSON.stringify(data, null, 2);
+    } catch (error) {
+      console.error("Error rendering JSON:", error);
+      return "";
+    }
+  };
+
   const { data: scholarship, isLoading } = useQuery({
     queryKey: ["scholarship-details", scholarshipId],
     queryFn: async () => {
@@ -60,7 +72,20 @@ export function ScholarshipDetailsDialog({
 
   useEffect(() => {
     if (scholarship) {
-      setFormData(scholarship);
+      // Initialize form data with proper handling for JSON fields
+      setFormData({
+        ...scholarship,
+        // Ensure JSON fields are properly handled
+        eligibility_criteria: scholarship.eligibility_criteria || {},
+        academic_requirements: scholarship.academic_requirements || {},
+        contact_information: scholarship.contact_information || {},
+        // Ensure array fields are properly handled
+        category: scholarship.category || [],
+        tags: scholarship.tags || [],
+        citizenship_requirements: scholarship.citizenship_requirements || [],
+        demographic_requirements: scholarship.demographic_requirements || [],
+        required_documents: scholarship.required_documents || []
+      });
     }
   }, [scholarship]);
 
@@ -94,8 +119,52 @@ export function ScholarshipDetailsDialog({
     }));
   };
 
+  const handleJsonFieldChange = (parentField: string, field: string, value: any) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [parentField]: {
+        ...prev[parentField],
+        [field]: value
+      },
+    }));
+  };
+
+  const handleArrayChange = (field: string, index: number, value: string) => {
+    setFormData((prev: any) => {
+      const newArray = [...(prev[field] || [])];
+      newArray[index] = value;
+      return {
+        ...prev,
+        [field]: newArray,
+      };
+    });
+  };
+
+  const handleArrayAdd = (field: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [field]: [...(prev[field] || []), ""],
+    }));
+  };
+
+  const handleArrayRemove = (field: string, index: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [field]: prev[field].filter((_: any, i: number) => i !== index),
+    }));
+  };
+
   const handleSave = () => {
-    updateMutation.mutate(formData);
+    // Ensure dates are in the correct format
+    const formattedData = {
+      ...formData,
+      deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
+      application_open_date: formData.application_open_date 
+        ? new Date(formData.application_open_date).toISOString() 
+        : null,
+    };
+    
+    updateMutation.mutate(formattedData);
   };
 
   if (isLoading) {
@@ -109,6 +178,16 @@ export function ScholarshipDetailsDialog({
       </Dialog>
     );
   }
+
+  // Format a date for display
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      return new Date(dateString).toISOString().split("T")[0];
+    } catch (e) {
+      return "";
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,16 +228,15 @@ export function ScholarshipDetailsDialog({
               )}
             </div>
           </div>
-          <DialogDescription>
-            {isEditing ? "Update scholarship information" : "View scholarship details"}
-          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
             <TabsTrigger value="application">Application</TabsTrigger>
+            <TabsTrigger value="additional">Additional</TabsTrigger>
+            <TabsTrigger value="stats">Stats</TabsTrigger>
           </TabsList>
 
           {/* Basic Information Tab */}
@@ -198,7 +276,7 @@ export function ScholarshipDetailsDialog({
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData.status}
+                    value={formData.status || "Active"}
                     onValueChange={(value) => handleChange("status", value)}
                     disabled={!isEditing}
                   >
@@ -221,8 +299,8 @@ export function ScholarshipDetailsDialog({
                   <Input
                     id="deadline"
                     type="date"
-                    value={formData.deadline ? new Date(formData.deadline).toISOString().split('T')[0] : ""}
-                    onChange={(e) => handleChange("deadline", e.target.value ? new Date(e.target.value).toISOString() : null)}
+                    value={formatDate(formData.deadline)}
+                    onChange={(e) => handleChange("deadline", e.target.value)}
                     disabled={!isEditing}
                   />
                 </div>
@@ -231,8 +309,8 @@ export function ScholarshipDetailsDialog({
                   <Input
                     id="application_open_date"
                     type="date"
-                    value={formData.application_open_date ? new Date(formData.application_open_date).toISOString().split('T')[0] : ""}
-                    onChange={(e) => handleChange("application_open_date", e.target.value ? new Date(e.target.value).toISOString() : null)}
+                    value={formatDate(formData.application_open_date)}
+                    onChange={(e) => handleChange("application_open_date", e.target.value)}
                     disabled={!isEditing}
                   />
                 </div>
@@ -247,6 +325,86 @@ export function ScholarshipDetailsDialog({
                   disabled={!isEditing}
                   rows={5}
                 />
+              </div>
+
+              <div className="space-y-4">
+                <Label>Categories</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.category || []).map((cat: string, index: number) => (
+                      <div key={`category-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={cat}
+                          onChange={(e) => handleArrayChange("category", index, e.target.value)}
+                          placeholder="Category"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleArrayRemove("category", index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleArrayAdd("category")}
+                    >
+                      Add Category
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.category || []).map((cat: string, index: number) => (
+                      <Badge key={`category-view-${index}`} variant="outline">{cat}</Badge>
+                    ))}
+                    {formData.category?.length === 0 && <span className="text-muted-foreground">No categories</span>}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <Label>Tags</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.tags || []).map((tag: string, index: number) => (
+                      <div key={`tag-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={tag}
+                          onChange={(e) => handleArrayChange("tags", index, e.target.value)}
+                          placeholder="Tag"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleArrayRemove("tags", index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleArrayAdd("tags")}
+                    >
+                      Add Tag
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.tags || []).map((tag: string, index: number) => (
+                      <Badge key={`tag-view-${index}`} variant="secondary">{tag}</Badge>
+                    ))}
+                    {formData.tags?.length === 0 && <span className="text-muted-foreground">No tags</span>}
+                  </div>
+                )}
               </div>
 
               {/* Scholarship flags */}
@@ -288,51 +446,167 @@ export function ScholarshipDetailsDialog({
           <TabsContent value="eligibility" className="space-y-4 py-4">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Eligibility Criteria</h3>
-              {/* Add relevant eligibility fields here; this is a simplified version */}
+              
+              {/* GPA Requirements */}
               <div className="space-y-2">
-                <Label htmlFor="citizenship">Citizenship Requirements</Label>
+                <Label htmlFor="gpa_requirement">GPA Requirement</Label>
                 <Input
-                  id="citizenship"
-                  placeholder="e.g., US Citizens, International Students"
-                  value={(formData.citizenship_requirements || []).join(", ")}
-                  onChange={(e) => handleChange("citizenship_requirements", e.target.value.split(", "))}
+                  id="gpa_requirement"
+                  value={formData.eligibility_criteria?.gpa_requirement || ""}
+                  onChange={(e) => handleJsonFieldChange("eligibility_criteria", "gpa_requirement", e.target.value)}
                   disabled={!isEditing}
+                  placeholder="e.g., 3.5 or higher"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="demographic">Demographic Requirements</Label>
-                <Input
-                  id="demographic"
-                  placeholder="e.g., First-Generation, Women in STEM"
-                  value={(formData.demographic_requirements || []).join(", ")}
-                  onChange={(e) => handleChange("demographic_requirements", e.target.value.split(", "))}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="academic">Academic Requirements</Label>
-                <Textarea
-                  id="academic"
-                  placeholder="Describe academic requirements like GPA, course load, etc."
-                  value={formData.academic_requirements ? JSON.stringify(formData.academic_requirements, null, 2) : ""}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value);
-                      handleChange("academic_requirements", parsed);
-                    } catch (err) {
-                      // Handle invalid JSON input
-                      console.log("Invalid JSON");
-                    }
-                  }}
-                  disabled={!isEditing}
-                />
-                {isEditing && (
-                  <p className="text-xs text-muted-foreground">
-                    Enter as valid JSON object
-                  </p>
+              {/* Academic Year Requirements */}
+              <div className="space-y-4">
+                <Label>Academic Year Requirements</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.eligibility_criteria?.academic_year || []).map((year: string, index: number) => (
+                      <div key={`academic-year-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={year}
+                          onChange={(e) => {
+                            const newAcademicYears = [...(formData.eligibility_criteria?.academic_year || [])];
+                            newAcademicYears[index] = e.target.value;
+                            handleJsonFieldChange("eligibility_criteria", "academic_year", newAcademicYears);
+                          }}
+                          placeholder="Academic year"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => {
+                            const newAcademicYears = (formData.eligibility_criteria?.academic_year || [])
+                              .filter((_: any, i: number) => i !== index);
+                            handleJsonFieldChange("eligibility_criteria", "academic_year", newAcademicYears);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        const currentYears = formData.eligibility_criteria?.academic_year || [];
+                        handleJsonFieldChange("eligibility_criteria", "academic_year", [...currentYears, ""]);
+                      }}
+                    >
+                      Add Academic Year
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.eligibility_criteria?.academic_year || []).map((year: string, index: number) => (
+                      <Badge key={`academic-year-view-${index}`} variant="outline">{year}</Badge>
+                    ))}
+                    {formData.eligibility_criteria?.academic_year?.length === 0 && 
+                      <span className="text-muted-foreground">No academic year requirements specified</span>}
+                  </div>
                 )}
+              </div>
+
+              {/* Citizenship Requirements */}
+              <div className="space-y-4">
+                <Label>Citizenship Requirements</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.citizenship_requirements || []).map((req: string, index: number) => (
+                      <div key={`citizenship-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={req}
+                          onChange={(e) => handleArrayChange("citizenship_requirements", index, e.target.value)}
+                          placeholder="Citizenship requirement"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleArrayRemove("citizenship_requirements", index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleArrayAdd("citizenship_requirements")}
+                    >
+                      Add Citizenship Requirement
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.citizenship_requirements || []).map((req: string, index: number) => (
+                      <Badge key={`citizenship-view-${index}`} variant="outline">{req}</Badge>
+                    ))}
+                    {formData.citizenship_requirements?.length === 0 && 
+                      <span className="text-muted-foreground">No citizenship requirements specified</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Demographic Requirements */}
+              <div className="space-y-4">
+                <Label>Demographic Requirements</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.demographic_requirements || []).map((req: string, index: number) => (
+                      <div key={`demographic-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={req}
+                          onChange={(e) => handleArrayChange("demographic_requirements", index, e.target.value)}
+                          placeholder="Demographic requirement"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleArrayRemove("demographic_requirements", index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleArrayAdd("demographic_requirements")}
+                    >
+                      Add Demographic Requirement
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.demographic_requirements || []).map((req: string, index: number) => (
+                      <Badge key={`demographic-view-${index}`} variant="outline">{req}</Badge>
+                    ))}
+                    {formData.demographic_requirements?.length === 0 && 
+                      <span className="text-muted-foreground">No demographic requirements specified</span>}
+                  </div>
+                )}
+              </div>
+
+              {/* Other Eligibility Criteria */}
+              <div className="space-y-2">
+                <Label htmlFor="other_eligibility">Other Eligibility Requirements</Label>
+                <Textarea
+                  id="other_eligibility"
+                  value={formData.eligibility_criteria?.other || ""}
+                  onChange={(e) => handleJsonFieldChange("eligibility_criteria", "other", e.target.value)}
+                  disabled={!isEditing}
+                  rows={3}
+                  placeholder="Any other eligibility requirements"
+                />
               </div>
             </div>
           </TabsContent>
@@ -360,22 +634,53 @@ export function ScholarshipDetailsDialog({
                   disabled={!isEditing}
                 />
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="required_documents">Required Documents</Label>
-                <Input
-                  id="required_documents"
-                  placeholder="e.g., Transcripts, Essays, Letters of Recommendation"
-                  value={(formData.required_documents || []).join(", ")}
-                  onChange={(e) => handleChange("required_documents", e.target.value.split(", "))}
-                  disabled={!isEditing}
-                />
+              
+              {/* Required Documents */}
+              <div className="space-y-4">
+                <Label>Required Documents</Label>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    {(formData.required_documents || []).map((doc: string, index: number) => (
+                      <div key={`document-${index}`} className="flex items-center gap-2">
+                        <Input
+                          value={doc}
+                          onChange={(e) => handleArrayChange("required_documents", index, e.target.value)}
+                          placeholder="Required document"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          onClick={() => handleArrayRemove("required_documents", index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleArrayAdd("required_documents")}
+                    >
+                      Add Required Document
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.required_documents || []).map((doc: string, index: number) => (
+                      <Badge key={`document-view-${index}`} variant="outline">{doc}</Badge>
+                    ))}
+                    {formData.required_documents?.length === 0 && 
+                      <span className="text-muted-foreground">No required documents specified</span>}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="award_frequency">Award Frequency</Label>
                 <Select
-                  value={formData.award_frequency}
+                  value={formData.award_frequency || ""}
                   onValueChange={(value) => handleChange("award_frequency", value)}
                   disabled={!isEditing}
                 >
@@ -391,6 +696,238 @@ export function ScholarshipDetailsDialog({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+          </TabsContent>
+
+          {/* Additional Tab */}
+          <TabsContent value="additional" className="space-y-4 py-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Additional Information</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="image_url">Scholarship Image URL</Label>
+                <Input
+                  id="image_url"
+                  value={formData.image_url || ""}
+                  onChange={(e) => handleChange("image_url", e.target.value)}
+                  disabled={!isEditing}
+                />
+                {formData.image_url && !isEditing && (
+                  <div className="mt-2 border rounded-md p-2 max-w-xs">
+                    <img 
+                      src={formData.image_url} 
+                      alt="Scholarship" 
+                      className="max-h-40 object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://placehold.co/300x200?text=Image+Not+Found";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Contact Information */}
+              <div className="border p-4 rounded-md space-y-4">
+                <h4 className="font-medium">Contact Information</h4>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact_email">Contact Email</Label>
+                  <Input
+                    id="contact_email"
+                    value={formData.contact_information?.email || ""}
+                    onChange={(e) => handleJsonFieldChange("contact_information", "email", e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact_phone">Contact Phone</Label>
+                  <Input
+                    id="contact_phone"
+                    value={formData.contact_information?.phone || ""}
+                    onChange={(e) => handleJsonFieldChange("contact_information", "phone", e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact_website">Contact Website</Label>
+                  <Input
+                    id="contact_website"
+                    value={formData.contact_information?.website || ""}
+                    onChange={(e) => handleJsonFieldChange("contact_information", "website", e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact_person">Contact Person</Label>
+                  <Input
+                    id="contact_person"
+                    value={formData.contact_information?.contact_person || ""}
+                    onChange={(e) => handleJsonFieldChange("contact_information", "contact_person", e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
+                  <Input
+                    id="department"
+                    value={formData.contact_information?.department || ""}
+                    onChange={(e) => handleJsonFieldChange("contact_information", "department", e.target.value)}
+                    disabled={!isEditing}
+                  />
+                </div>
+              </div>
+
+              {/* Academic Requirements */}
+              <div className="border p-4 rounded-md space-y-4">
+                <h4 className="font-medium">Academic Requirements</h4>
+
+                <div className="space-y-2">
+                  <Label htmlFor="min_gpa">Minimum GPA</Label>
+                  <Input
+                    id="min_gpa"
+                    type="number"
+                    step="0.1"
+                    value={formData.academic_requirements?.min_gpa || ""}
+                    onChange={(e) => handleJsonFieldChange("academic_requirements", "min_gpa", parseFloat(e.target.value) || null)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="enrollment_status">Enrollment Status</Label>
+                  <Input
+                    id="enrollment_status"
+                    value={formData.academic_requirements?.enrollment_status || ""}
+                    onChange={(e) => handleJsonFieldChange("academic_requirements", "enrollment_status", e.target.value)}
+                    disabled={!isEditing}
+                    placeholder="e.g., Full-time, Part-time"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="credits_completed">Credits Completed</Label>
+                  <Input
+                    id="credits_completed"
+                    type="number"
+                    value={formData.academic_requirements?.credits_completed || ""}
+                    onChange={(e) => handleJsonFieldChange("academic_requirements", "credits_completed", parseInt(e.target.value) || null)}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                {/* Major Restrictions */}
+                <div className="space-y-4">
+                  <Label>Major Restrictions</Label>
+                  {isEditing ? (
+                    <div className="space-y-2">
+                      {(formData.academic_requirements?.major_restrictions || []).map((major: string, index: number) => (
+                        <div key={`major-${index}`} className="flex items-center gap-2">
+                          <Input
+                            value={major}
+                            onChange={(e) => {
+                              const newMajors = [...(formData.academic_requirements?.major_restrictions || [])];
+                              newMajors[index] = e.target.value;
+                              handleJsonFieldChange("academic_requirements", "major_restrictions", newMajors);
+                            }}
+                            placeholder="Major restriction"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => {
+                              const newMajors = (formData.academic_requirements?.major_restrictions || [])
+                                .filter((_: any, i: number) => i !== index);
+                              handleJsonFieldChange("academic_requirements", "major_restrictions", newMajors);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const currentMajors = formData.academic_requirements?.major_restrictions || [];
+                          handleJsonFieldChange("academic_requirements", "major_restrictions", [...currentMajors, ""]);
+                        }}
+                      >
+                        Add Major Restriction
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {(formData.academic_requirements?.major_restrictions || []).map((major: string, index: number) => (
+                        <Badge key={`major-view-${index}`} variant="outline">{major}</Badge>
+                      ))}
+                      {(!formData.academic_requirements?.major_restrictions || formData.academic_requirements?.major_restrictions.length === 0) && 
+                        <span className="text-muted-foreground">No major restrictions specified</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Stats Tab */}
+          <TabsContent value="stats" className="space-y-4 py-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Scholarship Statistics</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border rounded-md p-4">
+                  <div className="text-sm text-muted-foreground">Views</div>
+                  <div className="text-2xl font-semibold">{formData.views_count || 0}</div>
+                </div>
+                
+                <div className="border rounded-md p-4">
+                  <div className="text-sm text-muted-foreground">Applicants</div>
+                  <div className="text-2xl font-semibold">{formData.total_applicants || 0}</div>
+                </div>
+              </div>
+              
+              <div className="border rounded-md p-4">
+                <h4 className="font-medium mb-2">Timeline</h4>
+                <div className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Created</span>
+                    <span className="text-sm font-medium">
+                      {formData.created_at ? new Date(formData.created_at).toLocaleDateString() : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Last Updated</span>
+                    <span className="text-sm font-medium">
+                      {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString() : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Application Opens</span>
+                    <span className="text-sm font-medium">
+                      {formData.application_open_date ? new Date(formData.application_open_date).toLocaleDateString() : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Deadline</span>
+                    <span className="text-sm font-medium">
+                      {formData.deadline ? new Date(formData.deadline).toLocaleDateString() : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {formData.author_id && (
+                <div className="border rounded-md p-4">
+                  <h4 className="font-medium mb-2">Submitted by</h4>
+                  <div className="text-sm">{formData.author_id}</div>
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
