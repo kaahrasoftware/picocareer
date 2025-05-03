@@ -91,40 +91,36 @@ export function ScholarshipManagementTab() {
   const { data: stats } = useQuery({
     queryKey: ['scholarship-stats'],
     queryFn: async () => {
-      // Get total count
-      const { data: totalData, error: totalError } = await supabase
+      // Get total count of all scholarships regardless of status
+      const { count: total, error: totalError } = await supabase
         .from('scholarships')
-        .select('count', { count: 'exact' });
+        .select('*', { count: 'exact', head: true });
 
       if (totalError) throw totalError;
-      const total = totalData?.count || 0;
-
+      
       // Get active count
-      const { data: activeData, error: activeError } = await supabase
+      const { count: active, error: activeError } = await supabase
         .from('scholarships')
-        .select('count', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('status', 'Active');
       
       if (activeError) throw activeError;
-      const active = activeData?.count || 0;
-
+      
       // Get pending count
-      const { data: pendingData, error: pendingError } = await supabase
+      const { count: pending, error: pendingError } = await supabase
         .from('scholarships')
-        .select('count', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('status', 'Pending');
       
       if (pendingError) throw pendingError;
-      const pending = pendingData?.count || 0;
-
+      
       // Get featured count
-      const { data: featuredData, error: featuredError } = await supabase
+      const { count: featured, error: featuredError } = await supabase
         .from('scholarships')
-        .select('count', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('featured', true);
       
       if (featuredError) throw featuredError;
-      const featured = featuredData?.count || 0;
 
       // Calculate total scholarship amount
       const { data: amountData, error: amountError } = await supabase
@@ -140,10 +136,10 @@ export function ScholarshipManagementTab() {
       }, 0);
 
       return {
-        total,
-        active,
-        pending,
-        featured,
+        total: total || 0,
+        active: active || 0,
+        pending: pending || 0,
+        featured: featured || 0,
         totalAmount
       };
     }
