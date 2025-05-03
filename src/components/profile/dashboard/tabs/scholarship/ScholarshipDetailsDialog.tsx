@@ -143,6 +143,24 @@ export function ScholarshipDetailsDialog({
     return `${currency || '$'}${amount.toLocaleString()}`;
   };
 
+  // Function to safely render fields that might be objects
+  const safeRender = (value: any) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+    
+    if (typeof value === "object") {
+      // For objects, convert to string representation
+      try {
+        return JSON.stringify(value);
+      } catch (e) {
+        return "";
+      }
+    }
+    
+    return String(value);
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       onOpenChange(isOpen);
@@ -344,7 +362,7 @@ export function ScholarshipDetailsDialog({
                     />
                   ) : (
                     <p className="whitespace-pre-wrap">
-                      {scholarship.eligibility_criteria || "No eligibility criteria specified."}
+                      {safeRender(scholarship.eligibility_criteria) || "No eligibility criteria specified."}
                     </p>
                   )}
                 </div>
