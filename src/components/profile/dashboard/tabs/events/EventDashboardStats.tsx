@@ -44,25 +44,21 @@ export function EventDashboardStats() {
         title="Total Events" 
         value={totalEvents} 
         icon={<Calendar className="text-primary" />} 
-        loading={isLoading}
       />
       <StatsCard 
         title="Upcoming Events" 
         value={upcomingEvents} 
         icon={<Award className="text-green-500" />} 
-        loading={isLoading}
       />
       <StatsCard 
         title="Past Events" 
         value={pastEvents} 
         icon={<Calendar className="text-amber-500" />} 
-        loading={isLoading}
       />
       <StatsCard 
         title="Most Popular Type" 
-        value={mostPopularType} 
+        value={mostPopularType}
         icon={<Video className="text-blue-500" />} 
-        loading={isLoading}
         valueClassName="text-sm"
       />
     </div>

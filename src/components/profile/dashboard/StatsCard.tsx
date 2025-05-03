@@ -1,6 +1,6 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import { ContentDetailsDialog } from "./ContentDetailsDialog";
 
 // Import the ContentType type or redefine it here
@@ -8,13 +8,23 @@ type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "comp
 
 interface StatsCardProps {
   title: string;
-  value: number;
+  value: number | string;
   subtitle?: string;
-  icon: LucideIcon;
+  icon: React.ReactNode;
   contentType?: ContentType;
+  loading?: boolean;
+  valueClassName?: string;
 }
 
-export function StatsCard({ title, value, subtitle, icon: Icon, contentType }: StatsCardProps) {
+export function StatsCard({ 
+  title, 
+  value, 
+  subtitle, 
+  icon, 
+  contentType,
+  loading,
+  valueClassName
+}: StatsCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const isClickable = contentType !== undefined;
@@ -29,10 +39,12 @@ export function StatsCard({ title, value, subtitle, icon: Icon, contentType }: S
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <div className="text-muted-foreground">
+            {icon}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{value}</div>
+          <div className={`text-2xl font-bold ${valueClassName || ''}`}>{loading ? '–' : value}</div>
           {subtitle && (
             <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>
           )}

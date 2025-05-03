@@ -22,27 +22,27 @@ export function DashboardTab() {
         <TabsList className="grid grid-cols-6 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
-            Overview
+            <span>Overview</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
-            Users
+            <span>Users</span>
           </TabsTrigger>
           <TabsTrigger value="events" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Events
+            <span>Events</span>
           </TabsTrigger>
           <TabsTrigger value="academic-resources" className="gap-2">
             <GraduationCap className="h-4 w-4" />
-            Academic Resources
+            <span>Academic Resources</span>
           </TabsTrigger>
           <TabsTrigger value="content-resources" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            Content Resources
+            <span>Content Resources</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
-            App Settings
+            <span>App Settings</span>
           </TabsTrigger>
         </TabsList>
 
