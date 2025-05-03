@@ -87,34 +87,64 @@ export function ScholarshipManagementTab() {
     }
   });
 
-  // Fetch scholarship stats
+  // Fetch scholarship stats with accurate counts and total amount
   const { data: stats } = useQuery({
     queryKey: ['scholarship-stats'],
     queryFn: async () => {
-      const { data: total } = await supabase
+      // Get total count
+      const { data: totalData, error: totalError } = await supabase
         .from('scholarships')
         .select('count', { count: 'exact' });
 
-      const { data: active } = await supabase
+      if (totalError) throw totalError;
+      const total = totalData?.count || 0;
+
+      // Get active count
+      const { data: activeData, error: activeError } = await supabase
         .from('scholarships')
         .select('count', { count: 'exact' })
         .eq('status', 'Active');
+      
+      if (activeError) throw activeError;
+      const active = activeData?.count || 0;
 
-      const { data: pending } = await supabase
+      // Get pending count
+      const { data: pendingData, error: pendingError } = await supabase
         .from('scholarships')
         .select('count', { count: 'exact' })
         .eq('status', 'Pending');
+      
+      if (pendingError) throw pendingError;
+      const pending = pendingData?.count || 0;
 
-      const { data: featured } = await supabase
+      // Get featured count
+      const { data: featuredData, error: featuredError } = await supabase
         .from('scholarships')
         .select('count', { count: 'exact' })
         .eq('featured', true);
+      
+      if (featuredError) throw featuredError;
+      const featured = featuredData?.count || 0;
+
+      // Calculate total scholarship amount
+      const { data: amountData, error: amountError } = await supabase
+        .from('scholarships')
+        .select('amount');
+      
+      if (amountError) throw amountError;
+      
+      const totalAmount = amountData.reduce((sum, scholarship) => {
+        // Use COALESCE-like logic to handle nulls
+        const amount = scholarship.amount || 0;
+        return sum + amount;
+      }, 0);
 
       return {
-        total: total?.count || 0,
-        active: active?.count || 0,
-        pending: pending?.count || 0,
-        featured: featured?.count || 0
+        total,
+        active,
+        pending,
+        featured,
+        totalAmount
       };
     }
   });
