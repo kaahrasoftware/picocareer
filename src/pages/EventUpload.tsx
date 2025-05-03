@@ -1,14 +1,16 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { FormField } from "@/components/forms/FormField";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
 import { supabase } from "@/integrations/supabase/client";
+import { ArrowLeft } from "lucide-react";
 
 interface EventFormData {
   title: string;
@@ -29,8 +31,9 @@ export default function EventUpload() {
   const navigate = useNavigate();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<EventFormData>();
+  const [isFromDashboard, setIsFromDashboard] = useState(false);
 
   const platformOptions = [
     { id: 'Google Meet', name: 'Google Meet' },
@@ -45,51 +48,74 @@ export default function EventUpload() {
     { id: 'Workshop', name: 'Workshop' }
   ];
 
+  useEffect(() => {
+    // Check if we're coming from the dashboard
+    const referrer = document.referrer;
+    if (referrer && referrer.includes('/dashboard')) {
+      setIsFromDashboard(true);
+    }
+  }, []);
+
   const onSubmit = async (data: EventFormData) => {
+    if (!session?.user) {
+      toast.error("You must be logged in to submit an event");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
     try {
       const { error } = await supabase
         .from('events')
         .insert({
-          author_id: session?.user.id,
+          author_id: session.user.id,
           status: 'Pending',
           ...data
         });
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Event has been submitted for review",
-      });
-
+      toast.success("Event has been submitted for review");
       form.reset();
+      
+      // If coming from dashboard, redirect back
+      if (isFromDashboard) {
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Error submitting event:', error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
     if (profile && profile.user_type !== 'admin') {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can access this page",
-        variant: "destructive",
-      });
+      toast.error("Only administrators can access this page");
       navigate('/');
     }
-  }, [profile, navigate, toast]);
+  }, [profile, navigate]);
 
   if (!profile) return null;
   if (profile.user_type !== 'admin') return null;
 
   return (
     <div className="container max-w-3xl py-10">
-      <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Create New Event</h1>
+        
+        {isFromDashboard && (
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        )}
+      </div>
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -197,8 +223,8 @@ export default function EventUpload() {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Submit Event
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit Event'}
           </Button>
         </form>
       </Form>
