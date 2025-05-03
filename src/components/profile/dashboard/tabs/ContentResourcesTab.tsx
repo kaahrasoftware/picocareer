@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Video, Award, Calendar, Bookmark } from "lucide-react";
 import { ScholarshipManagementTab } from "./ScholarshipManagementTab";
+import { EventManagementTab } from "./EventManagementTab";
 
 export function ContentResourcesTab() {
   return (
@@ -55,11 +56,7 @@ export function ContentResourcesTab() {
         </TabsContent>
         
         <TabsContent value="events">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Events Management</h3>
-            {/* Add events management UI */}
-            <p className="text-muted-foreground">Manage upcoming events, registrations, schedules, and attendance tracking.</p>
-          </div>
+          <EventManagementTab />
         </TabsContent>
         
         <TabsContent value="opportunities">
