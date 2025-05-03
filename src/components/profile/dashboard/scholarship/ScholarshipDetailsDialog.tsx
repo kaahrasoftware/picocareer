@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -31,16 +33,6 @@ interface ScholarshipDetailsDialogProps {
   onScholarshipUpdated?: () => void;
 }
 
-// Default empty structures for JSON fields to prevent null errors
-const DEFAULT_ELIGIBILITY_CRITERIA = {
-  gpa_requirement: "",
-  academic_year: [],
-  other: ""
-};
-
-const DEFAULT_ACADEMIC_REQUIREMENTS = {};
-const DEFAULT_CONTACT_INFORMATION = {};
-
 export function ScholarshipDetailsDialog({
   scholarshipId,
   open,
@@ -49,81 +41,26 @@ export function ScholarshipDetailsDialog({
 }: ScholarshipDetailsDialogProps) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<any>({
-    // Initialize with empty defaults to prevent errors during loading
-    title: "",
-    provider_name: "",
-    status: "Active",
-    amount: 0,
-    category: [],
-    tags: [],
-    citizenship_requirements: [],
-    demographic_requirements: [],
-    required_documents: [],
-    eligibility_criteria: DEFAULT_ELIGIBILITY_CRITERIA,
-    academic_requirements: DEFAULT_ACADEMIC_REQUIREMENTS,
-    contact_information: DEFAULT_CONTACT_INFORMATION,
-  });
-  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<any>({});
 
-  // Safe JSON rendering utility function with better error handling
-  const safeRenderJson = (data: any): string => {
-    try {
-      if (data === null || data === undefined) return "";
-      if (typeof data === "string") {
-        return data;
-      }
-      return JSON.stringify(data, null, 2);
-    } catch (error) {
-      console.error("Error rendering JSON:", error);
-      return "";
-    }
-  };
-
-  // More defensive query to handle loading and error states better
   const { data: scholarship, isLoading } = useQuery({
     queryKey: ["scholarship-details", scholarshipId],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from("scholarships")
-          .select("*")
-          .eq("id", scholarshipId)
-          .single();
+      const { data, error } = await supabase
+        .from("scholarships")
+        .select("*")
+        .eq("id", scholarshipId)
+        .single();
 
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error("Error fetching scholarship:", error);
-        setError("Failed to load scholarship details");
-        return null;
-      }
+      if (error) throw error;
+      return data;
     },
     enabled: open && !!scholarshipId,
   });
 
-  // Effect to safely initialize form data when scholarship loads
   useEffect(() => {
     if (scholarship) {
-      try {
-        setFormData({
-          ...scholarship,
-          // Safely initialize JSON fields with defaults if null/undefined
-          eligibility_criteria: scholarship.eligibility_criteria || DEFAULT_ELIGIBILITY_CRITERIA,
-          academic_requirements: scholarship.academic_requirements || DEFAULT_ACADEMIC_REQUIREMENTS,
-          contact_information: scholarship.contact_information || DEFAULT_CONTACT_INFORMATION,
-          // Safely initialize array fields
-          category: Array.isArray(scholarship.category) ? scholarship.category : [],
-          tags: Array.isArray(scholarship.tags) ? scholarship.tags : [],
-          citizenship_requirements: Array.isArray(scholarship.citizenship_requirements) ? scholarship.citizenship_requirements : [],
-          demographic_requirements: Array.isArray(scholarship.demographic_requirements) ? scholarship.demographic_requirements : [],
-          required_documents: Array.isArray(scholarship.required_documents) ? scholarship.required_documents : [],
-        });
-        setError(null); // Clear any previous errors
-      } catch (err) {
-        console.error("Error initializing form data:", err);
-        setError("Error initializing scholarship data");
-      }
+      setFormData(scholarship);
     }
   }, [scholarship]);
 
@@ -157,85 +94,21 @@ export function ScholarshipDetailsDialog({
     }));
   };
 
-  const handleJsonFieldChange = (parentField: string, field: string, value: any) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [parentField]: {
-        ...(prev[parentField] || {}),
-        [field]: value
-      },
-    }));
-  };
-
-  const handleArrayChange = (field: string, index: number, value: string) => {
-    setFormData((prev: any) => {
-      const newArray = [...(prev[field] || [])];
-      newArray[index] = value;
-      return {
-        ...prev,
-        [field]: newArray,
-      };
-    });
-  };
-
-  const handleArrayAdd = (field: string) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [field]: [...(prev[field] || []), ""],
-    }));
-  };
-
-  const handleArrayRemove = (field: string, index: number) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [field]: (prev[field] || []).filter((_: any, i: number) => i !== index),
-    }));
-  };
-
   const handleSave = () => {
-    try {
-      // Ensure dates are in the correct format
-      const formattedData = {
-        ...formData,
-        deadline: formData.deadline ? new Date(formData.deadline).toISOString() : null,
-        application_open_date: formData.application_open_date 
-          ? new Date(formData.application_open_date).toISOString() 
-          : null,
-      };
-      
-      updateMutation.mutate(formattedData);
-    } catch (err) {
-      console.error("Error saving form:", err);
-      toast.error("Failed to save scholarship details. Please check your form data.");
-    }
+    updateMutation.mutate(formData);
   };
 
-  // Display error state if there was a problem loading data
-  if (error) {
+  if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Error</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center py-6">
-            <div className="text-red-500 mb-4">{error}</div>
-            <Button onClick={() => onOpenChange(false)}>Close</Button>
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </DialogContent>
       </Dialog>
     );
   }
-
-  // Format a date for display
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "";
-    try {
-      return new Date(dateString).toISOString().split("T")[0];
-    } catch (e) {
-      return "";
-    }
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -255,20 +128,7 @@ export function ScholarshipDetailsDialog({
                   <Button
                     onClick={() => {
                       setIsEditing(false);
-                      // Reset form data to original scholarship data
-                      if (scholarship) {
-                        setFormData({
-                          ...scholarship,
-                          eligibility_criteria: scholarship.eligibility_criteria || DEFAULT_ELIGIBILITY_CRITERIA,
-                          academic_requirements: scholarship.academic_requirements || DEFAULT_ACADEMIC_REQUIREMENTS,
-                          contact_information: scholarship.contact_information || DEFAULT_CONTACT_INFORMATION,
-                          category: Array.isArray(scholarship.category) ? scholarship.category : [],
-                          tags: Array.isArray(scholarship.tags) ? scholarship.tags : [],
-                          citizenship_requirements: Array.isArray(scholarship.citizenship_requirements) ? scholarship.citizenship_requirements : [],
-                          demographic_requirements: Array.isArray(scholarship.demographic_requirements) ? scholarship.demographic_requirements : [],
-                          required_documents: Array.isArray(scholarship.required_documents) ? scholarship.required_documents : [],
-                        });
-                      }
+                      setFormData(scholarship);
                     }}
                     variant="ghost"
                   >
@@ -289,565 +149,277 @@ export function ScholarshipDetailsDialog({
               )}
             </div>
           </div>
+          <DialogDescription>
+            {isEditing ? "Update scholarship information" : "View scholarship details"}
+          </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
-              <TabsTrigger value="application">Application</TabsTrigger>
-              <TabsTrigger value="additional">Additional</TabsTrigger>
-              <TabsTrigger value="stats">Stats</TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="basic" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
+            <TabsTrigger value="application">Application</TabsTrigger>
+          </TabsList>
 
-            {/* Basic Information Tab */}
-            <TabsContent value="basic" className="space-y-4 py-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title || ""}
-                    onChange={(e) => handleChange("title", e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="provider_name">Provider</Label>
-                  <Input
-                    id="provider_name"
-                    value={formData.provider_name || ""}
-                    onChange={(e) => handleChange("provider_name", e.target.value)}
-                    disabled={!isEditing}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Amount ($)</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      value={formData.amount || ""}
-                      onChange={(e) => handleChange("amount", parseFloat(e.target.value) || null)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status || "Active"}
-                      onValueChange={(value) => handleChange("status", value)}
-                      disabled={!isEditing}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="Expired">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="deadline">Deadline</Label>
-                    <Input
-                      id="deadline"
-                      type="date"
-                      value={formatDate(formData.deadline)}
-                      onChange={(e) => handleChange("deadline", e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="application_open_date">Opening Date</Label>
-                    <Input
-                      id="application_open_date"
-                      type="date"
-                      value={formatDate(formData.application_open_date)}
-                      onChange={(e) => handleChange("application_open_date", e.target.value)}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description || ""}
-                    onChange={(e) => handleChange("description", e.target.value)}
-                    disabled={!isEditing}
-                    rows={5}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Categories</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.category || []).map((cat: string, index: number) => (
-                        <div key={`category-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={cat}
-                            onChange={(e) => handleArrayChange("category", index, e.target.value)}
-                            placeholder="Category"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => handleArrayRemove("category", index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleArrayAdd("category")}
-                      >
-                        Add Category
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.category || []).map((cat: string, index: number) => (
-                        <Badge key={`category-view-${index}`} variant="outline">{cat}</Badge>
-                      ))}
-                      {(formData.category || []).length === 0 && <span className="text-muted-foreground">No categories</span>}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Tags</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.tags || []).map((tag: string, index: number) => (
-                        <div key={`tag-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={tag}
-                            onChange={(e) => handleArrayChange("tags", index, e.target.value)}
-                            placeholder="Tag"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => handleArrayRemove("tags", index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleArrayAdd("tags")}
-                      >
-                        Add Tag
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.tags || []).map((tag: string, index: number) => (
-                        <Badge key={`tag-view-${index}`} variant="secondary">{tag}</Badge>
-                      ))}
-                      {(formData.tags || []).length === 0 && <span className="text-muted-foreground">No tags</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Scholarship flags */}
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="featured"
-                      checked={formData.featured || false}
-                      onCheckedChange={(checked) => handleChange("featured", checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="featured">Featured</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="source_verified"
-                      checked={formData.source_verified || false}
-                      onCheckedChange={(checked) => handleChange("source_verified", checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="source_verified">Source Verified</Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="renewable"
-                      checked={formData.renewable || false}
-                      onCheckedChange={(checked) => handleChange("renewable", checked)}
-                      disabled={!isEditing}
-                    />
-                    <Label htmlFor="renewable">Renewable</Label>
-                  </div>
-                </div>
+          {/* Basic Information Tab */}
+          <TabsContent value="basic" className="space-y-4 py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  value={formData.title || ""}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  disabled={!isEditing}
+                />
               </div>
-            </TabsContent>
 
-            {/* Eligibility Tab */}
-            <TabsContent value="eligibility" className="space-y-4 py-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Eligibility Criteria</h3>
-                
-                {/* GPA Requirements */}
-                <div className="space-y-2">
-                  <Label htmlFor="gpa_requirement">GPA Requirement</Label>
-                  <Input
-                    id="gpa_requirement"
-                    value={formData.eligibility_criteria?.gpa_requirement || ""}
-                    onChange={(e) => handleJsonFieldChange("eligibility_criteria", "gpa_requirement", e.target.value)}
-                    disabled={!isEditing}
-                    placeholder="e.g., 3.5 or higher"
-                  />
-                </div>
-
-                {/* Academic Year Requirements */}
-                <div className="space-y-4">
-                  <Label>Academic Year Requirements</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.eligibility_criteria?.academic_year || []).map((year: string, index: number) => (
-                        <div key={`academic-year-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={year}
-                            onChange={(e) => {
-                              const newAcademicYears = [...(formData.eligibility_criteria?.academic_year || [])];
-                              newAcademicYears[index] = e.target.value;
-                              handleJsonFieldChange("eligibility_criteria", "academic_year", newAcademicYears);
-                            }}
-                            placeholder="Academic year"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => {
-                              const newAcademicYears = (formData.eligibility_criteria?.academic_year || [])
-                                .filter((_: any, i: number) => i !== index);
-                              handleJsonFieldChange("eligibility_criteria", "academic_year", newAcademicYears);
-                            }}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          const currentYears = formData.eligibility_criteria?.academic_year || [];
-                          handleJsonFieldChange("eligibility_criteria", "academic_year", [...currentYears, ""]);
-                        }}
-                      >
-                        Add Academic Year
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.eligibility_criteria?.academic_year || []).map((year: string, index: number) => (
-                        <Badge key={`academic-year-view-${index}`} variant="outline">{year}</Badge>
-                      ))}
-                      {(formData.eligibility_criteria?.academic_year || []).length === 0 && 
-                        <span className="text-muted-foreground">No academic year requirements specified</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Citizenship Requirements */}
-                <div className="space-y-4">
-                  <Label>Citizenship Requirements</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.citizenship_requirements || []).map((req: string, index: number) => (
-                        <div key={`citizenship-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={req}
-                            onChange={(e) => handleArrayChange("citizenship_requirements", index, e.target.value)}
-                            placeholder="Citizenship requirement"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => handleArrayRemove("citizenship_requirements", index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleArrayAdd("citizenship_requirements")}
-                      >
-                        Add Citizenship Requirement
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.citizenship_requirements || []).map((req: string, index: number) => (
-                        <Badge key={`citizenship-view-${index}`} variant="outline">{req}</Badge>
-                      ))}
-                      {(formData.citizenship_requirements || []).length === 0 && 
-                        <span className="text-muted-foreground">No citizenship requirements specified</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Demographic Requirements */}
-                <div className="space-y-4">
-                  <Label>Demographic Requirements</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.demographic_requirements || []).map((req: string, index: number) => (
-                        <div key={`demographic-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={req}
-                            onChange={(e) => handleArrayChange("demographic_requirements", index, e.target.value)}
-                            placeholder="Demographic requirement"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => handleArrayRemove("demographic_requirements", index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleArrayAdd("demographic_requirements")}
-                      >
-                        Add Demographic Requirement
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.demographic_requirements || []).map((req: string, index: number) => (
-                        <Badge key={`demographic-view-${index}`} variant="outline">{req}</Badge>
-                      ))}
-                      {(formData.demographic_requirements || []).length === 0 && 
-                        <span className="text-muted-foreground">No demographic requirements specified</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Other Eligibility Criteria */}
-                <div className="space-y-2">
-                  <Label htmlFor="other_eligibility">Other Eligibility Requirements</Label>
-                  <Textarea
-                    id="other_eligibility"
-                    value={formData.eligibility_criteria?.other || ""}
-                    onChange={(e) => handleJsonFieldChange("eligibility_criteria", "other", e.target.value)}
-                    disabled={!isEditing}
-                    rows={3}
-                    placeholder="Any other eligibility requirements"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="provider_name">Provider</Label>
+                <Input
+                  id="provider_name"
+                  value={formData.provider_name || ""}
+                  onChange={(e) => handleChange("provider_name", e.target.value)}
+                  disabled={!isEditing}
+                />
               </div>
-            </TabsContent>
 
-            {/* Application Tab */}
-            <TabsContent value="application" className="space-y-4 py-4">
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="application_process">Application Process</Label>
-                  <Textarea
-                    id="application_process"
-                    value={formData.application_process || ""}
-                    onChange={(e) => handleChange("application_process", e.target.value)}
-                    disabled={!isEditing}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="application_url">Application URL</Label>
+                  <Label htmlFor="amount">Amount ($)</Label>
                   <Input
-                    id="application_url"
-                    value={formData.application_url || ""}
-                    onChange={(e) => handleChange("application_url", e.target.value)}
+                    id="amount"
+                    type="number"
+                    value={formData.amount || ""}
+                    onChange={(e) => handleChange("amount", parseFloat(e.target.value) || null)}
                     disabled={!isEditing}
                   />
                 </div>
-                
-                {/* Required Documents */}
-                <div className="space-y-4">
-                  <Label>Required Documents</Label>
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      {(formData.required_documents || []).map((doc: string, index: number) => (
-                        <div key={`document-${index}`} className="flex items-center gap-2">
-                          <Input
-                            value={doc}
-                            onChange={(e) => handleArrayChange("required_documents", index, e.target.value)}
-                            placeholder="Required document"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="destructive"
-                            onClick={() => handleArrayRemove("required_documents", index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleArrayAdd("required_documents")}
-                      >
-                        Add Required Document
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {(formData.required_documents || []).map((doc: string, index: number) => (
-                        <Badge key={`document-view-${index}`} variant="outline">{doc}</Badge>
-                      ))}
-                      {(formData.required_documents || []).length === 0 && 
-                        <span className="text-muted-foreground">No required documents specified</span>}
-                    </div>
-                  )}
-                </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="award_frequency">Award Frequency</Label>
+                  <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData.award_frequency || ""}
-                    onValueChange={(value) => handleChange("award_frequency", value)}
+                    value={formData.status}
+                    onValueChange={(value) => handleChange("status", value)}
                     disabled={!isEditing}
                   >
-                    <SelectTrigger id="award_frequency">
-                      <SelectValue placeholder="Select frequency" />
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="one-time">One-time</SelectItem>
-                      <SelectItem value="annual">Annual</SelectItem>
-                      <SelectItem value="semester">Per Semester</SelectItem>
-                      <SelectItem value="quarterly">Quarterly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                      <SelectItem value="Expired">Expired</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-            </TabsContent>
 
-            {/* Additional Tab */}
-            <TabsContent value="additional" className="space-y-4 py-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Additional Information</h3>
-                
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="image_url">Scholarship Image URL</Label>
+                  <Label htmlFor="deadline">Deadline</Label>
                   <Input
-                    id="image_url"
-                    value={formData.image_url || ""}
-                    onChange={(e) => handleChange("image_url", e.target.value)}
-                    disabled={!isEditing}
-                  />
-                  {formData.image_url && !isEditing && (
-                    <div className="mt-2 border rounded-md p-2 max-w-xs">
-                      <img 
-                        src={formData.image_url} 
-                        alt="Scholarship" 
-                        className="max-h-40 object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://placehold.co/300x200?text=Image+Not+Found";
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Contact Information */}
-                <div className="space-y-2">
-                  <Label htmlFor="contact_email">Contact Email</Label>
-                  <Input
-                    id="contact_email"
-                    value={formData.contact_information?.email || ""}
-                    onChange={(e) => handleJsonFieldChange("contact_information", "email", e.target.value)}
+                    id="deadline"
+                    type="date"
+                    value={formData.deadline ? new Date(formData.deadline).toISOString().split('T')[0] : ""}
+                    onChange={(e) => handleChange("deadline", e.target.value ? new Date(e.target.value).toISOString() : null)}
                     disabled={!isEditing}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="contact_phone">Contact Phone</Label>
+                  <Label htmlFor="application_open_date">Opening Date</Label>
                   <Input
-                    id="contact_phone"
-                    value={formData.contact_information?.phone || ""}
-                    onChange={(e) => handleJsonFieldChange("contact_information", "phone", e.target.value)}
+                    id="application_open_date"
+                    type="date"
+                    value={formData.application_open_date ? new Date(formData.application_open_date).toISOString().split('T')[0] : ""}
+                    onChange={(e) => handleChange("application_open_date", e.target.value ? new Date(e.target.value).toISOString() : null)}
                     disabled={!isEditing}
                   />
                 </div>
               </div>
-            </TabsContent>
 
-            {/* Stats Tab */}
-            <TabsContent value="stats" className="space-y-4 py-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Statistics</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Views</Label>
-                    <p className="text-xl font-semibold">{formData.views_count || 0}</p>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Applicants</Label>
-                    <p className="text-xl font-semibold">{formData.total_applicants || 0}</p>
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ""}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  disabled={!isEditing}
+                  rows={5}
+                />
+              </div>
+
+              {/* Scholarship flags */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="featured"
+                    checked={formData.featured || false}
+                    onCheckedChange={(checked) => handleChange("featured", checked)}
+                    disabled={!isEditing}
+                  />
+                  <Label htmlFor="featured">Featured</Label>
                 </div>
-                
-                <div className="pt-2">
-                  <Label className="text-sm text-muted-foreground">Created At</Label>
-                  <p className="font-semibold">
-                    {formData.created_at ? new Date(formData.created_at).toLocaleDateString() : 'N/A'}
-                  </p>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="source_verified"
+                    checked={formData.source_verified || false}
+                    onCheckedChange={(checked) => handleChange("source_verified", checked)}
+                    disabled={!isEditing}
+                  />
+                  <Label htmlFor="source_verified">Source Verified</Label>
                 </div>
-                
-                <div>
-                  <Label className="text-sm text-muted-foreground">Last Updated</Label>
-                  <p className="font-semibold">
-                    {formData.updated_at ? new Date(formData.updated_at).toLocaleDateString() : 'N/A'}
-                  </p>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="renewable"
+                    checked={formData.renewable || false}
+                    onCheckedChange={(checked) => handleChange("renewable", checked)}
+                    disabled={!isEditing}
+                  />
+                  <Label htmlFor="renewable">Renewable</Label>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </TabsContent>
+
+          {/* Eligibility Tab */}
+          <TabsContent value="eligibility" className="space-y-4 py-4">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Eligibility Criteria</h3>
+              {/* Add relevant eligibility fields here; this is a simplified version */}
+              <div className="space-y-2">
+                <Label htmlFor="citizenship">Citizenship Requirements</Label>
+                <Input
+                  id="citizenship"
+                  placeholder="e.g., US Citizens, International Students"
+                  value={(formData.citizenship_requirements || []).join(", ")}
+                  onChange={(e) => handleChange("citizenship_requirements", e.target.value.split(", "))}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="demographic">Demographic Requirements</Label>
+                <Input
+                  id="demographic"
+                  placeholder="e.g., First-Generation, Women in STEM"
+                  value={(formData.demographic_requirements || []).join(", ")}
+                  onChange={(e) => handleChange("demographic_requirements", e.target.value.split(", "))}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="academic">Academic Requirements</Label>
+                <Textarea
+                  id="academic"
+                  placeholder="Describe academic requirements like GPA, course load, etc."
+                  value={formData.academic_requirements ? JSON.stringify(formData.academic_requirements, null, 2) : ""}
+                  onChange={(e) => {
+                    try {
+                      const parsed = JSON.parse(e.target.value);
+                      handleChange("academic_requirements", parsed);
+                    } catch (err) {
+                      // Handle invalid JSON input
+                      console.log("Invalid JSON");
+                    }
+                  }}
+                  disabled={!isEditing}
+                />
+                {isEditing && (
+                  <p className="text-xs text-muted-foreground">
+                    Enter as valid JSON object
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Application Tab */}
+          <TabsContent value="application" className="space-y-4 py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="application_process">Application Process</Label>
+                <Textarea
+                  id="application_process"
+                  value={formData.application_process || ""}
+                  onChange={(e) => handleChange("application_process", e.target.value)}
+                  disabled={!isEditing}
+                  rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="application_url">Application URL</Label>
+                <Input
+                  id="application_url"
+                  value={formData.application_url || ""}
+                  onChange={(e) => handleChange("application_url", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="required_documents">Required Documents</Label>
+                <Input
+                  id="required_documents"
+                  placeholder="e.g., Transcripts, Essays, Letters of Recommendation"
+                  value={(formData.required_documents || []).join(", ")}
+                  onChange={(e) => handleChange("required_documents", e.target.value.split(", "))}
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="award_frequency">Award Frequency</Label>
+                <Select
+                  value={formData.award_frequency}
+                  onValueChange={(value) => handleChange("award_frequency", value)}
+                  disabled={!isEditing}
+                >
+                  <SelectTrigger id="award_frequency">
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="one-time">One-time</SelectItem>
+                    <SelectItem value="annual">Annual</SelectItem>
+                    <SelectItem value="semester">Per Semester</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {!isEditing && (
+          <div className="mt-4 pt-2 border-t flex flex-wrap gap-2">
+            <Badge variant={formData.featured ? "default" : "outline"}>
+              {formData.featured ? "Featured" : "Not Featured"}
+            </Badge>
+            <Badge variant={formData.source_verified ? "success" : "outline"}>
+              {formData.source_verified ? "Verified Source" : "Unverified Source"}
+            </Badge>
+            <Badge variant={formData.renewable ? "secondary" : "outline"}>
+              {formData.renewable ? "Renewable" : "Non-renewable"}
+            </Badge>
+            <Badge>
+              Created: {new Date(formData.created_at).toLocaleDateString()}
+            </Badge>
+            {formData.views_count !== null && (
+              <Badge variant="outline">
+                Views: {formData.views_count}
+              </Badge>
+            )}
+            {formData.total_applicants !== null && (
+              <Badge variant="outline">
+                Applicants: {formData.total_applicants}
+              </Badge>
+            )}
+          </div>
         )}
       </DialogContent>
     </Dialog>
