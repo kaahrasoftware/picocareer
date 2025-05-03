@@ -11,8 +11,6 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ColumnDef } from "@tanstack/react-table";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -185,7 +183,7 @@ export function ScholarshipManagementTab() {
   });
 
   // Define columns for the data table
-  const columns: ColumnDef<Scholarship>[] = [
+  const columns = [
     {
       accessorKey: "title",
       header: "Title",
@@ -342,76 +340,54 @@ export function ScholarshipManagementTab() {
       {/* Dashboard Stats */}
       <ScholarshipDashboardStats stats={stats} />
       
-      {/* Tabs for different views */}
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all" onClick={() => setStatusFilter('all')}>All</TabsTrigger>
-          <TabsTrigger value="active" onClick={() => setStatusFilter('Active')}>Active</TabsTrigger>
-          <TabsTrigger value="pending" onClick={() => setStatusFilter('Pending')}>Pending</TabsTrigger>
-          <TabsTrigger value="inactive" onClick={() => setStatusFilter('Inactive')}>Inactive</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all" className="p-0">
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row items-center justify-between py-4 gap-2">
-            <div className="flex gap-2 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search scholarships..." 
-                  className="pl-8" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select 
-                value={statusFilter} 
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Controls and Content */}
+      <div>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-between py-4 gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-[300px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input 
+                placeholder="Search scholarships..." 
+                className="pl-8" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Scholarship
-            </Button>
+            <Select 
+              value={statusFilter} 
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Main Data Table */}
-          {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : scholarships && scholarships.length > 0 ? (
-            <DataTable columns={columns} data={scholarships} />
-          ) : (
-            <div className="py-8 text-center">
-              <p className="text-muted-foreground">No scholarships found</p>
-            </div>
-          )}
-        </TabsContent>
-        
-        {/* These tabs share the same content but with pre-filtered data */}
-        <TabsContent value="active" className="p-0">
-          {/* Same content as "all" tab */}
-        </TabsContent>
-        
-        <TabsContent value="pending" className="p-0">
-          {/* Same content as "all" tab */}
-        </TabsContent>
-        
-        <TabsContent value="inactive" className="p-0">
-          {/* Same content as "all" tab */}
-        </TabsContent>
-      </Tabs>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Add Scholarship
+          </Button>
+        </div>
+
+        {/* Main Data Table */}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : scholarships && scholarships.length > 0 ? (
+          <DataTable columns={columns} data={scholarships} />
+        ) : (
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground">No scholarships found</p>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

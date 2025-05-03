@@ -1,30 +1,16 @@
 
 import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2, Save, X } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 interface ScholarshipDetailsDialogProps {
   scholarshipId: string;
@@ -33,392 +19,407 @@ interface ScholarshipDetailsDialogProps {
   onScholarshipUpdated?: () => void;
 }
 
+interface ScholarshipDetails {
+  id: string;
+  title: string;
+  provider_name: string;
+  description: string;
+  amount: number | null;
+  currency: string | null;
+  deadline: string | null;
+  eligibility_criteria: string | null;
+  application_url: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+  featured: boolean;
+  source_verified: boolean;
+  views_count: number | null;
+  total_applicants: number | null;
+}
+
 export function ScholarshipDetailsDialog({
   scholarshipId,
   open,
   onOpenChange,
-  onScholarshipUpdated,
+  onScholarshipUpdated
 }: ScholarshipDetailsDialogProps) {
-  const queryClient = useQueryClient();
+  const [scholarship, setScholarship] = useState<ScholarshipDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<any>({});
+  const [editedScholarship, setEditedScholarship] = useState<ScholarshipDetails | null>(null);
 
-  const { data: scholarship, isLoading } = useQuery({
-    queryKey: ["scholarship-details", scholarshipId],
-    queryFn: async () => {
+  useEffect(() => {
+    if (open && scholarshipId) {
+      fetchScholarshipDetails();
+    }
+  }, [open, scholarshipId]);
+
+  const fetchScholarshipDetails = async () => {
+    setIsLoading(true);
+    try {
       const { data, error } = await supabase
-        .from("scholarships")
-        .select("*")
-        .eq("id", scholarshipId)
+        .from('scholarships')
+        .select('*')
+        .eq('id', scholarshipId)
         .single();
 
       if (error) throw error;
-      return data;
-    },
-    enabled: open && !!scholarshipId,
-  });
-
-  useEffect(() => {
-    if (scholarship) {
-      setFormData(scholarship);
+      
+      setScholarship(data);
+      setEditedScholarship(data);
+    } catch (error: any) {
+      toast.error(`Error loading scholarship details: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-  }, [scholarship]);
+  };
 
   const updateMutation = useMutation({
-    mutationFn: async (updatedData: any) => {
+    mutationFn: async (updatedData: Partial<ScholarshipDetails>) => {
       const { error } = await supabase
-        .from("scholarships")
+        .from('scholarships')
         .update(updatedData)
-        .eq("id", scholarshipId);
-
+        .eq('id', scholarshipId);
+      
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Scholarship updated successfully");
+      fetchScholarshipDetails(); // Refresh data
       setIsEditing(false);
-      queryClient.invalidateQueries({ queryKey: ["scholarship-details"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-scholarships"] });
       if (onScholarshipUpdated) {
         onScholarshipUpdated();
       }
     },
-    onError: (error) => {
-      toast.error(`Update failed: ${error.message}`);
-    },
+    onError: (error: any) => {
+      toast.error(`Failed to update: ${error.message}`);
+    }
   });
 
-  const handleChange = (field: string, value: any) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    
+    if (!editedScholarship) return;
+
+    setEditedScholarship({
+      ...editedScholarship,
+      [name]: value
+    });
   };
 
   const handleSave = () => {
-    updateMutation.mutate(formData);
+    if (!editedScholarship) return;
+    
+    // Only send changed fields
+    const changedFields = Object.entries(editedScholarship).reduce((acc, [key, value]) => {
+      if (scholarship && scholarship[key as keyof ScholarshipDetails] !== value) {
+        acc[key as keyof ScholarshipDetails] = value;
+      }
+      return acc;
+    }, {} as Partial<ScholarshipDetails>);
+    
+    if (Object.keys(changedFields).length > 0) {
+      updateMutation.mutate(changedFields);
+    } else {
+      setIsEditing(false);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px]">
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  const handleCancel = () => {
+    setEditedScholarship(scholarship);
+    setIsEditing(false);
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "Not set";
+    return new Date(dateStr).toLocaleDateString();
+  };
+
+  const formatCurrency = (amount: number | null, currency: string | null) => {
+    if (amount === null) return "Not specified";
+    return `${currency || '$'}${amount.toLocaleString()}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl">
-              {isEditing ? "Edit Scholarship" : "Scholarship Details"}
-            </DialogTitle>
-            <div className="flex gap-2">
-              {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} variant="outline">
-                  Edit
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setFormData(scholarship);
-                    }}
-                    variant="ghost"
-                  >
-                    <X className="w-4 h-4 mr-1" /> Cancel
-                  </Button>
-                  <Button onClick={handleSave} disabled={updateMutation.isPending}>
-                    {updateMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-1" /> Save
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </div>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-          <DialogDescription>
-            {isEditing ? "Update scholarship information" : "View scholarship details"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
-            <TabsTrigger value="application">Application</TabsTrigger>
-          </TabsList>
-
-          {/* Basic Information Tab */}
-          <TabsContent value="basic" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title || ""}
-                  onChange={(e) => handleChange("title", e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="provider_name">Provider</Label>
-                <Input
-                  id="provider_name"
-                  value={formData.provider_name || ""}
-                  onChange={(e) => handleChange("provider_name", e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    value={formData.amount || ""}
-                    onChange={(e) => handleChange("amount", parseFloat(e.target.value) || null)}
-                    disabled={!isEditing}
-                  />
+        ) : scholarship ? (
+          <>
+            <DialogHeader>
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  {isEditing ? (
+                    <Input 
+                      name="title"
+                      value={editedScholarship?.title || ""}
+                      onChange={handleInputChange}
+                      className="text-xl font-semibold"
+                    />
+                  ) : (
+                    <DialogTitle className="text-xl">{scholarship.title}</DialogTitle>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Badge variant={scholarship.status === "Active" ? "default" : scholarship.status === "Pending" ? "outline" : "secondary"}>
+                      {scholarship.status}
+                    </Badge>
+                    {scholarship.featured && (
+                      <Badge variant="success">Featured</Badge>
+                    )}
+                    {scholarship.source_verified && (
+                      <Badge variant="secondary">Verified Source</Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) => handleChange("status", value)}
-                    disabled={!isEditing}
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Expired">Expired</SelectItem>
-                    </SelectContent>
-                  </Select>
+                
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCancel}
+                        disabled={updateMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSave}
+                        disabled={updateMutation.isPending}
+                      >
+                        {updateMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : "Save Changes"}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => setIsEditing(true)}>
+                      Edit
+                    </Button>
+                  )}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deadline">Deadline</Label>
-                  <Input
-                    id="deadline"
-                    type="date"
-                    value={formData.deadline ? new Date(formData.deadline).toISOString().split('T')[0] : ""}
-                    onChange={(e) => handleChange("deadline", e.target.value ? new Date(e.target.value).toISOString() : null)}
-                    disabled={!isEditing}
-                  />
+            </DialogHeader>
+            
+            <Tabs defaultValue="details" className="mt-6">
+              <TabsList>
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
+                <TabsTrigger value="stats">Stats</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="provider">Provider</Label>
+                    {isEditing ? (
+                      <Input 
+                        id="provider"
+                        name="provider_name"
+                        value={editedScholarship?.provider_name || ""}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <p>{scholarship.provider_name}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="amount">Amount</Label>
+                    {isEditing ? (
+                      <Input 
+                        id="amount"
+                        name="amount"
+                        type="number"
+                        value={editedScholarship?.amount || ""}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <p>{formatCurrency(scholarship.amount, scholarship.currency)}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="deadline">Deadline</Label>
+                    {isEditing ? (
+                      <Input 
+                        id="deadline"
+                        name="deadline"
+                        type="date"
+                        value={editedScholarship?.deadline?.split('T')[0] || ""}
+                        onChange={handleInputChange}
+                      />
+                    ) : (
+                      <p>{formatDate(scholarship.deadline)}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    {isEditing ? (
+                      <select
+                        id="status"
+                        name="status"
+                        value={editedScholarship?.status || ""}
+                        onChange={e => handleInputChange(e as any)}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    ) : (
+                      <p>{scholarship.status}</p>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="application_open_date">Opening Date</Label>
-                  <Input
-                    id="application_open_date"
-                    type="date"
-                    value={formData.application_open_date ? new Date(formData.application_open_date).toISOString().split('T')[0] : ""}
-                    onChange={(e) => handleChange("application_open_date", e.target.value ? new Date(e.target.value).toISOString() : null)}
-                    disabled={!isEditing}
-                  />
+                
+                <div>
+                  <Label htmlFor="application_url">Application URL</Label>
+                  {isEditing ? (
+                    <Input 
+                      id="application_url"
+                      name="application_url"
+                      value={editedScholarship?.application_url || ""}
+                      onChange={handleInputChange}
+                    />
+                  ) : (
+                    <p className="break-all">
+                      {scholarship.application_url ? (
+                        <a 
+                          href={scholarship.application_url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {scholarship.application_url}
+                        </a>
+                      ) : (
+                        "Not provided"
+                      )}
+                    </p>
+                  )}
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description || ""}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                  disabled={!isEditing}
-                  rows={5}
-                />
-              </div>
-
-              {/* Scholarship flags */}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="featured"
-                    checked={formData.featured || false}
-                    onCheckedChange={(checked) => handleChange("featured", checked)}
-                    disabled={!isEditing}
-                  />
-                  <Label htmlFor="featured">Featured</Label>
+                
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  {isEditing ? (
+                    <Textarea 
+                      id="description"
+                      name="description"
+                      value={editedScholarship?.description || ""}
+                      onChange={handleInputChange}
+                      className="min-h-[150px]"
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{scholarship.description}</p>
+                  )}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="source_verified"
-                    checked={formData.source_verified || false}
-                    onCheckedChange={(checked) => handleChange("source_verified", checked)}
-                    disabled={!isEditing}
-                  />
-                  <Label htmlFor="source_verified">Source Verified</Label>
+              </TabsContent>
+              
+              <TabsContent value="eligibility" className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="eligibility_criteria">Eligibility Criteria</Label>
+                  {isEditing ? (
+                    <Textarea 
+                      id="eligibility_criteria"
+                      name="eligibility_criteria"
+                      value={editedScholarship?.eligibility_criteria || ""}
+                      onChange={handleInputChange}
+                      className="min-h-[200px]"
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">
+                      {scholarship.eligibility_criteria || "No eligibility criteria specified."}
+                    </p>
+                  )}
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="renewable"
-                    checked={formData.renewable || false}
-                    onCheckedChange={(checked) => handleChange("renewable", checked)}
-                    disabled={!isEditing}
-                  />
-                  <Label htmlFor="renewable">Renewable</Label>
+              </TabsContent>
+              
+              <TabsContent value="stats" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Views</Label>
+                    <p>{scholarship.views_count || 0}</p>
+                  </div>
+                  
+                  <div>
+                    <Label>Applications</Label>
+                    <p>{scholarship.total_applicants || 0}</p>
+                  </div>
+                  
+                  <div>
+                    <Label>Created</Label>
+                    <p>{formatDate(scholarship.created_at)}</p>
+                  </div>
+                  
+                  <div>
+                    <Label>Last Updated</Label>
+                    <p>{formatDate(scholarship.updated_at)}</p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="featured">Featured</Label>
+                    {isEditing ? (
+                      <div className="flex items-center space-x-2 mt-2">
+                        <input 
+                          type="checkbox" 
+                          id="featured"
+                          name="featured"
+                          checked={editedScholarship?.featured || false}
+                          onChange={(e) => {
+                            setEditedScholarship(prev => prev ? {
+                              ...prev,
+                              featured: e.target.checked
+                            } : null);
+                          }}
+                          className="h-4 w-4"
+                        />
+                        <span>Mark as featured</span>
+                      </div>
+                    ) : (
+                      <p>{scholarship.featured ? "Yes" : "No"}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="source_verified">Verified Source</Label>
+                    {isEditing ? (
+                      <div className="flex items-center space-x-2 mt-2">
+                        <input 
+                          type="checkbox" 
+                          id="source_verified"
+                          name="source_verified"
+                          checked={editedScholarship?.source_verified || false}
+                          onChange={(e) => {
+                            setEditedScholarship(prev => prev ? {
+                              ...prev,
+                              source_verified: e.target.checked
+                            } : null);
+                          }}
+                          className="h-4 w-4"
+                        />
+                        <span>Verify source</span>
+                      </div>
+                    ) : (
+                      <p>{scholarship.source_verified ? "Yes" : "No"}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Eligibility Tab */}
-          <TabsContent value="eligibility" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Eligibility Criteria</h3>
-              {/* Add relevant eligibility fields here; this is a simplified version */}
-              <div className="space-y-2">
-                <Label htmlFor="citizenship">Citizenship Requirements</Label>
-                <Input
-                  id="citizenship"
-                  placeholder="e.g., US Citizens, International Students"
-                  value={(formData.citizenship_requirements || []).join(", ")}
-                  onChange={(e) => handleChange("citizenship_requirements", e.target.value.split(", "))}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="demographic">Demographic Requirements</Label>
-                <Input
-                  id="demographic"
-                  placeholder="e.g., First-Generation, Women in STEM"
-                  value={(formData.demographic_requirements || []).join(", ")}
-                  onChange={(e) => handleChange("demographic_requirements", e.target.value.split(", "))}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="academic">Academic Requirements</Label>
-                <Textarea
-                  id="academic"
-                  placeholder="Describe academic requirements like GPA, course load, etc."
-                  value={formData.academic_requirements ? JSON.stringify(formData.academic_requirements, null, 2) : ""}
-                  onChange={(e) => {
-                    try {
-                      const parsed = JSON.parse(e.target.value);
-                      handleChange("academic_requirements", parsed);
-                    } catch (err) {
-                      // Handle invalid JSON input
-                      console.log("Invalid JSON");
-                    }
-                  }}
-                  disabled={!isEditing}
-                />
-                {isEditing && (
-                  <p className="text-xs text-muted-foreground">
-                    Enter as valid JSON object
-                  </p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Application Tab */}
-          <TabsContent value="application" className="space-y-4 py-4">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="application_process">Application Process</Label>
-                <Textarea
-                  id="application_process"
-                  value={formData.application_process || ""}
-                  onChange={(e) => handleChange("application_process", e.target.value)}
-                  disabled={!isEditing}
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="application_url">Application URL</Label>
-                <Input
-                  id="application_url"
-                  value={formData.application_url || ""}
-                  onChange={(e) => handleChange("application_url", e.target.value)}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="required_documents">Required Documents</Label>
-                <Input
-                  id="required_documents"
-                  placeholder="e.g., Transcripts, Essays, Letters of Recommendation"
-                  value={(formData.required_documents || []).join(", ")}
-                  onChange={(e) => handleChange("required_documents", e.target.value.split(", "))}
-                  disabled={!isEditing}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="award_frequency">Award Frequency</Label>
-                <Select
-                  value={formData.award_frequency}
-                  onValueChange={(value) => handleChange("award_frequency", value)}
-                  disabled={!isEditing}
-                >
-                  <SelectTrigger id="award_frequency">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="one-time">One-time</SelectItem>
-                    <SelectItem value="annual">Annual</SelectItem>
-                    <SelectItem value="semester">Per Semester</SelectItem>
-                    <SelectItem value="quarterly">Quarterly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {!isEditing && (
-          <div className="mt-4 pt-2 border-t flex flex-wrap gap-2">
-            <Badge variant={formData.featured ? "default" : "outline"}>
-              {formData.featured ? "Featured" : "Not Featured"}
-            </Badge>
-            <Badge variant={formData.source_verified ? "success" : "outline"}>
-              {formData.source_verified ? "Verified Source" : "Unverified Source"}
-            </Badge>
-            <Badge variant={formData.renewable ? "secondary" : "outline"}>
-              {formData.renewable ? "Renewable" : "Non-renewable"}
-            </Badge>
-            <Badge>
-              Created: {new Date(formData.created_at).toLocaleDateString()}
-            </Badge>
-            {formData.views_count !== null && (
-              <Badge variant="outline">
-                Views: {formData.views_count}
-              </Badge>
-            )}
-            {formData.total_applicants !== null && (
-              <Badge variant="outline">
-                Applicants: {formData.total_applicants}
-              </Badge>
-            )}
+              </TabsContent>
+            </Tabs>
+          </>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            Scholarship not found
           </div>
         )}
       </DialogContent>
