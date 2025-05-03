@@ -17,6 +17,9 @@ import { FormField } from '@/components/forms/FormField';
 import { ImageUpload } from '@/components/forms/ImageUpload';
 import { format } from 'date-fns';
 import { RichTextEditor } from '@/components/forms/RichTextEditor';
+import { Badge } from '@/components/ui/badge';
+import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
+import { Star } from 'lucide-react';
 
 interface EventDetailsDialogProps {
   event: any;
