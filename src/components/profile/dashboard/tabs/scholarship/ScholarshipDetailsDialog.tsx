@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -89,7 +89,7 @@ export function ScholarshipDetailsDialog({
       fetchScholarshipDetails(); // Refresh data
       setIsEditing(false);
       if (onScholarshipUpdated) {
-        onScholarshipUpdated();
+        onScholarshipUpdated(); // Trigger refresh in parent component
       }
     },
     onError: (error: any) => {
@@ -144,7 +144,13 @@ export function ScholarshipDetailsDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      onOpenChange(isOpen);
+      // Refresh data when dialog is opened to get the latest changes
+      if (isOpen && scholarshipId) {
+        fetchScholarshipDetails();
+      }
+    }}>
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center py-8">

@@ -452,7 +452,9 @@ export function ScholarshipManagementTab() {
           open={isDetailsOpen}
           onOpenChange={setIsDetailsOpen}
           onScholarshipUpdated={() => {
+            // Invalidate both queries to ensure stats are refreshed
             queryClient.invalidateQueries({ queryKey: ['admin-scholarships'] });
+            queryClient.invalidateQueries({ queryKey: ['scholarship-stats'] });
           }}
         />
       )}
