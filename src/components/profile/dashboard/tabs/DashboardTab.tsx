@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   LayoutDashboard, 
@@ -42,7 +41,7 @@ export function DashboardTab() {
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
-            <span>App Settings</span>
+            <span>Settings</span>
           </TabsTrigger>
         </TabsList>
 
