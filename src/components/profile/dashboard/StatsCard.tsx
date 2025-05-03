@@ -10,7 +10,7 @@ interface StatsCardProps {
   title: string;
   value: number | string;
   subtitle?: string;
-  icon: React.ReactNode;
+  icon: React.ReactNode; // Ensure this is typed as ReactNode
   contentType?: ContentType;
   loading?: boolean;
   valueClassName?: string;
