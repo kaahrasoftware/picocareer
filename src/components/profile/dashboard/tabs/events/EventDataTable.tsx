@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
@@ -47,7 +46,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const { 
-    data: events, 
+    data: events = [], 
     isLoading, 
     error, 
     count,
@@ -69,6 +68,15 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
       ...(eventTypeFilter ? { event_type: eventTypeFilter } : {}),
       ...(statusFilter ? { status: statusFilter } : {})
     }
+  });
+
+  // Log for debugging purposes
+  console.log("Events data table:", {
+    events,
+    isLoading,
+    error,
+    count,
+    page
   });
 
   const handleDeleteEvent = async (id: string) => {
@@ -245,6 +253,27 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
     },
   ];
 
+  if (isLoading) {
+    return <div className="py-12 text-center">Loading events data...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="py-12 text-center text-red-500">
+        Error loading events: {error.message}
+      </div>
+    );
+  }
+
+  if (!events || events.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-muted-foreground">No events found</p>
+        <p className="text-sm mt-2">Try changing your filters or create a new event</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-4">
@@ -292,6 +321,8 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
       <DataTable
         columns={columns}
         data={events}
+        filterColumn="title"
+        filterPlaceholder="Filter by title..."
       />
 
       {/* Delete Confirmation Dialog */}

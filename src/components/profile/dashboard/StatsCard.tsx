@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
@@ -8,16 +9,45 @@ type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "comp
 
 interface StatsCardProps {
   title: string;
-  value: number;
+  value: number | string;
   subtitle?: string;
-  icon: LucideIcon;
+  icon: React.ReactNode;
   contentType?: ContentType;
+  loading?: boolean;
+  valueClassName?: string;
 }
 
-export function StatsCard({ title, value, subtitle, icon: Icon, contentType }: StatsCardProps) {
+export function StatsCard({ 
+  title, 
+  value, 
+  subtitle, 
+  icon, 
+  contentType, 
+  loading = false,
+  valueClassName = ""
+}: StatsCardProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const isClickable = contentType !== undefined;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {title}
+          </CardTitle>
+          {icon}
+        </CardHeader>
+        <CardContent>
+          <div className="h-5 w-16 bg-muted animate-pulse rounded"></div>
+          {subtitle && (
+            <div className="h-3 w-24 bg-muted animate-pulse rounded mt-2"></div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -29,10 +59,10 @@ export function StatsCard({ title, value, subtitle, icon: Icon, contentType }: S
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          {icon}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{value}</div>
+          <div className={`text-2xl font-bold ${valueClassName}`}>{value}</div>
           {subtitle && (
             <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>
           )}
