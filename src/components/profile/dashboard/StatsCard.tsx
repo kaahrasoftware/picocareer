@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import { ContentDetailsDialog } from "./ContentDetailsDialog";
 
 // Import the ContentType type or redefine it here
