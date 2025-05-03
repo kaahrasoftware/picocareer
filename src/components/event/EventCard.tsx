@@ -1,8 +1,10 @@
+
 import { format } from "date-fns";
-import { Tag, Calendar, Clock, Monitor, Users } from "lucide-react";
+import { Calendar, Clock, Monitor, Users, Building, User } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EventTypeTag } from "./EventTypeTag";
+import { cn } from "@/lib/utils";
 
 interface EventCardProps {
   event: {
@@ -41,38 +43,84 @@ export function EventCard({
     return format(new Date(date), "MMMM d, yyyy");
   };
 
+  // Get gradient overlay based on event type
+  const getHeaderGradient = () => {
+    const type = event.event_type?.toLowerCase() || '';
+    
+    if (type.includes('workshop')) {
+      return "bg-gradient-to-br from-green-900/80 to-black/50";
+    } else if (type.includes('webinar')) {
+      return "bg-gradient-to-br from-purple-900/80 to-black/50";
+    } else if (type.includes('conference')) {
+      return "bg-gradient-to-br from-blue-900/80 to-black/50";
+    } else if (type.includes('training')) {
+      return "bg-gradient-to-br from-orange-900/80 to-black/50";
+    } else if (type.includes('seminar')) {
+      return "bg-gradient-to-br from-teal-900/80 to-black/50";
+    } else if (type.includes('panel')) {
+      return "bg-gradient-to-br from-pink-900/80 to-black/50";
+    }
+    
+    // Default gradient
+    return "bg-gradient-to-br from-gray-900/80 to-black/60";
+  };
+
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <div className="relative">
         {event.thumbnail_url && (
-          <div className="absolute inset-0 bg-black/70">
+          <div className="absolute inset-0">
             <img 
               src={event.thumbnail_url} 
               alt={event.title}
-              className="w-full h-[250px] object-cover opacity-60"
+              className="w-full h-[250px] object-cover"
             />
           </div>
         )}
+        
+        {/* Gradient overlay for better text readability */}
+        <div className={cn(
+          "absolute inset-0",
+          event.thumbnail_url ? getHeaderGradient() : "bg-gradient-to-b from-primary/10 to-transparent"
+        )}></div>
+        
         <CardHeader className="relative z-10 h-[250px] flex flex-col justify-end pb-4">
-          {event.event_type && (
-            <div className="absolute top-4 right-4">
-              <Badge className="text-xs font-medium">
-                <Tag className="h-3 w-3 mr-1" />
-                {event.event_type}
-              </Badge>
-            </div>
-          )}
-          <div className="mt-auto">
-            <CardTitle className={`text-xl mb-4 ${event.thumbnail_url ? 'text-white' : ''}`}>
+          <div className="absolute top-4 right-4">
+            {event.event_type && <EventTypeTag eventType={event.event_type} />}
+          </div>
+          
+          <div className="mt-auto space-y-4">
+            <CardTitle 
+              className={cn(
+                "text-2xl font-bold mb-2 leading-tight",
+                event.thumbnail_url ? "text-white drop-shadow-md" : "text-foreground"
+              )}
+            >
               {event.title}
             </CardTitle>
-            <div className={`grid grid-cols-2 gap-4 ${event.thumbnail_url ? 'text-gray-200' : ''}`}>
-              <div>
-                <p className="text-sm">By: {event.organized_by || 'PicoCareer & I-Impact'}</p>
-              </div>
+            
+            <div className={cn(
+              "space-y-2",
+              event.thumbnail_url ? "text-gray-100" : ""
+            )}>
+              {event.organized_by && (
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Building className="h-4 w-4 flex-shrink-0" />
+                  <span className={event.thumbnail_url ? "text-white/90" : ""}>
+                    {event.organized_by}
+                  </span>
+                </div>
+              )}
+              
               {event.facilitator && (
-                <div>
-                  <p className="text-sm">Facilitator: {event.facilitator}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="h-4 w-4 flex-shrink-0" />
+                  <span className={cn(
+                    "font-medium",
+                    event.thumbnail_url ? "text-white/80" : "text-muted-foreground"
+                  )}>
+                    Facilitator: {event.facilitator}
+                  </span>
                 </div>
               )}
             </div>
@@ -84,11 +132,11 @@ export function EventCard({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">{formatDate(event.start_time)}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
                 {formatTime(event.start_time)} - {formatTime(event.end_time)}
               </span>
@@ -96,12 +144,12 @@ export function EventCard({
           </div>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
-              <Monitor className="h-4 w-4" />
+              <Monitor className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">{event.platform}</span>
             </div>
             {event.max_attendees && (
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4" />
+                <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">
                   {event.registrations_count || 0} / {event.max_attendees} registered
                 </span>
