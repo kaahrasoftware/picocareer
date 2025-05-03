@@ -7,13 +7,11 @@ import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EventDetailsDialog } from './events/EventDetailsDialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddNewEvent = () => {
     navigate('/event/upload');
@@ -42,17 +40,7 @@ export function EventManagementTab() {
 
       <Card>
         <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex justify-between items-center">
-                  <Skeleton className="h-12 w-full" />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EventDataTable onViewDetails={handleViewDetails} />
-          )}
+          <EventDataTable onViewDetails={handleViewDetails} />
         </CardContent>
       </Card>
 

@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
-import { StatsCard } from '@/components/profile/dashboard/StatsCard';
-import { Calendar, Award, Clock, Video } from 'lucide-react';
+import { StatsCard } from '../../StatsCard';
+import { Calendar, Users, Award, Video } from 'lucide-react';
 
 export function EventDashboardStats() {
-  const { data: events = [], isLoading, error } = usePaginatedQuery<any>({
+  const { data: events, isLoading } = usePaginatedQuery<any>({
     queryKey: ['admin-events-stats'],
     tableName: 'events',
     paginationOptions: {
@@ -14,41 +14,28 @@ export function EventDashboardStats() {
   });
 
   // Calculate stats from fetched events
-  const totalEvents = events?.length || 0;
-  const upcomingEvents = events?.filter(event => 
-    event?.start_time && new Date(event.start_time) > new Date()
-  )?.length || 0;
+  const totalEvents = events.length;
+  const upcomingEvents = events.filter(event => 
+    new Date(event.start_time) > new Date()
+  ).length;
   const pastEvents = totalEvents - upcomingEvents;
 
-  // Count events by type with null checking
-  const eventsByType = events?.reduce((acc: Record<string, number>, event: any) => {
-    if (!event) return acc;
+  // Count events by type
+  const eventsByType = events.reduce((acc: Record<string, number>, event: any) => {
     const type = event.event_type || 'Other';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
-  }, {}) || {};
+  }, {});
 
   // Get most popular event type
   let mostPopularType = 'None';
   let maxCount = 0;
   
-  if (Object.keys(eventsByType).length > 0) {
-    Object.entries(eventsByType).forEach(([type, count]) => {
-      if ((count as number) > maxCount) {
-        mostPopularType = type;
-        maxCount = count as number;
-      }
-    });
-  }
-
-  // Log for debugging purposes
-  console.log("Events data:", { 
-    totalCount: totalEvents, 
-    upcoming: upcomingEvents, 
-    past: pastEvents, 
-    byType: eventsByType,
-    isLoading,
-    error
+  Object.entries(eventsByType).forEach(([type, count]) => {
+    if (count > maxCount) {
+      mostPopularType = type;
+      maxCount = count as number;
+    }
   });
 
   return (
@@ -56,25 +43,25 @@ export function EventDashboardStats() {
       <StatsCard 
         title="Total Events" 
         value={totalEvents} 
-        icon={<Calendar className="text-primary" />}
+        icon={<Calendar className="text-primary" />} 
         loading={isLoading}
       />
       <StatsCard 
         title="Upcoming Events" 
         value={upcomingEvents} 
-        icon={<Award className="text-green-500" />}
+        icon={<Award className="text-green-500" />} 
         loading={isLoading}
       />
       <StatsCard 
         title="Past Events" 
         value={pastEvents} 
-        icon={<Clock className="text-amber-500" />}
+        icon={<Calendar className="text-amber-500" />} 
         loading={isLoading}
       />
       <StatsCard 
         title="Most Popular Type" 
         value={mostPopularType} 
-        icon={<Video className="text-blue-500" />}
+        icon={<Video className="text-blue-500" />} 
         loading={isLoading}
         valueClassName="text-sm"
       />
