@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,22 +7,23 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailCampaignSchema, EmailCampaignType } from './emailCampaign.schema';
 import { useDebounce } from '@/hooks/useDebounce';
+import type { Campaign } from '@/types/database/email';
 
 interface UseEmailCampaignFormStateProps {
   campaign?: EmailCampaignType | null;
-  onSuccess?: () => void;
+  onSuccess?: (campaignId?: string) => void;
 }
 
 export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampaignFormStateProps = {}) => {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     recipientType: 'all',
-    recipients: [],
-    recipientFilter: null,
+    recipients: [] as string[],
+    recipientFilter: null as string | null,
   });
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const [availableRecipients, setAvailableRecipients] = useState([]);
+  const [availableRecipients, setAvailableRecipients] = useState<Array<{id: string, full_name?: string, email: string}>>([]);
   const [isFetchingRecipients, setIsFetchingRecipients] = useState(false);
   const { session } = useAuthSession();
 
@@ -44,9 +46,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   useEffect(() => {
     if (campaign) {
       setFormData({
-        recipientType: campaign.recipient_type,
+        recipientType: campaign.recipient_type || 'all',
         recipients: campaign.recipients || [],
-        recipientFilter: campaign.recipient_filter,
+        recipientFilter: campaign.recipient_filter || null,
       });
     }
   }, [campaign]);
@@ -60,22 +62,24 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
 
       setIsFetchingRecipients(true);
       try {
-        let query = supabase
+        const query = supabase
           .from('profiles')
           .select('id, full_name, email')
-          .neq('id', session?.user?.id);
+          .neq('id', session?.user?.id || '');
 
+        let filteredQuery = query;
+        
         if (formData.recipientFilter === 'mentee') {
-          query = query.eq('role', 'mentee');
+          filteredQuery = query.eq('role', 'mentee');
         } else if (formData.recipientFilter === 'mentor') {
-          query = query.eq('role', 'mentor');
+          filteredQuery = query.eq('role', 'mentor');
         }
 
         if (debouncedSearchTerm) {
-          query = query.ilike('full_name', `%${debouncedSearchTerm}%`);
+          filteredQuery = filteredQuery.ilike('full_name', `%${debouncedSearchTerm}%`);
         }
 
-        const { data, error } = await query;
+        const { data, error } = await filteredQuery;
 
         if (error) {
           console.error('Error fetching recipients:', error);
@@ -105,15 +109,22 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
         created_by: session.user.id,
       };
 
-      let query = supabase.from('email_campaigns');
-
-      if (campaign) {
-        query = query.update(campaignData).eq('id', campaign.id);
+      let response;
+      
+      if (campaign && 'id' in campaign) {
+        response = await supabase
+          .from('email_campaigns')
+          .update(campaignData)
+          .eq('id', campaign.id)
+          .select();
       } else {
-        query = query.insert(campaignData);
+        response = await supabase
+          .from('email_campaigns')
+          .insert(campaignData)
+          .select();
       }
-
-      const { error } = await query.select();
+      
+      const { data: savedData, error } = response;
 
       if (error) {
         console.error('Error saving email campaign:', error);
@@ -122,7 +133,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       }
 
       toast.success('Email campaign saved successfully!');
-      onSuccess?.();
+      onSuccess?.(savedData?.[0]?.id);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
       toast.error('An unexpected error occurred. Please try again.');
@@ -149,7 +160,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     }
   };
 
-  const handleRecipientSelect = (recipient: any) => {
+  const handleRecipientSelect = (recipient: {id: string}) => {
     setFormData((prev) => ({
       ...prev,
       recipients: [...prev.recipients, recipient.id],
