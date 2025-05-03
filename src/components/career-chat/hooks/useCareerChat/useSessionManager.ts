@@ -53,7 +53,12 @@ export function useSessionManager(
   };
 
   const updateSessionMetadata = async (metadata: Partial<ChatSessionMetadata>) => {
-    await updateMetadata(metadata);
+    // Fix: Ensure metadata is an object before spreading
+    if (metadata && typeof metadata === 'object') {
+      await updateMetadata(metadata);
+    } else {
+      console.error('Invalid metadata format:', metadata);
+    }
   };
 
   return {

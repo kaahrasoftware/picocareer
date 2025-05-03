@@ -48,7 +48,7 @@ export interface MessageDeliveryMetadata {
   error?: string;
 }
 
-// Add ChatSessionMetadata interface that was missing
+// Added ChatSessionMetadata interface as it was missing
 export interface ChatSessionMetadata {
   title?: string;
   lastCategory?: string;

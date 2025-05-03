@@ -6,7 +6,7 @@ import { useProgressTracker } from './useProgressTracker';
 import { useSessionManager } from './useSessionManager';
 import { useApiConfig } from './useApiConfig';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { ChatSessionMetadata } from './types'; // Import the type from local types file
+import { ChatSessionMetadata, QuestionCounts } from './types'; // Import the type from local types file
 
 export function useCareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,14 +65,20 @@ export function useCareerChat() {
   };
   
   const createQuestionMessage = (sessionId: string): CareerChatMessage => {
+    // Fix: Ensure message_type is the correct type
+    const messageType: "system" | "user" | "bot" | "recommendation" | "session_end" = "bot";
+    
     return {
       id: `question-${Date.now()}`,
       session_id: sessionId,
-      message_type: "bot",
+      message_type: messageType,
       content: "What are your career goals?",
       metadata: {
-        category: currentCategory
-      }
+        category: currentCategory,
+        // Fix: Initialize questionCounts as a proper object with key-value pairs
+        questionCounts: { education: 0, skills: 0, workstyle: 0, goals: 0 } as QuestionCounts
+      },
+      created_at: new Date().toISOString()
     } as CareerChatMessage; // Cast to ensure type compatibility
   };
 

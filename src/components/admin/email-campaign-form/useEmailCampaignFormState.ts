@@ -1,188 +1,186 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
-
-type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
-
-type FormState = {
-  subject: string;
-  contentType: ContentType;
-  contentIds: string[];
-  frequency: "daily" | "weekly" | "monthly";
-  scheduledFor: string;
-  recipientType: RecipientType;
-  recipientIds: string[];
-};
+import { useState, useEffect, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { supabase } from '@/integrations/supabase/client';
+import { EmailCampaignSchema, EmailCampaignType } from './emailCampaign.schema';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface UseEmailCampaignFormStateProps {
-  adminId: string;
+  campaign?: EmailCampaignType | null;
+  onSuccess?: () => void;
 }
 
-export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormStateProps) => {
-  const [formState, setFormState] = useState<FormState>({
-    subject: "",
-    contentType: "blogs",
-    contentIds: [],
-    frequency: "daily",
-    scheduledFor: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
+export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampaignFormStateProps = {}) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState({
     recipientType: 'all',
-    recipientIds: []
+    recipients: [],
+    recipientFilter: null,
   });
-  
-  const [contentList, setContentList] = useState<{id: string, title: string}[]>([]);
-  const [recipientsList, setRecipientsList] = useState<{id: string, email: string, full_name?: string}[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [availableRecipients, setAvailableRecipients] = useState([]);
+  const [isFetchingRecipients, setIsFetchingRecipients] = useState(false);
+  const { session } = useAuthSession();
 
-  const updateFormState = (updates: Partial<FormState>) => {
-    setFormState(prev => ({ ...prev, ...updates }));
-  };
+  const form = useForm<EmailCampaignType>({
+    resolver: zodResolver(EmailCampaignSchema),
+    defaultValues: {
+      title: campaign?.title || '',
+      subject: campaign?.subject || '',
+      body: campaign?.body || '',
+    },
+    mode: 'onChange',
+  });
+
+  const {
+    handleSubmit,
+    setValue,
+    formState: { isValid },
+  } = form;
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadContent() {
-      setIsLoading(true);
-      
-      try {
-        let data;
-        
-        switch (formState.contentType) {
-          case "scholarships":
-            ({ data } = await supabase
-              .from("scholarships")
-              .select("id, title")
-              .eq("status", "Active"));
-            break;
-            
-          case "opportunities":
-            ({ data } = await supabase
-              .from("opportunities")
-              .select("id, title")
-              .eq("status", "Active"));
-            break;
-            
-          case "careers":
-            ({ data } = await supabase
-              .from("careers")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          case "majors":
-            ({ data } = await supabase
-              .from("majors")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          case "schools":
-            const { data: schools } = await supabase
-              .from("schools")
-              .select("id, name")
-              .eq("status", "Approved");
-            data = schools?.map(school => ({
-              id: school.id,
-              title: school.name
-            }));
-            break;
-            
-          case "mentors":
-            const { data: mentors } = await supabase
-              .from("profiles")
-              .select("id, full_name")
-              .eq("user_type", "mentor")
-              .eq("onboarding_status", "Approved");
-            data = mentors?.map(mentor => ({
-              id: mentor.id,
-              title: mentor.full_name || 'Unknown Mentor'
-            }));
-            break;
-            
-          case "blogs":
-            ({ data } = await supabase
-              .from("blogs")
-              .select("id, title")
-              .eq("status", "Approved"));
-            break;
-            
-          default:
-            data = [];
-        }
-
-        if (isMounted && data) {
-          setContentList(data);
-          setFormState(prev => ({ ...prev, contentIds: [] }));
-        }
-      } catch (error) {
-        console.error(`Error loading ${formState.contentType} content:`, error);
-        toast({
-          title: "Error Loading Content",
-          description: `Failed to load ${CONTENT_TYPE_LABELS[formState.contentType]}. Please try again.`,
-          variant: "destructive"
-        });
-        if (isMounted) {
-          setContentList([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+    if (campaign) {
+      setFormData({
+        recipientType: campaign.recipient_type,
+        recipients: campaign.recipients || [],
+        recipientFilter: campaign.recipient_filter,
+      });
     }
-    
-    loadContent();
-    return () => { isMounted = false; }
-  }, [formState.contentType, adminId]);
+  }, [campaign]);
 
   useEffect(() => {
-    async function loadRecipients() {
-      if (formState.recipientType !== 'selected') {
-        setRecipientsList([]);
+    const fetchRecipients = async () => {
+      if (!debouncedSearchTerm && formData.recipientType !== 'selected') {
+        setAvailableRecipients([]);
         return;
       }
-      
+
+      setIsFetchingRecipients(true);
       try {
         let query = supabase
           .from('profiles')
-          .select('id, email, full_name');
+          .select('id, full_name, email')
+          .neq('id', session?.user?.id);
 
-        // Fix string comparison - use strict equality with string literals
-        if (formState.recipientType === 'mentees') {
-          query = query.eq('user_type', 'mentee');
-        } else if (formState.recipientType === 'mentors') {
-          query = query.eq('user_type', 'mentor');
+        if (formData.recipientFilter === 'mentee') {
+          query = query.eq('role', 'mentee');
+        } else if (formData.recipientFilter === 'mentor') {
+          query = query.eq('role', 'mentor');
+        }
+
+        if (debouncedSearchTerm) {
+          query = query.ilike('full_name', `%${debouncedSearchTerm}%`);
         }
 
         const { data, error } = await query;
-        
-        if (error) throw error;
-        setRecipientsList(data || []);
-      } catch (error) {
-        console.error('Error loading recipients:', error);
-        toast({ 
-          title: "Error Loading Recipients", 
-          description: error instanceof Error ? error.message : "Unknown error occurred",
-          variant: "destructive" 
-        });
-        setRecipientsList([]);
+
+        if (error) {
+          console.error('Error fetching recipients:', error);
+          toast.error('Failed to fetch recipients. Please try again.');
+          return;
+        }
+
+        setAvailableRecipients(data || []);
+      } finally {
+        setIsFetchingRecipients(false);
       }
+    };
+
+    fetchRecipients();
+  }, [debouncedSearchTerm, formData.recipientFilter, formData.recipientType, session?.user?.id]);
+
+  const onSubmit = async (data: EmailCampaignType) => {
+    if (!session?.user) return;
+
+    setIsSaving(true);
+    try {
+      const campaignData = {
+        ...data,
+        recipient_type: formData.recipientType,
+        recipients: formData.recipients,
+        recipient_filter: formData.recipientFilter,
+        created_by: session.user.id,
+      };
+
+      let query = supabase.from('email_campaigns');
+
+      if (campaign) {
+        query = query.update(campaignData).eq('id', campaign.id);
+      } else {
+        query = query.insert(campaignData);
+      }
+
+      const { error } = await query.select();
+
+      if (error) {
+        console.error('Error saving email campaign:', error);
+        toast.error('Failed to save email campaign. Please try again.');
+        return;
+      }
+
+      toast.success('Email campaign saved successfully!');
+      onSuccess?.();
+    } catch (error) {
+      console.error('Unexpected error saving email campaign:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
+  };
 
-    loadRecipients();
-  }, [formState.recipientType]);
+  const handleRecipientChange = (type: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      recipientType: type,
+      recipients: [],
+    }));
+    
+    if (type === "selected") {
+      setFormData((prev) => ({ ...prev, recipientFilter: null }));
+    } else if (type === "mentees") {
+      setFormData((prev) => ({ ...prev, recipientFilter: "mentee" }));
+    } else if (type === "mentors") {
+      setFormData((prev) => ({ ...prev, recipientFilter: "mentor" }));
+    } else {
+      setFormData((prev) => ({ ...prev, recipientFilter: null }));
+    }
+  };
 
-  const hasRequiredFields = 
-    formState.subject?.trim() !== "" && 
-    formState.contentIds.length > 0 && 
-    formState.scheduledFor && 
-    (formState.recipientType !== 'selected' || formState.recipientIds.length > 0);
+  const handleRecipientSelect = (recipient: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      recipients: [...prev.recipients, recipient.id],
+    }));
+  };
+
+  const handleRecipientDeselect = (recipientId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      recipients: prev.recipients.filter((id) => id !== recipientId),
+    }));
+  };
+
+  const handleSearchTermChange = (term: string) => {
+    setSearchTerm(term);
+  };
 
   return {
-    formState,
-    contentList,
-    updateFormState,
-    isLoading,
-    hasRequiredFields,
-    recipientsList
+    form,
+    formData,
+    availableRecipients,
+    isFetchingRecipients,
+    isSaving,
+    handleSubmit,
+    onSubmit,
+    handleRecipientChange,
+    handleRecipientSelect,
+    handleRecipientDeselect,
+    handleSearchTermChange,
+    searchTerm,
+    setValue,
+    isValid,
   };
 };
