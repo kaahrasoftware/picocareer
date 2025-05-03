@@ -12,27 +12,13 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { Badge } from "@/components/ui/badge";
 import { MentorSettingsTab } from "./MentorSettingsTab";
+import { Profile } from "@/types/database/profiles";
 
-type ExtendedProfile = {
-  id: string;
-  user_type: 'admin' | 'mentor' | 'mentee';
-  full_name?: string; 
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  location?: string;
-  onboarding_status?: string;
-  bio?: string;
-  years_of_experience?: number;
-  total_booked_sessions?: number;
-  skills?: string[];
-  tools_used?: string[];
-  linkedin_url?: string;
-  github_url?: string;
-  website_url?: string;
-  highest_degree?: string;
-  avatar_url?: string;
-  [key: string]: any;
+type ExtendedProfile = Profile & {
+  company_name?: string | null;
+  school_name?: string | null;
+  academic_major?: string | null;
+  career_title?: string | null;
 };
 
 interface UserProfileDetailsDialogProps {
@@ -82,6 +68,13 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
         school_name: data.schools?.name,
         academic_major: data.majors?.title,
         career_title: data.careers?.title,
+        skills: data.skills || [],
+        tools_used: data.tools_used || [],
+        keywords: data.keywords || [],
+        fields_of_interest: data.fields_of_interest || [],
+        top_mentor: data.top_mentor || false,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
         user_type: (data.user_type === 'admin' || data.user_type === 'mentor' || data.user_type === 'mentee') 
           ? data.user_type 
           : 'mentee'

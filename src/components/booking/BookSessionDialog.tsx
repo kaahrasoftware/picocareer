@@ -7,8 +7,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { BookingForm } from "./booking/BookingForm";
-import { useSessionBooking } from "./booking/SessionBookingHandler";
+import { BookingForm } from "@/components/booking/BookingForm";
+import { useSessionBooking } from "@/hooks/useSessionBooking";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";

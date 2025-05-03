@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,17 +33,19 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
       if (error && error.code !== 'PGRST116') throw error;
       return data as EmailTemplateContent;
     },
-    onSuccess: (data) => {
-      if (data) {
-        reset({
-          header_text: data.header_text,
-          intro_text: data.intro_text,
-          cta_text: data.cta_text,
-          footer_text: data.footer_text,
-        });
-      }
-    }
   });
+
+  // Use useEffect instead of onSuccess in useQuery
+  useEffect(() => {
+    if (content) {
+      reset({
+        header_text: content.header_text,
+        intro_text: content.intro_text,
+        cta_text: content.cta_text,
+        footer_text: content.footer_text,
+      });
+    }
+  }, [content, reset]);
 
   const onSubmit = async (formData: Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>) => {
     try {

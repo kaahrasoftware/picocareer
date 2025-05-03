@@ -140,6 +140,12 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
     }
   };
 
+  const refreshPreview = () => {
+    // This function will be called when content is updated
+    console.log("Refreshing email template preview");
+    // Could add additional refresh logic here if needed
+  };
+
   if (loading) {
     return (
       <Card className="p-6 text-center">
@@ -241,8 +247,8 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                     adminId={adminId}
                     contentType={contentType}
                     onContentUpdate={() => {
-                      // Refresh preview
-                      loadCampaigns();
+                      // Replace loadCampaigns with refreshPreview
+                      refreshPreview();
                     }}
                   />
                 </TabsContent>

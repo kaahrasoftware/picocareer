@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from 'react';
 import { useChatSession } from '../chat-session';
-import { ChatSessionMetadata } from './types';
+import { ChatSessionMetadata } from './types'; // Import from local types
 
 export function useSessionManager(
   setIsSessionComplete: Dispatch<SetStateAction<boolean>>,
@@ -19,7 +19,8 @@ export function useSessionManager(
     resumeSession: resumeExistingSession,
     deleteSession: deleteExistingSession,
     updateSessionTitle: updateTitle,
-    updateSessionMetadata: updateMetadata
+    updateSessionMetadata: updateMetadata,
+    addMessage // Ensure this is coming from useChatSession
   } = useChatSession();
 
   // Wrap the session functions to handle UI state updates
@@ -66,6 +67,7 @@ export function useSessionManager(
     resumeSession,
     deleteSession,
     updateSessionTitle,
-    updateSessionMetadata
+    updateSessionMetadata,
+    addMessage // Include addMessage in the return object
   };
 }

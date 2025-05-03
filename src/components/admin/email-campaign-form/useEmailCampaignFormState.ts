@@ -146,6 +146,7 @@ export const useEmailCampaignFormState = ({ adminId }: UseEmailCampaignFormState
           .from('profiles')
           .select('id, email, full_name');
 
+        // Fix string comparison - use strict equality with string literals
         if (formState.recipientType === 'mentees') {
           query = query.eq('user_type', 'mentee');
         } else if (formState.recipientType === 'mentors') {

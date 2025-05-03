@@ -6,6 +6,7 @@ import { useProgressTracker } from './useProgressTracker';
 import { useSessionManager } from './useSessionManager';
 import { useApiConfig } from './useApiConfig';
 import { CareerChatMessage } from '@/types/database/analytics';
+import { ChatSessionMetadata } from './types'; // Import the type from local types file
 
 export function useCareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,7 +73,7 @@ export function useCareerChat() {
       metadata: {
         category: currentCategory
       }
-    };
+    } as CareerChatMessage; // Cast to ensure type compatibility
   };
 
   const {
