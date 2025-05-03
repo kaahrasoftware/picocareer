@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DataTable } from '@/components/ui/data-table';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
@@ -47,7 +46,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const { 
-    data: events, 
+    data: events = [], 
     isLoading, 
     error, 
     count,
@@ -89,6 +88,11 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
   };
 
   const handleToggleFeatured = async (event: any) => {
+    if (!event?.id) {
+      toast.error('Cannot update event: Missing event ID');
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('events')
@@ -104,6 +108,11 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
   };
 
   const handleUpdateStatus = async (event: any, status: string) => {
+    if (!event?.id) {
+      toast.error('Cannot update event status: Missing event ID');
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('events')
@@ -118,31 +127,56 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
     }
   };
 
+  // Render loading state
+  if (isLoading) {
+    return <div className="flex justify-center py-8">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+    </div>;
+  }
+
+  // Render error state
+  if (error) {
+    return <div className="py-8 text-center text-red-500">
+      Error loading events: {error.message || "Unknown error"}
+    </div>;
+  }
+
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'title',
       header: 'Title',
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium truncate max-w-[200px]">{row.original.title}</span>
-          <span className="text-xs text-muted-foreground">
-            {formatDistance(new Date(row.original.created_at), new Date(), { addSuffix: true })}
-          </span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const event = row.original;
+        if (!event) return null;
+        
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium truncate max-w-[200px]">{event.title || 'Untitled Event'}</span>
+            <span className="text-xs text-muted-foreground">
+              {event.created_at ? formatDistance(new Date(event.created_at), new Date(), { addSuffix: true }) : 'Unknown date'}
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'event_type',
       header: 'Type',
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.event_type}</Badge>
-      ),
+      cell: ({ row }) => {
+        const type = row.original?.event_type || 'Unknown';
+        return (
+          <Badge variant="outline">{type}</Badge>
+        );
+      },
     },
     {
       accessorKey: 'start_time',
       header: 'Date',
       cell: ({ row }) => {
-        const date = new Date(row.original.start_time);
+        const startTime = row.original?.start_time;
+        if (!startTime) return <span className="text-muted-foreground">Date not set</span>;
+        
+        const date = new Date(startTime);
         return (
           <div className="flex flex-col">
             <span>{date.toLocaleDateString()}</span>
@@ -155,7 +189,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.original.status;
+        const status = row.original?.status || 'Pending';
         let variant: "default" | "secondary" | "destructive" | "outline" = "default";
         let icon = null;
         
@@ -187,6 +221,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
       id: 'actions',
       cell: ({ row }) => {
         const event = row.original;
+        if (!event) return null;
         
         return (
           <div className="flex items-center justify-end gap-2">
@@ -289,10 +324,17 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
         ))}
       </div>
 
-      <DataTable
-        columns={columns}
-        data={events}
-      />
+      {events.length === 0 ? (
+        <div className="py-12 text-center border rounded-lg">
+          <p className="text-muted-foreground">No events found</p>
+          <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters or create a new event</p>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={events}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -300,7 +342,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the event "{eventToDelete?.title}". This action cannot be undone.
+              This will permanently delete the event "{eventToDelete?.title || 'Unknown'}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
