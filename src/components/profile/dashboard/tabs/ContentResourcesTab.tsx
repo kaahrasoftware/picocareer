@@ -1,6 +1,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Video, Award, Calendar, Bookmark } from "lucide-react";
+import { ScholarshipManagementTab } from "./ScholarshipManagementTab";
 
 export function ContentResourcesTab() {
   return (
@@ -50,11 +51,7 @@ export function ContentResourcesTab() {
         </TabsContent>
         
         <TabsContent value="scholarships">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Scholarships Management</h3>
-            {/* Add scholarships management UI */}
-            <p className="text-muted-foreground">Manage scholarship opportunities, eligibility criteria, and application deadlines.</p>
-          </div>
+          <ScholarshipManagementTab />
         </TabsContent>
         
         <TabsContent value="events">
