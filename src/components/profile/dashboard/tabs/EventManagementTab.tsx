@@ -7,6 +7,8 @@ import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EventDetailsDialog } from './events/EventDetailsDialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { EventRegistrationsTab } from './EventRegistrationsTab';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -36,13 +38,26 @@ export function EventManagementTab() {
         </Button>
       </div>
 
-      <EventDashboardStats />
+      <Tabs defaultValue="events" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="registrations">Registrations</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardContent className="p-6">
-          <EventDataTable onViewDetails={handleViewDetails} />
-        </CardContent>
-      </Card>
+        <TabsContent value="events" className="space-y-6">
+          <EventDashboardStats />
+
+          <Card>
+            <CardContent className="p-6">
+              <EventDataTable onViewDetails={handleViewDetails} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="registrations">
+          <EventRegistrationsTab />
+        </TabsContent>
+      </Tabs>
 
       {selectedEvent && (
         <EventDetailsDialog 
