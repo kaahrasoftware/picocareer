@@ -44,6 +44,7 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
   const [eventToDelete, setEventToDelete] = useState<any>(null);
   const [eventTypeFilter, setEventTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1); // Initialize page state first
 
   const { 
     data: events = [], 
@@ -56,11 +57,11 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
     hasNextPage,
     hasPreviousPage
   } = usePaginatedQuery<any>({
-    queryKey: ['admin-events', page, eventTypeFilter, statusFilter],
+    queryKey: ['admin-events', currentPage, eventTypeFilter, statusFilter],
     tableName: 'events',
     paginationOptions: {
       limit: 10,
-      page: 1,
+      page: currentPage, // Use the currentPage state variable
       orderBy: 'created_at',
       orderDirection: 'desc'
     },
@@ -69,6 +70,13 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
       ...(statusFilter ? { status: statusFilter } : {})
     }
   });
+
+  // Update the local state when page changes from hook
+  React.useEffect(() => {
+    if (page !== currentPage) {
+      setCurrentPage(page);
+    }
+  }, [page]);
 
   const handleDeleteEvent = async (id: string) => {
     try {
@@ -334,6 +342,29 @@ export function EventDataTable({ onViewDetails }: EventDataTableProps) {
           columns={columns}
           data={events}
         />
+      )}
+
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-4 gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setPage(currentPage - 1)}
+            disabled={!hasPreviousPage}
+          >
+            Previous
+          </Button>
+          <span className="py-2 px-4">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button 
+            variant="outline" 
+            onClick={() => setPage(currentPage + 1)}
+            disabled={!hasNextPage}
+          >
+            Next
+          </Button>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}
