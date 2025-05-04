@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { StatsCard } from '../../StatsCard';
 import { Calendar, Award, Video, Users } from 'lucide-react';
+
 export function EventDashboardStats() {
   const {
     data: events = [],
@@ -36,5 +38,40 @@ export function EventDashboardStats() {
       maxCount = count as number;
     }
   });
-  return;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <StatsCard
+        title="Total Events"
+        value={totalEvents.toString()}
+        icon={<Calendar className="h-5 w-5" />}
+        description="All events created"
+        loading={isLoading}
+      />
+      
+      <StatsCard
+        title="Upcoming Events"
+        value={upcomingEvents.toString()}
+        icon={<Video className="h-5 w-5" />}
+        description="Events in the future"
+        loading={isLoading}
+      />
+      
+      <StatsCard
+        title="Past Events"
+        value={pastEvents.toString()}
+        icon={<Users className="h-5 w-5" />}
+        description="Completed events"
+        loading={isLoading}
+      />
+      
+      <StatsCard
+        title="Most Popular Type"
+        value={mostPopularType}
+        icon={<Award className="h-5 w-5" />}
+        description={`${maxCount} events of this type`}
+        loading={isLoading}
+      />
+    </div>
+  );
 }
