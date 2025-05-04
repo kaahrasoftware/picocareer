@@ -42,7 +42,7 @@ export function RegistrationSummary({
             <Badge variant="secondary" className="text-xs font-normal">
               {eventTitle}
             </Badge>
-            <CircularProgress percentage={registrationCount > 0 ? 100 : 0} size="sm" color="#8B5CF6" className="ml-2" />
+            
           </div>
         </CardTitle>
       </CardHeader>
