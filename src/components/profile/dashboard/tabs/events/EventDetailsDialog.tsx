@@ -20,6 +20,7 @@ import { RichTextEditor } from '@/components/forms/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { Star } from 'lucide-react';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 
 interface EventDetailsDialogProps {
   event: any;
@@ -355,35 +356,41 @@ function EventRegistrations({ eventId }: { eventId: string }) {
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Registrations ({registrations.length})</h3>
       
-      <div className="border rounded-md">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="px-4 py-2 text-left">Name</th>
-              <th className="px-4 py-2 text-left">Email</th>
-              <th className="px-4 py-2 text-left">Registered</th>
-              <th className="px-4 py-2 text-left">Status</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div className="border rounded-md overflow-auto max-h-[500px]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Registered</TableHead>
+              <TableHead>Country</TableHead>
+              <TableHead>Academic Field/Position</TableHead>
+              <TableHead>School/Company</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {registrations.map((registration: any) => (
-              <tr key={registration.id} className="border-b hover:bg-muted/50">
-                <td className="px-4 py-2">
+              <TableRow key={registration.id} className="hover:bg-muted/50">
+                <TableCell>
                   {registration.first_name} {registration.last_name}
-                </td>
-                <td className="px-4 py-2">{registration.email}</td>
-                <td className="px-4 py-2">
+                </TableCell>
+                <TableCell>{registration.email}</TableCell>
+                <TableCell>
                   {format(new Date(registration.created_at), 'MMM d, yyyy')}
-                </td>
-                <td className="px-4 py-2">
+                </TableCell>
+                <TableCell>{registration.country || 'Not specified'}</TableCell>
+                <TableCell>{registration["current academic field/position"] || 'Not specified'}</TableCell>
+                <TableCell>{registration["current school/company"] || 'Not specified'}</TableCell>
+                <TableCell>
                   <Badge variant={registration.status === 'registered' ? 'default' : 'outline'}>
                     {registration.status}
                   </Badge>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
