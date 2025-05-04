@@ -9,6 +9,7 @@ import { EventDetailsDialog } from './events/EventDetailsDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventRegistrationsTab } from './EventRegistrationsTab';
+import { EventSummaryTab } from './events/EventSummaryTab';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -38,11 +39,16 @@ export function EventManagementTab() {
         </Button>
       </div>
 
-      <Tabs defaultValue="events" className="space-y-4">
+      <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="registrations">Registrations</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="summary">
+          <EventSummaryTab />
+        </TabsContent>
 
         <TabsContent value="events" className="space-y-6">
           <EventDashboardStats />
