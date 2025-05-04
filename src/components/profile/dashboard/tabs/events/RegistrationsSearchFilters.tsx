@@ -19,8 +19,10 @@ export function RegistrationsSearchFilters({
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by email..."
-            className="pl-8"
+            placeholder={selectedEvent === 'all' 
+              ? "Search registrations by email..." 
+              : "Search participants by email..."}
+            className="pl-8 border-gray-200 focus:border-primary"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />

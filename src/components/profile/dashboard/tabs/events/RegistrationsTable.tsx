@@ -24,10 +24,10 @@ export function RegistrationsTable({
   const showEventColumn = selectedEvent === 'all';
   
   return (
-    <div className="border rounded-md overflow-auto">
+    <div className="border rounded-md overflow-auto bg-white shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-muted/30">
             {showEventColumn && <TableHead>Event</TableHead>}
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
@@ -42,13 +42,17 @@ export function RegistrationsTable({
           {isLoading ? (
             <TableRow>
               <TableCell colSpan={showEventColumn ? 8 : 7} className="h-24 text-center">
-                Loading registrations...
+                <div className="flex flex-col items-center justify-center">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  <p className="mt-2 text-sm text-muted-foreground">Loading registrations...</p>
+                </div>
               </TableCell>
             </TableRow>
           ) : registrations.length === 0 ? (
             <TableRow>
               <TableCell colSpan={showEventColumn ? 8 : 7} className="h-24 text-center">
-                No registrations found.
+                <p className="text-muted-foreground">No registrations found.</p>
+                <p className="text-xs text-muted-foreground mt-1">Try changing your search criteria.</p>
               </TableCell>
             </TableRow>
           ) : (
@@ -70,7 +74,7 @@ export function RegistrationsTable({
                 <TableCell>{registration["current academic field/position"] || 'Not specified'}</TableCell>
                 <TableCell>{registration["current school/company"] || 'Not specified'}</TableCell>
                 <TableCell>
-                  <Badge variant={registration.status === 'registered' ? 'default' : 'outline'}>
+                  <Badge variant={registration.status === 'registered' ? 'success' : 'outline'}>
                     {registration.status}
                   </Badge>
                 </TableCell>
