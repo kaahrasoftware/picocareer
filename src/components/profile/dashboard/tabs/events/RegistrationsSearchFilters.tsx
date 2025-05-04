@@ -1,30 +1,17 @@
 
-import { Search, Filter } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 
 interface RegistrationsSearchFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   selectedEvent: string;
-  onEventChange: (value: string) => void;
-  events: any[];
-  isLoading: boolean;
 }
 
 export function RegistrationsSearchFilters({
   searchQuery,
   onSearchChange,
-  selectedEvent,
-  onEventChange,
-  events,
-  isLoading
+  selectedEvent
 }: RegistrationsSearchFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -38,25 +25,6 @@ export function RegistrationsSearchFilters({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-      </div>
-      <div className="w-full sm:w-1/3">
-        <Select
-          value={selectedEvent}
-          onValueChange={onEventChange}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Filter by event" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Events</SelectItem>
-            {events.map((event) => (
-              <SelectItem key={event.id} value={event.id}>
-                {event.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
     </div>
   );

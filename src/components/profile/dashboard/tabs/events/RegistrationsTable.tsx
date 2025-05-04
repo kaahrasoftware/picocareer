@@ -13,15 +13,22 @@ import { Badge } from '@/components/ui/badge';
 interface RegistrationTableProps {
   registrations: any[];
   isLoading: boolean;
+  selectedEvent: string;
 }
 
-export function RegistrationsTable({ registrations, isLoading }: RegistrationTableProps) {
+export function RegistrationsTable({ 
+  registrations, 
+  isLoading, 
+  selectedEvent 
+}: RegistrationTableProps) {
+  const showEventColumn = selectedEvent === 'all';
+  
   return (
     <div className="border rounded-md overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Event</TableHead>
+            {showEventColumn && <TableHead>Event</TableHead>}
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Registered</TableHead>
@@ -34,22 +41,24 @@ export function RegistrationsTable({ registrations, isLoading }: RegistrationTab
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={showEventColumn ? 8 : 7} className="h-24 text-center">
                 Loading registrations...
               </TableCell>
             </TableRow>
           ) : registrations.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={showEventColumn ? 8 : 7} className="h-24 text-center">
                 No registrations found.
               </TableCell>
             </TableRow>
           ) : (
             registrations.map((registration) => (
               <TableRow key={registration.id} className="hover:bg-muted/50">
-                <TableCell className="font-medium">
-                  {registration.events?.title || 'Unknown Event'}
-                </TableCell>
+                {showEventColumn && (
+                  <TableCell className="font-medium">
+                    {registration.events?.title || 'Unknown Event'}
+                  </TableCell>
+                )}
                 <TableCell>
                   {registration.first_name} {registration.last_name}
                 </TableCell>

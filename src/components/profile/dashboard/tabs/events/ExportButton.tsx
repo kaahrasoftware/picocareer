@@ -4,13 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ExportButtonProps {
   selectedEvent: string;
   searchQuery: string;
+  eventTitle?: string;
 }
 
-export function ExportButton({ selectedEvent, searchQuery }: ExportButtonProps) {
+export function ExportButton({ selectedEvent, searchQuery, eventTitle }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   
   const handleExport = async () => {
@@ -63,13 +65,24 @@ export function ExportButton({ selectedEvent, searchQuery }: ExportButtonProps) 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `event-registrations-${new Date().toISOString().split('T')[0]}.csv`);
+        
+        // Use the event title in the filename if available
+        const filename = selectedEvent !== 'all' && eventTitle
+          ? `${eventTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-registrations-${new Date().toISOString().split('T')[0]}.csv`
+          : `event-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+        
+        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        toast.success(`Successfully exported ${data.length} registrations`);
+      } else {
+        toast.info('No registrations to export');
       }
     } catch (error: any) {
       console.error('Error exporting registrations:', error.message);
+      toast.error('Failed to export registrations');
     } finally {
       setIsExporting(false);
     }
@@ -82,7 +95,9 @@ export function ExportButton({ selectedEvent, searchQuery }: ExportButtonProps) 
       disabled={isExporting}
     >
       <Download className="h-4 w-4" />
-      {isExporting ? 'Exporting...' : 'Export as CSV'}
+      {isExporting ? 'Exporting...' : selectedEvent !== 'all' 
+        ? `Export ${eventTitle || 'Event'} Registrations` 
+        : 'Export All Registrations'}
     </Button>
   );
 }

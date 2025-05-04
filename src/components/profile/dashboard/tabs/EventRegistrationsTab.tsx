@@ -6,6 +6,8 @@ import { RegistrationsTable } from './events/RegistrationsTable';
 import { RegistrationsSearchFilters } from './events/RegistrationsSearchFilters';
 import { RegistrationsPagination } from './events/RegistrationsPagination';
 import { useEventRegistrations } from './events/useEventRegistrations';
+import { EventSelector } from './events/EventSelector';
+import { RegistrationSummary } from './events/RegistrationSummary';
 
 export function EventRegistrationsTab() {
   const {
@@ -21,7 +23,12 @@ export function EventRegistrationsTab() {
     selectedEvent,
     setSelectedEvent,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    registrationCounts,
+    selectedEventTitle,
+    countriesData,
+    academicFieldsData,
+    currentEventRegistrationCount
   } = useEventRegistrations();
 
   // Fetch events on component mount
@@ -36,26 +43,48 @@ export function EventRegistrationsTab() {
         <ExportButton 
           selectedEvent={selectedEvent}
           searchQuery={searchQuery}
+          eventTitle={selectedEventTitle}
         />
       </div>
 
+      {/* Event Selector */}
+      <EventSelector 
+        events={events}
+        selectedEvent={selectedEvent}
+        onEventChange={setSelectedEvent}
+        registrationCounts={registrationCounts}
+        isLoading={isLoading}
+      />
+
+      {/* Registration Summary (only shown when specific event is selected) */}
+      <RegistrationSummary 
+        selectedEvent={selectedEvent}
+        eventTitle={selectedEventTitle}
+        registrationCount={currentEventRegistrationCount}
+        countriesData={countriesData}
+        academicFieldsData={academicFieldsData}
+      />
+
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>All Registrations</CardTitle>
+          <CardTitle>
+            {selectedEvent === 'all' ? 
+              'All Registrations' : 
+              `Registrations: ${selectedEventTitle || 'Selected Event'}`
+            }
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <RegistrationsSearchFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             selectedEvent={selectedEvent}
-            onEventChange={setSelectedEvent}
-            events={events}
-            isLoading={isLoading}
           />
 
           <RegistrationsTable 
             registrations={registrations}
             isLoading={isRegistrationsLoading}
+            selectedEvent={selectedEvent}
           />
 
           <RegistrationsPagination
