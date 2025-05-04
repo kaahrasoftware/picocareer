@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Video, Award, Calendar, Bookmark } from "lucide-react";
 import { ScholarshipManagementTab } from "./ScholarshipManagementTab";
 import { EventManagementTab } from "./EventManagementTab";
+import { EventRegistrationsTab } from "./EventRegistrationsTab";
 
 export function ContentResourcesTab() {
   return (
@@ -28,6 +29,10 @@ export function ContentResourcesTab() {
           <TabsTrigger value="events" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Events
+          </TabsTrigger>
+          <TabsTrigger value="eventRegistrations" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Event Registrations
           </TabsTrigger>
           <TabsTrigger value="opportunities" className="flex items-center gap-2">
             <Bookmark className="h-4 w-4" />
@@ -57,6 +62,10 @@ export function ContentResourcesTab() {
         
         <TabsContent value="events">
           <EventManagementTab />
+        </TabsContent>
+        
+        <TabsContent value="eventRegistrations">
+          <EventRegistrationsTab />
         </TabsContent>
         
         <TabsContent value="opportunities">
