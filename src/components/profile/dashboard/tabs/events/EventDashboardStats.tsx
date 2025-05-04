@@ -1,30 +1,40 @@
-
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-
+import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
+import { StatsCard } from '../../StatsCard';
+import { Calendar, Award, Video, Users } from 'lucide-react';
 export function EventDashboardStats() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">0</div>
-          <div className="text-muted-foreground text-sm">Upcoming Events</div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">0</div>
-          <div className="text-muted-foreground text-sm">Past Events</div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">0</div>
-          <div className="text-muted-foreground text-sm">Total Registrations</div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const {
+    data: events = [],
+    isLoading
+  } = usePaginatedQuery<any>({
+    queryKey: ['admin-events-stats'],
+    tableName: 'events',
+    paginationOptions: {
+      limit: 1000 // Large limit to fetch all events for stats calculation
+    }
+  });
+
+  // Calculate stats from fetched events
+  const totalEvents = events?.length || 0;
+  const upcomingEvents = events?.filter(event => event?.start_time && new Date(event.start_time) > new Date())?.length || 0;
+  const pastEvents = totalEvents - upcomingEvents;
+
+  // Count events by type
+  const eventsByType = events?.reduce((acc: Record<string, number>, event: any) => {
+    if (!event) return acc;
+    const type = event.event_type || 'Other';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {}) || {};
+
+  // Get most popular event type
+  let mostPopularType = 'None';
+  let maxCount = 0;
+  Object.entries(eventsByType).forEach(([type, count]) => {
+    if (count as number > maxCount) {
+      mostPopularType = type;
+      maxCount = count as number;
+    }
+  });
+  return;
 }
