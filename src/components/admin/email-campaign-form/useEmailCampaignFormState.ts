@@ -11,14 +11,16 @@ import { RecipientType } from './utils';
 interface UseEmailCampaignFormStateProps {
   campaign?: EmailCampaignType | null;
   onSuccess?: (campaignId?: string) => void;
+  specificRecipientType?: RecipientType;
 }
 
-export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampaignFormStateProps = {}) => {
+export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipientType }: UseEmailCampaignFormStateProps = {}) => {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     recipientType: 'all' as RecipientType,
     recipientIds: [] as string[],
     recipientFilter: null as Record<string, any> | null,
+    selectedEventId: '',
   });
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -58,13 +60,77 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
         recipientType: (campaign.recipient_type as RecipientType) || 'all',
         recipientIds: profileIds,
         recipientFilter: campaign.recipient_filter || null,
+        selectedEventId: campaign.recipient_filter?.event_id || '',
       });
     }
   }, [campaign]);
 
+  // Override recipientType when specificRecipientType is provided
+  useEffect(() => {
+    if (specificRecipientType) {
+      setFormData(prev => ({
+        ...prev,
+        recipientType: specificRecipientType
+      }));
+    }
+  }, [specificRecipientType]);
+  
+  // Fetch event registrants when needed
+  const fetchEventRegistrants = useCallback(async (eventId: string) => {
+    if (!eventId) return [];
+    
+    setIsFetchingRecipients(true);
+    try {
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('profile_id, profiles:profile_id(id, full_name, email)')
+        .eq('event_id', eventId)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching event registrants:', error);
+        toast.error('Failed to fetch event registrants');
+        return [];
+      }
+      
+      // Transform data to match recipient format
+      const registrants = data.map(reg => ({
+        id: reg.profiles.id,
+        full_name: reg.profiles.full_name,
+        email: reg.profiles.email
+      }));
+      
+      // Sort alphabetically by name
+      registrants.sort((a, b) => {
+        const nameA = a.full_name || a.email || '';
+        const nameB = b.full_name || b.email || '';
+        return nameA.localeCompare(nameB);
+      });
+      
+      return registrants;
+    } catch (error) {
+      console.error('Error in event registrant fetching:', error);
+      return [];
+    } finally {
+      setIsFetchingRecipients(false);
+    }
+  }, []);
+
   // Fetch recipients based on search term and filters
   const fetchRecipients = useCallback(async () => {
-    if (!debouncedSearchTerm && formData.recipientType !== 'selected') {
+    const currentRecipientType = specificRecipientType || formData.recipientType;
+    
+    // Special handling for event registrants
+    if (currentRecipientType === 'event_registrants') {
+      if (formData.selectedEventId) {
+        const registrants = await fetchEventRegistrants(formData.selectedEventId);
+        setAvailableRecipients(registrants);
+      }
+      return;
+    }
+    
+    // For normal recipients (users), always fetch when type is 'selected'
+    if (currentRecipientType !== 'selected') {
       setAvailableRecipients([]);
       return;
     }
@@ -93,6 +159,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       if (debouncedSearchTerm) {
         filteredQuery = filteredQuery.ilike('full_name', `%${debouncedSearchTerm}%`);
       }
+      
+      // Always sort alphabetically by name
+      filteredQuery = filteredQuery.order('full_name', { ascending: true });
 
       const { data, error } = await filteredQuery;
 
@@ -106,7 +175,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     } finally {
       setIsFetchingRecipients(false);
     }
-  }, [debouncedSearchTerm, formData.recipientFilter, formData.recipientType, session?.user?.id]);
+  }, [debouncedSearchTerm, formData.recipientFilter, formData.recipientType, formData.selectedEventId, session?.user?.id, specificRecipientType, fetchEventRegistrants]);
 
   // Run the fetch when dependencies change
   useEffect(() => {
@@ -267,6 +336,17 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     }));
   };
 
+  const handleEventSelect = (eventId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedEventId: eventId,
+      recipientFilter: {
+        ...prev.recipientFilter,
+        event_id: eventId
+      }
+    }));
+  };
+
   const handleSearchTermChange = (term: string) => {
     setSearchTerm(term);
   };
@@ -282,6 +362,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     handleRecipientChange,
     handleRecipientSelect,
     handleRecipientDeselect,
+    handleEventSelect,
     handleSearchTermChange,
     searchTerm,
     setValue,

@@ -6,6 +6,7 @@ import { RecipientTypeSelector } from './RecipientTypeSelector';
 import { RecipientSelection } from './RecipientSelection';
 import { FrequencySelector } from './FrequencySelector';
 import { ScheduleDateTimeInput } from './ScheduleDateTimeInput';
+import { EventSelect } from './EventSelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
   const [recipientType, setRecipientType] = useState<RecipientType>('all');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [scheduledFor, setScheduledFor] = useState('');
   const [subject, setSubject] = useState('');
@@ -51,10 +53,13 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     setSubject('');
     setScheduledFor('');
     setRandomSelect(false);
+    setSelectedEventId('');
     // Keep other settings like recipient type and frequency as they may be reused
   };
 
-  const { availableRecipients, isFetchingRecipients } = useEmailCampaignFormState();
+  const { availableRecipients, isFetchingRecipients } = useEmailCampaignFormState({
+    specificRecipientType: recipientType
+  });
   
   const { isSubmitting, handleSubmit } = useEmailCampaignFormSubmit({
     adminId,
@@ -68,14 +73,41 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         : recipientType === 'mentees' 
           ? { filter_type: 'mentee' } 
           : recipientType === 'mentors' 
-            ? { filter_type: 'mentor' } 
-            : null,
+            ? { filter_type: 'mentor' }
+            : recipientType === 'event_registrants' && selectedEventId
+              ? { event_id: selectedEventId }
+              : null,
       scheduled_for: scheduledFor,
       frequency: frequency
     },
     onSuccess: onCampaignCreated
   });
   
+  // Fetch list of events for the event registrants option
+  const { data: eventsList = [], isLoading: isEventsLoading } = useQuery({
+    queryKey: ['events', 'for-campaign'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('id, title, registrations_count')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        if (error) {
+          console.error('Error fetching events:', error);
+          throw error;
+        }
+        
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        return [];
+      }
+    },
+    enabled: recipientType === 'event_registrants'
+  });
+
   // Helper function to get content type config for field mapping
   const getContentTypeConfig = (type: ContentType): { 
     tableName: string, 
@@ -273,6 +305,11 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         return;
       }
       
+      if (recipientType === 'event_registrants' && !selectedEventId) {
+        toast.error('Please select an event');
+        return;
+      }
+      
       if (!scheduledFor) {
         toast.error('Please select a scheduled date and time');
         return;
@@ -290,6 +327,8 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         setValue('recipient_filter', { filter_type: 'mentee' });
       } else if (recipientType === 'mentors') {
         setValue('recipient_filter', { filter_type: 'mentor' });
+      } else if (recipientType === 'event_registrants' && selectedEventId) {
+        setValue('recipient_filter', { event_id: selectedEventId });
       } else {
         setValue('recipient_filter', null);
       }
@@ -303,7 +342,11 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         content_type: contentType,
         content_ids: selectedContentIds,
         recipient_type: recipientType,
-        recipient_filter: recipientType === 'selected' ? { profile_ids: recipientIds } : null,
+        recipient_filter: recipientType === 'selected' 
+          ? { profile_ids: recipientIds } 
+          : recipientType === 'event_registrants' && selectedEventId
+            ? { event_id: selectedEventId }
+            : null,
         scheduled_for: scheduledFor,
         frequency: frequency,
         adminId
@@ -320,6 +363,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const hasRequiredFields = subject && 
     (selectedContentIds.length > 0 || randomSelect) && 
     (recipientType !== 'selected' || (recipientType === 'selected' && recipientIds.length > 0)) &&
+    (recipientType !== 'event_registrants' || (recipientType === 'event_registrants' && selectedEventId)) &&
     scheduledFor;
 
   return (
@@ -367,6 +411,9 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
           recipientType={recipientType}
           setRecipientType={(type) => {
             setRecipientType(type as RecipientType);
+            // Reset other fields when changing recipient type
+            setRecipientIds([]);
+            setSelectedEventId('');
           }}
         />
 
@@ -375,6 +422,15 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
             recipientsList={availableRecipients}
             selectedRecipients={recipientIds}
             setSelectedRecipients={setRecipientIds}
+          />
+        )}
+
+        {recipientType === 'event_registrants' && (
+          <EventSelect
+            eventId={selectedEventId}
+            setEventId={setSelectedEventId}
+            events={eventsList}
+            isLoading={isEventsLoading}
           />
         )}
 

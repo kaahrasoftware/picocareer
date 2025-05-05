@@ -12,11 +12,12 @@ export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   schools: 'Schools'
 };
 
-export type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
+export type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected' | 'event_registrants';
 
 export const RECIPIENT_TYPE_OPTIONS = [
   { value: 'all', label: 'All Users' },
   { value: 'mentees', label: 'All Mentees' },
   { value: 'mentors', label: 'All Mentors' },
-  { value: 'selected', label: 'Selected Users' }
+  { value: 'selected', label: 'Selected Users' },
+  { value: 'event_registrants', label: 'Event Registrants' }
 ];

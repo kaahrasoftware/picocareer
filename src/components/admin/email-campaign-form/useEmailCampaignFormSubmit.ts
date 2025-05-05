@@ -65,6 +65,27 @@ export const useEmailCampaignFormSubmit = ({
         recipientFilter = { filter_type: 'mentee' };
       } else if (formState.recipient_type === 'mentors') {
         recipientFilter = { filter_type: 'mentor' };
+      } else if (formState.recipient_type === 'event_registrants' && 
+                formState.recipient_filter && 
+                formState.recipient_filter.event_id) {
+        recipientFilter = { 
+          event_id: formState.recipient_filter.event_id,
+          filter_type: 'event_registrants'
+        };
+        
+        // Calculate event registrants count
+        try {
+          const { count, error } = await supabase
+            .from('event_registrations')
+            .select('*', { count: 'exact' })
+            .eq('event_id', formState.recipient_filter.event_id);
+            
+          if (!error) {
+            recipientsCount = count || 0;
+          }
+        } catch (err) {
+          console.error('Error counting event registrants:', err);
+        }
       }
       
       // First, ensure the session is refreshed before submitting
