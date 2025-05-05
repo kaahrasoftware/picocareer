@@ -37,14 +37,12 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
   const { form, isValid, setValue } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
-      if (campaignId) {
-        if (onCampaignCreated) {
-          onCampaignCreated(campaignId);
-        }
-        
-        // Reset form state
-        resetForm();
+      if (campaignId && onCampaignCreated) {
+        onCampaignCreated(campaignId);
       }
+      
+      // Reset form state
+      resetForm();
     }
   });
 

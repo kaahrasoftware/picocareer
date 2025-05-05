@@ -21,11 +21,14 @@ export default function AdminEmailCampaigns() {
   }
 
   const handleCampaignCreated = (campaignId: string) => {
-    toast.success("Campaign created successfully! Refreshing page...");
-    // Use setTimeout to allow the toast to be visible before refresh
+    toast.success("Campaign created successfully!", {
+      description: "The page will refresh to show your new campaign."
+    });
+    
+    // Use setTimeout to allow the toast to be visible before refreshing
     setTimeout(() => {
       window.location.reload();
-    }, 1500);
+    }, 2000);
   };
 
   return (
