@@ -19,9 +19,12 @@ export function ContentTypeSelector({ contentType, setContentType }: ContentType
         }}
         className="w-full border px-3 py-2 rounded"
       >
-        {Object.keys(CONTENT_TYPE_LABELS).map(type => (
-          <option key={type} value={type}>{CONTENT_TYPE_LABELS[type as ContentType]}</option>
-        ))}
+        {Object.entries(CONTENT_TYPE_LABELS)
+          .sort(([, labelA], [, labelB]) => labelA.localeCompare(labelB))
+          .map(([type, label]) => (
+            <option key={type} value={type}>{label}</option>
+          ))
+        }
       </select>
     </div>
   );

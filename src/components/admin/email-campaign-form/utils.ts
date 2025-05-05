@@ -1,20 +1,15 @@
 
-export type ContentType = 'blog' | 'event' | 'news' | 'update' | 'promotion' | 'announcement' | 'scholarships' | 'opportunities' | 'careers' | 'majors' | 'schools' | 'mentors' | 'blogs';
+export type ContentType = 'blogs' | 'careers' | 'events' | 'majors' | 'mentors' | 'opportunities' | 'scholarships' | 'schools';
 
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  blog: 'Blog Posts',
-  blogs: 'Blog Posts',
-  event: 'Events',
-  news: 'News Articles',
-  update: 'Updates',
-  promotion: 'Promotions',
-  announcement: 'Announcements',
-  scholarships: 'Scholarships',
-  opportunities: 'Opportunities',
+  blogs: 'Blogs',
   careers: 'Careers',
+  events: 'Events',
   majors: 'Majors',
-  schools: 'Schools',
-  mentors: 'Mentors'
+  mentors: 'Mentors',
+  opportunities: 'Opportunities',
+  scholarships: 'Scholarships',
+  schools: 'Schools'
 };
 
 export type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';

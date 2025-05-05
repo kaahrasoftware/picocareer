@@ -73,7 +73,15 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
     return contentList.filter(content => selectedContentIds.includes(content.id));
   }, [contentList, selectedContentIds]);
   
-  console.log("Email Preview Props:", { selectedContentIds, contentList, selectedContents, contentType });
+  console.log("Email Preview Props:", { 
+    selectedContentIds, 
+    contentType,
+    selectedContents: selectedContents.map(c => ({ id: c.id, title: c.title })),
+    templateSettings: templateSettings ? {
+      primary_color: templateSettings.primary_color,
+      layout: templateSettings.layout_settings
+    } : 'No template settings'
+  });
 
   if (loadingSettings) {
     return <Skeleton className="w-full h-[300px]" />;

@@ -10,7 +10,7 @@ interface BlogPaginationProps {
 export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPaginationProps) {
   const getPageNumbers = () => {
     const maxPagesDisplayed = 5;
-    const pages = [];
+    const pages: Array<number | string> = [];
     
     // Logic to calculate which page numbers to show
     if (totalPages <= maxPagesDisplayed) {
@@ -31,7 +31,7 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
       if (end === totalPages - 1) start = Math.max(2, end - 2);
       
       // Add ellipsis before the window if needed
-      if (start > 2) pages.push(-1); // -1 represents ellipsis
+      if (start > 2) pages.push('ellipsis1'); // Use string for ellipsis
       
       // Add the window pages
       for (let i = start; i <= end; i++) {
@@ -39,7 +39,7 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
       }
       
       // Add ellipsis after the window if needed
-      if (end < totalPages - 1) pages.push(-2); // -2 represents the second ellipsis
+      if (end < totalPages - 1) pages.push('ellipsis2'); // Use string for the second ellipsis
       
       // Always include last page if there are more than 1 page
       if (totalPages > 1) pages.push(totalPages);
@@ -65,7 +65,7 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
           
           {getPageNumbers().map((page, index) => (
             <PaginationItem key={index}>
-              {page === -1 || page === -2 ? (
+              {typeof page === 'string' ? (
                 <span className="h-8 min-w-8 px-2 flex items-center justify-center">...</span>
               ) : (
                 <PaginationLink

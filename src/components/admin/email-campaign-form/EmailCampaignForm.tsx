@@ -26,7 +26,7 @@ interface EmailCampaignFormProps {
 }
 
 const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampaignCreated }) => {
-  const [contentType, setContentType] = useState<ContentType>('blog');
+  const [contentType, setContentType] = useState<ContentType>('blogs');
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
   const [recipientType, setRecipientType] = useState<RecipientType>('all');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
@@ -57,37 +57,76 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   });
   
-  // Helper function to map content type to table name
-  const getTableNameForContentType = (type: ContentType): string => {
-    switch(type) {
-      case 'blog':
-      case 'blogs':
-        return 'blogs';
-      case 'event':
-        return 'events';
-      case 'news':
-        return 'blogs'; // Fallback
-      case 'update':
-        return 'blogs'; // Fallback
-      case 'promotion':
-        return 'opportunities';
-      case 'announcement':
-        return 'hub_announcements';
-      case 'scholarships':
-        return 'scholarships';
-      case 'opportunities':
-        return 'opportunities';
-      case 'careers':
-        return 'careers';
-      case 'majors':
-        return 'majors';
-      case 'schools':
-        return 'schools';
-      case 'mentors':
-        return 'profiles';
-      default:
-        return 'blogs';
-    }
+  // Helper function to get table name and field mapping for content type
+  const getContentTypeConfig = (type: ContentType): { 
+    tableName: string, 
+    titleField: string,
+    descriptionField: string,
+    imageField: string,
+    selectFields: string,
+    filters?: Record<string, any>
+  } => {
+    const configs = {
+      blogs: {
+        tableName: 'blogs',
+        titleField: 'title',
+        descriptionField: 'summary',
+        imageField: 'cover_image_url',
+        selectFields: 'id, title, summary, cover_image_url, created_at, categories'
+      },
+      careers: {
+        tableName: 'careers',
+        titleField: 'title',
+        descriptionField: 'description',
+        imageField: 'image_url',
+        selectFields: 'id, title, description, image_url, industry, salary_range'
+      },
+      events: {
+        tableName: 'events',
+        titleField: 'title',
+        descriptionField: 'description',
+        imageField: 'thumbnail_url',
+        selectFields: 'id, title, description, thumbnail_url, event_type, start_time, end_time, organized_by'
+      },
+      majors: {
+        tableName: 'majors',
+        titleField: 'title',
+        descriptionField: 'description',
+        imageField: '',
+        selectFields: 'id, title, description, potential_salary, category'
+      },
+      mentors: {
+        tableName: 'profiles',
+        titleField: 'full_name',
+        descriptionField: 'bio',
+        imageField: 'avatar_url',
+        selectFields: 'id, full_name, bio, avatar_url, skills, location',
+        filters: { user_type: 'mentor' }
+      },
+      opportunities: {
+        tableName: 'opportunities',
+        titleField: 'title',
+        descriptionField: 'description',
+        imageField: 'cover_image_url',
+        selectFields: 'id, title, description, cover_image_url, provider_name, deadline, compensation, location, remote'
+      },
+      scholarships: {
+        tableName: 'scholarships',
+        titleField: 'title',
+        descriptionField: 'description',
+        imageField: 'image_url',
+        selectFields: 'id, title, description, image_url, provider_name, deadline, amount'
+      },
+      schools: {
+        tableName: 'schools',
+        titleField: 'name',
+        descriptionField: '',
+        imageField: '',
+        selectFields: 'id, name, type, location, country, state, website'
+      }
+    };
+
+    return configs[type];
   };
   
   // Fetch content based on content type
@@ -95,44 +134,46 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     queryKey: ['content', contentType],
     queryFn: async () => {
       try {
-        const tableName = getTableNameForContentType(contentType);
-        console.log(`Fetching content from table: ${tableName}`);
+        const config = getContentTypeConfig(contentType);
+        console.log(`Fetching content from table: ${config.tableName} with fields: ${config.selectFields}`);
         
-        // Check if the table exists before querying
-        try {
-          // Type cast as any to avoid TypeScript errors with dynamic table names
-          const { data, error } = await (supabase as any)
-            .from(tableName)
-            .select('id, title, description, cover_image_url, image_url, provider_name, deadline, amount, location, remote')
-            .order('created_at', { ascending: false })
-            .limit(50);
-          
-          if (error) {
-            console.error(`Error fetching ${contentType}:`, error);
-            return [] as ContentItem[];
-          }
-          
-          // Transform data if needed based on content type
-          let transformedData = data;
-          
-          if (tableName === 'profiles' && contentType === 'mentors') {
-            transformedData = data.map((item: any) => ({
-              ...item,
-              title: item.full_name || 'Unnamed Mentor',
-              description: item.bio || '',
-              cover_image_url: item.avatar_url
-            }));
-          }
-          
-          console.log(`Fetched ${transformedData.length} ${contentType} items`);
-          return transformedData as ContentItem[];
-        } catch (error) {
-          console.error(`Error fetching content for ${contentType}:`, error);
-          toast.error(`Failed to fetch content for ${contentType}. Please try again.`);
+        // Build the query
+        let query = supabase
+          .from(config.tableName)
+          .select(config.selectFields)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        // Apply any filters if they exist
+        if (config.filters) {
+          Object.entries(config.filters).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error(`Error fetching ${contentType}:`, error);
           return [] as ContentItem[];
         }
+        
+        // Transform data to standardize format for all content types
+        const transformedData = data.map((item: any) => {
+          return {
+            id: item.id,
+            title: item[config.titleField] || `Untitled ${contentType}`,
+            description: item[config.descriptionField] || '',
+            cover_image_url: item[config.imageField] || '',
+            ...item  // Keep all original properties
+          };
+        });
+        
+        console.log(`Fetched ${transformedData.length} ${contentType} items`);
+        return transformedData as ContentItem[];
       } catch (error) {
         console.error(`Error in content fetching:`, error);
+        toast.error(`Failed to fetch ${contentType}. Please try again.`);
         return [] as ContentItem[];
       }
     }
@@ -140,7 +181,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
   // Apply random selection if enabled
   useEffect(() => {
-    if (randomSelect && contentList.length > 0 && randomCount > 0) {
+    if (randomSelect && contentList && contentList.length > 0 && randomCount > 0) {
       // Shuffle array and pick the first N items
       const shuffled = [...contentList].sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, Math.min(randomCount, contentList.length));
@@ -174,6 +215,11 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     
     handleSubmit(onSubmit)();
   };
+
+  // Reset selected content when content type changes
+  useEffect(() => {
+    setSelectedContentIds([]);
+  }, [contentType]);
 
   const hasRequiredFields = subject && 
     (selectedContentIds.length > 0 || randomSelect) && 

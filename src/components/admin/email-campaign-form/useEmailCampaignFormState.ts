@@ -114,8 +114,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
         admin_id: session.user.id,
         subject: data.subject,
         body: data.body || '',
-        content_type: data.content_type || 'blog',
-        content_id: 'default', // Adding a placeholder value for required field
+        content_type: data.content_type || 'blogs',
+        content_id: data.content_ids && data.content_ids.length > 0 ? data.content_ids[0] : 'default', // Required field
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipients: formData.recipients,

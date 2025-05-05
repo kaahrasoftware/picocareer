@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { EmailCampaignType } from './emailCampaign.schema';
+import { ContentType } from './utils';
 
 interface UseEmailCampaignFormSubmitProps {
   adminId: string;
@@ -33,6 +34,11 @@ export const useEmailCampaignFormSubmit = ({
       return;
     }
 
+    if (!formState.content_type) {
+      toast.error('Content type is required');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -41,7 +47,7 @@ export const useEmailCampaignFormSubmit = ({
       const campaignData = {
         admin_id: adminId,
         subject: formState.subject,
-        content_type: formState.content_type || 'blog',
+        content_type: formState.content_type as ContentType || 'blogs',
         content_id: formState.content_ids?.[0] || 'default', // Set the first content ID as the primary one
         content_ids: formState.content_ids,
         recipient_type: formState.recipient_type || 'all',
