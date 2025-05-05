@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -44,13 +44,15 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   } = form;
 
   // Handle when campaign props change
-  if (campaign) {
-    setFormData({
-      recipientType: (campaign.recipient_type as RecipientType) || 'all',
-      recipients: campaign.recipients || [],
-      recipientFilter: campaign.recipient_filter || null,
-    });
-  }
+  useEffect(() => {
+    if (campaign) {
+      setFormData({
+        recipientType: (campaign.recipient_type as RecipientType) || 'all',
+        recipients: campaign.recipients || [],
+        recipientFilter: campaign.recipient_filter || null,
+      });
+    }
+  }, [campaign]);
 
   // Fetch recipients based on search term and filters
   const fetchRecipients = useCallback(async () => {
@@ -63,8 +65,12 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     try {
       const query = supabase
         .from('profiles')
-        .select('id, full_name, email')
-        .neq('id', session?.user?.id || '');
+        .select('id, full_name, email');
+      
+      // Don't include the current user
+      if (session?.user?.id) {
+        query.neq('id', session.user.id);
+      }
 
       let filteredQuery = query;
       
@@ -95,9 +101,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   }, [debouncedSearchTerm, formData.recipientFilter, formData.recipientType, session?.user?.id]);
 
   // Run the fetch when dependencies change
-  useState(() => {
+  useEffect(() => {
     fetchRecipients();
-  }, [debouncedSearchTerm, formData.recipientType, formData.recipientFilter, session?.user?.id]);
+  }, [fetchRecipients]);
 
   const onSubmit = async (data: EmailCampaignType) => {
     if (!session?.user) return;

@@ -92,14 +92,22 @@ export const useAdminOpportunitiesQuery = ({
           throw new Error(`Error fetching opportunities count: ${countError.message}`);
         }
 
-        // Get counts for different statuses
-        const { data: statusCounts, error: statusError } = await supabase
-          .from('opportunities')
-          .select('status, count(*)', { count: 'exact' })
-          .groupBy('status'); // Changed from .group('status') to .groupBy('status')
-
-        if (statusError) {
-          throw new Error(`Error fetching status counts: ${statusError.message}`);
+        // Get status counts using separate queries instead of groupBy
+        const statuses: OpportunityStatus[] = ['Pending', 'Active', 'Rejected', 'Closed'];
+        let statusCounts: { status: OpportunityStatus, count: number }[] = [];
+        
+        // Run a query for each status to get the count
+        for (const status of statuses) {
+          const { count, error } = await supabase
+            .from('opportunities')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', status);
+            
+          if (error) {
+            console.error(`Error fetching count for ${status} status:`, error);
+          } else {
+            statusCounts.push({ status, count: count || 0 });
+          }
         }
 
         // Get featured count
@@ -170,8 +178,8 @@ export const useAdminOpportunitiesQuery = ({
         }
 
         // Calculate totals
-        const pendingCount = statusCounts?.find(s => s.status === 'Pending')?.count || 0;
-        const activeCount = statusCounts?.find(s => s.status === 'Active')?.count || 0;
+        const pendingCount = statusCounts.find(s => s.status === 'Pending')?.count || 0;
+        const activeCount = statusCounts.find(s => s.status === 'Active')?.count || 0;
         
         const totalViews = analyticsTotals?.reduce((sum, item) => sum + (item.views_count || 0), 0) || 0;
         const totalApplications = analyticsTotals?.reduce((sum, item) => sum + (item.applications_count || 0), 0) || 0;

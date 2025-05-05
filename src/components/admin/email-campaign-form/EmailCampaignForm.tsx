@@ -23,6 +23,19 @@ interface EmailCampaignFormProps {
   onCampaignCreated?: (campaignId: string) => void;
 }
 
+interface ContentItem {
+  id: string;
+  title: string;
+  description?: string;
+  cover_image_url?: string;
+  image_url?: string;
+  provider_name?: string;
+  deadline?: string;
+  amount?: number;
+  location?: string;
+  remote?: boolean;
+}
+
 const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampaignCreated }) => {
   const [contentType, setContentType] = useState<ContentType>('blog');
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
@@ -49,57 +62,78 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     isValid
   } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
-      onCampaignCreated?.(campaignId);
+      if (campaignId) {
+        onCampaignCreated?.(campaignId);
+      }
     }
   });
-
-  // Define the content interface to match our query
-  interface ContentItem {
-    id: string;
-    title: string;
-  }
   
   // Fetch content based on content type
   const { data: contentList = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ['content', contentType],
     queryFn: async () => {
-      // Map content type to actual Supabase table name
-      let tableName = '';
-      
-      switch(contentType) {
-        case 'blog':
-          tableName = 'blogs';
-          break;
-        case 'event':
-          tableName = 'events';
-          break;
-        case 'news':
-          tableName = 'blogs'; // Fallback to blogs table if news isn't available
-          break;
-        case 'update':
-          tableName = 'blogs'; // Fallback to blogs table if updates isn't available
-          break;
-        case 'promotion':
-          tableName = 'opportunities'; // Using opportunities for promotions
-          break;
-        case 'announcement':
-          tableName = 'hub_announcements';
-          break;
-        default:
-          tableName = 'blogs';
-      }
-      
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('id, title')
-        .order('created_at', { ascending: false });
+      try {
+        // Map content type to actual Supabase table name
+        let tableName: string;
         
-      if (error) {
-        console.error(`Error fetching ${contentType}:`, error);
-        return [];
+        switch(contentType) {
+          case 'blog':
+            tableName = 'blogs';
+            break;
+          case 'event':
+            tableName = 'events';
+            break;
+          case 'news':
+            tableName = 'blogs'; // Fallback to blogs table if news isn't available
+            break;
+          case 'update':
+            tableName = 'blogs'; // Fallback to blogs table if updates isn't available
+            break;
+          case 'promotion':
+            tableName = 'opportunities'; // Using opportunities for promotions
+            break;
+          case 'announcement':
+            tableName = 'hub_announcements';
+            break;
+          case 'scholarships':
+            tableName = 'scholarships';
+            break;
+          case 'opportunities':
+            tableName = 'opportunities';
+            break;
+          case 'careers':
+            tableName = 'careers';
+            break;
+          case 'majors':
+            tableName = 'majors';
+            break;
+          case 'schools':
+            tableName = 'schools';
+            break;
+          case 'mentors':
+            tableName = 'profiles';
+            break;
+          default:
+            tableName = 'blogs';
+        }
+        
+        // Check if the table exists in the database before querying
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('id, title')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        if (error) {
+          console.error(`Error fetching ${contentType}:`, error);
+          return [] as ContentItem[];
+        }
+        
+        return data as ContentItem[];
+      } catch (error) {
+        console.error(`Error fetching content for ${contentType}:`, error);
+        return [] as ContentItem[];
       }
-      
-      return data || [];
     }
   });
 
@@ -140,7 +174,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
         <ContentSelect
           contentType={contentType}
-          contentList={contentList}
+          contentList={(contentList || []) as ContentItem[]}
           selectedContentIds={selectedContentIds}
           setSelectedContentIds={setSelectedContentIds}
           loadingContent={isLoading}
@@ -180,7 +214,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
           <div className="mt-8">
             <EmailPreview 
               selectedContentIds={selectedContentIds}
-              contentList={contentList}
+              contentList={(contentList || []) as ContentItem[]}
               contentType={contentType}
             />
           </div>

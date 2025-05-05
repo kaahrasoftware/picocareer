@@ -79,7 +79,8 @@ export function UserProfileDetailsDialog({ userId, open, onOpenChange }: UserPro
         top_mentor: data.top_mentor || false,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        user_type: data.user_type || 'mentee'
+        // Use "admin" | "mentor" | "mentee" type instead of "admin" | "mentor" | "mentee" | "editor"
+        user_type: (data.user_type || 'mentee') as any
       };
 
       return profileData;
