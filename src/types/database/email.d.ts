@@ -1,4 +1,3 @@
-
 export interface EmailTemplateSettings {
   id: string;
   admin_id: string;

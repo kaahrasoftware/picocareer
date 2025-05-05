@@ -1,3 +1,4 @@
+
 import { ContentItem, EmailTemplateSettings } from "./types.ts";
 
 function getDialogUrl(contentType: string, id: string, siteUrl: string): string {
@@ -14,6 +15,8 @@ function getDialogUrl(contentType: string, id: string, siteUrl: string): string 
       return `${siteUrl}/scholarships?dialog=true&scholarshipId=${id}`;
     case 'opportunities':
       return `${siteUrl}/opportunities?dialog=true&opportunityId=${id}`;
+    case 'events':
+      return `${siteUrl}/event?dialog=true&eventId=${id}`;
     default:
       return `${siteUrl}/${contentType}/${id}`;
   }
@@ -54,6 +57,11 @@ function generateContentCard(
         const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
         metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">📍 ${locationText}</p>`;
       }
+      break;
+    
+    case 'events':
+      if (item.start_time) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">🗓️ ${new Date(item.start_time).toLocaleDateString()}</p>`;
+      if (item.platform) metadata += `<p style="color: #4b5563; margin-bottom: 5px; font-size: 14px;">💻 ${item.platform}</p>`;
       break;
   }
 
@@ -188,6 +196,8 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
       return `👋 Meet Your Potential Mentors, ${nameSection}`;
     case 'blogs':
       return `📖 Fresh Insights Curated for You, ${nameSection}`;
+    case 'events':
+      return `🗓️ Upcoming Events Selected For You, ${nameSection}`;
     default:
       return `New Content Updates for You, ${nameSection}`;
   }
