@@ -88,18 +88,41 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     queryKey: ['events', 'for-campaign'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
+        // Modified query to correctly calculate registration counts
+        const { data: events, error } = await supabase
           .from('events')
-          .select('id, title, registrations_count')
-          .order('created_at', { ascending: false })
-          .limit(50);
+          .select('id, title');
         
         if (error) {
           console.error('Error fetching events:', error);
           throw error;
         }
+
+        // Now get registration counts in a separate query
+        const eventsWithCounts = await Promise.all((events || []).map(async (event) => {
+          const { count, error: countError } = await supabase
+            .from('event_registrations')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', event.id);
+            
+          if (countError) {
+            console.error(`Error counting registrations for event ${event.id}:`, countError);
+            return {
+              ...event,
+              registrations_count: 0
+            };
+          }
+          
+          return {
+            ...event,
+            registrations_count: count || 0
+          };
+        }));
         
-        return data || [];
+        // Sort alphabetically by title
+        eventsWithCounts.sort((a, b) => a.title.localeCompare(b.title));
+        
+        return eventsWithCounts;
       } catch (error) {
         console.error('Error fetching events:', error);
         return [];
