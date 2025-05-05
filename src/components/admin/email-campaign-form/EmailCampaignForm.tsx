@@ -17,6 +17,7 @@ import { Form } from '@/components/ui/form';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentType, RecipientType } from './utils';
+import { toast } from 'sonner';
 
 interface EmailCampaignFormProps {
   adminId: string;
@@ -78,6 +79,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         
         switch(contentType) {
           case 'blog':
+          case 'blogs':
             tableName = 'blogs';
             break;
           case 'event':
@@ -118,20 +120,26 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         }
         
         // Check if the table exists in the database before querying
-        const { data, error } = await supabase
-          .from(tableName)
-          .select('id, title')
-          .order('created_at', { ascending: false })
-          .limit(50);
-        
-        if (error) {
-          console.error(`Error fetching ${contentType}:`, error);
+        try {
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('id, title')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          
+          if (error) {
+            console.error(`Error fetching ${contentType}:`, error);
+            return [] as ContentItem[];
+          }
+          
+          return data as ContentItem[];
+        } catch (error) {
+          console.error(`Error fetching content for ${contentType}:`, error);
+          toast.error(`Failed to fetch content for ${contentType}. Please try again.`);
           return [] as ContentItem[];
         }
-        
-        return data as ContentItem[];
       } catch (error) {
-        console.error(`Error fetching content for ${contentType}:`, error);
+        console.error(`Error in content fetching:`, error);
         return [] as ContentItem[];
       }
     }

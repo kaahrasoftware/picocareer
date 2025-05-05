@@ -1,8 +1,9 @@
 
-export type ContentType = 'blog' | 'event' | 'news' | 'update' | 'promotion' | 'announcement' | 'scholarships' | 'opportunities' | 'careers' | 'majors' | 'schools' | 'mentors';
+export type ContentType = 'blog' | 'event' | 'news' | 'update' | 'promotion' | 'announcement' | 'scholarships' | 'opportunities' | 'careers' | 'majors' | 'schools' | 'mentors' | 'blogs';
 
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   blog: 'Blog Posts',
+  blogs: 'Blog Posts',
   event: 'Events',
   news: 'News Articles',
   update: 'Updates',

@@ -91,7 +91,11 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
           
           data.forEach(opp => {
             if (analyticsMap[opp.id]) {
-              (opp as any).analytics = analyticsMap[opp.id];
+              const analytics = analyticsMap[opp.id];
+              (opp as any).analytics = {
+                ...analytics, 
+                applications_count: analytics.checked_out_count // Map checked_out_count to applications_count
+              };
             }
           });
         }

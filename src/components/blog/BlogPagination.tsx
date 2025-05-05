@@ -1,3 +1,4 @@
+
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface BlogPaginationProps {
@@ -21,21 +22,18 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
         <PaginationContent className="gap-1">
           <PaginationItem>
             <PaginationPrevious 
-              href="#" 
               onClick={(e) => {
                 e.preventDefault();
                 if (currentPage > 1) onPageChange(currentPage - 1);
               }}
               className={`h-8 min-w-8 px-2 ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
-            >
-              <span className="sr-only">Previous</span>
-            </PaginationPrevious>
+              aria-disabled={currentPage === 1}
+            />
           </PaginationItem>
           
           {getPageNumbers().map((page) => (
             <PaginationItem key={page}>
               <PaginationLink
-                href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   onPageChange(page);
@@ -50,15 +48,13 @@ export function BlogPagination({ currentPage, totalPages, onPageChange }: BlogPa
           
           <PaginationItem>
             <PaginationNext 
-              href="#" 
               onClick={(e) => {
                 e.preventDefault();
                 if (currentPage < totalPages) onPageChange(currentPage + 1);
               }}
               className={`h-8 min-w-8 px-2 ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
-            >
-              <span className="sr-only">Next</span>
-            </PaginationNext>
+              aria-disabled={currentPage === totalPages}
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

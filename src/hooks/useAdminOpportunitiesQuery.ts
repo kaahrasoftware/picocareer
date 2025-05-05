@@ -123,7 +123,7 @@ export const useAdminOpportunitiesQuery = ({
         // Get analytics totals
         const { data: analyticsTotals, error: analyticsError } = await supabase
           .from('opportunity_analytics')
-          .select('views_count, applications_count');
+          .select('views_count, checked_out_count'); // Changed from 'applications_count' to 'checked_out_count'
 
         if (analyticsError) {
           throw new Error(`Error fetching analytics data: ${analyticsError.message}`);
@@ -165,12 +165,18 @@ export const useAdminOpportunitiesQuery = ({
             }, {} as Record<string, any>);
             
             opportunitiesWithAnalytics = opportunities.map((opp: any) => {
+              const analytics = analyticsMap[opp.id] || {
+                views_count: 0,
+                checked_out_count: 0,
+                bookmarks_count: 0
+              };
+              
+              // Map checked_out_count to applications_count for backward compatibility
               return {
                 ...opp,
-                analytics: analyticsMap[opp.id] || {
-                  views_count: 0,
-                  applications_count: 0,
-                  bookmarks_count: 0
+                analytics: {
+                  ...analytics,
+                  applications_count: analytics.checked_out_count
                 }
               };
             });
@@ -182,7 +188,7 @@ export const useAdminOpportunitiesQuery = ({
         const activeCount = statusCounts.find(s => s.status === 'Active')?.count || 0;
         
         const totalViews = analyticsTotals?.reduce((sum, item) => sum + (item.views_count || 0), 0) || 0;
-        const totalApplications = analyticsTotals?.reduce((sum, item) => sum + (item.applications_count || 0), 0) || 0;
+        const totalApplications = analyticsTotals?.reduce((sum, item) => sum + (item.checked_out_count || 0), 0) || 0; // Changed from 'applications_count' to 'checked_out_count'
 
         return {
           opportunities: opportunitiesWithAnalytics,
