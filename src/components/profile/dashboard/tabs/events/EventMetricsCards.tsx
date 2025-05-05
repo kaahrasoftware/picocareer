@@ -1,7 +1,14 @@
 
 import { StatsCard } from '@/components/profile/dashboard/StatsCard';
 import { Calendar, Users, CheckCircle, Clock } from 'lucide-react';
-import type { EventSummaryStats } from './useEventSummaryStats';
+
+export interface EventSummaryStats {
+  totalEvents: number;
+  upcomingEvents: number;
+  pastEvents: number;
+  totalRegistrations: number;
+  rankedEvents: { id: string; title: string; registrationCount: number }[];
+}
 
 interface EventMetricsCardsProps {
   stats: EventSummaryStats | null;

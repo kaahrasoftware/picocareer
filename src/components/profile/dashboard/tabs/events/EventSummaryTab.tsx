@@ -1,111 +1,76 @@
 
-import { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { EventMetricsCards } from './EventMetricsCards';
-import { EventTypeDistributionChart } from './EventTypeDistributionChart';
-import { RegistrationTimelineChart } from './RegistrationTimelineChart';
 import { EventRankingTable } from './EventRankingTable';
-import { AttendeeDemographicsCharts } from './AttendeeDemographicsCharts';
-import { TimePeriodSelect } from './TimePeriodSelect';
-import { useEventSummaryStats } from './useEventSummaryStats';
 
 export function EventSummaryTab() {
   const {
-    stats,
-    isLoading,
-    error,
-    timePeriod,
-    setTimePeriod,
-    refreshStats
-  } = useEventSummaryStats();
+    data: events = [],
+    isLoading
+  } = usePaginatedQuery<any>({
+    queryKey: ['admin-events-summary'],
+    tableName: 'events',
+    paginationOptions: {
+      limit: 1000 // Large limit to fetch all events for stats calculation
+    }
+  });
 
-  useEffect(() => {
-    refreshStats();
-  }, []);
+  // Process event data for statistics
+  const stats = React.useMemo(() => {
+    if (isLoading || !events) return null;
+
+    const now = new Date();
+    const upcoming = events.filter(e => e?.start_time && new Date(e.start_time) > now).length;
+    const past = events.filter(e => e?.start_time && new Date(e.start_time) <= now).length;
+    
+    // Get registration counts
+    const totalRegistrations = events.reduce((total, event) => total + (event.registration_count || 0), 0);
+    
+    // Sort events by registration count for ranking
+    const rankedEvents = [...events]
+      .filter(e => e?.registration_count)
+      .sort((a, b) => (b.registration_count || 0) - (a.registration_count || 0))
+      .slice(0, 5) // Top 5 events
+      .map(event => ({
+        id: event.id,
+        title: event.title || 'Untitled Event',
+        registrationCount: event.registration_count || 0
+      }));
+
+    return {
+      totalEvents: events.length,
+      upcomingEvents: upcoming,
+      pastEvents: past,
+      totalRegistrations,
+      rankedEvents
+    };
+  }, [events, isLoading]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold">Event Summary</h2>
-        <div className="flex items-center gap-3">
-          <TimePeriodSelect value={timePeriod} onChange={setTimePeriod} />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={refreshStats} 
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Refreshing...' : 'Refresh Stats'}
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <Card className="bg-red-50 border-red-200">
-          <CardContent className="pt-6">
-            <p className="text-red-600">Error: {error}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      <EventMetricsCards 
-        stats={stats} 
-        isLoading={isLoading} 
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <EventMetricsCards stats={stats} isLoading={isLoading} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Event Type Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EventTypeDistributionChart 
-              data={stats?.eventTypeDistribution || []} 
-              isLoading={isLoading} 
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Registration Timeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RegistrationTimelineChart 
-              data={stats?.registrationTimeline || []} 
-              isLoading={isLoading}
-              timePeriod={timePeriod}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Top Events</CardTitle>
+            <CardTitle>Top Events by Registration</CardTitle>
           </CardHeader>
           <CardContent>
             <EventRankingTable 
-              events={stats?.popularEvents || []} 
-              isLoading={isLoading} 
+              events={stats?.rankedEvents || []}
+              isLoading={isLoading}
             />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Attendee Demographics</CardTitle>
+            <CardTitle>Event Engagement</CardTitle>
           </CardHeader>
-          <CardContent>
-            <AttendeeDemographicsCharts 
-              geographicData={stats?.geographicDistribution || []}
-              academicData={stats?.academicFieldDistribution || []}
-              isLoading={isLoading} 
-            />
+          <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Event engagement charts coming soon
           </CardContent>
         </Card>
       </div>

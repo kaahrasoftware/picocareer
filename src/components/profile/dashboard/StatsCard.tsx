@@ -1,63 +1,53 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ContentDetailsDialog } from "./ContentDetailsDialog";
-
-// Import the ContentType type or redefine it here
-type ContentType = "blogs" | "videos" | "careers" | "majors" | "schools" | "companies";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatsCardProps {
   title: string;
   value: number | string;
+  valueIsText?: boolean;
   subtitle?: string;
-  icon: React.ReactNode;
-  contentType?: ContentType;
+  icon?: React.ReactNode;
   loading?: boolean;
   valueClassName?: string;
 }
 
-export function StatsCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon, 
-  contentType,
-  loading,
-  valueClassName
+export function StatsCard({
+  title,
+  value,
+  valueIsText = false,
+  subtitle,
+  icon,
+  loading = false,
+  valueClassName = 'text-primary'
 }: StatsCardProps) {
-  const [showDetails, setShowDetails] = useState(false);
-
-  const isClickable = contentType !== undefined;
-
   return (
-    <>
-      <Card 
-        className={`${isClickable ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
-        onClick={() => isClickable && setShowDetails(true)}
-      >
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
-            {title}
-          </CardTitle>
-          <div className="text-muted-foreground">
-            {icon}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${valueClassName || ''}`}>{loading ? '–' : value}</div>
-          {subtitle && (
-            <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          {icon && (
+            <span className="text-muted-foreground">{icon}</span>
           )}
-        </CardContent>
-      </Card>
-
-      {contentType && (
-        <ContentDetailsDialog
-          open={showDetails}
-          onOpenChange={setShowDetails}
-          contentType={contentType}
-        />
-      )}
-    </>
+        </div>
+        
+        {loading ? (
+          <>
+            <Skeleton className="h-9 w-20 mb-1" />
+            {subtitle && <Skeleton className="h-4 w-24" />}
+          </>
+        ) : (
+          <>
+            <div className={`text-2xl font-bold ${valueClassName}`}>
+              {valueIsText ? value : typeof value === 'number' ? value.toLocaleString() : value}
+            </div>
+            {subtitle && (
+              <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
