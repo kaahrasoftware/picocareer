@@ -1,3 +1,4 @@
+
 import type { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 
 interface EmailStyles {
@@ -6,7 +7,7 @@ interface EmailStyles {
   accent: string;
 }
 
-function getDialogUrl(contentType: string, id: string, siteUrl: string): string {
+function getDialogUrl(contentType: string, id: string, siteUrl: string = 'https://picocareer.com'): string {
   switch (contentType) {
     case 'blogs':
       return `${siteUrl}/blog?dialog=true&blogId=${id}`;
@@ -44,136 +45,122 @@ export function formatContentCard(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  const imageHtml = (item.cover_image_url || item.image_url) ? `
+  const imageUrl = item.cover_image_url || item.image_url || '';
+  const imageHtml = imageUrl ? `
     <img 
-      src="${item.cover_image_url || item.image_url}"
-      alt="${item.title}"
+      src="${imageUrl}"
+      alt="${item.title || 'Content'}"
       style="${getImageStyles(layout.imagePosition)}"
     />
   ` : '';
 
-  const contentBlockMapping: { [key: string]: () => string } = {
-    title: () => `
-      <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
-        ${item.title}
-      </h3>
-    `,
-    image: () => imageHtml,
-    description: () => item.description ? `
-      <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
-        ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
-      </p>
-    ` : '',
-    metadata: () => generateMetadata(item, contentType, layout.metadataDisplay),
-    cta: () => {
-      const dialogUrl = getDialogUrl(contentType, item.id, siteUrl);
-      return `
-        <div style="margin-top: 16px;">
-          <a 
-            href="${dialogUrl}" 
-            style="display: inline-block; background-color: ${styles.accent}; color: white; 
-                  padding: 8px 16px; text-decoration: none; border-radius: 6px; 
-                  font-size: 14px; font-weight: 500;"
-          >
-            Learn More
-          </a>
-        </div>
-      `;
+  // Generate metadata based on content type
+  function generateMetadata(item: ContentItem, contentType: string, displayFields?: string[]): string {
+    let metadataHtml = '';
+    
+    switch(contentType) {
+      case 'scholarships':
+        if (item.provider_name) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${item.provider_name}</p>`;
+        if (item.amount) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Amount: $${item.amount}</p>`;
+        if (item.deadline) metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Deadline: ${new Date(item.deadline).toLocaleDateString()}</p>`;
+        break;
+        
+      case 'opportunities':
+        if (item.provider_name) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${item.provider_name}</p>`;
+        if (item.compensation) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Compensation: ${item.compensation}</p>`;
+        if (item.location) {
+          const locationText = item.remote ? `${item.location} (Remote available)` : item.location;
+          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${locationText}</p>`;
+        }
+        break;
+        
+      case 'careers':
+        if (item.salary_range) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Salary: ${item.salary_range}</p>`;
+        if (item.company_name) metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Company: ${item.company_name}</p>`;
+        if (item.location) metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${item.location}</p>`;
+        break;
     }
-  };
+    
+    return metadataHtml;
+  }
 
-  let contentHtml = '';
+  // Determine image styles based on position
+  function getImageStyles(position: string): string {
+    switch (position) {
+      case 'side':
+        return "width: 30%; float: left; margin-right: 15px; border-radius: 8px;";
+      case 'inline':
+        return "width: 50%; margin: 0 auto 15px; display: block; border-radius: 8px;";
+      case 'top':
+      default:
+        return "width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;";
+    }
+  }
 
+  // Main content HTML generation
+  let cardHtml = '';
+  
   if (layout.imagePosition === 'side') {
-    // Special handling for side layout
-    const imageContent = contentBlockMapping['image']();
-    const otherBlocks = layout.contentBlocks
-      .filter(block => block !== 'image')
-      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
-      .join('');
-
-    contentHtml = `
-      <div style="display: flex; gap: 16px; align-items: start;">
-        <div style="flex-shrink: 0; width: 200px;">
-          ${imageContent}
-        </div>
-        <div style="flex: 1;">
-          ${otherBlocks}
+    // Special layout for side-by-side image and content
+    cardHtml = `
+      <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white; padding: 16px; display: table; width: 100%;">
+        <div style="display: table-row;">
+          ${imageUrl ? `
+            <div style="display: table-cell; width: 30%; padding-right: 15px; vertical-align: top;">
+              <img src="${imageUrl}" alt="${item.title || 'Content'}" style="width: 100%; border-radius: 8px;" />
+            </div>
+          ` : ''}
+          <div style="display: table-cell; vertical-align: top; ${!imageUrl ? 'width: 100%' : ''}">
+            <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">${item.title || 'Untitled'}</h3>
+            ${generateMetadata(item, contentType, layout.metadataDisplay)}
+            ${item.description ? `
+              <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
+                ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
+              </p>
+            ` : ''}
+            <div style="margin-top: 12px;">
+              <a 
+                href="${getDialogUrl(contentType, item.id, siteUrl)}" 
+                style="display: inline-block; background-color: ${styles.accent}; color: white; 
+                      padding: 8px 16px; text-decoration: none; border-radius: 6px; 
+                      font-size: 14px; font-weight: 500;"
+              >
+                Learn More
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     `;
   } else {
     // Standard layout
-    contentHtml = layout.contentBlocks
-      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
-      .join('');
+    cardHtml = `
+      <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
+        <div style="padding: 16px;">
+          ${imageHtml}
+          <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
+            ${item.title || 'Untitled'}
+          </h3>
+          ${generateMetadata(item, contentType, layout.metadataDisplay)}
+          ${item.description ? `
+            <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
+              ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
+            </p>
+          ` : ''}
+          <div style="margin-top: 16px;">
+            <a 
+              href="${getDialogUrl(contentType, item.id, siteUrl)}" 
+              style="display: inline-block; background-color: ${styles.accent}; color: white; 
+                    padding: 8px 16px; text-decoration: none; border-radius: 6px; 
+                    font-size: 14px; font-weight: 500;"
+            >
+              Learn More
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; 
-                overflow: hidden; background-color: white; padding: 16px;">
-      ${contentHtml}
-    </div>
-  `;
-}
-
-function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
-  switch (position) {
-    case 'side':
-      return 'width: 100%; height: auto; border-radius: 8px; margin-right: 16px;';
-    case 'inline':
-      return 'width: 60%; height: auto; border-radius: 8px; margin: 12px auto; display: block;';
-    case 'top':
-    default:
-      return 'width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;';
-  }
-}
-
-function generateMetadata(
-  item: ContentItem,
-  contentType: string,
-  metadataDisplay?: string[]
-): string {
-  if (!metadataDisplay || !metadataDisplay.length) return '';
-
-  const metadataItems: string[] = [];
-
-  if (metadataDisplay.includes('date') && item.created_at) {
-    metadataItems.push(`📅 ${new Date(item.created_at).toLocaleDateString()}`);
-  }
-
-  if (metadataDisplay.includes('author') && item.author_name) {
-    metadataItems.push(`👤 ${item.author_name}`);
-  }
-
-  // Content type specific metadata
-  switch (contentType) {
-    case 'scholarships':
-      if (metadataDisplay.includes('amount') && item.amount) {
-        metadataItems.push(`💰 $${item.amount}`);
-      }
-      if (metadataDisplay.includes('provider') && item.provider_name) {
-        metadataItems.push(`🏢 ${item.provider_name}`);
-      }
-      if (metadataDisplay.includes('deadline') && item.deadline) {
-        metadataItems.push(`⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}`);
-      }
-      break;
-      
-    case 'opportunities':
-      if (metadataDisplay.includes('compensation') && item.compensation) {
-        metadataItems.push(`💰 ${item.compensation}`);
-      }
-      if (metadataDisplay.includes('location') && item.location) {
-        const locationText = item.remote ? `${item.location} (Remote)` : item.location;
-        metadataItems.push(`📍 ${locationText}`);
-      }
-      break;
-  }
-
-  return metadataItems.length ? `
-    <div style="color: #6b7280; font-size: 14px; margin: 8px 0;">
-      ${metadataItems.join(' • ')}
-    </div>
-  ` : '';
+  return cardHtml;
 }

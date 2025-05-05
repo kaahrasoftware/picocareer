@@ -5,11 +5,11 @@ import { generateEmailContent } from "../../../utils/email-templates";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { EmailContentTypeSettings, EmailTemplateSettings } from "@/types/database/email";
+import type { EmailContentTypeSettings, EmailTemplateSettings, ContentItem } from "@/types/database/email";
 
 interface EmailPreviewProps {
   selectedContentIds: string[];
-  contentList: {id: string, title: string}[];
+  contentList: ContentItem[];
   contentType: ContentType;
 }
 
@@ -64,9 +64,16 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
   });
 
   // Safely select content items from the list
-  const selectedContents = Array.isArray(contentList) 
-    ? contentList.filter(content => selectedContentIds.includes(content.id))
-    : [];
+  const selectedContents = React.useMemo(() => {
+    if (!Array.isArray(contentList) || !Array.isArray(selectedContentIds)) {
+      console.log("Invalid content or selected IDs", { contentList, selectedContentIds });
+      return [];
+    }
+    
+    return contentList.filter(content => selectedContentIds.includes(content.id));
+  }, [contentList, selectedContentIds]);
+  
+  console.log("Email Preview Props:", { selectedContentIds, contentList, selectedContents, contentType });
 
   if (loadingSettings) {
     return <Skeleton className="w-full h-[300px]" />;
@@ -74,19 +81,23 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
 
   let previewHtml = '';
   try {
-    previewHtml = generateEmailContent(
-      CONTENT_TYPE_LABELS[contentType],
-      `Check out these featured ${contentType}!`,
-      "Preview User",
-      "preview-campaign-id",
-      selectedContents,
-      contentType,
-      window.location.origin,
-      templateSettings || undefined
-    );
+    if (selectedContents.length === 0) {
+      previewHtml = '<div>No content selected for preview</div>';
+    } else {
+      previewHtml = generateEmailContent(
+        CONTENT_TYPE_LABELS[contentType] || "Content",
+        `Check out these featured ${contentType}!`,
+        "Preview User",
+        "preview-campaign-id",
+        selectedContents,
+        contentType,
+        window.location.origin,
+        templateSettings || undefined
+      );
+    }
   } catch (error) {
     console.error("Error generating email preview:", error);
-    previewHtml = '<div>Error generating preview</div>';
+    previewHtml = `<div>Error generating preview: ${String(error)}</div>`;
   }
   
   return (

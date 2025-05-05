@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
 import { useEmailCampaignFormSubmit } from './useEmailCampaignFormSubmit';
 import { ContentTypeSelector } from './ContentTypeSelector';
@@ -18,23 +18,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentType, RecipientType } from './utils';
 import { toast } from 'sonner';
+import { ContentItem } from '@/types/database/email';
 
 interface EmailCampaignFormProps {
   adminId: string;
   onCampaignCreated?: (campaignId: string) => void;
-}
-
-interface ContentItem {
-  id: string;
-  title: string;
-  description?: string;
-  cover_image_url?: string;
-  image_url?: string;
-  provider_name?: string;
-  deadline?: string;
-  amount?: number;
-  location?: string;
-  remote?: boolean;
 }
 
 const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampaignCreated }) => {
@@ -69,61 +57,53 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   });
   
+  // Helper function to map content type to table name
+  const getTableNameForContentType = (type: ContentType): string => {
+    switch(type) {
+      case 'blog':
+      case 'blogs':
+        return 'blogs';
+      case 'event':
+        return 'events';
+      case 'news':
+        return 'blogs'; // Fallback
+      case 'update':
+        return 'blogs'; // Fallback
+      case 'promotion':
+        return 'opportunities';
+      case 'announcement':
+        return 'hub_announcements';
+      case 'scholarships':
+        return 'scholarships';
+      case 'opportunities':
+        return 'opportunities';
+      case 'careers':
+        return 'careers';
+      case 'majors':
+        return 'majors';
+      case 'schools':
+        return 'schools';
+      case 'mentors':
+        return 'profiles';
+      default:
+        return 'blogs';
+    }
+  };
+  
   // Fetch content based on content type
   const { data: contentList = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ['content', contentType],
     queryFn: async () => {
       try {
-        // Map content type to actual Supabase table name
-        let tableName: string;
+        const tableName = getTableNameForContentType(contentType);
+        console.log(`Fetching content from table: ${tableName}`);
         
-        switch(contentType) {
-          case 'blog':
-          case 'blogs':
-            tableName = 'blogs';
-            break;
-          case 'event':
-            tableName = 'events';
-            break;
-          case 'news':
-            tableName = 'blogs'; // Fallback to blogs table if news isn't available
-            break;
-          case 'update':
-            tableName = 'blogs'; // Fallback to blogs table if updates isn't available
-            break;
-          case 'promotion':
-            tableName = 'opportunities'; // Using opportunities for promotions
-            break;
-          case 'announcement':
-            tableName = 'hub_announcements';
-            break;
-          case 'scholarships':
-            tableName = 'scholarships';
-            break;
-          case 'opportunities':
-            tableName = 'opportunities';
-            break;
-          case 'careers':
-            tableName = 'careers';
-            break;
-          case 'majors':
-            tableName = 'majors';
-            break;
-          case 'schools':
-            tableName = 'schools';
-            break;
-          case 'mentors':
-            tableName = 'profiles';
-            break;
-          default:
-            tableName = 'blogs';
-        }
-        
-        // Check if the table exists in the database before querying
+        // Check if the table exists before querying
         try {
-          const { data, error } = await supabase
+          // Type cast as any to avoid TypeScript errors with dynamic table names
+          const { data, error } = await (supabase as any)
             .from(tableName)
-            .select('id, title')
+            .select('id, title, description, cover_image_url, image_url, provider_name, deadline, amount, location, remote')
             .order('created_at', { ascending: false })
             .limit(50);
           
@@ -132,7 +112,20 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
             return [] as ContentItem[];
           }
           
-          return data as ContentItem[];
+          // Transform data if needed based on content type
+          let transformedData = data;
+          
+          if (tableName === 'profiles' && contentType === 'mentors') {
+            transformedData = data.map((item: any) => ({
+              ...item,
+              title: item.full_name || 'Unnamed Mentor',
+              description: item.bio || '',
+              cover_image_url: item.avatar_url
+            }));
+          }
+          
+          console.log(`Fetched ${transformedData.length} ${contentType} items`);
+          return transformedData as ContentItem[];
         } catch (error) {
           console.error(`Error fetching content for ${contentType}:`, error);
           toast.error(`Failed to fetch content for ${contentType}. Please try again.`);
@@ -145,7 +138,32 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   });
 
+  // Apply random selection if enabled
+  useEffect(() => {
+    if (randomSelect && contentList.length > 0 && randomCount > 0) {
+      // Shuffle array and pick the first N items
+      const shuffled = [...contentList].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(randomCount, contentList.length));
+      setSelectedContentIds(selected.map(item => item.id));
+    }
+  }, [randomSelect, randomCount, contentList]);
+
   const handleFormSubmit = () => {
+    if (!subject) {
+      toast.error('Please enter a subject');
+      return;
+    }
+    
+    if (selectedContentIds.length === 0) {
+      toast.error('Please select at least one content item');
+      return;
+    }
+    
+    if (recipientType === 'selected' && recipientIds.length === 0) {
+      toast.error('Please select at least one recipient');
+      return;
+    }
+    
     setValue('subject', subject);
     setValue('content_type', contentType);
     setValue('content_ids', selectedContentIds);
@@ -182,7 +200,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
         <ContentSelect
           contentType={contentType}
-          contentList={(contentList || []) as ContentItem[]}
+          contentList={(contentList || []) as any[]}
           selectedContentIds={selectedContentIds}
           setSelectedContentIds={setSelectedContentIds}
           loadingContent={isLoading}
@@ -218,11 +236,11 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
           />
         )}
 
-        {selectedContentIds.length > 0 && (
+        {selectedContentIds.length > 0 && contentList.length > 0 && (
           <div className="mt-8">
             <EmailPreview 
               selectedContentIds={selectedContentIds}
-              contentList={(contentList || []) as ContentItem[]}
+              contentList={contentList as ContentItem[]}
               contentType={contentType}
             />
           </div>

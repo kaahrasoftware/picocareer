@@ -36,13 +36,16 @@ export const useEmailCampaignFormSubmit = ({
     setIsSubmitting(true);
 
     try {
+      console.log('Submitting campaign with data:', { adminId, formState });
+      
       const campaignData = {
         admin_id: adminId,
         subject: formState.subject,
         content_type: formState.content_type || 'blog',
-        content_id: 'default', // Adding a required field
+        content_id: formState.content_ids?.[0] || 'default', // Set the first content ID as the primary one
         content_ids: formState.content_ids,
         recipient_type: formState.recipient_type || 'all',
+        recipients: formState.recipients || [],
         scheduled_for: formState.scheduled_for,
         frequency: formState.frequency || 'weekly',
         status: 'scheduled'
@@ -54,6 +57,7 @@ export const useEmailCampaignFormSubmit = ({
         .select('id');
 
       if (error) {
+        console.error('Error creating campaign:', error);
         throw error;
       }
 
