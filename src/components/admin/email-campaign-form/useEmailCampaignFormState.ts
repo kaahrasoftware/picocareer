@@ -148,7 +148,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       }
 
       toast.success('Email campaign saved successfully!');
-      onSuccess?.(savedData?.[0]?.id);
+      // Fix TypeScript error by safely casting the unknown value to string
+      const campaignId = savedData?.[0]?.id as string | undefined;
+      onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
       toast.error('An unexpected error occurred. Please try again.');

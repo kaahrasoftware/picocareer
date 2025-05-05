@@ -5,6 +5,8 @@ import { generateEmailContent } from "../../../utils/email-templates";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import type { EmailContentTypeSettings, EmailTemplateSettings, ContentItem } from "@/types/database/email";
 
 interface EmailPreviewProps {
@@ -87,11 +89,29 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
     return <Skeleton className="w-full h-[300px]" />;
   }
 
+  // Generate preview content with error handling
   let previewHtml = '';
+  let errorMessage = '';
+  
   try {
     if (selectedContents.length === 0) {
-      previewHtml = '<div>No content selected for preview</div>';
+      previewHtml = '<div class="text-center p-4 text-gray-500">No content selected for preview</div>';
     } else {
+      // Make sure we have the necessary data before generating the email
+      const styles = templateSettings || {
+        primary_color: "#4f46e5",
+        secondary_color: "#3730a3",
+        accent_color: "#4f46e5",
+        layout_settings: {
+          headerStyle: 'centered',
+          showAuthor: true,
+          showDate: true,
+          imagePosition: 'top',
+          contentBlocks: ['title', 'image', 'description', 'cta'],
+          metadataDisplay: ['category', 'date', 'author']
+        }
+      };
+      
       previewHtml = generateEmailContent(
         CONTENT_TYPE_LABELS[contentType] || "Content",
         `Check out these featured ${contentType}!`,
@@ -100,20 +120,31 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
         selectedContents,
         contentType,
         window.location.origin,
-        templateSettings || undefined
+        styles
       );
     }
   } catch (error) {
     console.error("Error generating email preview:", error);
-    previewHtml = `<div>Error generating preview: ${String(error)}</div>`;
+    errorMessage = String(error);
+    previewHtml = `<div class="text-center p-4 text-red-500">Error generating preview</div>`;
   }
   
   return (
     <div>
       <label className="block font-medium mb-1">Email Preview</label>
+      
+      {errorMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Error generating preview: {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="border bg-muted rounded px-3 py-4 text-sm overflow-auto max-h-[500px]">
         {selectedContentIds.length === 0 ? (
-          "(Nothing selected)"
+          <div className="text-center p-4 text-gray-500">(Nothing selected)</div>
         ) : (
           <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
         )}

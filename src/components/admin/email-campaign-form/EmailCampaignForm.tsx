@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
-import { useEmailCampaignFormSubmit } from './useEmailCampaignFormSubmit';
 import { ContentTypeSelector } from './ContentTypeSelector';
 import { ContentSelect } from './ContentSelect';
 import { RecipientTypeSelector } from './RecipientTypeSelector';
@@ -66,67 +65,81 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     selectFields: string,
     filters?: Record<string, any>
   } => {
-    const configs = {
-      blogs: {
-        tableName: 'blogs',
-        titleField: 'title',
-        descriptionField: 'summary',
-        imageField: 'cover_image_url',
-        selectFields: 'id, title, summary, cover_image_url, created_at, categories'
-      },
-      careers: {
-        tableName: 'careers',
-        titleField: 'title',
-        descriptionField: 'description',
-        imageField: 'image_url',
-        selectFields: 'id, title, description, image_url, industry, salary_range'
-      },
-      events: {
-        tableName: 'events',
-        titleField: 'title',
-        descriptionField: 'description',
-        imageField: 'thumbnail_url',
-        selectFields: 'id, title, description, thumbnail_url, event_type, start_time, end_time, organized_by'
-      },
-      majors: {
-        tableName: 'majors',
-        titleField: 'title',
-        descriptionField: 'description',
-        imageField: '',
-        selectFields: 'id, title, description, potential_salary, category'
-      },
-      mentors: {
-        tableName: 'profiles',
-        titleField: 'full_name',
-        descriptionField: 'bio',
-        imageField: 'avatar_url',
-        selectFields: 'id, full_name, bio, avatar_url, skills, location',
-        filters: { user_type: 'mentor' }
-      },
-      opportunities: {
-        tableName: 'opportunities',
-        titleField: 'title',
-        descriptionField: 'description',
-        imageField: 'cover_image_url',
-        selectFields: 'id, title, description, cover_image_url, provider_name, deadline, compensation, location, remote'
-      },
-      scholarships: {
-        tableName: 'scholarships',
-        titleField: 'title',
-        descriptionField: 'description',
-        imageField: 'image_url',
-        selectFields: 'id, title, description, image_url, provider_name, deadline, amount'
-      },
-      schools: {
-        tableName: 'schools',
-        titleField: 'name',
-        descriptionField: '',
-        imageField: '',
-        selectFields: 'id, name, type, location, country, state, website'
-      }
-    };
-
-    return configs[type];
+    switch (type) {
+      case 'blogs':
+        return {
+          tableName: 'blogs',
+          titleField: 'title',
+          descriptionField: 'summary',
+          imageField: 'cover_image_url',
+          selectFields: 'id, title, summary, cover_image_url, created_at, categories'
+        };
+      case 'careers':
+        return {
+          tableName: 'careers',
+          titleField: 'title',
+          descriptionField: 'description',
+          imageField: 'image_url',
+          selectFields: 'id, title, description, image_url, industry, salary_range'
+        };
+      case 'events':
+        return {
+          tableName: 'events',
+          titleField: 'title',
+          descriptionField: 'description',
+          imageField: 'thumbnail_url',
+          selectFields: 'id, title, description, thumbnail_url, event_type, start_time, end_time, organized_by'
+        };
+      case 'majors':
+        return {
+          tableName: 'majors',
+          titleField: 'title',
+          descriptionField: 'description',
+          imageField: '',
+          selectFields: 'id, title, description, potential_salary, category'
+        };
+      case 'mentors':
+        return {
+          tableName: 'profiles',
+          titleField: 'full_name',
+          descriptionField: 'bio',
+          imageField: 'avatar_url',
+          selectFields: 'id, full_name, bio, avatar_url, skills, location',
+          filters: { user_type: 'mentor' }
+        };
+      case 'opportunities':
+        return {
+          tableName: 'opportunities',
+          titleField: 'title',
+          descriptionField: 'description',
+          imageField: 'cover_image_url',
+          selectFields: 'id, title, description, cover_image_url, provider_name, deadline, compensation, location, remote'
+        };
+      case 'scholarships':
+        return {
+          tableName: 'scholarships',
+          titleField: 'title',
+          descriptionField: 'description',
+          imageField: 'image_url',
+          selectFields: 'id, title, description, image_url, provider_name, deadline, amount'
+        };
+      case 'schools':
+        return {
+          tableName: 'schools',
+          titleField: 'name',
+          descriptionField: '',
+          imageField: '',
+          selectFields: 'id, name, type, location, country, state, website'
+        };
+      default:
+        return {
+          tableName: 'blogs',
+          titleField: 'title',
+          descriptionField: 'summary',
+          imageField: 'cover_image_url',
+          selectFields: 'id, title, summary, cover_image_url'
+        };
+    }
   };
   
   // Fetch content based on content type

@@ -4,15 +4,28 @@ import { ContentItem } from "@/types/database/email";
 export function formatContentCard(
   content: ContentItem, 
   contentType: string, 
+  siteUrl: string,
   styles: { primary: string; secondary: string; accent: string },
-  layoutSettings: any = {
-    imagePosition: 'top',
-    showDate: true,
-    showAuthor: true,
-    contentBlocks: ['title', 'image', 'description', 'metadata', 'cta']
+  layoutSettings?: {
+    imagePosition: 'top' | 'inline' | 'side';
+    showDate: boolean;
+    showAuthor: boolean;
+    contentBlocks: string[];
+    metadataDisplay: string[];
   }
 ): string {
   if (!content) return '';
+  
+  const defaultLayoutSettings = {
+    imagePosition: 'top' as const,
+    showDate: true,
+    showAuthor: true,
+    contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+    metadataDisplay: ['category', 'date', 'author']
+  };
+  
+  // Use provided layout settings or defaults
+  const settings = layoutSettings || defaultLayoutSettings;
   
   // Get the content image
   const imageUrl = content.cover_image_url || content.image_url || content.avatar_url || '';
@@ -27,7 +40,7 @@ export function formatContentCard(
   let metadataHtml = '';
   
   // Show image based on layout settings
-  const showImage = layoutSettings.contentBlocks.includes('image') && imageUrl;
+  const showImage = settings.contentBlocks.includes('image') && imageUrl;
   const imageHtml = showImage ? `
     <img 
       src="${imageUrl}" 
@@ -37,7 +50,7 @@ export function formatContentCard(
   ` : '';
   
   // Add type-specific metadata if layout includes it
-  if (layoutSettings.contentBlocks.includes('metadata')) {
+  if (settings.contentBlocks.includes('metadata')) {
     switch (contentType) {
       case 'scholarships':
         if (content.provider_name) {
@@ -125,15 +138,15 @@ export function formatContentCard(
           ${title}
         </h3>
         ${metadataHtml}
-        ${description && layoutSettings.contentBlocks.includes('description') ? `
+        ${description && settings.contentBlocks.includes('description') ? `
           <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
             ${description}
           </p>
         ` : ''}
-        ${layoutSettings.contentBlocks.includes('cta') ? `
+        ${settings.contentBlocks.includes('cta') ? `
           <div style="margin-top: 16px;">
             <a 
-              href="#" 
+              href="${siteUrl}/${contentType}/${content.id}" 
               style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
             >
               Learn More
