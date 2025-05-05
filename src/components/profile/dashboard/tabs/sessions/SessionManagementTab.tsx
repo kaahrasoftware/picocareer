@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SessionsDataTable } from "./SessionsDataTable";
 import { SessionMetricCards } from "./SessionMetricCards";
@@ -7,18 +7,99 @@ import { useAdminSessionsQuery } from "@/hooks/useAdminSessionsQuery";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Clock, CheckCircle, AlertCircle, CalendarX, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { DateRange } from "react-day-picker";
+import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function SessionManagementTab() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { data: sessions, isLoading } = useAdminSessionsQuery(statusFilter);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<string>("scheduled_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const pageSize = 10;
+  
+  // Convert date range to ISO strings for the query
+  const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined;
+  const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined;
+  
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useAdminSessionsQuery({
+    statusFilter,
+    page: currentPage,
+    pageSize,
+    startDate,
+    endDate,
+    searchTerm: searchQuery,
+    sortBy,
+    sortDirection
+  });
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchQuery, dateRange, sortBy, sortDirection]);
+  
+  const handleSort = useCallback((column: string) => {
+    if (sortBy === column) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortDirection("desc");
+    }
+  }, [sortBy]);
+  
+  const handleRefresh = useCallback(() => {
+    refetch();
+    toast({
+      title: "Refreshed",
+      description: "Session data has been refreshed",
+    });
+  }, [refetch, toast]);
+  
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
+  
+  const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+    setDateRange(range);
+  }, []);
+  
+  const handleExport = useCallback(() => {
+    // This would be implemented to export data to CSV
+    toast({
+      title: "Export Started",
+      description: "Your data export is being prepared",
+    });
+  }, [toast]);
+  
+  // Calculate session stats with error handling
   const sessionStats = {
-    total: sessions?.length || 0,
-    completed: sessions?.filter(s => s.status === "completed")?.length || 0, 
-    scheduled: sessions?.filter(s => s.status === "scheduled")?.length || 0,
-    cancelled: sessions?.filter(s => s.status === "cancelled")?.length || 0,
-    noShow: sessions?.filter(s => s.status === "no-show")?.length || 0
+    total: data?.totalCount || 0,
+    completed: data?.sessions?.filter(s => s.status === "completed")?.length || 0, 
+    scheduled: data?.sessions?.filter(s => s.status === "scheduled")?.length || 0,
+    cancelled: data?.sessions?.filter(s => s.status === "cancelled")?.length || 0,
+    noShow: data?.sessions?.filter(s => s.status === "no-show")?.length || 0
   };
+  
+  // Handle error states
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load session data. Please try again later.",
+      variant: "destructive",
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -29,7 +110,7 @@ export function SessionManagementTab() {
         </Badge>
       </div>
       
-      <SessionMetricCards stats={sessionStats} />
+      <SessionMetricCards stats={sessionStats} isLoading={isLoading} />
       
       <Tabs 
         defaultValue="all" 
@@ -60,30 +141,93 @@ export function SessionManagementTab() {
         </TabsList>
         
         <TabsContent value="all">
-          <SessionsDataTable sessions={sessions || []} isLoading={isLoading} />
+          <SessionsDataTable 
+            sessions={data?.sessions || []} 
+            isLoading={isLoading}
+            totalPages={data?.totalPages || 1}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            dateRange={dateRange}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
         </TabsContent>
         <TabsContent value="scheduled">
           <SessionsDataTable 
-            sessions={sessions?.filter(s => s.status === "scheduled") || []} 
-            isLoading={isLoading} 
+            sessions={data?.sessions?.filter(s => s.status === "scheduled") || []} 
+            isLoading={isLoading}
+            totalPages={data?.totalPages || 1}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            dateRange={dateRange}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="completed">
           <SessionsDataTable 
-            sessions={sessions?.filter(s => s.status === "completed") || []} 
-            isLoading={isLoading} 
+            sessions={data?.sessions?.filter(s => s.status === "completed") || []} 
+            isLoading={isLoading}
+            totalPages={data?.totalPages || 1}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            dateRange={dateRange}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="cancelled">
           <SessionsDataTable 
-            sessions={sessions?.filter(s => s.status === "cancelled") || []} 
-            isLoading={isLoading} 
+            sessions={data?.sessions?.filter(s => s.status === "cancelled") || []} 
+            isLoading={isLoading}
+            totalPages={data?.totalPages || 1}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            dateRange={dateRange}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
         </TabsContent>
         <TabsContent value="no-show">
           <SessionsDataTable 
-            sessions={sessions?.filter(s => s.status === "no-show") || []} 
-            isLoading={isLoading} 
+            sessions={data?.sessions?.filter(s => s.status === "no-show") || []} 
+            isLoading={isLoading}
+            totalPages={data?.totalPages || 1}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onSearchChange={handleSearchChange}
+            onDateRangeChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            onExport={handleExport}
+            dateRange={dateRange}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
         </TabsContent>
       </Tabs>

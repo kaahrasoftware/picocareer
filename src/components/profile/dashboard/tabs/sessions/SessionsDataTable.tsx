@@ -25,31 +25,54 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw,
+  Calendar,
+  Download
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminSessionDetailsDialog } from "./AdminSessionDetailsDialog";
+import { StandardPagination } from "@/components/common/StandardPagination";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { addDays } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { MentorSession } from "@/types/database/session";
 
 interface SessionsDataTableProps {
   sessions: MentorSession[];
   isLoading: boolean;
+  totalPages: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  onSearchChange: (value: string) => void;
+  onDateRangeChange: (range: DateRange | undefined) => void;
+  onRefresh: () => void;
+  onExport?: () => void;
+  dateRange?: DateRange;
+  searchQuery: string;
+  sortBy: string; 
+  sortDirection: "asc" | "desc";
+  onSort: (column: string) => void;
 }
 
-export function SessionsDataTable({ sessions, isLoading }: SessionsDataTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<string>("scheduled_at");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+export function SessionsDataTable({ 
+  sessions,
+  isLoading,
+  totalPages,
+  currentPage,
+  onPageChange,
+  onSearchChange,
+  onDateRangeChange,
+  onRefresh,
+  onExport,
+  dateRange,
+  searchQuery,
+  sortBy,
+  sortDirection,
+  onSort
+}: SessionsDataTableProps) {
   const [selectedSession, setSelectedSession] = useState<MentorSession | null>(null);
-  
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortDirection("desc");
-    }
-  };
   
   const getStatusBadge = (status: string) => {
     switch(status) {
@@ -74,62 +97,71 @@ export function SessionsDataTable({ sessions, isLoading }: SessionsDataTableProp
     }
   };
 
-  const filteredSessions = sessions.filter(session => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    
-    return (
-      session.mentor.full_name.toLowerCase().includes(query) ||
-      session.mentee.full_name.toLowerCase().includes(query) ||
-      session.session_type.type.toLowerCase().includes(query)
-    );
-  });
-  
-  const sortedSessions = [...filteredSessions].sort((a, b) => {
-    if (sortBy === "scheduled_at") {
-      const dateA = new Date(a.scheduled_at).getTime();
-      const dateB = new Date(b.scheduled_at).getTime();
-      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-    }
-    
-    if (sortBy === "mentor") {
-      return sortDirection === "asc" 
-        ? a.mentor.full_name.localeCompare(b.mentor.full_name)
-        : b.mentor.full_name.localeCompare(a.mentor.full_name);
-    }
-    
-    if (sortBy === "mentee") {
-      return sortDirection === "asc" 
-        ? a.mentee.full_name.localeCompare(b.mentee.full_name)
-        : b.mentee.full_name.localeCompare(a.mentee.full_name);
-    }
-    
-    if (sortBy === "type") {
-      return sortDirection === "asc" 
-        ? a.session_type.type.localeCompare(b.session_type.type)
-        : b.session_type.type.localeCompare(a.session_type.type);
-    }
-    
-    if (sortBy === "status") {
-      return sortDirection === "asc" 
-        ? a.status.localeCompare(b.status)
-        : b.status.localeCompare(a.status);
-    }
-    
-    return 0;
-  });
+  const handleSort = (column: string) => {
+    onSort(column);
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 w-80">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 w-full sm:w-80">
           <Search className="h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search sessions..."
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             className="h-9"
           />
+        </div>
+        
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9">
+                <Calendar className="h-4 w-4 mr-2" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} -{" "}
+                      {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Date Range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={onDateRangeChange}
+              />
+            </PopoverContent>
+          </Popover>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={onRefresh}
+            className="h-9 w-9"
+            title="Refresh"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          
+          {onExport && (
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={onExport}
+              className="h-9 w-9"
+              title="Export to CSV"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
       
@@ -204,14 +236,14 @@ export function SessionsDataTable({ sessions, isLoading }: SessionsDataTableProp
                   <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                 </TableRow>
               ))
-            ) : sortedSessions.length === 0 ? (
+            ) : sessions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   No sessions found.
                 </TableCell>
               </TableRow>
             ) : (
-              sortedSessions.map((session) => (
+              sessions.map((session) => (
                 <TableRow key={session.id}>
                   <TableCell>
                     {format(new Date(session.scheduled_at), "MMM d, yyyy h:mm a")}
@@ -253,6 +285,12 @@ export function SessionsDataTable({ sessions, isLoading }: SessionsDataTableProp
           </TableBody>
         </Table>
       </div>
+      
+      <StandardPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+      />
       
       {selectedSession && (
         <AdminSessionDetailsDialog 

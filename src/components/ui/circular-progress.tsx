@@ -9,6 +9,8 @@ interface CircularProgressProps {
   showValue?: boolean;
   className?: string;
   textClassName?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
 }
 
 export function CircularProgress({
@@ -17,7 +19,9 @@ export function CircularProgress({
   strokeWidth = 10,
   showValue = true,
   className,
-  textClassName
+  textClassName,
+  valuePrefix = '',
+  valueSuffix = '%'
 }: CircularProgressProps) {
   // Ensure value is between 0 and 100
   const normalizedValue = Math.min(100, Math.max(0, value));
@@ -28,13 +32,14 @@ export function CircularProgress({
   const strokeDashoffset = circumference - (normalizedValue / 100) * circumference;
 
   return (
-    <div className={cn('inline-flex items-center justify-center', className)}>
+    <div className={cn('inline-flex items-center justify-center relative', className)}>
       <svg
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         className="transform -rotate-90"
       >
+        {/* Background circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -44,6 +49,7 @@ export function CircularProgress({
           strokeWidth={strokeWidth}
           strokeOpacity={0.2}
         />
+        {/* Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -54,6 +60,7 @@ export function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
+          className="transition-all duration-500 ease-in-out"
         />
       </svg>
       {showValue && (
@@ -63,7 +70,7 @@ export function CircularProgress({
             fontSize: size * 0.2 + 'px'
           }}
         >
-          {Math.round(normalizedValue)}%
+          {valuePrefix}{Math.round(normalizedValue)}{valueSuffix}
         </span>
       )}
     </div>
