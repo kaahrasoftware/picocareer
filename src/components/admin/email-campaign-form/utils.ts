@@ -1,34 +1,20 @@
 
-export type ContentType = 'blog' | 'event' | 'news' | 'update' | 'promotion';
+export type ContentType = 'blog' | 'event' | 'news' | 'update' | 'promotion' | 'announcement';
 
 export const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
   blog: 'Blog Posts',
   event: 'Events',
-  news: 'News',
-  update: 'Platform Updates',
-  promotion: 'Promotions'
+  news: 'News Articles',
+  update: 'Updates',
+  promotion: 'Promotions',
+  announcement: 'Announcements'
 };
 
-export interface EmailCampaignFormState {
-  subject: string;
-  contentType: ContentType;
-  contentIds: string[];
-  recipientType: string;
-  recipientIds: string[];
-  scheduledFor: string;
-  frequency: 'daily' | 'weekly' | 'monthly';
-  randomSelect: boolean;
-  randomCount: number;
-}
+export type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
 
-export interface ContentItem {
-  id: string;
-  title: string;
-  description?: string;
-  image_url?: string;
-  cover_image_url?: string;
-  content?: string;
-  author_name?: string;
-  created_at?: string;
-  [key: string]: any;
-}
+export const RECIPIENT_TYPE_OPTIONS = [
+  { value: 'all', label: 'All Users' },
+  { value: 'mentees', label: 'All Mentees' },
+  { value: 'mentors', label: 'All Mentors' },
+  { value: 'selected', label: 'Selected Users' }
+];

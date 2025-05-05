@@ -40,9 +40,9 @@ export const useEmailCampaignFormSubmit = ({
         admin_id: adminId,
         subject: formState.subject,
         content_type: formState.content_type || 'blog',
+        content_id: 'default', // Adding a required field
         content_ids: formState.content_ids,
         recipient_type: formState.recipient_type || 'all',
-        recipient_ids: formState.recipients,
         scheduled_for: formState.scheduled_for,
         frequency: formState.frequency || 'weekly',
         status: 'scheduled'

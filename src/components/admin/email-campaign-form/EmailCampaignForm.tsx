@@ -16,7 +16,7 @@ import { EmailPreview } from './EmailPreview';
 import { Form } from '@/components/ui/form';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ContentType } from './utils';
+import { ContentType, RecipientType } from './utils';
 
 interface EmailCampaignFormProps {
   adminId: string;
@@ -26,7 +26,7 @@ interface EmailCampaignFormProps {
 const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampaignCreated }) => {
   const [contentType, setContentType] = useState<ContentType>('blog');
   const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
-  const [recipientType, setRecipientType] = useState('all');
+  const [recipientType, setRecipientType] = useState<RecipientType>('all');
   const [recipientIds, setRecipientIds] = useState<string[]>([]);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [scheduledFor, setScheduledFor] = useState('');
@@ -53,30 +53,40 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   });
 
+  // Define the content interface to match our query
+  interface ContentItem {
+    id: string;
+    title: string;
+  }
+  
   // Fetch content based on content type
-  const { data: contentList = [], isLoading } = useQuery({
+  const { data: contentList = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ['content', contentType],
     queryFn: async () => {
+      // Map content type to actual Supabase table name
       let tableName = '';
       
       switch(contentType) {
         case 'blog':
-          tableName = 'blog_posts';
+          tableName = 'blogs';
           break;
         case 'event':
           tableName = 'events';
           break;
         case 'news':
-          tableName = 'news_articles';
+          tableName = 'blogs'; // Fallback to blogs table if news isn't available
           break;
         case 'update':
-          tableName = 'updates';
+          tableName = 'blogs'; // Fallback to blogs table if updates isn't available
           break;
         case 'promotion':
-          tableName = 'promotions';
+          tableName = 'opportunities'; // Using opportunities for promotions
+          break;
+        case 'announcement':
+          tableName = 'hub_announcements';
           break;
         default:
-          tableName = 'blog_posts';
+          tableName = 'blogs';
       }
       
       const { data, error } = await supabase
@@ -153,7 +163,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         <RecipientTypeSelector
           recipientType={recipientType}
           setRecipientType={(type) => {
-            setRecipientType(type);
+            setRecipientType(type as RecipientType);
             handleRecipientChange(type);
           }}
         />

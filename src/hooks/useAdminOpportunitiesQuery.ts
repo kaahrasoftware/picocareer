@@ -96,7 +96,7 @@ export const useAdminOpportunitiesQuery = ({
         const { data: statusCounts, error: statusError } = await supabase
           .from('opportunities')
           .select('status, count(*)', { count: 'exact' })
-          .group('status');
+          .groupBy('status'); // Changed from .group('status') to .groupBy('status')
 
         if (statusError) {
           throw new Error(`Error fetching status counts: ${statusError.message}`);

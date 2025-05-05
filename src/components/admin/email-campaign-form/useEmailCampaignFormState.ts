@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
 import { EmailCampaignSchema, EmailCampaignType } from './emailCampaign.schema';
 import { useDebounce } from '@/hooks/useDebounce';
-import type { Campaign } from '@/types/database/email';
+import { RecipientType } from './utils';
 
 interface UseEmailCampaignFormStateProps {
   campaign?: EmailCampaignType | null;
@@ -17,7 +17,7 @@ interface UseEmailCampaignFormStateProps {
 export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampaignFormStateProps = {}) => {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    recipientType: 'all',
+    recipientType: 'all' as RecipientType,
     recipients: [] as string[],
     recipientFilter: null as string | null,
   });
@@ -43,58 +43,61 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     formState: { isValid },
   } = form;
 
-  useEffect(() => {
-    if (campaign) {
-      setFormData({
-        recipientType: campaign.recipient_type || 'all',
-        recipients: campaign.recipients || [],
-        recipientFilter: campaign.recipient_filter || null,
-      });
-    }
-  }, [campaign]);
+  // Handle when campaign props change
+  if (campaign) {
+    setFormData({
+      recipientType: (campaign.recipient_type as RecipientType) || 'all',
+      recipients: campaign.recipients || [],
+      recipientFilter: campaign.recipient_filter || null,
+    });
+  }
 
-  useEffect(() => {
-    const fetchRecipients = async () => {
-      if (!debouncedSearchTerm && formData.recipientType !== 'selected') {
-        setAvailableRecipients([]);
+  // Fetch recipients based on search term and filters
+  const fetchRecipients = useCallback(async () => {
+    if (!debouncedSearchTerm && formData.recipientType !== 'selected') {
+      setAvailableRecipients([]);
+      return;
+    }
+
+    setIsFetchingRecipients(true);
+    try {
+      const query = supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .neq('id', session?.user?.id || '');
+
+      let filteredQuery = query;
+      
+      // Apply role filter if needed
+      if (formData.recipientFilter === 'mentee') {
+        filteredQuery = query.eq('user_type', 'mentee');
+      } else if (formData.recipientFilter === 'mentor') {
+        filteredQuery = query.eq('user_type', 'mentor');
+      }
+
+      // Apply search term filter if provided
+      if (debouncedSearchTerm) {
+        filteredQuery = filteredQuery.ilike('full_name', `%${debouncedSearchTerm}%`);
+      }
+
+      const { data, error } = await filteredQuery;
+
+      if (error) {
+        console.error('Error fetching recipients:', error);
+        toast.error('Failed to fetch recipients. Please try again.');
         return;
       }
 
-      setIsFetchingRecipients(true);
-      try {
-        const query = supabase
-          .from('profiles')
-          .select('id, full_name, email')
-          .neq('id', session?.user?.id || '');
-
-        let filteredQuery = query;
-        
-        if (formData.recipientFilter === 'mentee') {
-          filteredQuery = query.eq('role', 'mentee');
-        } else if (formData.recipientFilter === 'mentor') {
-          filteredQuery = query.eq('role', 'mentor');
-        }
-
-        if (debouncedSearchTerm) {
-          filteredQuery = filteredQuery.ilike('full_name', `%${debouncedSearchTerm}%`);
-        }
-
-        const { data, error } = await filteredQuery;
-
-        if (error) {
-          console.error('Error fetching recipients:', error);
-          toast.error('Failed to fetch recipients. Please try again.');
-          return;
-        }
-
-        setAvailableRecipients(data || []);
-      } finally {
-        setIsFetchingRecipients(false);
-      }
-    };
-
-    fetchRecipients();
+      setAvailableRecipients(data || []);
+    } finally {
+      setIsFetchingRecipients(false);
+    }
   }, [debouncedSearchTerm, formData.recipientFilter, formData.recipientType, session?.user?.id]);
+
+  // Run the fetch when dependencies change
+  useState(() => {
+    fetchRecipients();
+  }, [debouncedSearchTerm, formData.recipientType, formData.recipientFilter, session?.user?.id]);
 
   const onSubmit = async (data: EmailCampaignType) => {
     if (!session?.user) return;
@@ -102,11 +105,17 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     setIsSaving(true);
     try {
       const campaignData = {
-        ...data,
+        admin_id: session.user.id,
+        subject: data.subject,
+        body: data.body || '',
+        content_type: data.content_type || 'blog',
+        content_id: 'default', // Adding a placeholder value for required field
+        content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipients: formData.recipients,
         recipient_filter: formData.recipientFilter,
-        created_by: session.user.id,
+        frequency: data.frequency || 'weekly',
+        status: 'planned'
       };
 
       let response;
@@ -145,7 +154,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   const handleRecipientChange = (type: string) => {
     setFormData((prev) => ({
       ...prev,
-      recipientType: type,
+      recipientType: type as RecipientType,
       recipients: [],
     }));
     
