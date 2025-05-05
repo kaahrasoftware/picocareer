@@ -50,8 +50,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       const recipientIds = 
         campaign.recipient_filter && 
         typeof campaign.recipient_filter === 'object' && 
-        Array.isArray(campaign.recipient_filter.recipient_ids) 
-          ? campaign.recipient_filter.recipient_ids 
+        campaign.recipient_filter.profile_ids && 
+        Array.isArray(campaign.recipient_filter.profile_ids) 
+          ? campaign.recipient_filter.profile_ids 
           : [];
       
       setFormData({
@@ -138,7 +139,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       
       // Create a properly structured recipient_filter
       const recipientFilter = formData.recipientType === 'selected'
-        ? { recipient_ids: formData.recipientIds }
+        ? { profile_ids: formData.recipientIds }
         : formData.recipientFilter;
       
       const campaignData = {
@@ -243,7 +244,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       recipientIds: [...prev.recipientIds, recipient.id],
       recipientFilter: {
         ...prev.recipientFilter,
-        recipient_ids: [...(prev.recipientIds || []), recipient.id]
+        profile_ids: [...(prev.recipientIds || []), recipient.id]
       }
     }));
   };
@@ -254,7 +255,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
       recipientFilter: {
         ...prev.recipientFilter,
-        recipient_ids: prev.recipientIds.filter((id) => id !== recipientId)
+        profile_ids: prev.recipientIds.filter((id) => id !== recipientId)
       }
     }));
   };

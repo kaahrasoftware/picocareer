@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useEmailCampaignFormState } from './useEmailCampaignFormState';
 import { ContentTypeSelector } from './ContentTypeSelector';
@@ -18,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContentType, RecipientType } from './utils';
 import { toast } from 'sonner';
 import { ContentItem } from '@/types/database/email';
+import { useEmailCampaignFormSubmit } from './useEmailCampaignFormSubmit';
 
 interface EmailCampaignFormProps {
   adminId: string;
@@ -35,20 +35,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const [randomSelect, setRandomSelect] = useState(false);
   const [randomCount, setRandomCount] = useState(3);
 
-  const {
-    form,
-    formData,
-    availableRecipients,
-    isFetchingRecipients,
-    isSaving,
-    handleSubmit,
-    onSubmit,
-    handleRecipientChange,
-    handleSearchTermChange,
-    searchTerm,
-    setValue,
-    isValid
-  } = useEmailCampaignFormState({
+  const { form, isValid, setValue } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
       if (campaignId) {
         toast.success('Campaign created successfully!');
@@ -60,6 +47,28 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         setScheduledFor('');
       }
     }
+  });
+
+  const { availableRecipients, isFetchingRecipients } = useEmailCampaignFormState();
+  
+  const { isSubmitting, handleSubmit } = useEmailCampaignFormSubmit({
+    adminId,
+    formState: {
+      subject,
+      content_type: contentType,
+      content_ids: selectedContentIds,
+      recipient_type: recipientType,
+      recipient_filter: recipientType === 'selected' 
+        ? { profile_ids: recipientIds } 
+        : recipientType === 'mentees' 
+          ? { filter_type: 'mentee' } 
+          : recipientType === 'mentors' 
+            ? { filter_type: 'mentor' } 
+            : null,
+      scheduled_for: scheduledFor,
+      frequency: frequency
+    },
+    onSuccess: onCampaignCreated
   });
   
   // Helper function to get content type config for field mapping
@@ -250,7 +259,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     
     // Create a properly formatted recipient_filter based on selection
     if (recipientType === 'selected') {
-      setValue('recipient_filter', { recipient_ids: recipientIds });
+      setValue('recipient_filter', { profile_ids: recipientIds });
     } else if (recipientType === 'mentees') {
       setValue('recipient_filter', { filter_type: 'mentee' });
     } else if (recipientType === 'mentors') {
@@ -268,14 +277,14 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       content_type: contentType,
       content_ids: selectedContentIds,
       recipient_type: recipientType,
-      recipient_filter: recipientType === 'selected' ? { recipient_ids: recipientIds } : null,
+      recipient_filter: recipientType === 'selected' ? { profile_ids: recipientIds } : null,
       scheduled_for: scheduledFor,
       frequency: frequency,
       adminId
     });
     
-    // Execute the form submission
-    handleSubmit(onSubmit)();
+    // Execute the submit handler
+    handleSubmit();
   };
 
   const hasRequiredFields = subject && 
@@ -328,7 +337,6 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
           recipientType={recipientType}
           setRecipientType={(type) => {
             setRecipientType(type as RecipientType);
-            handleRecipientChange(type);
           }}
         />
 
@@ -352,10 +360,10 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
         <Button
           onClick={handleFormSubmit}
-          disabled={isSaving || !hasRequiredFields || isLoading}
+          disabled={isSubmitting || !hasRequiredFields || isLoading}
           className="w-full mt-6"
         >
-          {isSaving ? (
+          {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Creating Campaign...

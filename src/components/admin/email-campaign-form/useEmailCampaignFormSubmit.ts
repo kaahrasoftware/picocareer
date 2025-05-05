@@ -55,9 +55,12 @@ export const useEmailCampaignFormSubmit = ({
       // Create a properly structured recipient_filter
       let recipientFilter = null;
       
-      if (formState.recipient_type === 'selected' && Array.isArray(formState.recipient_filter?.recipient_ids)) {
-        recipientsCount = formState.recipient_filter.recipient_ids.length;
-        recipientFilter = { recipient_ids: formState.recipient_filter.recipient_ids };
+      if (formState.recipient_type === 'selected' && 
+          formState.recipient_filter && 
+          typeof formState.recipient_filter === 'object' && 
+          Array.isArray(formState.recipient_filter.profile_ids)) {
+        recipientsCount = formState.recipient_filter.profile_ids.length;
+        recipientFilter = { profile_ids: formState.recipient_filter.profile_ids };
       }
       
       const campaignData = {
