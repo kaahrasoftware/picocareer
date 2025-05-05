@@ -62,15 +62,6 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   });
   
-  // Helper function to get table name based on content type
-  const getTableName = (type: ContentType) => {
-    // For the mentors type, we need to use the profiles table
-    if (type === 'mentors') {
-      return 'profiles';
-    }
-    return type;
-  };
-  
   // Helper function to get content type config for field mapping
   const getContentTypeConfig = (type: ContentType): { 
     tableName: string, 
@@ -166,8 +157,10 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         console.log(`Fetching content from table: ${config.tableName} with fields: ${config.selectFields}`);
         
         // Build the query with properly typed table name
+        // Fix the type error by using a type assertion
+        const tableName = config.tableName as any;
         let query = supabase
-          .from(config.tableName)
+          .from(tableName)
           .select(config.selectFields);
         
         // Apply any filters if they exist
@@ -254,8 +247,19 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     setValue('subject', subject);
     setValue('content_type', contentType);
     setValue('content_ids', selectedContentIds);
+    
+    // Create a properly formatted recipient_filter based on selection
+    if (recipientType === 'selected') {
+      setValue('recipient_filter', { recipient_ids: recipientIds });
+    } else if (recipientType === 'mentees') {
+      setValue('recipient_filter', { filter_type: 'mentee' });
+    } else if (recipientType === 'mentors') {
+      setValue('recipient_filter', { filter_type: 'mentor' });
+    } else {
+      setValue('recipient_filter', null);
+    }
+    
     setValue('recipient_type', recipientType);
-    setValue('recipients', recipientIds);
     setValue('scheduled_for', scheduledFor);
     setValue('frequency', frequency);
     
@@ -264,7 +268,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       content_type: contentType,
       content_ids: selectedContentIds,
       recipient_type: recipientType,
-      recipients: recipientIds,
+      recipient_filter: recipientType === 'selected' ? { recipient_ids: recipientIds } : null,
       scheduled_for: scheduledFor,
       frequency: frequency,
       adminId

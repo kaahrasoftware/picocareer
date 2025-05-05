@@ -18,8 +18,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     recipientType: 'all' as RecipientType,
-    recipients: [] as string[],
-    recipientFilter: null as string | null,
+    recipientIds: [] as string[],
+    recipientFilter: null as Record<string, any> | null,
   });
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -46,9 +46,17 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   // Handle when campaign props change
   useEffect(() => {
     if (campaign) {
+      // Extract recipient IDs from campaign's recipient_filter if it exists
+      const recipientIds = 
+        campaign.recipient_filter && 
+        typeof campaign.recipient_filter === 'object' && 
+        Array.isArray(campaign.recipient_filter.recipient_ids) 
+          ? campaign.recipient_filter.recipient_ids 
+          : [];
+      
       setFormData({
         recipientType: (campaign.recipient_type as RecipientType) || 'all',
-        recipients: campaign.recipients || [],
+        recipientIds,
         recipientFilter: campaign.recipient_filter || null,
       });
     }
@@ -75,9 +83,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       let filteredQuery = query;
       
       // Apply role filter if needed
-      if (formData.recipientFilter === 'mentee') {
+      if (formData.recipientFilter && formData.recipientFilter.filter_type === 'mentee') {
         filteredQuery = query.eq('user_type', 'mentee');
-      } else if (formData.recipientFilter === 'mentor') {
+      } else if (formData.recipientFilter && formData.recipientFilter.filter_type === 'mentor') {
         filteredQuery = query.eq('user_type', 'mentor');
       }
 
@@ -125,8 +133,13 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       
       // Calculate recipients count based on type
       const recipientsCount = formData.recipientType === 'selected' 
-        ? formData.recipients.length 
-        : await getEstimatedRecipientsCount(formData.recipientType, formData.recipientFilter);
+        ? formData.recipientIds.length 
+        : await getEstimatedRecipientsCount(formData.recipientType, formData.recipientFilter?.filter_type || null);
+      
+      // Create a properly structured recipient_filter
+      const recipientFilter = formData.recipientType === 'selected'
+        ? { recipient_ids: formData.recipientIds }
+        : formData.recipientFilter;
       
       const campaignData = {
         admin_id: session.user.id,
@@ -136,8 +149,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
         content_id: primaryContentId, // Required field - set from first content ID
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
-        recipients: formData.recipients,
-        recipient_filter: formData.recipientFilter ? { filter_type: formData.recipientFilter } : null,
+        recipient_filter: recipientFilter,
         scheduled_for: data.scheduled_for,
         frequency: data.frequency || 'weekly',
         status: 'planned', // Use 'planned' instead of 'scheduled'
@@ -212,31 +224,38 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     setFormData((prev) => ({
       ...prev,
       recipientType: type as RecipientType,
-      recipients: [],
+      recipientIds: [],
     }));
     
-    if (type === "selected") {
-      setFormData((prev) => ({ ...prev, recipientFilter: null }));
-    } else if (type === "mentees") {
-      setFormData((prev) => ({ ...prev, recipientFilter: "mentee" }));
+    let newFilter = null;
+    if (type === "mentees") {
+      newFilter = { filter_type: "mentee" };
     } else if (type === "mentors") {
-      setFormData((prev) => ({ ...prev, recipientFilter: "mentor" }));
-    } else {
-      setFormData((prev) => ({ ...prev, recipientFilter: null }));
+      newFilter = { filter_type: "mentor" };
     }
+    
+    setFormData((prev) => ({ ...prev, recipientFilter: newFilter }));
   };
 
   const handleRecipientSelect = (recipient: {id: string}) => {
     setFormData((prev) => ({
       ...prev,
-      recipients: [...prev.recipients, recipient.id],
+      recipientIds: [...prev.recipientIds, recipient.id],
+      recipientFilter: {
+        ...prev.recipientFilter,
+        recipient_ids: [...(prev.recipientIds || []), recipient.id]
+      }
     }));
   };
 
   const handleRecipientDeselect = (recipientId: string) => {
     setFormData((prev) => ({
       ...prev,
-      recipients: prev.recipients.filter((id) => id !== recipientId),
+      recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
+      recipientFilter: {
+        ...prev.recipientFilter,
+        recipient_ids: prev.recipientIds.filter((id) => id !== recipientId)
+      }
     }));
   };
 

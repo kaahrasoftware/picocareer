@@ -9,8 +9,7 @@ export const EmailCampaignSchema = z.object({
   content_type: z.custom<ContentType>().optional(),
   content_ids: z.array(z.string()).optional(),
   recipient_type: z.string().default('all'),
-  recipients: z.array(z.string()).optional(),
-  recipient_filter: z.string().nullable().optional(),
+  recipient_filter: z.record(z.any()).nullable().optional(),
   scheduled_for: z.string().optional(),
   frequency: z.enum(['daily', 'weekly', 'monthly']).default('weekly')
 });

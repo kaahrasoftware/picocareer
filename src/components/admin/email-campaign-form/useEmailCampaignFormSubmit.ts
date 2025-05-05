@@ -50,9 +50,15 @@ export const useEmailCampaignFormSubmit = ({
       console.log('Submitting campaign with data:', { adminId, formState });
       
       // Calculate recipients count based on type
-      const recipientsCount = formState.recipient_type === 'selected' && formState.recipients 
-        ? formState.recipients.length 
-        : 0;
+      let recipientsCount = 0;
+      
+      // Create a properly structured recipient_filter
+      let recipientFilter = null;
+      
+      if (formState.recipient_type === 'selected' && Array.isArray(formState.recipient_filter?.recipient_ids)) {
+        recipientsCount = formState.recipient_filter.recipient_ids.length;
+        recipientFilter = { recipient_ids: formState.recipient_filter.recipient_ids };
+      }
       
       const campaignData = {
         admin_id: adminId,
@@ -61,7 +67,7 @@ export const useEmailCampaignFormSubmit = ({
         content_id: formState.content_ids?.[0] || '', // Required field - explicitly set from first item
         content_ids: formState.content_ids || [],
         recipient_type: formState.recipient_type || 'all',
-        recipients: formState.recipients || [],
+        recipient_filter: recipientFilter,
         scheduled_for: formState.scheduled_for,
         frequency: formState.frequency || 'weekly',
         status: 'planned', // Use 'planned' instead of 'scheduled'
