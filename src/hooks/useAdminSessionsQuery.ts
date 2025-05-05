@@ -83,8 +83,7 @@ export function useAdminSessionsQuery({
             session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
               type,
               duration
-            ),
-            attendance_confirmed
+            )
           `);
         
         // Apply filters
@@ -102,8 +101,7 @@ export function useAdminSessionsQuery({
         
         if (searchTerm && searchTerm.trim() !== '') {
           // Using additional join for search
-          query = query
-            .or(`
+          query = query.or(`
               mentor.full_name.ilike.%${searchTerm}%,
               mentee.full_name.ilike.%${searchTerm}%,
               session_type.type.ilike.%${searchTerm}%
