@@ -18,7 +18,6 @@ import { ContentType, RecipientType } from './utils';
 import { toast } from 'sonner';
 import { ContentItem } from '@/types/database/email';
 import { useEmailCampaignFormSubmit } from './useEmailCampaignFormSubmit';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface EmailCampaignFormProps {
   adminId: string;
@@ -35,23 +34,17 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const [subject, setSubject] = useState('');
   const [randomSelect, setRandomSelect] = useState(false);
   const [randomCount, setRandomCount] = useState(3);
-  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const { form, isValid, setValue } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
       if (campaignId) {
-        setFormSubmitted(true);
-        // Don't need to show toast here as it will be shown in parent component
+        toast.success('Campaign created successfully!');
+        onCampaignCreated?.(campaignId);
         
         // Reset form state
         setSelectedContentIds([]);
         setSubject('');
         setScheduledFor('');
-        
-        // Pass campaign ID to parent component
-        if (onCampaignCreated) {
-          onCampaignCreated(campaignId);
-        }
       }
     }
   });
@@ -66,7 +59,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       content_ids: selectedContentIds,
       recipient_type: recipientType,
       recipient_filter: recipientType === 'selected' 
-        ? { profile_ids: recipientIds } 
+        ? { profile_ids: recipientIds } // Changed from recipient_ids to profile_ids
         : recipientType === 'mentees' 
           ? { filter_type: 'mentee' } 
           : recipientType === 'mentors' 
@@ -75,31 +68,8 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       scheduled_for: scheduledFor,
       frequency: frequency
     },
-    onSuccess: (campaignId) => {
-      setFormSubmitted(true);
-      
-      // Reset form after successful submission
-      resetForm();
-      
-      // Call the parent callback
-      if (onCampaignCreated) {
-        onCampaignCreated(campaignId);
-      }
-    }
+    onSuccess: onCampaignCreated
   });
-
-  // Reset form to initial state
-  const resetForm = () => {
-    setContentType('blogs');
-    setSelectedContentIds([]);
-    setRecipientType('all');
-    setRecipientIds([]);
-    setFrequency('weekly');
-    setScheduledFor('');
-    setSubject('');
-    setRandomSelect(false);
-    setRandomCount(3);
-  };
   
   // Helper function to get content type config for field mapping
   const getContentTypeConfig = (type: ContentType): { 
@@ -261,19 +231,6 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     setSelectedContentIds([]);
   }, [contentType]);
 
-  // Reset formSubmitted state after a few seconds
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (formSubmitted) {
-      timer = setTimeout(() => {
-        setFormSubmitted(false);
-      }, 5000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [formSubmitted]);
-
   const handleFormSubmit = async () => {
     // Verify admin status before submission
     try {
@@ -323,7 +280,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       
       // Create a properly formatted recipient_filter based on selection
       if (recipientType === 'selected') {
-        setValue('recipient_filter', { profile_ids: recipientIds });
+        setValue('recipient_filter', { profile_ids: recipientIds }); // Changed from recipient_ids to profile_ids
       } else if (recipientType === 'mentees') {
         setValue('recipient_filter', { filter_type: 'mentee' });
       } else if (recipientType === 'mentors') {
@@ -362,15 +319,6 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
 
   return (
     <div className="space-y-6">
-      {formSubmitted && (
-        <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-800">
-          <AlertTitle className="text-green-800 dark:text-green-300">Campaign Created Successfully!</AlertTitle>
-          <AlertDescription className="text-green-700 dark:text-green-400">
-            Your email campaign has been scheduled. The page will refresh shortly to show your new campaign.
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <Form {...form}>
         <div>
           <Label htmlFor="subject" className="text-base">Campaign Subject</Label>

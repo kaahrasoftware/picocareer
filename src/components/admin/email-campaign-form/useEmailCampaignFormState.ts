@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -192,15 +191,10 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
         return;
       }
 
-      // Success message is now handled in the parent component
-      
-      // Explicitly convert to string to fix type error
-      if (savedData && savedData[0]) {
-        const campaignId = String(savedData[0].id);
-        onSuccess?.(campaignId);
-      } else {
-        onSuccess?.();
-      }
+      toast.success('Email campaign saved successfully!');
+      // Cast the unknown value to string for typesafety
+      const campaignId = savedData?.[0]?.id as string | undefined;
+      onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
       toast.error(`An unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`);

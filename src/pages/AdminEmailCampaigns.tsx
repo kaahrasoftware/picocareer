@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Navigate } from "react-router-dom";
@@ -7,43 +7,16 @@ import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
-import { toast } from "sonner";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [activeTab, setActiveTab] = useState("campaigns");
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [campaignCreated, setCampaignCreated] = useState(false);
-
-  useEffect(() => {
-    // When a campaign is created, show success message and reset
-    if (campaignCreated) {
-      toast.success("Campaign created successfully! The page will refresh to show your new campaign.");
-      
-      // Reset the flag
-      setCampaignCreated(false);
-      
-      // Force a complete page refresh after a short delay
-      const refreshTimer = setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      
-      return () => clearTimeout(refreshTimer);
-    }
-  }, [campaignCreated]);
 
   if (!profile) return null;
   if (profile.user_type !== "admin") {
     return <Navigate to="/" replace />;
   }
-
-  const handleCampaignCreated = (campaignId: string) => {
-    // Increment refresh trigger to force CampaignList to reload
-    setRefreshTrigger(prev => prev + 1);
-    // Set campaign created flag to trigger success message and page refresh
-    setCampaignCreated(true);
-  };
 
   return (
     <div className="container py-8">
@@ -62,12 +35,14 @@ export default function AdminEmailCampaigns() {
                 </h1>
                 <EmailCampaignForm
                   adminId={profile.id}
-                  onCampaignCreated={handleCampaignCreated}
+                  onCampaignCreated={() => {
+                    // nothing additional, CampaignList reloads via effect on adminId prop change
+                  }}
                 />
               </div>
             </div>
             <div className="md:col-span-2">
-              <CampaignList adminId={profile.id} key={`campaign-list-${refreshTrigger}`} />
+              <CampaignList adminId={profile.id} />
             </div>
           </div>
         </TabsContent>

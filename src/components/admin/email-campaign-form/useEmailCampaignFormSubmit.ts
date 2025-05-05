@@ -110,14 +110,11 @@ export const useEmailCampaignFormSubmit = ({
         toast.error(`Failed to create campaign: ${error.message}`);
         throw error;
       }
-      
-      // Don't show success toast here since we'll show it in AdminEmailCampaigns
-      // instead to avoid duplicate notifications
+
+      toast.success('Campaign created successfully');
       
       if (data && data[0] && onSuccess) {
-        // Ensure we're passing a string to onSuccess
-        const campaignId = data[0].id as string;
-        onSuccess(campaignId);
+        onSuccess(data[0].id);
       }
     } catch (error) {
       console.error('Error creating campaign:', error);
