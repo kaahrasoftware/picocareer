@@ -59,7 +59,7 @@ export function SessionFeedbackDisplay({ sessionId }: SessionFeedbackDisplayProp
             <div className="bg-muted/20 px-4 py-3 flex items-center justify-between">
               <div>
                 <Badge variant="outline">
-                  {item.feedback_type === 'mentor_feedback' ? 'Mentor's Feedback' : 'Mentee's Feedback'}
+                  {item.feedback_type === 'mentor_feedback' ? "Mentor's Feedback" : "Mentee's Feedback"}
                 </Badge>
                 <p className="text-xs text-muted-foreground mt-1">
                   From {item.from_profile.full_name} to {item.to_profile.full_name}
