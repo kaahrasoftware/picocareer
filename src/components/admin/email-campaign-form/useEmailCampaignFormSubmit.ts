@@ -61,7 +61,26 @@ export const useEmailCampaignFormSubmit = ({
           Array.isArray(formState.recipient_filter.profile_ids)) {
         recipientsCount = formState.recipient_filter.profile_ids.length;
         recipientFilter = { profile_ids: formState.recipient_filter.profile_ids };
+      } else if (formState.recipient_type === 'mentees') {
+        recipientFilter = { filter_type: 'mentee' };
+      } else if (formState.recipient_type === 'mentors') {
+        recipientFilter = { filter_type: 'mentor' };
       }
+      
+      // First, ensure the session is refreshed before submitting
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Error refreshing session:', sessionError);
+        toast.error(`Session error: ${sessionError.message}`);
+        throw sessionError;
+      }
+      
+      if (!sessionData.session) {
+        toast.error('Not authenticated. Please log in again.');
+        throw new Error('Not authenticated');
+      }
+      
+      console.log('Session verified, user authenticated as:', sessionData.session.user?.id);
       
       const campaignData = {
         admin_id: adminId,
@@ -78,6 +97,8 @@ export const useEmailCampaignFormSubmit = ({
         failed_count: 0, // Explicitly set to 0
         recipients_count: recipientsCount
       };
+
+      console.log('Submitting campaign data:', campaignData);
 
       const { data, error } = await supabase
         .from('email_campaigns')

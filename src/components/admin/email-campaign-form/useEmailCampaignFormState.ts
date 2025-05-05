@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,8 +45,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
   // Handle when campaign props change
   useEffect(() => {
     if (campaign) {
-      // Extract recipient IDs from campaign's recipient_filter if it exists
-      const recipientIds = 
+      // Extract profile IDs from campaign's recipient_filter if it exists
+      const profileIds = 
         campaign.recipient_filter && 
         typeof campaign.recipient_filter === 'object' && 
         campaign.recipient_filter.profile_ids && 
@@ -57,7 +56,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       
       setFormData({
         recipientType: (campaign.recipient_type as RecipientType) || 'all',
-        recipientIds,
+        recipientIds: profileIds,
         recipientFilter: campaign.recipient_filter || null,
       });
     }
@@ -139,7 +138,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       
       // Create a properly structured recipient_filter
       const recipientFilter = formData.recipientType === 'selected'
-        ? { profile_ids: formData.recipientIds }
+        ? { profile_ids: formData.recipientIds } // Changed from recipient_ids to profile_ids
         : formData.recipientFilter;
       
       const campaignData = {
@@ -160,6 +159,14 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       };
 
       console.log("Submitting campaign data:", campaignData);
+
+      // Refresh the session before making the database request
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error('Session refresh error:', sessionError);
+        toast.error(`Authentication error: ${sessionError.message}`);
+        return;
+      }
 
       let response;
       
@@ -244,7 +251,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       recipientIds: [...prev.recipientIds, recipient.id],
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: [...(prev.recipientIds || []), recipient.id]
+        profile_ids: [...(prev.recipientIds || []), recipient.id] // Changed from recipient_ids to profile_ids
       }
     }));
   };
@@ -255,7 +262,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: prev.recipientIds.filter((id) => id !== recipientId)
+        profile_ids: prev.recipientIds.filter((id) => id !== recipientId) // Changed from recipient_ids to profile_ids
       }
     }));
   };

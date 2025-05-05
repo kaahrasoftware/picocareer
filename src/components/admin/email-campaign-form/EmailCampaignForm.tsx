@@ -59,7 +59,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       content_ids: selectedContentIds,
       recipient_type: recipientType,
       recipient_filter: recipientType === 'selected' 
-        ? { profile_ids: recipientIds } 
+        ? { profile_ids: recipientIds } // Changed from recipient_ids to profile_ids
         : recipientType === 'mentees' 
           ? { filter_type: 'mentee' } 
           : recipientType === 'mentors' 
@@ -231,60 +231,85 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     setSelectedContentIds([]);
   }, [contentType]);
 
-  const handleFormSubmit = () => {
-    if (!subject) {
-      toast.error('Please enter a subject');
-      return;
+  const handleFormSubmit = async () => {
+    // Verify admin status before submission
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', adminId)
+        .single();
+        
+      if (profileError) {
+        console.error("Error verifying admin status:", profileError);
+        toast.error("Could not verify admin privileges");
+        return;
+      }
+      
+      if (profile.user_type !== 'admin') {
+        toast.error("You must be an admin to create campaigns");
+        return;
+      }
+      
+      console.log("Admin status verified:", profile.user_type);
+      
+      if (!subject) {
+        toast.error('Please enter a subject');
+        return;
+      }
+      
+      if (selectedContentIds.length === 0) {
+        toast.error('Please select at least one content item');
+        return;
+      }
+      
+      if (recipientType === 'selected' && recipientIds.length === 0) {
+        toast.error('Please select at least one recipient');
+        return;
+      }
+      
+      if (!scheduledFor) {
+        toast.error('Please select a scheduled date and time');
+        return;
+      }
+      
+      // Set form values for submission
+      setValue('subject', subject);
+      setValue('content_type', contentType);
+      setValue('content_ids', selectedContentIds);
+      
+      // Create a properly formatted recipient_filter based on selection
+      if (recipientType === 'selected') {
+        setValue('recipient_filter', { profile_ids: recipientIds }); // Changed from recipient_ids to profile_ids
+      } else if (recipientType === 'mentees') {
+        setValue('recipient_filter', { filter_type: 'mentee' });
+      } else if (recipientType === 'mentors') {
+        setValue('recipient_filter', { filter_type: 'mentor' });
+      } else {
+        setValue('recipient_filter', null);
+      }
+      
+      setValue('recipient_type', recipientType);
+      setValue('scheduled_for', scheduledFor);
+      setValue('frequency', frequency);
+      
+      console.log("Submitting form with data:", {
+        subject,
+        content_type: contentType,
+        content_ids: selectedContentIds,
+        recipient_type: recipientType,
+        recipient_filter: recipientType === 'selected' ? { profile_ids: recipientIds } : null,
+        scheduled_for: scheduledFor,
+        frequency: frequency,
+        adminId
+      });
+      
+      // Execute the submit handler
+      await handleSubmit();
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      toast.error("An unexpected error occurred");
     }
-    
-    if (selectedContentIds.length === 0) {
-      toast.error('Please select at least one content item');
-      return;
-    }
-    
-    if (recipientType === 'selected' && recipientIds.length === 0) {
-      toast.error('Please select at least one recipient');
-      return;
-    }
-    
-    if (!scheduledFor) {
-      toast.error('Please select a scheduled date and time');
-      return;
-    }
-    
-    // Set form values for submission
-    setValue('subject', subject);
-    setValue('content_type', contentType);
-    setValue('content_ids', selectedContentIds);
-    
-    // Create a properly formatted recipient_filter based on selection
-    if (recipientType === 'selected') {
-      setValue('recipient_filter', { profile_ids: recipientIds });
-    } else if (recipientType === 'mentees') {
-      setValue('recipient_filter', { filter_type: 'mentee' });
-    } else if (recipientType === 'mentors') {
-      setValue('recipient_filter', { filter_type: 'mentor' });
-    } else {
-      setValue('recipient_filter', null);
-    }
-    
-    setValue('recipient_type', recipientType);
-    setValue('scheduled_for', scheduledFor);
-    setValue('frequency', frequency);
-    
-    console.log("Submitting form with data:", {
-      subject,
-      content_type: contentType,
-      content_ids: selectedContentIds,
-      recipient_type: recipientType,
-      recipient_filter: recipientType === 'selected' ? { profile_ids: recipientIds } : null,
-      scheduled_for: scheduledFor,
-      frequency: frequency,
-      adminId
-    });
-    
-    // Execute the submit handler
-    handleSubmit();
   };
 
   const hasRequiredFields = subject && 
