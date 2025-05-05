@@ -24,6 +24,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Starting one-time-no-show-sync function");
+    
     // Create a Supabase client with the service role key
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -76,16 +78,32 @@ serve(async (req) => {
     if (noShowFeedback && noShowFeedback.length > 0) {
       const sessionIds = noShowFeedback.map(f => f.session_id);
       
-      // Update all these sessions to have no_show status
+      // Check how many of these sessions are already marked as no_show
+      const { data: existingNoShows, error: checkError } = await supabaseClient
+        .from('mentor_sessions')
+        .select('id')
+        .in('id', sessionIds)
+        .eq('status', 'no_show');
+      
+      if (checkError) {
+        results.errors.push(checkError.message);
+      } else {
+        console.log(`${existingNoShows?.length || 0} sessions already marked as no_show`);
+      }
+      
+      // Update all sessions that aren't already marked as no_show
       const { data, error: updateError } = await supabaseClient
         .from('mentor_sessions')
         .update({ status: 'no_show' })
-        .in('id', sessionIds);
+        .in('id', sessionIds)
+        .neq('status', 'no_show');
         
       if (updateError) {
         results.errors.push(updateError.message);
       } else {
-        results.noShows = sessionIds.length;
+        const updatedCount = sessionIds.length - (existingNoShows?.length || 0);
+        results.noShows = updatedCount;
+        console.log(`Updated ${updatedCount} sessions to no_show status`);
       }
     }
 

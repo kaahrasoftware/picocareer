@@ -15,6 +15,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Starting sync-session-feedback-status function");
+    
     // Create a Supabase client with the service role key
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -27,13 +29,20 @@ serve(async (req) => {
     // 2. Find inconsistencies for monitoring purposes
     const { inconsistencies, inconsistencyError } = await checkInconsistencies(supabaseClient);
     
+    // Log detailed results for monitoring
+    console.log(`Sync results: Updated ${noShowSynced} sessions to no_show status`);
+    if (inconsistencies && inconsistencies.length > 0) {
+      console.log(`Found ${inconsistencies.length} inconsistent session statuses`);
+    }
+    
     return new Response(
       JSON.stringify({
         success: true,
         noShowSynced,
         noShowError,
         inconsistenciesFound: inconsistencies.length,
-        inconsistencyError
+        inconsistencyError,
+        execution_time: new Date().toISOString()
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -44,7 +53,10 @@ serve(async (req) => {
     console.error('Error in sync-session-feedback-status function:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        execution_time: new Date().toISOString()
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -56,6 +68,8 @@ serve(async (req) => {
 // Sync no-show feedback with session status
 async function syncNoShowFeedback(supabase) {
   try {
+    console.log("Running syncNoShowFeedback...");
+    
     // Find all feedback records with did_not_show_up = true
     const { data: noShowFeedback, error: feedbackError } = await supabase
       .from('session_feedback')
@@ -73,6 +87,26 @@ async function syncNoShowFeedback(supabase) {
     }
     
     const sessionIds = noShowFeedback.map(f => f.session_id);
+    console.log(`Found ${sessionIds.length} sessions with no-show feedback`);
+    
+    // Get current status of these sessions
+    const { data: currentSessions, error: queryError } = await supabase
+      .from('mentor_sessions')
+      .select('id, status')
+      .in('id', sessionIds);
+      
+    if (queryError) {
+      console.error('Error checking current session status:', queryError);
+      return { noShowSynced: 0, noShowError: queryError.message };
+    }
+    
+    // Count how many need updating
+    const sessionsNeedingUpdate = currentSessions.filter(s => s.status !== 'no_show');
+    console.log(`${sessionsNeedingUpdate.length} of ${currentSessions.length} sessions need status update`);
+    
+    if (sessionsNeedingUpdate.length === 0) {
+      return { noShowSynced: 0 };
+    }
     
     // Update these sessions to have no_show status if they're not already marked
     const { data, error: updateError } = await supabase
@@ -86,8 +120,8 @@ async function syncNoShowFeedback(supabase) {
       return { noShowSynced: 0, noShowError: updateError.message };
     }
     
-    console.log(`Synced ${sessionIds.length} sessions to no_show status based on feedback`);
-    return { noShowSynced: sessionIds.length };
+    console.log(`Synced ${sessionsNeedingUpdate.length} sessions to no_show status based on feedback`);
+    return { noShowSynced: sessionsNeedingUpdate.length };
   } catch (error) {
     console.error('Error syncing no-show sessions:', error);
     return { noShowSynced: 0, noShowError: error.message };
@@ -97,6 +131,8 @@ async function syncNoShowFeedback(supabase) {
 // Check for inconsistencies between feedback and session status
 async function checkInconsistencies(supabase) {
   try {
+    console.log("Running checkInconsistencies...");
+    
     // Find sessions where feedback says no-show but status isn't no_show
     const { data: inconsistentSessions, error } = await supabase
       .from('session_feedback')
@@ -120,7 +156,9 @@ async function checkInconsistencies(supabase) {
     
     if (inconsistentSessions && inconsistentSessions.length > 0) {
       console.log(`Found ${inconsistentSessions.length} inconsistent session statuses:`);
-      console.log(JSON.stringify(inconsistentSessions, null, 2));
+      inconsistentSessions.forEach(session => {
+        console.log(`  Session ${session.session_id} has no-show feedback but status is ${session.sessions.status}`);
+      });
     } else {
       console.log('No inconsistencies found');
     }

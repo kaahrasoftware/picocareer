@@ -44,7 +44,8 @@ port = 54329
 verify_jwt = true
 
 [functions.sync-session-feedback-status]
-verify_jwt = true
+verify_jwt = false
+schedule = "@hourly"
 
 [functions.one-time-no-show-sync]
-verify_jwt = true
+verify_jwt = false
