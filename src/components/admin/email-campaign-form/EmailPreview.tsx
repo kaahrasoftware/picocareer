@@ -1,7 +1,10 @@
 
 import React from "react";
 import { ContentType, CONTENT_TYPE_LABELS } from "./utils";
-import { generateEmailContent } from "../../../utils/email-templates";
+import { getContentTypeStyles } from "../../../utils/email-templates/styles";
+import { formatContentCard } from "../../../utils/email-templates/content-cards";
+import { generateBaseTemplate } from "../../../utils/email-templates/base-template";
+import { generateContentHeader } from "../../../utils/email-templates/content-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,34 +122,49 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
       previewHtml = '<div class="text-center p-4 text-gray-500">No content selected for preview</div>';
     } else {
       // Make sure we have the necessary data before generating the email
-      const settings = templateSettings || {
-        id: 'preview',
-        admin_id: 'preview',
-        content_type: contentType,
-        primary_color: "#4f46e5",
-        secondary_color: "#3730a3",
-        accent_color: "#4f46e5",
-        layout_settings: {
-          headerStyle: 'centered' as const,
-          showAuthor: true,
-          showDate: true,
-          imagePosition: 'top' as const,
-          contentBlocks: ['title', 'image', 'description', 'cta'] as string[],
-          metadataDisplay: ['category', 'date', 'author'] as string[]
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      const styles = templateSettings ? {
+        primary: templateSettings.primary_color,
+        secondary: templateSettings.secondary_color,
+        accent: templateSettings.accent_color
+      } : getContentTypeStyles(contentType);
       
-      previewHtml = generateEmailContent(
-        CONTENT_TYPE_LABELS[contentType] || "Content",
-        `Check out these featured ${contentType}!`,
-        "Preview User",
-        "preview-campaign-id",
-        selectedContents,
-        contentType,
-        window.location.origin,
-        settings
+      // Calculate total amount for scholarships
+      const totalAmount = contentType === 'scholarships' 
+        ? calculateTotalAmount(selectedContents)
+        : undefined;
+
+      // Generate header
+      const header = generateContentHeader(contentType, totalAmount, "Preview User", styles);
+      
+      // Generate content cards HTML
+      let contentCardsHtml = '';
+      selectedContents.forEach(item => {
+        // Note fixed parameter order: item, contentType, siteUrl, styles, layoutSettings
+        contentCardsHtml += formatContentCard(
+          item, 
+          contentType, 
+          window.location.origin,
+          styles,
+          templateSettings?.layout_settings
+        );
+      });
+      
+      // Generate main content with header
+      const mainContent = `
+        ${header}
+        
+        <div style="background-color: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+          ${contentCardsHtml}
+        </div>
+      `;
+      
+      // Generate complete email using base template
+      previewHtml = generateBaseTemplate(
+        mainContent, 
+        window.location.origin, 
+        window.location.origin + "/unsubscribe?campaign=preview", 
+        styles, 
+        templateSettings?.logo_url
       );
     }
   } catch (error) {
@@ -177,4 +195,19 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
       </div>
     </div>
   );
+  
+  // Helper function for calculating total scholarship amount
+  function calculateTotalAmount(contentItems: ContentItem[]): string {
+    const total = contentItems.reduce((sum, item) => {
+      const amount = typeof item.amount === 'number' ? item.amount : 0;
+      return sum + amount;
+    }, 0);
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(total);
+  }
 }

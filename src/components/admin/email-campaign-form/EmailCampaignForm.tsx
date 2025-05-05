@@ -63,14 +63,17 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   });
   
   // Helper function to get table name based on content type
-  const getTableName = (type: ContentType): "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools" => {
-    // This ensures we return a properly typed table name that Supabase expects
-    return type as "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools";
+  const getTableName = (type: ContentType) => {
+    // For the mentors type, we need to use the profiles table
+    if (type === 'mentors') {
+      return 'profiles';
+    }
+    return type;
   };
   
   // Helper function to get content type config for field mapping
   const getContentTypeConfig = (type: ContentType): { 
-    tableName: "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools", 
+    tableName: string, 
     titleField: string,
     descriptionField: string,
     imageField: string,
@@ -165,16 +168,23 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         // Build the query with properly typed table name
         let query = supabase
           .from(config.tableName)
-          .select(config.selectFields)
-          .order('created_at', { ascending: false })
-          .limit(50);
+          .select(config.selectFields);
         
         // Apply any filters if they exist
         if (config.filters) {
           Object.entries(config.filters).forEach(([key, value]) => {
+            // @ts-ignore - This is safe as we're building a dynamic query
             query = query.eq(key, value);
           });
         }
+        
+        // For most tables, sort by created_at
+        if (config.tableName !== 'schools' && config.tableName !== 'profiles') {
+          query = query.order('created_at', { ascending: false });
+        }
+        
+        // Limit to 50 results
+        query = query.limit(50);
         
         const { data, error } = await query;
         

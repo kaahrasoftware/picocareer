@@ -1,5 +1,6 @@
 
 import { ContentItem } from "@/types/database/email";
+import { getContentTypeStyles } from "./styles";
 
 /**
  * Formats a content item into an HTML card for email templates

@@ -112,28 +112,38 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
     try {
       console.log("Form submission data:", data);
       
+      // Ensure we have a primary content_id from the first content_ids item
       const primaryContentId = data.content_ids && data.content_ids.length > 0 
         ? data.content_ids[0] 
-        : 'default';
+        : null;
+        
+      if (!primaryContentId) {
+        toast.error('At least one content item must be selected');
+        setIsSaving(false);
+        return;
+      }
+      
+      // Calculate recipients count based on type
+      const recipientsCount = formData.recipientType === 'selected' 
+        ? formData.recipients.length 
+        : await getEstimatedRecipientsCount(formData.recipientType, formData.recipientFilter);
       
       const campaignData = {
         admin_id: session.user.id,
         subject: data.subject,
         body: data.body || '',
         content_type: data.content_type || 'blogs',
-        content_id: primaryContentId, // Required field
+        content_id: primaryContentId, // Required field - set from first content ID
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipients: formData.recipients,
-        recipient_filter: formData.recipientFilter,
+        recipient_filter: formData.recipientFilter ? { filter_type: formData.recipientFilter } : null,
         scheduled_for: data.scheduled_for,
         frequency: data.frequency || 'weekly',
-        status: 'scheduled',
-        sent_count: 0,
-        failed_count: 0,
-        recipients_count: formData.recipientType === 'selected' 
-          ? formData.recipients.length 
-          : 0
+        status: 'planned', // Use 'planned' instead of 'scheduled'
+        sent_count: 0, // Explicitly set to 0
+        failed_count: 0, // Explicitly set to 0
+        recipients_count: recipientsCount
       };
 
       console.log("Submitting campaign data:", campaignData);
@@ -157,7 +167,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
 
       if (error) {
         console.error('Error saving email campaign:', error);
-        toast.error('Failed to save email campaign. Please try again.');
+        toast.error(`Failed to save email campaign: ${error.message}`);
         return;
       }
 
@@ -167,9 +177,34 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error(`An unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Helper function to estimate recipient count
+  const getEstimatedRecipientsCount = async (type: string, filter: string | null): Promise<number> => {
+    try {
+      let query = supabase.from('profiles').select('id', { count: 'exact' });
+      
+      if (type === 'mentees') {
+        query = query.eq('user_type', 'mentee');
+      } else if (type === 'mentors') {
+        query = query.eq('user_type', 'mentor');
+      }
+      
+      const { count, error } = await query;
+      
+      if (error) {
+        console.error('Error getting recipient count:', error);
+        return 0;
+      }
+      
+      return count || 0;
+    } catch (error) {
+      console.error('Error estimating recipients:', error);
+      return 0;
     }
   };
 

@@ -38,23 +38,36 @@ export const useEmailCampaignFormSubmit = ({
       toast.error('Content type is required');
       return;
     }
+    
+    if (!formState.scheduled_for) {
+      toast.error('Scheduled date is required');
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
       console.log('Submitting campaign with data:', { adminId, formState });
       
+      // Calculate recipients count based on type
+      const recipientsCount = formState.recipient_type === 'selected' && formState.recipients 
+        ? formState.recipients.length 
+        : 0;
+      
       const campaignData = {
         admin_id: adminId,
         subject: formState.subject,
         content_type: formState.content_type as ContentType || 'blogs',
-        content_id: formState.content_ids?.[0] || 'default', // Set the first content ID as the primary one
-        content_ids: formState.content_ids,
+        content_id: formState.content_ids?.[0] || '', // Required field - explicitly set from first item
+        content_ids: formState.content_ids || [],
         recipient_type: formState.recipient_type || 'all',
         recipients: formState.recipients || [],
         scheduled_for: formState.scheduled_for,
         frequency: formState.frequency || 'weekly',
-        status: 'scheduled'
+        status: 'planned', // Use 'planned' instead of 'scheduled'
+        sent_count: 0, // Explicitly set to 0
+        failed_count: 0, // Explicitly set to 0
+        recipients_count: recipientsCount
       };
 
       const { data, error } = await supabase
@@ -64,6 +77,7 @@ export const useEmailCampaignFormSubmit = ({
 
       if (error) {
         console.error('Error creating campaign:', error);
+        toast.error(`Failed to create campaign: ${error.message}`);
         throw error;
       }
 
@@ -74,7 +88,8 @@ export const useEmailCampaignFormSubmit = ({
       }
     } catch (error) {
       console.error('Error creating campaign:', error);
-      toast.error('Failed to create campaign. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to create campaign: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
