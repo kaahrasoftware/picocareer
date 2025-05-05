@@ -1,304 +1,230 @@
 
-import React, { useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { 
-  MoreHorizontal, 
-  ArrowUpDown, 
-  Search,
-  Eye,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  RefreshCw,
-  Calendar,
-  Download
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminSessionDetailsDialog } from "./AdminSessionDetailsDialog";
-import { StandardPagination } from "@/components/common/StandardPagination";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addDays } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronLeft, ChevronRight, MessageSquare, ArrowUpDown } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { MentorSession } from "@/types/database/session";
 
 interface SessionsDataTableProps {
   sessions: MentorSession[];
   isLoading: boolean;
+  isError: boolean;
+  error?: Error;
+  page: number;
+  setPage: (page: number) => void;
   totalPages: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  onSearchChange: (value: string) => void;
-  onDateRangeChange: (range: DateRange | undefined) => void;
-  onRefresh: () => void;
-  onExport?: () => void;
-  dateRange?: DateRange;
-  searchQuery: string;
-  sortBy: string; 
-  sortDirection: "asc" | "desc";
-  onSort: (column: string) => void;
+  pageSize: number;
+  setPageSize: (pageSize: number) => void;
+  onViewFeedback: (sessionId: string) => void;
+  onSort?: (columnName: string) => void;
+  currentSortColumn?: string;
+  currentSortDirection?: 'asc' | 'desc';
 }
 
-export function SessionsDataTable({ 
+export function SessionsDataTable({
   sessions,
   isLoading,
+  isError,
+  error,
+  page,
+  setPage,
   totalPages,
-  currentPage,
-  onPageChange,
-  onSearchChange,
-  onDateRangeChange,
-  onRefresh,
-  onExport,
-  dateRange,
-  searchQuery,
-  sortBy,
-  sortDirection,
-  onSort
+  pageSize,
+  setPageSize,
+  onViewFeedback,
+  onSort,
+  currentSortColumn,
+  currentSortDirection
 }: SessionsDataTableProps) {
-  const [selectedSession, setSelectedSession] = useState<MentorSession | null>(null);
-  
+  // Status badge color mapping
   const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "completed":
-        return <Badge variant="success" className="flex gap-1 items-center">
-          <CheckCircle className="h-3 w-3" /> Completed
-        </Badge>;
+    switch (status) {
       case "scheduled":
-        return <Badge variant="outline" className="flex gap-1 items-center">
-          Scheduled
-        </Badge>;
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Scheduled</Badge>;
+      case "completed":
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
       case "cancelled":
-        return <Badge variant="destructive" className="flex gap-1 items-center">
-          <XCircle className="h-3 w-3" /> Cancelled
-        </Badge>;
-      case "no-show":
-        return <Badge variant="warning" className="flex gap-1 items-center">
-          <AlertTriangle className="h-3 w-3" /> No-show
-        </Badge>;
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>;
+      case "no_show":
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">No-show</Badge>;
       default:
-        return <Badge>{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const handleSort = (column: string) => {
-    onSort(column);
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array(3).fill(0).map((_, i) => (
+          <div key={i} className="flex items-center space-x-4 py-3">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[200px]" />
+              <Skeleton className="h-4 w-[150px]" />
+            </div>
+            <div className="ml-auto flex items-center space-x-2">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-8 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-red-500 font-medium">Error loading sessions</p>
+        <p className="text-sm text-muted-foreground mt-1">{error?.message || "Please try again later"}</p>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (sessions.length === 0) {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-muted-foreground">No sessions found</p>
+      </div>
+    );
+  }
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: string }) => {
+    if (column !== currentSortColumn) return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    return (
+      <span className="ml-2">
+        {currentSortDirection === 'asc' ? '↑' : '↓'}
+      </span>
+    );
   };
 
+  // Render data table
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full sm:w-80">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search sessions..."
-            value={searchQuery}
-            onChange={e => onSearchChange(e.target.value)}
-            className="h-9"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <Calendar className="h-4 w-4 mr-2" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "LLL dd, y")} -{" "}
-                      {format(dateRange.to, "LLL dd, y")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "LLL dd, y")
-                  )
-                ) : (
-                  <span>Date Range</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <DatePickerWithRange
-                date={dateRange}
-                onDateChange={onDateRangeChange}
-              />
-            </PopoverContent>
-          </Popover>
-          
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={onRefresh}
-            className="h-9 w-9"
-            title="Refresh"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          
-          {onExport && (
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={onExport}
-              className="h-9 w-9"
-              title="Export to CSV"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-      
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px]">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("scheduled_at")}
-                  className="flex items-center gap-1 p-0 h-auto font-medium"
-                >
-                  Date/Time
-                  <ArrowUpDown className="h-3 w-3" />
-                </Button>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => onSort && onSort("scheduled_at")}
+              >
+                Date 
+                <SortIndicator column="scheduled_at" />
               </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("mentor")}
-                  className="flex items-center gap-1 p-0 h-auto font-medium"
-                >
-                  Mentor
-                  <ArrowUpDown className="h-3 w-3" />
-                </Button>
+              <TableHead>Type</TableHead>
+              <TableHead>Mentor</TableHead>
+              <TableHead>Mentee</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => onSort && onSort("status")}
+              >
+                Status
+                <SortIndicator column="status" />
               </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("mentee")}
-                  className="flex items-center gap-1 p-0 h-auto font-medium"
-                >
-                  Mentee
-                  <ArrowUpDown className="h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("type")}
-                  className="flex items-center gap-1 p-0 h-auto font-medium"
-                >
-                  Session Type
-                  <ArrowUpDown className="h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[100px]">Duration</TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleSort("status")}
-                  className="flex items-center gap-1 p-0 h-auto font-medium"
-                >
-                  Status
-                  <ArrowUpDown className="h-3 w-3" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              Array(5).fill(0).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                </TableRow>
-              ))
-            ) : sessions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  No sessions found.
+            {sessions.map((session) => (
+              <TableRow key={session.id}>
+                <TableCell>
+                  {format(parseISO(session.scheduled_at), 'MMM d, yyyy')}
+                  <div className="text-xs text-muted-foreground">
+                    {format(parseISO(session.scheduled_at), 'h:mm a')}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium">{session.session_type.type}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {session.session_type.duration} min
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={session.mentor.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {session.mentor.full_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {session.mentor.full_name}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={session.mentee.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {session.mentee.full_name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {session.mentee.full_name}
+                  </div>
+                </TableCell>
+                <TableCell>{getStatusBadge(session.status)}</TableCell>
+                <TableCell>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onViewFeedback(session.id)}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>View feedback</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </TableCell>
               </TableRow>
-            ) : (
-              sessions.map((session) => (
-                <TableRow key={session.id}>
-                  <TableCell>
-                    {format(new Date(session.scheduled_at), "MMM d, yyyy h:mm a")}
-                  </TableCell>
-                  <TableCell>
-                    {session.mentor.full_name}
-                  </TableCell>
-                  <TableCell>
-                    {session.mentee.full_name}
-                  </TableCell>
-                  <TableCell>
-                    {session.session_type.type}
-                  </TableCell>
-                  <TableCell>
-                    {session.session_type.duration} min
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(session.status)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setSelectedSession(session)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
       
-      <StandardPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-      />
-      
-      {selectedSession && (
-        <AdminSessionDetailsDialog 
-          session={selectedSession}
-          isOpen={!!selectedSession}
-          onClose={() => setSelectedSession(null)}
-        />
-      )}
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Page {page} of {totalPages}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(page - 1)}
+            disabled={page <= 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setPage(page + 1)}
+            disabled={page >= totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

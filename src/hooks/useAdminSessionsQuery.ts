@@ -46,6 +46,13 @@ export function useAdminSessionsQuery({
           countQuery = countQuery.lte("scheduled_at", endDate);
         }
         
+        if (searchTerm && searchTerm.trim() !== '') {
+          // Join with profiles to search by mentor or mentee name
+          countQuery = countQuery.or(
+            `mentor.full_name.ilike.%${searchTerm}%,mentee.full_name.ilike.%${searchTerm}%`
+          );
+        }
+        
         // Execute count query
         const { count, error: countError } = await countQuery;
         
@@ -94,31 +101,8 @@ export function useAdminSessionsQuery({
         }
         
         if (searchTerm && searchTerm.trim() !== '') {
-          // Using additional join for search (this is more efficient than OR clauses)
+          // Using additional join for search
           query = query
-            .select(`
-              id,
-              scheduled_at,
-              status,
-              notes,
-              meeting_link,
-              meeting_platform,
-              mentor:profiles!mentor_sessions_mentor_id_fkey(
-                id,
-                full_name,
-                avatar_url
-              ),
-              mentee:profiles!mentor_sessions_mentee_id_fkey(
-                id,
-                full_name,
-                avatar_url
-              ),
-              session_type:mentor_session_types!mentor_sessions_session_type_id_fkey(
-                type,
-                duration
-              ),
-              attendance_confirmed
-            `)
             .or(`
               mentor.full_name.ilike.%${searchTerm}%,
               mentee.full_name.ilike.%${searchTerm}%,
