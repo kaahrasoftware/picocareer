@@ -1,8 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, PieChart, Table, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { CircularProgress } from "@/components/ui/circular-progress";
 import { Badge } from "@/components/ui/badge";
 
 interface RegistrationSummaryProps {
@@ -81,20 +80,18 @@ export function RegistrationSummary({
           <h3 className="text-sm font-medium text-muted-foreground">Academic Fields</h3>
           
           {topFields.length > 0 ? (
-            <div className="flex gap-4 pt-2">
+            <div className="flex flex-col gap-4 pt-2">
               {topFields.map(([field, count], index) => (
-                <div key={field} className="flex flex-1 flex-col items-center gap-2 text-center">
-                  <CircularProgress 
-                    value={(count / totalFieldsCount) * 100} 
-                    size={80}
-                    strokeWidth={8}
-                    showValue={false}
-                    className="text-primary"
-                  />
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium">{Math.round((count / totalFieldsCount) * 100)}%</div>
-                    <div className="text-xs text-muted-foreground line-clamp-2">{field}</div>
+                <div key={field} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>{field}</span>
+                    <span className="font-medium">{Math.round((count / totalFieldsCount) * 100)}%</span>
                   </div>
+                  <Progress 
+                    value={(count / totalFieldsCount) * 100} 
+                    className="h-2" 
+                    indicatorClassName={`bg-${['blue', 'green', 'amber'][index] || 'primary'}-500`}
+                  />
                 </div>
               ))}
             </div>

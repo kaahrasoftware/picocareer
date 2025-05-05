@@ -9,6 +9,7 @@ import { EventDetailsDialog } from './EventDetailsDialog';
 import { EventDataTable } from './EventDataTable';
 import { EventDashboardStats } from './EventDashboardStats';
 import { EventSummaryTab } from './EventSummaryTab';
+import { EventRegistrationsTab } from './EventRegistrationsTab';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -60,9 +61,7 @@ export function EventManagementTab() {
         </TabsContent>
 
         <TabsContent value="registrations">
-          <div className="py-8 text-center text-muted-foreground">
-            Event registrations management coming soon
-          </div>
+          <EventRegistrationsTab />
         </TabsContent>
       </Tabs>
 

@@ -1,43 +1,71 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { EventMetricsCards } from './EventMetricsCards';
 import { EventRankingTable } from './EventRankingTable';
 
 export function EventSummaryTab() {
-  const {
-    data: events = [],
-    isLoading
-  } = usePaginatedQuery<any>({
+  // Fetch all events for statistics
+  const { data: events = [], isLoading: isEventsLoading } = useQuery({
     queryKey: ['admin-events-summary'],
-    tableName: 'events',
-    paginationOptions: {
-      limit: 1000 // Large limit to fetch all events for stats calculation
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('start_time', { ascending: false });
+      
+      if (error) throw error;
+      return data;
     }
   });
 
+  // Fetch registration counts
+  const { data: registrationsData = [], isLoading: isRegistrationsLoading } = useQuery({
+    queryKey: ['admin-event-registrations-summary'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('event_id, events(id, title)');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const isLoading = isEventsLoading || isRegistrationsLoading;
+
   // Process event data for statistics
   const stats = React.useMemo(() => {
-    if (isLoading || !events) return null;
+    if (isLoading || !events || !registrationsData) return null;
 
     const now = new Date();
     const upcoming = events.filter(e => e?.start_time && new Date(e.start_time) > now).length;
     const past = events.filter(e => e?.start_time && new Date(e.start_time) <= now).length;
     
-    // Get registration counts
-    const totalRegistrations = events.reduce((total, event) => total + (event.registration_count || 0), 0);
+    // Calculate registration counts per event
+    const regCountsByEvent: Record<string, number> = {};
+    registrationsData.forEach(reg => {
+      if (reg.event_id) {
+        regCountsByEvent[reg.event_id] = (regCountsByEvent[reg.event_id] || 0) + 1;
+      }
+    });
     
-    // Sort events by registration count for ranking
-    const rankedEvents = [...events]
-      .filter(e => e?.registration_count)
-      .sort((a, b) => (b.registration_count || 0) - (a.registration_count || 0))
-      .slice(0, 5) // Top 5 events
-      .map(event => ({
-        id: event.id,
-        title: event.title || 'Untitled Event',
-        registrationCount: event.registration_count || 0
-      }));
+    // Get total registrations
+    const totalRegistrations = Object.values(regCountsByEvent).reduce((sum, count) => sum + count, 0);
+    
+    // Create ranked events by registration count
+    const eventsWithCounts = events.map(event => ({
+      id: event.id,
+      title: event.title || 'Untitled Event',
+      registrationCount: regCountsByEvent[event.id] || 0
+    }));
+    
+    // Sort events by registration count
+    const rankedEvents = eventsWithCounts
+      .sort((a, b) => b.registrationCount - a.registrationCount)
+      .slice(0, 5); // Top 5 events
 
     return {
       totalEvents: events.length,
@@ -46,7 +74,7 @@ export function EventSummaryTab() {
       totalRegistrations,
       rankedEvents
     };
-  }, [events, isLoading]);
+  }, [events, registrationsData, isLoading]);
 
   return (
     <div className="space-y-6">

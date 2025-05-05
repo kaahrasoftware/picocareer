@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -42,7 +42,7 @@ export function useEventRegistrations() {
   });
 
   // Fetch all events for the selector
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -60,22 +60,23 @@ export function useEventRegistrations() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fetch registration counts for each event
   const fetchRegistrationCounts = async () => {
     try {
       const { data, error } = await supabase
         .from('event_registrations')
-        .select('event_id')
+        .select('event_id, count()', { count: 'exact' })
+        .groupBy('event_id');
       
       if (error) throw error;
       
-      // Count registrations for each event
+      // Transform the results into a record object
       const counts: Record<string, number> = {};
-      data.forEach(reg => {
-        if (reg.event_id) {
-          counts[reg.event_id] = (counts[reg.event_id] || 0) + 1;
+      data.forEach((item: any) => {
+        if (item.event_id) {
+          counts[item.event_id] = item.count;
         }
       });
       
@@ -86,7 +87,7 @@ export function useEventRegistrations() {
   };
 
   // Fetch analytics data when an event is selected
-  const fetchEventAnalytics = async () => {
+  const fetchEventAnalytics = useCallback(async () => {
     if (selectedEvent === 'all') {
       setCountriesData({});
       setAcademicFieldsData({});
@@ -111,7 +112,7 @@ export function useEventRegistrations() {
 
       // Count countries
       const countries: Record<string, number> = {};
-      data.forEach(reg => {
+      data.forEach((reg: any) => {
         const country = reg.country || 'Unknown';
         countries[country] = (countries[country] || 0) + 1;
       });
@@ -119,7 +120,7 @@ export function useEventRegistrations() {
 
       // Count academic fields
       const fields: Record<string, number> = {};
-      data.forEach(reg => {
+      data.forEach((reg: any) => {
         const field = reg["current academic field/position"] || 'Unknown';
         fields[field] = (fields[field] || 0) + 1;
       });
@@ -129,12 +130,14 @@ export function useEventRegistrations() {
     } finally {
       setIsLoadingAnalytics(false);
     }
-  };
+  }, [selectedEvent, events]);
 
   // Update analytics when selected event changes
   useEffect(() => {
-    fetchEventAnalytics();
-  }, [selectedEvent]);
+    if (events.length > 0) {
+      fetchEventAnalytics();
+    }
+  }, [selectedEvent, events, fetchEventAnalytics]);
 
   const currentEventRegistrationCount = useMemo(() => {
     return selectedEvent !== 'all' ? (registrationCounts[selectedEvent] || 0) : totalCount;

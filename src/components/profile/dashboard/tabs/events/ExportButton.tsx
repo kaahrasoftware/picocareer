@@ -1,10 +1,8 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
-import { toast } from 'sonner';
 
 interface ExportButtonProps {
   selectedEvent: string;
@@ -13,91 +11,90 @@ interface ExportButtonProps {
 }
 
 export function ExportButton({ selectedEvent, searchQuery, eventTitle }: ExportButtonProps) {
-  const [isExporting, setIsExporting] = useState(false);
-  
   const handleExport = async () => {
-    setIsExporting(true);
     try {
-      let query = supabase
-        .from('event_registrations')
-        .select(`
-          id, first_name, last_name, email, country, 
-          status, created_at, 
-          "current academic field/position", "current school/company",
-          events(id, title)
-        `);
+      let query = supabase.from('event_registrations').select(`
+        first_name,
+        last_name,
+        email,
+        country,
+        "current academic field/position",
+        "current school/company",
+        status,
+        created_at
+      `);
       
+      // Apply filters
       if (selectedEvent !== 'all') {
         query = query.eq('event_id', selectedEvent);
       }
-
+      
       if (searchQuery) {
         query = query.ilike('email', `%${searchQuery}%`);
       }
-
+      
       const { data, error } = await query;
       
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Format the data for CSV
-        const formattedData = data.map(reg => ({
-          'First Name': reg.first_name,
-          'Last Name': reg.last_name,
-          'Email': reg.email,
-          'Country': reg.country || 'Not specified',
-          'Academic Field/Position': reg["current academic field/position"] || 'Not specified',
-          'School/Company': reg["current school/company"] || 'Not specified',
-          'Event': reg.events?.title || 'Unknown Event',
-          'Registration Date': format(new Date(reg.created_at), 'yyyy-MM-dd HH:mm:ss'),
-          'Status': reg.status
-        }));
-
         // Convert to CSV
-        const header = Object.keys(formattedData[0]).join(',');
-        const rows = formattedData.map(row => 
-          Object.values(row).map(val => `"${val}"`).join(',')
-        );
-        const csv = [header, ...rows].join('\n');
+        const headers = [
+          'First Name',
+          'Last Name',
+          'Email',
+          'Country',
+          'Academic Field/Position',
+          'School/Company',
+          'Status',
+          'Registration Date'
+        ];
         
-        // Create and download the file
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const csvRows = [headers.join(',')];
+        
+        data.forEach(row => {
+          const values = [
+            `"${row.first_name || ''}"`,
+            `"${row.last_name || ''}"`,
+            `"${row.email || ''}"`,
+            `"${row.country || ''}"`,
+            `"${row['current academic field/position'] || ''}"`,
+            `"${row['current school/company'] || ''}"`,
+            `"${row.status || ''}"`,
+            `"${new Date(row.created_at).toLocaleString()}"`,
+          ];
+          csvRows.push(values.join(','));
+        });
+        
+        // Create and download file
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.href = url;
         
-        // Use the event title in the filename if available
-        const filename = selectedEvent !== 'all' && eventTitle
-          ? `${eventTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-registrations-${new Date().toISOString().split('T')[0]}.csv`
-          : `event-registrations-${new Date().toISOString().split('T')[0]}.csv`;
+        link.setAttribute('href', url);
+        link.setAttribute('download', 
+          `${selectedEvent !== 'all' ? eventTitle : 'All'}_registrations_${new Date().toISOString().split('T')[0]}.csv`
+        );
+        link.style.visibility = 'hidden';
         
-        link.setAttribute('download', filename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        toast.success(`Successfully exported ${data.length} registrations`);
-      } else {
-        toast.info('No registrations to export');
       }
-    } catch (error: any) {
-      console.error('Error exporting registrations:', error.message);
-      toast.error('Failed to export registrations');
-    } finally {
-      setIsExporting(false);
+    } catch (error) {
+      console.error('Error exporting registrations:', error);
     }
   };
-
+  
   return (
-    <Button
-      onClick={handleExport}
+    <Button 
+      onClick={handleExport} 
+      variant="outline" 
       className="flex items-center gap-2"
-      disabled={isExporting}
     >
       <Download className="h-4 w-4" />
-      {isExporting ? 'Exporting...' : selectedEvent !== 'all' 
-        ? `Export ${eventTitle || 'Event'} Registrations` 
-        : 'Export All Registrations'}
+      <span>Export CSV</span>
     </Button>
   );
 }
