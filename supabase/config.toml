@@ -1,28 +1,50 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
-[functions.google-auth]
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+port = 54325
+
+[auth]
+enabled = true
+port = 54326
+
+[realtime]
+enabled = true
+port = 54327
+
+[analytics]
+enabled = false
+port = 54328
+
+[vector]
+enabled = false
+port = 54329
+
+[functions.update-past-sessions]
 verify_jwt = true
 
-[functions.manage-session]
+[functions.sync-session-feedback-status]
 verify_jwt = true
 
-[functions.reschedule_session]
+[functions.one-time-no-show-sync]
 verify_jwt = true
-
-[functions.cancel_session]
-verify_jwt = true
-
-[functions.send-session-reminder]
-verify_jwt = true
-
-[functions.send-session-email]
-verify_jwt = false
-
-[functions.check-scheduled-reminders]
-verify_jwt = false
-
-[functions.send-campaign-emails]
-verify_jwt = true
-
-[functions.check-scheduled-campaigns]
-verify_jwt = false
