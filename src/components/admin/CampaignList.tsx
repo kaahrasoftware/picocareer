@@ -15,7 +15,7 @@ interface CampaignListProps {
 export function CampaignList({ adminId }: CampaignListProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
 
   const loadCampaigns = async () => {
