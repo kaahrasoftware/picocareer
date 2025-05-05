@@ -7,6 +7,7 @@ import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { EmailContentsTab } from "@/components/admin/email-templates/EmailContentsTab";
 import { toast } from "sonner";
 
 export default function AdminEmailCampaigns() {
@@ -37,6 +38,7 @@ export default function AdminEmailCampaigns() {
         <TabsList>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="template-settings">Template Settings</TabsTrigger>
+          <TabsTrigger value="email-contents">Email Contents</TabsTrigger>
         </TabsList>
 
         <TabsContent value="campaigns">
@@ -63,6 +65,10 @@ export default function AdminEmailCampaigns() {
 
         <TabsContent value="template-settings">
           <TemplateSettingsTab adminId={profile.id} />
+        </TabsContent>
+
+        <TabsContent value="email-contents">
+          <EmailContentsTab adminId={profile.id} />
         </TabsContent>
       </Tabs>
     </div>

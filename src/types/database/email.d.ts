@@ -1,3 +1,4 @@
+
 export interface EmailTemplateSettings {
   id: string;
   admin_id: string;
@@ -31,6 +32,16 @@ export interface EmailContentTypeSettings {
     cta_text?: string;
     footer_text?: string;
   };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailHtmlTemplate {
+  id: string;
+  admin_id: string;
+  content_type: string;
+  template_type: string;
+  html_content: string;
   created_at: string;
   updated_at: string;
 }
