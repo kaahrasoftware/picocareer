@@ -7,16 +7,26 @@ import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { toast } from "sonner";
 
 export default function AdminEmailCampaigns() {
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [activeTab, setActiveTab] = useState("campaigns");
+  const [campaignListKey, setCampaignListKey] = useState(0);
 
   if (!profile) return null;
   if (profile.user_type !== "admin") {
     return <Navigate to="/" replace />;
   }
+
+  const handleCampaignCreated = (campaignId: string) => {
+    toast.success("Campaign created successfully! Refreshing page...");
+    // Use setTimeout to allow the toast to be visible before refresh
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  };
 
   return (
     <div className="container py-8">
@@ -35,14 +45,15 @@ export default function AdminEmailCampaigns() {
                 </h1>
                 <EmailCampaignForm
                   adminId={profile.id}
-                  onCampaignCreated={() => {
-                    // nothing additional, CampaignList reloads via effect on adminId prop change
-                  }}
+                  onCampaignCreated={handleCampaignCreated}
                 />
               </div>
             </div>
             <div className="md:col-span-2">
-              <CampaignList adminId={profile.id} />
+              <CampaignList 
+                adminId={profile.id} 
+                key={campaignListKey} 
+              />
             </div>
           </div>
         </TabsContent>

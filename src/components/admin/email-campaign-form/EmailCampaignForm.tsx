@@ -38,16 +38,23 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   const { form, isValid, setValue } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
       if (campaignId) {
-        toast.success('Campaign created successfully!');
-        onCampaignCreated?.(campaignId);
+        if (onCampaignCreated) {
+          onCampaignCreated(campaignId);
+        }
         
         // Reset form state
-        setSelectedContentIds([]);
-        setSubject('');
-        setScheduledFor('');
+        resetForm();
       }
     }
   });
+
+  const resetForm = () => {
+    setSelectedContentIds([]);
+    setSubject('');
+    setScheduledFor('');
+    setRandomSelect(false);
+    // Keep other settings like recipient type and frequency as they may be reused
+  };
 
   const { availableRecipients, isFetchingRecipients } = useEmailCampaignFormState();
   
@@ -59,7 +66,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       content_ids: selectedContentIds,
       recipient_type: recipientType,
       recipient_filter: recipientType === 'selected' 
-        ? { profile_ids: recipientIds } // Changed from recipient_ids to profile_ids
+        ? { profile_ids: recipientIds }
         : recipientType === 'mentees' 
           ? { filter_type: 'mentee' } 
           : recipientType === 'mentors' 
@@ -280,7 +287,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       
       // Create a properly formatted recipient_filter based on selection
       if (recipientType === 'selected') {
-        setValue('recipient_filter', { profile_ids: recipientIds }); // Changed from recipient_ids to profile_ids
+        setValue('recipient_filter', { profile_ids: recipientIds });
       } else if (recipientType === 'mentees') {
         setValue('recipient_filter', { filter_type: 'mentee' });
       } else if (recipientType === 'mentors') {

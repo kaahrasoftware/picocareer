@@ -111,7 +111,7 @@ export const useEmailCampaignFormSubmit = ({
         throw error;
       }
 
-      toast.success('Campaign created successfully');
+      // We've moved the success toast to the parent component for better flow control
       
       if (data && data[0] && onSuccess) {
         onSuccess(data[0].id);
