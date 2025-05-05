@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import {
   Download, 
   Filter, 
   Search as SearchIcon,
-  SlidersHorizontal
+  SlidersHorizontal,
+  UserCheck
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,8 @@ import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { Badge } from '@/components/ui/badge';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { supabase } from '@/integrations/supabase/client';
 
 export function SessionManagementTab() {
   // State for filters and pagination
@@ -39,6 +41,12 @@ export function SessionManagementTab() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   
+  // State for the sync operation
+  const [isSyncing, setIsSyncing] = useState(false);
+  
+  // Get session for authentication
+  const { session } = useAuthSession();
+
   // Toast notification
   const { toast } = useToast();
   
@@ -135,6 +143,56 @@ export function SessionManagementTab() {
     }
   };
 
+  // New function to run the one-time no-show sync
+  const handleRunNoShowSync = async () => {
+    if (!session?.access_token) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in as an admin to perform this action.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('one-time-no-show-sync', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error syncing no-show sessions:", error);
+        toast({
+          title: "Sync failed",
+          description: error.message || "An error occurred while syncing no-show sessions.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Sync result:", data);
+      toast({
+        title: "Sync completed",
+        description: `Updated ${data.message}`,
+      });
+
+      // Refresh the data to show updated statuses
+      refetch();
+
+    } catch (err: any) {
+      console.error("Error in sync function:", err);
+      toast({
+        title: "Sync error",
+        description: err.message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -171,6 +229,17 @@ export function SessionManagementTab() {
           >
             <Download className="mr-2 h-4 w-4" />
             Export
+          </Button>
+          
+          {/* New sync button for admin users */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleRunNoShowSync}
+            disabled={isSyncing}
+          >
+            <UserCheck className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? "Syncing..." : "Sync No-Shows"}
           </Button>
         </div>
       </div>
