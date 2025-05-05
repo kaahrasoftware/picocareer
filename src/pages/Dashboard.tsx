@@ -1,4 +1,5 @@
-import { DashboardTab } from "@/components/profile/DashboardTab";
+
+import { DashboardTab } from "@/components/profile/dashboard/tabs/DashboardTab";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Navigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
