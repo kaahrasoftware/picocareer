@@ -42,21 +42,42 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
           return null;
         }
 
-        // Cast and merge with default values
+        // Cast and merge with default values for the type
+        const defaultLayoutSettings = {
+          headerStyle: 'centered' as const,
+          showAuthor: true,
+          showDate: true,
+          imagePosition: 'top' as const,
+          contentBlocks: ['title', 'image', 'description', 'cta'] as string[],
+          metadataDisplay: ['category', 'date', 'author'] as string[]
+        };
+
+        // Return properly typed settings object
+        if (globalSettings) {
+          return {
+            id: globalSettings.id,
+            admin_id: globalSettings.admin_id,
+            content_type: contentType,
+            primary_color: globalSettings.primary_color || "#4f46e5",
+            secondary_color: globalSettings.secondary_color || "#3730a3",
+            accent_color: globalSettings.accent_color || "#4f46e5",
+            layout_settings: defaultLayoutSettings,
+            created_at: globalSettings.created_at,
+            updated_at: globalSettings.updated_at
+          } as EmailContentTypeSettings;
+        }
+        
+        // Fallback default values
         return {
-          ...globalSettings,
+          id: '',
+          admin_id: '',
           content_type: contentType,
-          primary_color: globalSettings?.primary_color || "#4f46e5",
-          secondary_color: globalSettings?.secondary_color || "#3730a3",
-          accent_color: globalSettings?.accent_color || "#4f46e5",
-          layout_settings: {
-            headerStyle: 'centered',
-            showAuthor: true,
-            showDate: true,
-            imagePosition: 'top',
-            contentBlocks: ['title', 'image', 'description', 'cta'],
-            metadataDisplay: ['category', 'date', 'author']
-          }
+          primary_color: "#4f46e5",
+          secondary_color: "#3730a3",
+          accent_color: "#4f46e5",
+          layout_settings: defaultLayoutSettings,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         } as EmailContentTypeSettings;
       } catch (error) {
         console.error("Error in template settings query:", error);
@@ -98,18 +119,23 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
       previewHtml = '<div class="text-center p-4 text-gray-500">No content selected for preview</div>';
     } else {
       // Make sure we have the necessary data before generating the email
-      const styles = templateSettings || {
+      const settings = templateSettings || {
+        id: 'preview',
+        admin_id: 'preview',
+        content_type: contentType,
         primary_color: "#4f46e5",
         secondary_color: "#3730a3",
         accent_color: "#4f46e5",
         layout_settings: {
-          headerStyle: 'centered',
+          headerStyle: 'centered' as const,
           showAuthor: true,
           showDate: true,
-          imagePosition: 'top',
-          contentBlocks: ['title', 'image', 'description', 'cta'],
-          metadataDisplay: ['category', 'date', 'author']
-        }
+          imagePosition: 'top' as const,
+          contentBlocks: ['title', 'image', 'description', 'cta'] as string[],
+          metadataDisplay: ['category', 'date', 'author'] as string[]
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       previewHtml = generateEmailContent(
@@ -120,7 +146,7 @@ export function EmailPreview({ selectedContentIds, contentList, contentType }: E
         selectedContents,
         contentType,
         window.location.origin,
-        styles
+        settings
       );
     }
   } catch (error) {

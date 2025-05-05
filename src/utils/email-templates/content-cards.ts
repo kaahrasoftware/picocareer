@@ -1,157 +1,144 @@
 
 import { ContentItem } from "@/types/database/email";
 
+/**
+ * Formats a content item into an HTML card for email templates
+ */
 export function formatContentCard(
-  content: ContentItem, 
-  contentType: string, 
+  item: ContentItem,
+  contentType: string,
   siteUrl: string,
   styles: { primary: string; secondary: string; accent: string },
   layoutSettings?: {
-    imagePosition: 'top' | 'inline' | 'side';
-    showDate: boolean;
-    showAuthor: boolean;
-    contentBlocks: string[];
-    metadataDisplay: string[];
+    headerStyle?: string;
+    showAuthor?: boolean;
+    showDate?: boolean;
+    imagePosition?: string;
+    contentBlocks?: string[];
+    metadataDisplay?: string[];
   }
 ): string {
-  if (!content) return '';
-  
-  const defaultLayoutSettings = {
-    imagePosition: 'top' as const,
-    showDate: true,
+  // Default layout settings if none provided
+  const settings = layoutSettings || {
+    headerStyle: 'centered',
     showAuthor: true,
+    showDate: true,
+    imagePosition: 'top',
     contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
     metadataDisplay: ['category', 'date', 'author']
   };
-  
-  // Use provided layout settings or defaults
-  const settings = layoutSettings || defaultLayoutSettings;
-  
-  // Get the content image
-  const imageUrl = content.cover_image_url || content.image_url || content.avatar_url || '';
-  const title = content.title || (contentType === 'schools' ? content.name : 'Untitled');
-  
-  // Truncate description if it's too long
-  const description = content.description 
-    ? (content.description.length > 150 ? content.description.substring(0, 147) + '...' : content.description)
-    : '';
-  
-  // Format display based on content type
-  let metadataHtml = '';
-  
-  // Show image based on layout settings
-  const showImage = settings.contentBlocks.includes('image') && imageUrl;
-  const imageHtml = showImage ? `
-    <img 
-      src="${imageUrl}" 
-      alt="${title}"
-      style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; object-fit: cover; max-height: 200px;"
-    />
-  ` : '';
-  
-  // Add type-specific metadata if layout includes it
-  if (settings.contentBlocks.includes('metadata')) {
-    switch (contentType) {
-      case 'scholarships':
-        if (content.provider_name) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>`;
-        }
-        if (content.amount) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Amount: $${content.amount}</p>`;
-        }
-        if (content.deadline) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Deadline: ${new Date(content.deadline).toLocaleDateString()}</p>`;
-        }
-        break;
-        
-      case 'opportunities':
-        if (content.provider_name) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Provider: ${content.provider_name}</p>`;
-        }
-        if (content.compensation) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Compensation: ${content.compensation}</p>`;
-        }
-        if (content.location) {
-          const remoteLabel = content.remote ? " (Remote available)" : "";
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${content.location}${remoteLabel}</p>`;
-        }
-        break;
-        
-      case 'careers':
-        if (content.industry) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Industry: ${content.industry}</p>`;
-        }
-        if (content.salary_range) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Salary Range: ${content.salary_range}</p>`;
-        }
-        break;
-        
-      case 'mentors':
-        if (content.skills && Array.isArray(content.skills) && content.skills.length > 0) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Skills: ${content.skills.slice(0, 3).join(', ')}</p>`;
-        }
-        if (content.location) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${content.location}</p>`;
-        }
-        break;
-        
-      case 'events':
-        if (content.start_time) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Date: ${new Date(content.start_time).toLocaleDateString()}</p>`;
-        }
-        if (content.organized_by) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Organized by: ${content.organized_by}</p>`;
-        }
-        break;
-        
-      case 'schools':
-        if (content.type) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Type: ${content.type}</p>`;
-        }
-        if (content.location) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Location: ${content.location}</p>`;
-        }
-        break;
-        
-      case 'majors':
-        if (content.potential_salary) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Potential Salary: ${content.potential_salary}</p>`;
-        }
-        if (content.category && Array.isArray(content.category)) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280;">Category: ${content.category.join(', ')}</p>`;
-        }
-        break;
 
-      case 'blogs':
-        if (content.categories && Array.isArray(content.categories)) {
-          metadataHtml += `<p style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">Categories: ${content.categories.join(', ')}</p>`;
-        }
-        break;
-    }
+  // Get the formatted date if available
+  const formattedDate = item.created_at 
+    ? new Date(item.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    : '';
+
+  // Get display properties based on content type
+  const title = item.title || `Untitled ${contentType}`;
+  const description = item.description || '';
+  const imageUrl = item.cover_image_url || item.image_url || '';
+  const author = item.author_name || '';
+  const category = Array.isArray(item.categories) && item.categories.length > 0 
+    ? item.categories[0] 
+    : contentType;
+
+  // Determine the content link
+  let contentLink = `${siteUrl}`;
+  switch (contentType) {
+    case 'blogs':
+      contentLink += `/blog/${item.id}`;
+      break;
+    case 'careers':
+      contentLink += `/career/${item.id}`;
+      break;
+    case 'majors':
+      contentLink += `/program/${item.id}`;
+      break;
+    case 'scholarships':
+      contentLink += `/scholarship/${item.id}`;
+      break;
+    case 'opportunities':
+      contentLink += `/opportunity/${item.id}`;
+      break;
+    case 'mentors':
+      contentLink += `/profile/${item.id}`;
+      break;
+    case 'events':
+      contentLink += `/event/${item.id}`;
+      break;
+    case 'schools':
+      contentLink += `/school/${item.id}`;
+      break;
+    default:
+      contentLink += `/${contentType}/${item.id}`;
   }
 
+  // Build and return the HTML for the content card
   return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background-color: white;">
-      <div style="padding: 16px;">
-        ${imageHtml}
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
-          ${title}
-        </h3>
-        ${metadataHtml}
-        ${description && settings.contentBlocks.includes('description') ? `
-          <p style="color: #4b5563; margin-bottom: 12px; font-size: 14px;">
-            ${description}
+    <div style="margin-bottom: 32px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+      ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'top' ? `
+        <div style="width: 100%; height: 200px; overflow: hidden; background-color: #f3f4f6;">
+          <img 
+            src="${imageUrl}" 
+            alt="${title}" 
+            style="width: 100%; height: 100%; object-fit: cover;"
+          />
+        </div>
+      ` : ''}
+      
+      <div style="padding: 20px;">
+        ${settings.contentBlocks?.includes('title') ? `
+          <h2 style="margin-top: 0; margin-bottom: 8px; color: #1f2937; font-size: 18px; font-weight: 600;">
+            <a href="${contentLink}" style="color: ${styles.primary}; text-decoration: none;">
+              ${title}
+            </a>
+          </h2>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('metadata') ? `
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: #6b7280;">
+            ${settings.metadataDisplay?.includes('category') ? `
+              <span style="color: ${styles.accent}; font-weight: 500;">${category}</span>
+            ` : ''}
+            
+            ${settings.metadataDisplay?.includes('date') && formattedDate ? `
+              <span>${formattedDate}</span>
+            ` : ''}
+            
+            ${settings.metadataDisplay?.includes('author') && author ? `
+              <span>By ${author}</span>
+            ` : ''}
+          </div>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'inline' ? `
+          <div style="width: 100%; height: 200px; overflow: hidden; margin: 16px 0; background-color: #f3f4f6;">
+            <img 
+              src="${imageUrl}" 
+              alt="${title}" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+            />
+          </div>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('description') && description ? `
+          <p style="margin-top: 0; margin-bottom: 16px; color: #4b5563; font-size: 14px; line-height: 1.5;">
+            ${description.length > 150 ? description.substring(0, 150) + '...' : description}
           </p>
         ` : ''}
-        ${settings.contentBlocks.includes('cta') ? `
-          <div style="margin-top: 16px;">
-            <a 
-              href="${siteUrl}/${contentType}/${content.id}" 
-              style="display: inline-block; background: linear-gradient(135deg, ${styles.primary}, ${styles.secondary}); color: white; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 500;"
-            >
-              Learn More
-            </a>
-          </div>
+        
+        ${settings.contentBlocks?.includes('cta') ? `
+          <a 
+            href="${contentLink}" 
+            style="display: inline-block; padding: 8px 16px; background-color: ${styles.accent}; color: white; 
+                  text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 500;"
+          >
+            Read More
+          </a>
         ` : ''}
       </div>
     </div>

@@ -110,19 +110,33 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
 
     setIsSaving(true);
     try {
+      console.log("Form submission data:", data);
+      
+      const primaryContentId = data.content_ids && data.content_ids.length > 0 
+        ? data.content_ids[0] 
+        : 'default';
+      
       const campaignData = {
         admin_id: session.user.id,
         subject: data.subject,
         body: data.body || '',
         content_type: data.content_type || 'blogs',
-        content_id: data.content_ids && data.content_ids.length > 0 ? data.content_ids[0] : 'default', // Required field
+        content_id: primaryContentId, // Required field
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipients: formData.recipients,
         recipient_filter: formData.recipientFilter,
+        scheduled_for: data.scheduled_for,
         frequency: data.frequency || 'weekly',
-        status: 'planned'
+        status: 'scheduled',
+        sent_count: 0,
+        failed_count: 0,
+        recipients_count: formData.recipientType === 'selected' 
+          ? formData.recipients.length 
+          : 0
       };
+
+      console.log("Submitting campaign data:", campaignData);
 
       let response;
       
@@ -148,7 +162,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess }: UseEmailCampa
       }
 
       toast.success('Email campaign saved successfully!');
-      // Fix TypeScript error by safely casting the unknown value to string
+      // Cast the unknown value to string for typesafety
       const campaignId = savedData?.[0]?.id as string | undefined;
       onSuccess?.(campaignId);
     } catch (error) {

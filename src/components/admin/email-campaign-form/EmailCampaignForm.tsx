@@ -51,14 +51,26 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
   } = useEmailCampaignFormState({
     onSuccess: (campaignId) => {
       if (campaignId) {
+        toast.success('Campaign created successfully!');
         onCampaignCreated?.(campaignId);
+        
+        // Reset form state
+        setSelectedContentIds([]);
+        setSubject('');
+        setScheduledFor('');
       }
     }
   });
   
-  // Helper function to get table name and field mapping for content type
+  // Helper function to get table name based on content type
+  const getTableName = (type: ContentType): "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools" => {
+    // This ensures we return a properly typed table name that Supabase expects
+    return type as "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools";
+  };
+  
+  // Helper function to get content type config for field mapping
   const getContentTypeConfig = (type: ContentType): { 
-    tableName: string, 
+    tableName: "blogs" | "careers" | "events" | "majors" | "mentors" | "opportunities" | "scholarships" | "schools", 
     titleField: string,
     descriptionField: string,
     imageField: string,
@@ -68,7 +80,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     switch (type) {
       case 'blogs':
         return {
-          tableName: 'blogs',
+          tableName: "blogs",
           titleField: 'title',
           descriptionField: 'summary',
           imageField: 'cover_image_url',
@@ -76,7 +88,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'careers':
         return {
-          tableName: 'careers',
+          tableName: "careers",
           titleField: 'title',
           descriptionField: 'description',
           imageField: 'image_url',
@@ -84,7 +96,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'events':
         return {
-          tableName: 'events',
+          tableName: "events",
           titleField: 'title',
           descriptionField: 'description',
           imageField: 'thumbnail_url',
@@ -92,7 +104,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'majors':
         return {
-          tableName: 'majors',
+          tableName: "majors",
           titleField: 'title',
           descriptionField: 'description',
           imageField: '',
@@ -100,7 +112,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'mentors':
         return {
-          tableName: 'profiles',
+          tableName: "profiles",
           titleField: 'full_name',
           descriptionField: 'bio',
           imageField: 'avatar_url',
@@ -109,7 +121,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'opportunities':
         return {
-          tableName: 'opportunities',
+          tableName: "opportunities",
           titleField: 'title',
           descriptionField: 'description',
           imageField: 'cover_image_url',
@@ -117,7 +129,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'scholarships':
         return {
-          tableName: 'scholarships',
+          tableName: "scholarships",
           titleField: 'title',
           descriptionField: 'description',
           imageField: 'image_url',
@@ -125,7 +137,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       case 'schools':
         return {
-          tableName: 'schools',
+          tableName: "schools",
           titleField: 'name',
           descriptionField: '',
           imageField: '',
@@ -133,7 +145,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         };
       default:
         return {
-          tableName: 'blogs',
+          tableName: "blogs",
           titleField: 'title',
           descriptionField: 'summary',
           imageField: 'cover_image_url',
@@ -150,7 +162,7 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
         const config = getContentTypeConfig(contentType);
         console.log(`Fetching content from table: ${config.tableName} with fields: ${config.selectFields}`);
         
-        // Build the query
+        // Build the query with properly typed table name
         let query = supabase
           .from(config.tableName)
           .select(config.selectFields)
@@ -202,6 +214,11 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     }
   }, [randomSelect, randomCount, contentList]);
 
+  // Reset selected content when content type changes
+  useEffect(() => {
+    setSelectedContentIds([]);
+  }, [contentType]);
+
   const handleFormSubmit = () => {
     if (!subject) {
       toast.error('Please enter a subject');
@@ -218,6 +235,12 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
       return;
     }
     
+    if (!scheduledFor) {
+      toast.error('Please select a scheduled date and time');
+      return;
+    }
+    
+    // Set form values for submission
     setValue('subject', subject);
     setValue('content_type', contentType);
     setValue('content_ids', selectedContentIds);
@@ -226,17 +249,25 @@ const EmailCampaignForm: React.FC<EmailCampaignFormProps> = ({ adminId, onCampai
     setValue('scheduled_for', scheduledFor);
     setValue('frequency', frequency);
     
+    console.log("Submitting form with data:", {
+      subject,
+      content_type: contentType,
+      content_ids: selectedContentIds,
+      recipient_type: recipientType,
+      recipients: recipientIds,
+      scheduled_for: scheduledFor,
+      frequency: frequency,
+      adminId
+    });
+    
+    // Execute the form submission
     handleSubmit(onSubmit)();
   };
 
-  // Reset selected content when content type changes
-  useEffect(() => {
-    setSelectedContentIds([]);
-  }, [contentType]);
-
   const hasRequiredFields = subject && 
     (selectedContentIds.length > 0 || randomSelect) && 
-    (recipientType !== 'selected' || (recipientType === 'selected' && recipientIds.length > 0));
+    (recipientType !== 'selected' || (recipientType === 'selected' && recipientIds.length > 0)) &&
+    scheduledFor;
 
   return (
     <div className="space-y-6">
