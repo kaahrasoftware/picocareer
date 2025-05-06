@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { CampaignCard } from "./CampaignCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import type { Campaign } from "@/types/database/email";
 
 interface CampaignListProps {
@@ -15,12 +15,15 @@ interface CampaignListProps {
 export function CampaignList({ adminId }: CampaignListProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true); // Start with loading to show initial state
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadCampaigns = async () => {
     setLoadingCampaigns(true);
     try {
+      console.log('Loading campaigns for admin ID:', adminId);
+      
       const { data, error } = await supabase
         .from('email_campaigns')
         .select(`
@@ -49,6 +52,8 @@ export function CampaignList({ adminId }: CampaignListProps) {
 
       if (error) throw error;
       
+      console.log('Campaigns loaded:', data?.length || 0);
+      
       // Ensure we have all required fields for the Campaign type
       const typedCampaigns: Campaign[] = (data || []).map(item => ({
         ...item,
@@ -64,13 +69,11 @@ export function CampaignList({ adminId }: CampaignListProps) {
       
       setCampaigns(typedCampaigns);
     } catch (err: any) {
-      toast({
-        title: "Error loading campaigns",
-        description: err.message,
-        variant: "destructive"
-      });
+      console.error('Error loading campaigns:', err);
+      toast.error('Could not load campaigns. Please try again.');
     } finally {
       setLoadingCampaigns(false);
+      setRefreshing(false);
     }
   };
 
@@ -102,18 +105,10 @@ export function CampaignList({ adminId }: CampaignListProps) {
         );
       }
 
-      toast({
-        title: "Campaign sent successfully",
-        description: `Sent to ${data.sent} recipients (${data.failed} failed)`
-      });
-
+      toast.success(`Campaign sent successfully to ${data.sent} recipients`);
       loadCampaigns();
     } catch (err: any) {
-      toast({
-        title: "Error sending campaign",
-        description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
-        variant: "destructive"
-      });
+      toast.error(`Error sending campaign: ${err?.message || "Unknown error"}`);
       console.error("Send campaign error (caught in handler):", err);
     } finally {
       setSendingCampaign(null);
@@ -135,31 +130,23 @@ export function CampaignList({ adminId }: CampaignListProps) {
           "Unknown error: No valid response from campaign scheduler function. Check edge logs."
         );
       }
-      toast({
-        title: "Checked scheduled campaigns",
-        description: data.campaigns_processed
-          ? `Processed ${data.campaigns_processed} campaigns`
-          : (data.message || "No campaigns due for sending")
-      });
+      toast.success(data.campaigns_processed
+        ? `Processed ${data.campaigns_processed} campaigns`
+        : (data.message || "No campaigns due for sending"));
+        
       loadCampaigns();
     } catch (err: any) {
-      toast({
-        title: "Error checking scheduled campaigns",
-        description: err?.message ?? "Unknown error occurred. Check network and edge function logs.",
-        variant: "destructive"
-      });
+      toast.error(`Error checking scheduled campaigns: ${err?.message || "Unknown error"}`);
       console.error("Check scheduled campaigns error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (adminId) {
-      loadCampaigns();
-    }
-    // eslint-disable-next-line
-  }, [adminId]);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadCampaigns();
+  };
 
   return (
     <div>
@@ -185,33 +172,41 @@ export function CampaignList({ adminId }: CampaignListProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadCampaigns}
-            disabled={loadingCampaigns}
+            onClick={handleRefresh}
+            disabled={loadingCampaigns || refreshing}
             className="border-primary/20 hover:border-primary/40 transition-colors"
           >
-            {loadingCampaigns ? (
+            {loadingCampaigns || refreshing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading...
               </>
-            ) : "Refresh"}
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </>
+            )}
           </Button>
         </div>
       </div>
       
-      {campaigns.length === 0 ? (
+      {loadingCampaigns ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <div className="flex justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+            <p className="mt-2 text-muted-foreground">Loading campaigns...</p>
+          </CardContent>
+        </Card>
+      ) : campaigns.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            {loadingCampaigns ? (
-              <div className="flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p>No campaigns found.</p>
-                <p className="text-sm">Create a new campaign to get started.</p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <p>No campaigns found.</p>
+              <p className="text-sm">Create a new campaign to get started.</p>
+            </div>
           </CardContent>
         </Card>
       ) : (

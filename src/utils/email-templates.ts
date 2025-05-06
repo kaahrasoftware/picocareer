@@ -1,3 +1,4 @@
+
 import { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 import { formatContentCard } from "./email-templates/content-cards";
 import { generateBaseTemplate } from "./email-templates/base-template";

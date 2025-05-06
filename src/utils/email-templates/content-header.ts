@@ -1,54 +1,66 @@
 
-import { getContentTypeStyles } from "../email-templates/styles";
-
+/**
+ * Generates a content-specific header for email templates
+ */
 export function generateContentHeader(
-  contentType: string,
-  totalAmount?: string,
-  recipientName?: string,
-  templateContent?: {
-    header_text?: string;
-    intro_text?: string;
+  contentType: string, 
+  totalAmount: string | undefined, 
+  recipientName: string,
+  styles: { primary: string; secondary: string; accent: string }
+): string {
+  let greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
+  let headerText = '';
+  let subheaderText = '';
+
+  switch (contentType) {
+    case 'scholarships':
+      headerText = 'Scholarship Opportunities';
+      subheaderText = totalAmount 
+        ? `Discover scholarships worth up to ${totalAmount} that match your profile!` 
+        : 'Discover these scholarship opportunities that match your profile!';
+      break;
+    case 'opportunities':
+      headerText = 'Career Opportunities';
+      subheaderText = 'Explore these exclusive opportunities selected just for you.';
+      break;
+    case 'careers':
+      headerText = 'Career Pathways';
+      subheaderText = 'Discover these career paths that align with your skills and interests.';
+      break;
+    case 'majors':
+      headerText = 'Academic Programs';
+      subheaderText = 'Explore these academic majors that could be perfect for your career goals.';
+      break;
+    case 'schools':
+      headerText = 'Educational Institutions';
+      subheaderText = 'Check out these schools that match your educational preferences.';
+      break;
+    case 'mentors':
+      headerText = 'Meet Your Mentors';
+      subheaderText = 'Connect with these exceptional mentors selected based on your interests.';
+      break;
+    case 'blogs':
+      headerText = 'Latest Insights';
+      subheaderText = 'Read the latest articles and insights from our platform.';
+      break;
+    case 'events':
+      headerText = 'Upcoming Events';
+      subheaderText = 'Don\'t miss these upcoming events that match your interests.';
+      break;
+    default:
+      headerText = 'Personalized Content';
+      subheaderText = 'Check out this content selected just for you.';
   }
-) {
-  const styles = getContentTypeStyles(contentType);
-  const greeting = recipientName ? `Hi ${recipientName.split(' ')[0]},` : 'Hi there,';
-  
-  const headerText = templateContent?.header_text || `${contentType.charAt(0).toUpperCase() + contentType.slice(1)} Spotlight`;
-  const introText = templateContent?.intro_text || getContentTypeIntro(contentType);
 
   return `
-    <div style="margin-bottom: 32px;">
-      <h1 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 600; color: ${styles.accent}; text-align: center;">
+    <div style="padding: 24px; text-align: center;">
+      <h1 style="margin: 0 0 16px 0; color: ${styles.primary}; font-size: 24px; font-weight: 600;">
         ${headerText}
       </h1>
       
-      <p style="font-size: 16px; line-height: 1.6; color: #374151; margin: 0;">
-        ${greeting}
-      </p>
-      <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-top: 16px;">
-        ${introText}
+      <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 16px;">
+        ${greeting} ${subheaderText}
       </p>
     </div>
   `;
-}
-
-function getContentTypeIntro(contentType: string): string {
-  switch (contentType) {
-    case 'scholarships':
-      return "We've curated some exciting scholarship opportunities that match your profile. Take a look at these opportunities to help fund your education journey.";
-    case 'opportunities':
-      return "We've curated these career opportunities based on your interests and skills. These positions could be your next career milestone.";
-    case 'careers':
-      return "Based on your profile and interests, we've identified these career paths that might interest you. Each one offers unique opportunities for growth and success.";
-    case 'majors':
-      return "Discover these academic majors that align with your interests and career goals. Each program offers unique opportunities for learning and future career prospects.";
-    case 'schools':
-      return "We've selected these educational institutions based on your preferences and academic interests. Each one offers unique opportunities for growth and learning.";
-    case 'mentors':
-      return "Connect with experienced professionals who can guide you on your career journey. These mentors have valuable insights to share in your areas of interest.";
-    case 'blogs':
-      return "Stay informed with these latest insights and tips relevant to your career interests. These articles provide valuable perspectives and practical advice.";
-    default:
-      return "We've curated this content specially for you based on your interests and preferences.";
-  }
 }

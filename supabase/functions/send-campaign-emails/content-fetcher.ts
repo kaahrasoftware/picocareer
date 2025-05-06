@@ -22,7 +22,9 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         if (scholarshipError) throw new Error(`Error fetching scholarships: ${scholarshipError.message}`);
         data = scholarships?.map(s => ({
           ...s,
-          cover_image_url: s.image_url
+          cover_image_url: s.image_url,
+          amount: s.amount || 0, // Ensure amount is set even if null
+          formatted_amount: s.amount ? `$${s.amount.toLocaleString()}` : 'Amount varies' // Add formatted amount
         })) || [];
         break;
         
@@ -37,6 +39,7 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         break;
         
       case 'careers':
+        // Fixed query to remove non-existent columns (location and remote)
         const { data: careers, error: careerError } = await supabase
           .from('careers')
           .select(`
@@ -46,9 +49,7 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
             salary_range,
             image_url,
             industry,
-            growth_potential,
-            location,
-            remote
+            growth_potential
           `)
           .in('id', contentIds);
         
@@ -56,7 +57,10 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         
         data = careers?.map(career => ({
           ...career,
-          cover_image_url: career.image_url
+          cover_image_url: career.image_url,
+          // Add fallbacks for location and remote properties that might be expected by templates
+          location: career.industry || 'Various locations', // Using industry as a fallback for location display
+          remote: false // Default value for remote property
         })) || [];
         break;
         

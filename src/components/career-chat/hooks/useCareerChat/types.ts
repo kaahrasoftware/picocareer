@@ -1,6 +1,6 @@
 
 import { Dispatch, SetStateAction } from 'react';
-import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
+import { CareerChatMessage, CareerChatSession } from '@/types/database/analytics';
 
 export interface MessageSenderProps {
   sessionId: string;
@@ -46,4 +46,17 @@ export interface MessageDeliveryMetadata {
   lastAttempt: string;
   receivedAt?: string;
   error?: string;
+}
+
+// Added ChatSessionMetadata interface as it was missing
+export interface ChatSessionMetadata {
+  title?: string;
+  lastCategory?: string;
+  isComplete?: boolean;
+  overallProgress?: number;
+  startedAt?: string;
+  completedAt?: string;
+  questionCounts?: QuestionCounts;
+  careerInterests?: string[];
+  [key: string]: any;
 }

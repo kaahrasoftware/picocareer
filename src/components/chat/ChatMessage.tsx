@@ -7,7 +7,7 @@ import { CareerRecommendationCard } from '@/components/career-chat/message-parts
 import { RecommendationSection } from '@/components/career-chat/message-parts/RecommendationSection';
 import { UserMessage } from '@/components/career-chat/message-parts/UserMessage';
 import { BotMessage } from '@/components/career-chat/message-parts/BotMessage';
-import { parseStructuredRecommendation } from '@/components/career-chat/utils/recommendationParser';
+import { parseStructuredRecommendation, ParsedRecommendation } from '@/components/career-chat/utils/recommendationParser';
 import { StructuredMessage } from '@/types/database/message-types';
 import { StructuredQuestionMessage } from './components/StructuredQuestionMessage';
 import { NumberedListMessage } from './components/NumberedListMessage';

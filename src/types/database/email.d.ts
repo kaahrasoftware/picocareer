@@ -42,9 +42,8 @@ export interface Campaign {
   name?: string;
   subject: string;
   content_type: string; // Using string type to avoid type mismatches
-  status: 'draft' | 'scheduled' | 'sent' | 'failed' | 'sending' | 'pending' | 'partial';
+  status: 'draft' | 'scheduled' | 'sent' | 'failed' | 'sending' | 'pending' | 'partial' | 'planned';
   recipient_type: string;
-  recipient_ids?: string[];
   content_ids?: string[];
   content_id?: string;
   scheduled_for?: string;
@@ -57,6 +56,11 @@ export interface Campaign {
   frequency: 'once' | 'daily' | 'weekly' | 'monthly';
   created_at: string;
   updated_at: string;
+  recipient_filter?: {
+    profile_ids?: string[];
+    filter_type?: string;
+    [key: string]: any;
+  };
 }
 
 export interface ContentItem {

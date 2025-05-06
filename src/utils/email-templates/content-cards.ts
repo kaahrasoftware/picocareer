@@ -1,41 +1,26 @@
-import type { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 
-interface EmailStyles {
-  primary: string;
-  secondary: string;
-  accent: string;
-}
+import { ContentItem } from "@/types/database/email";
+import { getContentTypeStyles } from "./styles";
 
-function getDialogUrl(contentType: string, id: string, siteUrl: string): string {
-  switch (contentType) {
-    case 'blogs':
-      return `${siteUrl}/blog?dialog=true&blogId=${id}`;
-    case 'careers':
-      return `${siteUrl}/career?dialog=true&careerId=${id}`;
-    case 'majors':
-      return `${siteUrl}/program?dialog=true&majorId=${id}`;
-    case 'mentors':
-      return `${siteUrl}/mentor?dialog=true&mentorId=${id}`;
-    case 'scholarships':
-      return `${siteUrl}/scholarships?dialog=true&scholarshipId=${id}`;
-    case 'opportunities':
-      return `${siteUrl}/opportunities?dialog=true&opportunityId=${id}`;
-    default:
-      return `${siteUrl}/${contentType}/${id}`;
-  }
-}
-
+/**
+ * Formats a content item into an HTML card for email templates
+ */
 export function formatContentCard(
   item: ContentItem,
   contentType: string,
-  styles: EmailStyles,
-  settings?: EmailContentTypeSettings['layout_settings'],
-  siteUrl: string = 'https://picocareer.com'
+  siteUrl: string,
+  styles: { primary: string; secondary: string; accent: string },
+  layoutSettings?: {
+    headerStyle?: string;
+    showAuthor?: boolean;
+    showDate?: boolean;
+    imagePosition?: string;
+    contentBlocks?: string[];
+    metadataDisplay?: string[];
+  }
 ): string {
-  if (!item) return '';
-
-  // Default settings if none provided
-  const layout = settings || {
+  // Default layout settings if none provided
+  const settings = layoutSettings || {
     headerStyle: 'centered',
     showAuthor: true,
     showDate: true,
@@ -44,136 +29,145 @@ export function formatContentCard(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  const imageHtml = (item.cover_image_url || item.image_url) ? `
-    <img 
-      src="${item.cover_image_url || item.image_url}"
-      alt="${item.title}"
-      style="${getImageStyles(layout.imagePosition)}"
-    />
-  ` : '';
+  // Get the formatted date if available
+  const formattedDate = item.created_at 
+    ? new Date(item.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    : '';
 
-  const contentBlockMapping: { [key: string]: () => string } = {
-    title: () => `
-      <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: ${styles.accent};">
-        ${item.title}
-      </h3>
-    `,
-    image: () => imageHtml,
-    description: () => item.description ? `
-      <p style="color: #4b5563; margin: 8px 0; font-size: 14px; line-height: 1.5;">
-        ${item.description.length > 150 ? item.description.substring(0, 147) + '...' : item.description}
-      </p>
-    ` : '',
-    metadata: () => generateMetadata(item, contentType, layout.metadataDisplay),
-    cta: () => {
-      const dialogUrl = getDialogUrl(contentType, item.id, siteUrl);
-      return `
-        <div style="margin-top: 16px;">
-          <a 
-            href="${dialogUrl}" 
-            style="display: inline-block; background-color: ${styles.accent}; color: white; 
-                  padding: 8px 16px; text-decoration: none; border-radius: 6px; 
-                  font-size: 14px; font-weight: 500;"
-          >
-            Learn More
-          </a>
-        </div>
-      `;
-    }
-  };
+  // Get display properties based on content type
+  const title = item.title || `Untitled ${contentType}`;
+  const description = item.description || '';
+  const imageUrl = item.cover_image_url || item.image_url || '';
+  const author = item.author_name || '';
+  const category = Array.isArray(item.categories) && item.categories.length > 0 
+    ? item.categories[0] 
+    : contentType;
 
-  let contentHtml = '';
-
-  if (layout.imagePosition === 'side') {
-    // Special handling for side layout
-    const imageContent = contentBlockMapping['image']();
-    const otherBlocks = layout.contentBlocks
-      .filter(block => block !== 'image')
-      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
-      .join('');
-
-    contentHtml = `
-      <div style="display: flex; gap: 16px; align-items: start;">
-        <div style="flex-shrink: 0; width: 200px;">
-          ${imageContent}
-        </div>
-        <div style="flex: 1;">
-          ${otherBlocks}
-        </div>
-      </div>
-    `;
-  } else {
-    // Standard layout
-    contentHtml = layout.contentBlocks
-      .map(block => contentBlockMapping[block] ? contentBlockMapping[block]() : '')
-      .join('');
-  }
-
-  return `
-    <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; 
-                overflow: hidden; background-color: white; padding: 16px;">
-      ${contentHtml}
-    </div>
-  `;
-}
-
-function getImageStyles(position: 'top' | 'inline' | 'side' = 'top'): string {
-  switch (position) {
-    case 'side':
-      return 'width: 100%; height: auto; border-radius: 8px; margin-right: 16px;';
-    case 'inline':
-      return 'width: 60%; height: auto; border-radius: 8px; margin: 12px auto; display: block;';
-    case 'top':
-    default:
-      return 'width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px;';
-  }
-}
-
-function generateMetadata(
-  item: ContentItem,
-  contentType: string,
-  metadataDisplay?: string[]
-): string {
-  if (!metadataDisplay || !metadataDisplay.length) return '';
-
-  const metadataItems: string[] = [];
-
-  if (metadataDisplay.includes('date') && item.created_at) {
-    metadataItems.push(`📅 ${new Date(item.created_at).toLocaleDateString()}`);
-  }
-
-  if (metadataDisplay.includes('author') && item.author_name) {
-    metadataItems.push(`👤 ${item.author_name}`);
-  }
-
-  // Content type specific metadata
+  // Determine the content link - with special handling for scholarships
+  let contentLink = `${siteUrl}`;
   switch (contentType) {
     case 'scholarships':
-      if (metadataDisplay.includes('amount') && item.amount) {
-        metadataItems.push(`💰 $${item.amount}`);
-      }
-      if (metadataDisplay.includes('provider') && item.provider_name) {
-        metadataItems.push(`🏢 ${item.provider_name}`);
-      }
-      if (metadataDisplay.includes('deadline') && item.deadline) {
-        metadataItems.push(`⏰ Deadline: ${new Date(item.deadline).toLocaleDateString()}`);
-      }
+      contentLink += `/scholarships?dialog=${item.id}`;
       break;
-      
+    case 'blogs':
+      contentLink += `/blog/${item.id}`;
+      break;
+    case 'careers':
+      contentLink += `/career/${item.id}`;
+      break;
+    case 'majors':
+      contentLink += `/program/${item.id}`;
+      break;
     case 'opportunities':
-      if (metadataDisplay.includes('compensation') && item.compensation) {
-        metadataItems.push(`💰 ${item.compensation}`);
-      }
-      if (metadataDisplay.includes('location') && item.location) {
-        const locationText = item.remote ? `${item.location} (Remote)` : item.location;
-        metadataItems.push(`📍 ${locationText}`);
-      }
+      contentLink += `/opportunity/${item.id}`;
       break;
+    case 'mentors':
+      contentLink += `/profile/${item.id}`;
+      break;
+    case 'events':
+      contentLink += `/event/${item.id}`;
+      break;
+    case 'schools':
+      contentLink += `/school/${item.id}`;
+      break;
+    default:
+      contentLink += `/${contentType}/${item.id}`;
   }
 
-  return metadataItems.length ? `
-    <div style="color: #6b7280; font-size: 14px; margin: 8px 0;">
-      ${metadataItems.join(' • ')}
+  // Scholarship amount highlight for scholarships
+  let scholarshipAmountHighlight = '';
+  if (contentType === 'scholarships' && item.amount) {
+    scholarshipAmountHighlight = `
+      <div style="position: absolute; top: 10px; right: 10px; background-color: ${styles.accent}; color: white; 
+                  padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+        $${item.amount.toLocaleString()}
+      </div>
+    `;
+  }
+
+  // Build and return the HTML for the content card
+  return `
+    <div style="margin-bottom: 32px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: relative;">
+      ${contentType === 'scholarships' ? scholarshipAmountHighlight : ''}
+      ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'top' ? `
+        <div style="width: 100%; height: 200px; overflow: hidden; background-color: #f3f4f6;">
+          <img 
+            src="${imageUrl}" 
+            alt="${title}" 
+            style="width: 100%; height: 100%; object-fit: cover;"
+          />
+        </div>
+      ` : ''}
+      
+      <div style="padding: 20px;">
+        ${settings.contentBlocks?.includes('title') ? `
+          <h2 style="margin-top: 0; margin-bottom: 8px; color: #1f2937; font-size: 18px; font-weight: 600;">
+            <a href="${contentLink}" style="color: ${styles.primary}; text-decoration: none;">
+              ${title}
+            </a>
+          </h2>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('metadata') ? `
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: #6b7280;">
+            ${settings.metadataDisplay?.includes('category') ? `
+              <span style="color: ${styles.accent}; font-weight: 500;">${category}</span>
+            ` : ''}
+            
+            ${settings.metadataDisplay?.includes('date') && formattedDate ? `
+              <span>${formattedDate}</span>
+            ` : ''}
+            
+            ${settings.metadataDisplay?.includes('author') && author ? `
+              <span>By ${author}</span>
+            ` : ''}
+            
+            ${contentType === 'scholarships' && item.amount ? `
+              <span style="font-weight: bold; color: ${styles.primary};">Amount: $${item.amount.toLocaleString()}</span>
+            ` : ''}
+            
+            ${contentType === 'scholarships' && item.deadline ? `
+              <span style="color: #ef4444;">Deadline: ${new Date(item.deadline).toLocaleDateString()}</span>
+            ` : ''}
+          </div>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'inline' ? `
+          <div style="width: 100%; height: 200px; overflow: hidden; margin: 16px 0; background-color: #f3f4f6;">
+            <img 
+              src="${imageUrl}" 
+              alt="${title}" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+            />
+          </div>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('description') && description ? `
+          <p style="margin-top: 0; margin-bottom: 16px; color: #4b5563; font-size: 14px; line-height: 1.5;">
+            ${description.length > 150 ? description.substring(0, 150) + '...' : description}
+          </p>
+        ` : ''}
+        
+        ${contentType === 'scholarships' ? `
+          <div style="margin: 10px 0; padding: 10px; background-color: #f9fafb; border-radius: 4px;">
+            ${item.provider_name ? `<p style="margin: 0; font-size: 14px;"><strong>Provider:</strong> ${item.provider_name}</p>` : ''}
+          </div>
+        ` : ''}
+        
+        ${settings.contentBlocks?.includes('cta') ? `
+          <a 
+            href="${contentLink}" 
+            style="display: inline-block; padding: 8px 16px; background-color: ${styles.accent}; color: white; 
+                  text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 500;"
+          >
+            ${contentType === 'scholarships' ? 'Apply Now' : 'Read More'}
+          </a>
+        ` : ''}
+      </div>
     </div>
-  ` : '';
+  `;
 }

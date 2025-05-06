@@ -1,238 +1,163 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { CONTENT_TYPE_LABELS, ContentType } from "./utils";
 
-type FormState = {
-  subject: string;
-  contentType: ContentType;
-  contentIds: string[];
-  frequency: "once" | "daily" | "weekly" | "monthly";
-  scheduledFor: string;
-  recipientType: 'all' | 'mentees' | 'mentors' | 'selected';
-  recipientIds: string[];
-};
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { EmailCampaignType } from './emailCampaign.schema';
+import { ContentType } from './utils';
 
 interface UseEmailCampaignFormSubmitProps {
   adminId: string;
-  formState: FormState;
+  formState: Partial<EmailCampaignType>;
   onSuccess?: (campaignId: string) => void;
 }
 
-export const useEmailCampaignFormSubmit = ({
-  adminId,
-  formState,
-  onSuccess
+export const useEmailCampaignFormSubmit = ({ 
+  adminId, 
+  formState, 
+  onSuccess 
 }: UseEmailCampaignFormSubmitProps) => {
-  const [isSubmitting, setSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!formState.contentType || !formState.frequency || !formState.scheduledFor || formState.contentIds.length === 0) {
-      toast({ title: "Fill all required fields", variant: "destructive" });
+    if (!adminId) {
+      toast.error('Admin ID is required');
       return;
     }
 
-    // Validate that scheduled time is in the future
-    const scheduleDate = new Date(formState.scheduledFor);
-    if (scheduleDate <= new Date()) {
-      toast({
-        title: "Invalid schedule time",
-        description: "Scheduled time must be in the future",
-        variant: "destructive"
-      });
+    if (!formState.subject) {
+      toast.error('Subject is required');
       return;
     }
 
-    setSubmitting(true);
+    if (!formState.content_ids || formState.content_ids.length === 0) {
+      toast.error('Please select at least one content item');
+      return;
+    }
+
+    if (!formState.content_type) {
+      toast.error('Content type is required');
+      return;
+    }
+    
+    if (!formState.scheduled_for) {
+      toast.error('Scheduled date is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      // Create a campaign with all content IDs
-      const campaignInsert = {
-        scheduled_for: formState.scheduledFor,
-        frequency: formState.frequency,
-        content_type: formState.contentType,
-        content_ids: formState.contentIds,
-        content_id: formState.contentIds[0], // Keep first ID for backward compatibility
-        subject: formState.subject || `${CONTENT_TYPE_LABELS[formState.contentType]}: ${formState.contentIds.length} items`,
-        body: `Check out these featured ${formState.contentType}!`,
-        admin_id: adminId,
-        recipient_type: formState.recipientType,
-        recipient_filter: formState.recipientType === 'selected' 
-          ? { profile_ids: formState.recipientIds } 
-          : {},
-        sent_at: null,
-        failed_count: 0,
-        recipients_count: 0,
-        status: 'pending',
-        last_error: null,
-        last_checked_at: null
-      };
-
-      const { data: insertedCampaign, error: campaignError } = await supabase
-        .from('email_campaigns')
-        .insert(campaignInsert)
-        .select()
-        .single();
-
-      if (campaignError || !insertedCampaign) {
-        throw new Error(
-          `Failed to insert campaign: ${campaignError?.message || 'Unknown error'}`
-        );
-      }
-
-      if (formState.recipientType === 'selected' && insertedCampaign) {
-        const recipientRecords = formState.recipientIds.map(recipientId => ({
-          campaign_id: insertedCampaign.id,
-          profile_id: recipientId
-        }));
-
-        const { error: recipientError } = await supabase
-          .from('email_campaign_recipients')
-          .insert(recipientRecords);
-
-        if (recipientError) {
-          throw new Error(`Failed to insert recipients: ${recipientError.message}`);
+      console.log('Submitting campaign with data:', { adminId, formState });
+      
+      // Calculate recipients count based on type
+      let recipientsCount = 0;
+      
+      // Create a properly structured recipient_filter
+      let recipientFilter = null;
+      
+      if (formState.recipient_type === 'selected' && 
+          formState.recipient_filter && 
+          typeof formState.recipient_filter === 'object' && 
+          Array.isArray(formState.recipient_filter.profile_ids)) {
+        recipientsCount = formState.recipient_filter.profile_ids.length;
+        recipientFilter = { profile_ids: formState.recipient_filter.profile_ids };
+      } else if (formState.recipient_type === 'mentees') {
+        recipientFilter = { filter_type: 'mentee' };
+      } else if (formState.recipient_type === 'mentors') {
+        recipientFilter = { filter_type: 'mentor' };
+      } else if (formState.recipient_type === 'event_registrants' && 
+                formState.recipient_filter && 
+                formState.recipient_filter.event_id) {
+        recipientFilter = { 
+          event_id: formState.recipient_filter.event_id,
+          filter_type: 'event_registrants'
+        };
+        
+        // Calculate event registrants count
+        try {
+          const { count, error } = await supabase
+            .from('event_registrations')
+            .select('*', { count: 'exact' })
+            .eq('event_id', formState.recipient_filter.event_id);
+            
+          if (!error) {
+            recipientsCount = count || 0;
+          }
+        } catch (err) {
+          console.error('Error counting event registrants:', err);
         }
       }
-
-      toast({
-        title: "Campaign created!",
-        description: `Scheduled campaign with ${formState.contentIds.length} items for ${new Date(formState.scheduledFor).toLocaleString()}.`
-      });
-
-      if (onSuccess) {
-        onSuccess(insertedCampaign.id);
+      
+      // First, ensure the session is refreshed before submitting
+      console.log('Refreshing auth session before campaign creation...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
+      
+      if (sessionError) {
+        console.error('Error refreshing session:', sessionError);
+        toast.error(`Session error: ${sessionError.message}`);
+        
+        // If session refresh fails, try getting the current session
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (!currentSession.session) {
+          toast.error('Your session has expired. Please log in again.');
+          throw new Error('Authentication error: Session expired');
+        }
       }
       
-      return insertedCampaign.id;
-    } catch (err: any) {
-      toast({
-        title: "Error sending campaign",
-        description: err?.message || "Unknown error — please check that all fields and recipients are correct.",
-        variant: "destructive"
-      });
-      if (typeof window !== 'undefined') {
-        console.error("Error sending campaign:", err);
+      // Additional check to ensure we have an authenticated session
+      if (!sessionData?.session) {
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (!currentSession.session) {
+          toast.error('Not authenticated. Please log in again.');
+          throw new Error('Not authenticated');
+        }
+        console.log('Using current session:', currentSession.session.user?.id);
+      } else {
+        console.log('Session refreshed successfully:', sessionData.session.user?.id);
       }
-      return null;
+      
+      const campaignData = {
+        admin_id: adminId,
+        subject: formState.subject,
+        content_type: formState.content_type as ContentType || 'blogs',
+        content_id: formState.content_ids?.[0] || '', // Required field - explicitly set from first item
+        content_ids: formState.content_ids || [],
+        recipient_type: formState.recipient_type || 'all',
+        recipient_filter: recipientFilter,
+        scheduled_for: formState.scheduled_for,
+        frequency: formState.frequency || 'weekly',
+        status: 'planned', // Use 'planned' instead of 'scheduled'
+        sent_count: 0, // Explicitly set to 0
+        failed_count: 0, // Explicitly set to 0
+        recipients_count: recipientsCount
+      };
+
+      console.log('Submitting campaign data:', campaignData);
+
+      const { data, error } = await supabase
+        .from('email_campaigns')
+        .insert(campaignData)
+        .select('id');
+
+      if (error) {
+        console.error('Error creating campaign:', error);
+        toast.error(`Failed to create campaign: ${error.message}`);
+        throw error;
+      }
+
+      // Removed the success toast from here as it's now in AdminEmailCampaigns
+      
+      if (data && data[0] && onSuccess) {
+        onSuccess(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to create campaign: ${errorMessage}`);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return { isSubmitting, handleSubmit };
 };
-
-export async function handleEmailCampaignFormSubmit({
-  e, adminId, contentList, selectedContentIds, frequency, scheduledFor, contentType, recipientType, selectedRecipients, onCampaignCreated, setSubmitting, setSelectedContentIds, setSelectedRecipients
-}: {
-  e: React.FormEvent;
-  adminId: string;
-  contentList: { id: string; title: string }[];
-  selectedContentIds: string[];
-  frequency: "daily" | "weekly" | "monthly";
-  scheduledFor: string;
-  contentType: ContentType;
-  recipientType: 'all' | 'mentees' | 'mentors' | 'selected';
-  selectedRecipients: string[];
-  onCampaignCreated?: () => void;
-  setSubmitting: (b: boolean) => void;
-  setSelectedContentIds: (ids: string[]) => void;
-  setSelectedRecipients: (ids: string[]) => void;
-}) {
-  e.preventDefault();
-  if (!contentType || !frequency || !scheduledFor || selectedContentIds.length === 0) {
-    toast({ title: "Fill all required fields", variant: "destructive" });
-    return;
-  }
-
-  // Validate that scheduled time is in the future
-  const scheduleDate = new Date(scheduledFor);
-  if (scheduleDate <= new Date()) {
-    toast({ 
-      title: "Invalid schedule time", 
-      description: "Scheduled time must be in the future",
-      variant: "destructive" 
-    });
-    return;
-  }
-
-  setSubmitting(true);
-  try {
-    // For multiple content IDs, we'll create a single campaign with all content IDs
-    const selectedContents = contentList.filter(c => selectedContentIds.includes(c.id));
-    const contentTitles = selectedContents.map(c => c.title).join(", ");
-    
-    // Create a single campaign with all content IDs
-    const campaignInsert = {
-      scheduled_for: scheduledFor,
-      frequency,
-      content_type: contentType,
-      content_ids: selectedContentIds, // Store all content IDs
-      content_id: selectedContentIds[0], // Keep first ID for backward compatibility
-      subject: `${CONTENT_TYPE_LABELS[contentType]}: ${selectedContents.length > 1 ? `${selectedContents.length} Items` : contentTitles}`,
-      body: `Check out these featured ${contentType}!`,
-      admin_id: adminId,
-      recipient_type: recipientType,
-      recipient_filter: recipientType === 'selected' 
-        ? { profile_ids: selectedRecipients } 
-        : {},
-      sent_at: null,
-      failed_count: 0,
-      recipients_count: 0,
-      status: 'pending',
-      last_error: null,
-      last_checked_at: null
-    };
-
-    const { data: insertedCampaign, error: campaignError } = await supabase
-      .from('email_campaigns')
-      .insert(campaignInsert)
-      .select()
-      .single();
-
-    if (campaignError || !insertedCampaign) {
-      throw new Error(
-        `Failed to insert campaign: ${campaignError?.message || 'Unknown error'}`
-      );
-    }
-
-    if (recipientType === 'selected' && insertedCampaign) {
-      const recipientRecords = selectedRecipients.map(recipientId => ({
-        campaign_id: insertedCampaign.id,
-        profile_id: recipientId
-      }));
-
-      const { error: recipientError } = await supabase
-        .from('email_campaign_recipients')
-        .insert(recipientRecords);
-
-      if (recipientError) {
-        throw new Error(`Failed to insert recipients: ${recipientError.message}`);
-      }
-    }
-
-    toast({ 
-      title: "Campaign created!", 
-      description: `Scheduled campaign with ${selectedContentIds.length} items for ${new Date(scheduledFor).toLocaleString()}.` 
-    });
-    
-    setSelectedContentIds([]);
-    setSelectedRecipients([]);
-    
-    if (onCampaignCreated) {
-      onCampaignCreated();
-    }
-  } catch (err: any) {
-    toast({ 
-      title: "Error sending campaign", 
-      description: err?.message || "Unknown error — please check that all fields and recipients are correct.",
-      variant: "destructive" 
-    });
-    // Optional: log error for debugging in future
-    if (typeof window !== 'undefined') {
-      console.error("Error sending campaign:", err);
-    }
-  } finally {
-    setSubmitting(false);
-  }
-}

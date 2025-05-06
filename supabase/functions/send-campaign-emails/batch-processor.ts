@@ -2,6 +2,7 @@
 import { Resend } from "npm:resend@2.0.0";
 import { ContentItem, EmailTemplateSettings } from "./types.ts";
 import { generateEmailContent, getEmailSubject } from "./email-templates.ts";
+import { fetchTemplateContent } from "./template-renderer.ts";
 
 // Sleep function for rate limiting
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -53,12 +54,39 @@ export async function processBatchSending(
   if (contentTypeError && contentTypeError.code !== 'PGRST116') {
     console.warn("Content type settings error:", contentTypeError);
   }
+
+  // Fetch template content
+  const templateContent = await fetchTemplateContent(
+    supabaseClient,
+    campaign.admin_id,
+    campaign.content_type
+  );
     
   // Use content type specific settings if available, otherwise fall back to global template settings
-  const settings = contentTypeSettings || templateSettings || {
-    primary_color: '#8B5CF6',
-    secondary_color: '#7C3AED',
-    accent_color: '#6D28D9'
+  const settings: EmailTemplateSettings = {
+    id: contentTypeSettings?.id || templateSettings?.id || '',
+    admin_id: campaign.admin_id,
+    primary_color: contentTypeSettings?.primary_color || templateSettings?.primary_color || '#8B5CF6',
+    secondary_color: contentTypeSettings?.secondary_color || templateSettings?.secondary_color || '#7C3AED',
+    accent_color: contentTypeSettings?.accent_color || templateSettings?.accent_color || '#6D28D9',
+    logo_url: contentTypeSettings?.logo_url || templateSettings?.logo_url,
+    content_type: campaign.content_type,
+    layout_settings: contentTypeSettings?.layout_settings || {
+      headerStyle: 'centered',
+      showAuthor: true,
+      showDate: true,
+      imagePosition: 'top',
+      contentBlocks: ['title', 'image', 'description', 'metadata', 'cta'],
+      metadataDisplay: ['category', 'date', 'author']
+    },
+    content: {
+      header_text: templateContent.header_text || campaign.subject,
+      intro_text: templateContent.intro_text || campaign.body || `Check out these featured ${campaign.content_type}!`,
+      cta_text: templateContent.cta_text || 'Visit our website for more content',
+      footer_text: templateContent.footer_text || `© ${new Date().getFullYear()} All rights reserved.`
+    },
+    created_at: contentTypeSettings?.created_at || templateSettings?.created_at || new Date().toISOString(),
+    updated_at: contentTypeSettings?.updated_at || templateSettings?.updated_at || new Date().toISOString()
   };
   
   // Process in smaller batches of 2 (respecting rate limit)

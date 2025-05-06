@@ -158,26 +158,26 @@ export function OverviewTab() {
           title="Total Users"
           value={(userStats?.mentors || 0) + (userStats?.mentees || 0)}
           subtitle={`${userStats?.mentors || 0} mentors, ${userStats?.mentees || 0} mentees`}
-          icon={Users}
+          icon={<Users className="h-4 w-4" />}
         />
         <StatsCard
           title="Total Content"
           value={(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
           subtitle={`${contentStats?.blogs.total || 0} blogs, ${contentStats?.videos.total || 0} videos`}
-          icon={BookOpen}
+          icon={<BookOpen className="h-4 w-4" />}
           contentType="blogs"
         />
         <StatsCard
           title="Total Sessions"
           value={contentStats?.sessions.total || 0}
           subtitle={`${contentStats?.sessions.completed || 0} completed sessions`}
-          icon={Calendar}
+          icon={<Calendar className="h-4 w-4" />}
         />
         <StatsCard
           title="Pending Reviews"
           value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
           subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
-          icon={Video}
+          icon={<Video className="h-4 w-4" />}
           contentType="videos"
         />
       </div>

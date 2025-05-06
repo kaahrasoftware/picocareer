@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // Session protection levels
 export type AuthProtectionLevel = 'required' | 'optional' | 'public';
@@ -35,9 +36,25 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
   // Add session refresh helper
   const refreshSession = useCallback(async () => {
     try {
+      console.log('Attempting to refresh auth session');
       const { data, error } = await supabase.auth.refreshSession();
+      
       if (error) {
         console.error('Error refreshing session:', error);
+        
+        // Try getting the current session as a fallback
+        const { data: currentSession, error: currentError } = await supabase.auth.getSession();
+        if (currentError) {
+          console.error('Error getting current session:', currentError);
+          toast.error('Authentication error. Please try logging in again.');
+          return false;
+        }
+        
+        if (currentSession?.session) {
+          console.log('Current session is still valid');
+          return true;
+        }
+        
         return false;
       }
       

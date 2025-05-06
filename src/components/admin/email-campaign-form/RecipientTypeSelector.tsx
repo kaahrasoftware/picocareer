@@ -2,7 +2,7 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected';
+type RecipientType = 'all' | 'mentees' | 'mentors' | 'selected' | 'event_registrants';
 
 interface RecipientTypeSelectorProps {
   recipientType: RecipientType;
@@ -25,6 +25,7 @@ export function RecipientTypeSelector({ recipientType, setRecipientType }: Recip
           <SelectItem value="mentees">Mentees Only</SelectItem>
           <SelectItem value="mentors">Mentors Only</SelectItem>
           <SelectItem value="selected">Select Specific Users</SelectItem>
+          <SelectItem value="event_registrants">Event Registrants</SelectItem>
         </SelectContent>
       </Select>
     </div>

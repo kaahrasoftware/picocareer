@@ -1,73 +1,78 @@
-import React from "react";
-import { cn } from "@/lib/utils";
+
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface CircularProgressProps {
-  percentage: number;
-  size?: "sm" | "md" | "lg";
-  color?: string;
-  label?: string;
+  value: number;
+  size?: number;
+  strokeWidth?: number;
+  showValue?: boolean;
   className?: string;
+  textClassName?: string;
+  valuePrefix?: string;
+  valueSuffix?: string;
 }
 
 export function CircularProgress({
-  percentage,
-  size = "md",
-  color = "#8B5CF6",
-  label,
+  value,
+  size = 100,
+  strokeWidth = 10,
+  showValue = true,
   className,
+  textClassName,
+  valuePrefix = '',
+  valueSuffix = '%'
 }: CircularProgressProps) {
-  // Dynamic sizing based on percentage value
-  const getSize = () => {
-    if (percentage >= 95) return "w-36 h-36";
-    if (percentage >= 85) return "w-32 h-32";
-    return "w-28 h-28";
-  };
-
-  const baseSize = size === "sm" ? "w-24 h-24" : size === "md" ? "w-28 h-28" : getSize();
-  const strokeWidth = size === "sm" ? 3 : 4;
-  const radius = size === "sm" ? 42 : size === "md" ? 48 : 60;
+  // Ensure value is between 0 and 100
+  const normalizedValue = Math.min(100, Math.max(0, value));
+  
+  // Calculate circle properties
+  const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = ((100 - percentage) / 100) * circumference;
+  const strokeDashoffset = circumference - (normalizedValue / 100) * circumference;
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center group", baseSize, className)}>
-      {/* Background circle */}
-      <div className="absolute inset-0 rounded-full bg-gray-800/50" />
-      
-      {/* Progress circle */}
-      <svg className="w-full h-full transform -rotate-90">
+    <div className={cn('inline-flex items-center justify-center relative', className)}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="transform -rotate-90"
+      >
+        {/* Background circle */}
         <circle
-          className="opacity-20"
-          strokeWidth={strokeWidth}
-          stroke={color}
-          fill="transparent"
+          cx={size / 2}
+          cy={size / 2}
           r={radius}
-          cx="50%"
-          cy="50%"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeOpacity={0.2}
         />
+        {/* Progress circle */}
         <circle
-          className="transition-all duration-300 ease-in-out"
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="currentColor"
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
-          strokeDashoffset={progress}
+          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          stroke={color}
-          fill="transparent"
-          r={radius}
-          cx="50%"
-          cy="50%"
+          className="transition-all duration-500 ease-in-out"
         />
       </svg>
-
-      {/* Percentage display */}
-      <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-white">{percentage}%</span>
-        {label && (
-          <span className="text-xs mt-1 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            {label}
-          </span>
-        )}
-      </div>
+      {showValue && (
+        <span 
+          className={cn('absolute text-lg font-medium', textClassName)}
+          style={{
+            fontSize: size * 0.2 + 'px'
+          }}
+        >
+          {valuePrefix}{Math.round(normalizedValue)}{valueSuffix}
+        </span>
+      )}
     </div>
   );
 }

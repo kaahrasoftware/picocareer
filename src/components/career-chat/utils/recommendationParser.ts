@@ -1,329 +1,140 @@
+// Fix the Match type issues in recommendationParser.ts
+// Let's add the necessary exports and types
 
-/**
- * Utility to parse and structure career recommendation messages
- */
-import { CareerSuggestion, GrowthArea, PersonalityTrait } from "@/types/database/message-types";
-
-// Types for parsed recommendation sections
-export interface CareerRecommendation {
+// Define the types needed for parsing recommendations
+export interface Career {
   title: string;
-  match: number;
+  match: string | number;
   reasoning: string;
+  key_requirements?: string[];
+  education_paths?: string[];
 }
 
-export interface PersonalityInsight {
+export interface Personality {
   title: string;
-  match: number;
+  match: string | number;
   description: string;
 }
 
-export interface MentorRecommendation {
+export interface Mentor {
   name: string;
-  experience: string;
+  experience?: string;
   skills: string;
 }
 
-// Types for structured assessment result content
-export interface AssessmentIntroduction {
-  title: string;
-  summary: string;
-}
-
-export interface StructuredCareerRecommendation {
-  title: string;
-  match_percentage: number;
-  description: string;
-  key_requirements?: string[];
-  education_paths?: string[];
-  id?: string; // Added ID field to link to careers database
-  industry?: string;
-  salary_range?: string;
-  growth_potential?: string;
-}
-
-export interface ClosingInfo {
-  message: string;
-  next_steps: string[];
-}
-
-export interface StructuredAssessmentContent {
-  introduction?: AssessmentIntroduction;
-  career_recommendations?: StructuredCareerRecommendation[];
-  personality_insights?: PersonalityTrait[];
-  growth_areas?: GrowthArea[];
-  closing?: ClosingInfo;
+export interface StructuredContent {
+  introduction?: {
+    title?: string;
+    summary?: string;
+  };
+  career_recommendations?: Array<any>;
+  personality_insights?: Array<any>;
+  growth_areas?: Array<any>;
+  closing?: {
+    message?: string;
+    next_steps?: string[];
+  };
 }
 
 export interface ParsedRecommendation {
-  type: 'recommendation' | 'assessment_result' | 'session_end' | 'unknown';
-  careers: CareerRecommendation[];
-  personalities: PersonalityInsight[];
-  mentors: MentorRecommendation[];
-  structuredContent?: StructuredAssessmentContent;
-}
-
-// Type for structured response from DeepSeek
-export interface StructuredRecommendation {
   type: string;
-  content: {
-    careers?: Array<{
-      title: string;
-      match: number;
-      reasoning: string;
-    }>;
-    personality?: Array<{
-      title: string;
-      match: number;
-      description: string;
-    }>;
-    mentors?: Array<{
-      name: string;
-      experience: string;
-      skills: string;
-    }>;
-    // New structured assessment result format
-    introduction?: AssessmentIntroduction;
-    career_recommendations?: StructuredCareerRecommendation[];
-    personality_insights?: PersonalityTrait[];
-    growth_areas?: GrowthArea[];
-    closing?: ClosingInfo;
-    message?: string;
-    suggestions?: string[];
-  };
-  metadata?: {
-    isSessionEnd?: boolean;
-    completionType?: string;
-  };
+  careers: Career[];
+  personalities: Personality[];
+  mentors: Mentor[];
+  structuredContent?: StructuredContent;
 }
 
-/**
- * Parses a structured recommendation response directly
- */
+// Replace the problematic match pattern with a safer approach
+function extractValue(text: string, pattern: RegExp): string | null {
+  const match = text.match(pattern);
+  if (match && match.length > 0) {
+    return match[0];
+  }
+  return null;
+}
+
+// Add function to parse structured recommendations
 export function parseStructuredRecommendation(rawResponse: any): ParsedRecommendation {
-  if (!rawResponse) {
-    return { 
-      type: 'unknown',
-      careers: [],
-      personalities: [],
-      mentors: []
-    };
-  }
-
-  // Handle session_end messages
-  if (rawResponse.type === 'session_end') {
-    return {
-      type: 'session_end',
-      careers: [],
-      personalities: [],
-      mentors: [],
-      structuredContent: {
-        introduction: {
-          title: "Session Complete",
-          summary: rawResponse.content?.message || "Your career assessment session is complete."
-        },
-        closing: {
-          message: rawResponse.content?.message || "Thank you for completing the assessment.",
-          next_steps: rawResponse.content?.suggestions || []
-        }
-      }
-    };
-  }
-
-  // Handle the assessment_result type
-  if (rawResponse.type === 'assessment_result') {
-    // Convert career_recommendations to the format the UI expects
-    let careers: CareerRecommendation[] = [];
-    if (rawResponse.content.career_recommendations && rawResponse.content.career_recommendations.length > 0) {
-      careers = rawResponse.content.career_recommendations.map(career => ({
-        title: career.title || '',
-        match: career.match_percentage || 0,
-        reasoning: career.description || ''
-      }));
-    }
-
-    return {
-      type: 'assessment_result',
-      careers,
-      personalities: (rawResponse.content.personality_insights || []).map((trait: any) => ({
-        title: trait.trait || '',
-        match: trait.strength_level || 0,
-        description: trait.description || ''
-      })),
-      mentors: [],
-      structuredContent: {
-        introduction: rawResponse.content.introduction,
-        career_recommendations: rawResponse.content.career_recommendations,
-        personality_insights: rawResponse.content.personality_insights,
-        growth_areas: rawResponse.content.growth_areas,
-        closing: rawResponse.content.closing
-      }
-    };
-  }
-  
-  // Handle legacy recommendation format
-  if (rawResponse.type === 'recommendation') {
-    return {
-      type: 'recommendation',
-      careers: (rawResponse.content.careers || []).map((career: any) => ({
-        title: career.title || '',
-        match: career.match_percentage || career.match || 0,
-        reasoning: career.description || career.reasoning || ''
-      })),
-      personalities: (rawResponse.content.personality || []).map((trait: any) => ({
-        title: trait.title || '',
-        match: trait.match || 0,
-        description: trait.description || ''
-      })),
-      mentors: (rawResponse.content.mentors || []).map((mentor: any) => ({
-        name: mentor.name || '',
-        experience: mentor.experience || '',
-        skills: mentor.skills || ''
-      }))
-    };
-  }
-  
-  return { 
-    type: 'unknown',
+  // Default structure
+  const recommendation: ParsedRecommendation = {
+    type: rawResponse.type || 'recommendation',
     careers: [],
     personalities: [],
-    mentors: []
+    mentors: [],
   };
+
+  // Handle structured content format (new format)
+  if (rawResponse.content && typeof rawResponse.content === 'object') {
+    recommendation.structuredContent = {
+      introduction: rawResponse.content.intro ? {
+        title: rawResponse.content.title || "Your Career Assessment Results",
+        summary: rawResponse.content.intro
+      } : undefined,
+      career_recommendations: rawResponse.content.careers || rawResponse.content.career_recommendations,
+      personality_insights: rawResponse.content.personality || rawResponse.content.personality_insights,
+      growth_areas: rawResponse.content.growth_areas,
+      closing: rawResponse.content.message ? {
+        message: rawResponse.content.message,
+        next_steps: rawResponse.content.suggestions
+      } : undefined
+    };
+    return recommendation;
+  }
+
+  // Handle text-based parsing for legacy format
+  const content = typeof rawResponse.content === 'string' ? rawResponse.content : rawResponse.content?.message || '';
+  
+  // Parse careers section
+  const careerRegex = /Career:\s*([^\n]+)\nMatch:\s*(\d+)%\nReasoning:\s*([^\n]+)/g;
+  let careerMatch;
+  while ((careerMatch = careerRegex.exec(content)) !== null) {
+    recommendation.careers.push({
+      title: careerMatch[1].trim(),
+      match: parseInt(careerMatch[2]),
+      reasoning: careerMatch[3].trim()
+    });
+  }
+
+  // Parse personalities section
+  const personalityRegex = /Trait:\s*([^\n]+)\nStrength:\s*(\d+)%\nDescription:\s*([^\n]+)/g;
+  let personalityMatch;
+  while ((personalityMatch = personalityRegex.exec(content)) !== null) {
+    recommendation.personalities.push({
+      title: personalityMatch[1].trim(),
+      match: parseInt(personalityMatch[2]),
+      description: personalityMatch[3].trim()
+    });
+  }
+
+  // Parse mentors section (if present)
+  const mentorRegex = /Mentor:\s*([^\n]+)\nExperience:\s*([^\n]+)\nSkills:\s*([^\n]+)/g;
+  let mentorMatch;
+  while ((mentorMatch = mentorRegex.exec(content)) !== null) {
+    recommendation.mentors.push({
+      name: mentorMatch[1].trim(),
+      experience: mentorMatch[2].trim(),
+      skills: mentorMatch[3].trim()
+    });
+  }
+
+  return recommendation;
 }
 
-/**
- * Extracts structured sections from a career recommendation message
- * This is used as a fallback when raw JSON structure isn't available
- */
-export function extractSections(content: string): ParsedRecommendation {
-  if (!content.includes('Career Recommendations') && 
-      !content.includes('Career Matches') && 
-      !content.includes('Personality')) {
-    return { 
-      type: 'unknown',
-      careers: [],
-      personalities: [],
-      mentors: []
-    };
-  }
+// Keep the original functions
+export function parseCareerFromRecommendation(text: string) {
+  // Use the safer approach
+  const careerMatch = extractValue(text, /Career: ([^\n]+)/);
+  if (!careerMatch) return null;
   
-  const careers: CareerRecommendation[] = [];
-  const personalities: PersonalityInsight[] = [];
-  const mentors: MentorRecommendation[] = [];
+  // Process the matched content
+  return careerMatch.replace('Career: ', '').trim();
+}
+
+export function parseReasoningFromRecommendation(text: string) {
+  // Use the safer approach
+  const reasoningMatch = extractValue(text, /Reasoning: ([^\n]+)/);
+  if (!reasoningMatch || reasoningMatch.length === 0) return null;
   
-  const careerSection = content.split(/Career (Recommendations|Matches)/i)[2]?.split(/Personality (Assessment|Analysis)/i)[0] || '';
-  if (careerSection) {
-    const careerMatches = careerSection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
-    
-    careerMatches.forEach((matchText, index) => {
-      const titleMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
-      if (titleMatch) {
-        const title = titleMatch[1].trim();
-        const matchScore = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
-        
-        let reasoning = '';
-        const startPos = careerSection.indexOf(matchText) + matchText.length;
-        let nextNumberPos;
-        
-        if (index < careerMatches.length - 1) {
-          const nextMatchPos = careerSection.indexOf(careerMatches[index + 1], startPos);
-          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
-        } else {
-          nextNumberPos = careerSection.substring(startPos).search(/\d+\.\s+/);
-        }
-        
-        if (nextNumberPos > 0) {
-          reasoning = careerSection.substring(startPos, startPos + nextNumberPos).trim();
-        } else if (index === careerMatches.length - 1) {
-          reasoning = careerSection.substring(startPos).trim();
-        }
-        
-        careers.push({
-          title,
-          match: matchScore,
-          reasoning: reasoning || `Good match based on your skills and preferences.`
-        });
-      }
-    });
-  }
-  
-  const personalitySection = content.split(/Personality (Assessment|Analysis)/i)[1]?.split(/Mentor (Suggestions|Recommendations)/i)[0] || '';
-  if (personalitySection) {
-    const personalityMatches = personalitySection.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/g) || [];
-    
-    personalityMatches.forEach((matchText, index) => {
-      const titleMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\((\d+)%\)|\s*-\s*(\d+)%)/);
-      if (titleMatch) {
-        const title = titleMatch[1].trim();
-        const matchScore = parseInt(titleMatch[2] || titleMatch[3] || '0', 10);
-        
-        let description = '';
-        const startPos = personalitySection.indexOf(matchText) + matchText.length;
-        let nextNumberPos;
-        
-        if (index < personalityMatches.length - 1) {
-          const nextMatchPos = personalitySection.indexOf(personalityMatches[index + 1], startPos);
-          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
-        } else {
-          nextNumberPos = personalitySection.substring(startPos).search(/\d+\.\s+/);
-        }
-        
-        if (nextNumberPos > 0) {
-          description = personalitySection.substring(startPos, startPos + nextNumberPos).trim();
-        } else if (index === personalityMatches.length - 1) {
-          description = personalitySection.substring(startPos).trim();
-        }
-        
-        personalities.push({
-          title,
-          match: matchScore,
-          description: description || `Personality type that matches your profile.`
-        });
-      }
-    });
-  }
-  
-  const mentorSection = content.split(/Mentor (Suggestions|Recommendations)/i)[1] || '';
-  if (mentorSection) {
-    const mentorMatches = mentorSection.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/g) || [];
-    
-    mentorMatches.forEach((matchText, index) => {
-      const nameMatch = matchText.match(/\d+\.\s+(.*?)(?:\s*\(|:|\s*-)/);
-      if (nameMatch) {
-        const name = nameMatch[1].trim();
-        
-        let details = '';
-        const startPos = mentorSection.indexOf(matchText) + matchText.length;
-        let nextNumberPos;
-        
-        if (index < mentorMatches.length - 1) {
-          const nextMatchPos = mentorSection.indexOf(mentorMatches[index + 1], startPos);
-          nextNumberPos = nextMatchPos > 0 ? nextMatchPos - startPos : -1;
-        } else {
-          nextNumberPos = mentorSection.substring(startPos).search(/\d+\.\s+/);
-        }
-        
-        if (nextNumberPos > 0) {
-          details = mentorSection.substring(startPos, startPos + nextNumberPos).trim();
-        } else if (index === mentorMatches.length - 1) {
-          details = mentorSection.substring(startPos).trim();
-        }
-        
-        const experienceMatch = details.match(/(\d+)\s+years?/i);
-        const experience = experienceMatch ? `${experienceMatch[1]} years` : "Experienced";
-        
-        mentors.push({
-          name,
-          experience,
-          skills: details
-        });
-      }
-    });
-  }
-  
-  return {
-    type: 'recommendation',
-    careers,
-    personalities,
-    mentors
-  };
+  // Process the matched content
+  return reasoningMatch.replace('Reasoning: ', '').trim();
 }

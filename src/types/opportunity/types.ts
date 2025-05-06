@@ -35,15 +35,18 @@ export interface OpportunityAnalytics {
   id: string;
   opportunity_id: string;
   views_count: number;
-  applications_count: number;
+  checked_out_count: number;
   bookmarks_count: number;
   created_at: string;
   updated_at: string;
 }
 
-export interface OpportunityWithAnalytics extends Opportunity {
-  analytics?: OpportunityAnalytics;
-}
+// Alias applications_count to checked_out_count for backward compatibility
+export type OpportunityWithAnalytics = Opportunity & {
+  analytics?: OpportunityAnalytics & {
+    applications_count?: number;
+  };
+};
 
 export interface OpportunityApplication {
   id: string;

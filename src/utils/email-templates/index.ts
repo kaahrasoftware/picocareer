@@ -42,10 +42,12 @@ export function generateEmailContent(
   // Ensure contentItems is an array before attempting to map over it
   const safeContentItems = Array.isArray(contentItems) ? contentItems : [];
 
+  // Fix: Passing parameters in the correct order
   const contentCardsHtml = safeContentItems.length > 0
     ? safeContentItems.map(item => formatContentCard(
         item, 
         contentType, 
+        siteUrl,  // Pass siteUrl before styles
         styles, 
         layoutSettings
       )).join('')
@@ -130,6 +132,8 @@ export function getEmailSubject(contentType: string, firstName: string = ''): st
       return `👋 Meet Your Potential Mentors, ${nameSection}`;
     case 'blogs':
       return `📖 Fresh Insights Curated for You, ${nameSection}`;
+    case 'events':
+      return `🗓️ Upcoming Events Selected For You, ${nameSection}`;
     default:
       return `New Content Updates for You, ${nameSection}`;
   }
