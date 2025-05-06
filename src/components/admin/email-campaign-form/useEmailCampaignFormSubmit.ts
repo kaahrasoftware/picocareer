@@ -89,19 +89,32 @@ export const useEmailCampaignFormSubmit = ({
       }
       
       // First, ensure the session is refreshed before submitting
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('Refreshing auth session before campaign creation...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
+      
       if (sessionError) {
         console.error('Error refreshing session:', sessionError);
         toast.error(`Session error: ${sessionError.message}`);
-        throw sessionError;
+        
+        // If session refresh fails, try getting the current session
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (!currentSession.session) {
+          toast.error('Your session has expired. Please log in again.');
+          throw new Error('Authentication error: Session expired');
+        }
       }
       
-      if (!sessionData.session) {
-        toast.error('Not authenticated. Please log in again.');
-        throw new Error('Not authenticated');
+      // Additional check to ensure we have an authenticated session
+      if (!sessionData?.session) {
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (!currentSession.session) {
+          toast.error('Not authenticated. Please log in again.');
+          throw new Error('Not authenticated');
+        }
+        console.log('Using current session:', currentSession.session.user?.id);
+      } else {
+        console.log('Session refreshed successfully:', sessionData.session.user?.id);
       }
-      
-      console.log('Session verified, user authenticated as:', sessionData.session.user?.id);
       
       const campaignData = {
         admin_id: adminId,
