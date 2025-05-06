@@ -209,9 +209,12 @@ function formatContentCard(
   const author = item.author_name || '';
   const category = contentType;
 
-  // Determine the content link
+  // Determine the content link - with special handling for scholarships to use the dialog URL
   let contentLink = `${siteUrl}`;
   switch (contentType) {
+    case 'scholarships':
+      contentLink += `/scholarships/dialog/${item.id}`; // Updated link format for scholarships
+      break;
     case 'blogs':
       contentLink += `/blog/${item.id}`;
       break;
@@ -220,9 +223,6 @@ function formatContentCard(
       break;
     case 'majors':
       contentLink += `/program/${item.id}`;
-      break;
-    case 'scholarships':
-      contentLink += `/scholarship/${item.id}`;
       break;
     case 'opportunities':
       contentLink += `/opportunity/${item.id}`;
@@ -261,9 +261,10 @@ function formatContentCard(
     // Add custom metadata based on content type
     switch (contentType) {
       case 'scholarships':
-        if (item.amount && settings.metadataDisplay?.includes('amount')) {
-          metadataItems.push(`<span>Amount: $${item.amount}</span>`);
-        }
+        // Always display amount for scholarships prominently
+        const amountText = item.formatted_amount || (item.amount ? `$${item.amount.toLocaleString()}` : 'Amount varies');
+        metadataItems.push(`<span style="font-weight: bold; color: ${colors.primary};">Amount: ${amountText}</span>`);
+        
         if (item.provider_name && settings.metadataDisplay?.includes('provider')) {
           metadataItems.push(`<span>Provider: ${item.provider_name}</span>`);
         }
@@ -295,9 +296,22 @@ function formatContentCard(
     }
   }
 
+  // Special scholarship highlight for amounts
+  let scholarshipAmountHighlight = '';
+  if (contentType === 'scholarships' && item.amount) {
+    scholarshipAmountHighlight = `
+      <div style="position: absolute; top: 10px; right: 10px; background-color: ${colors.accent}; color: white; 
+                  padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+        $${item.amount.toLocaleString()}
+      </div>
+    `;
+  }
+
   // Build and return the HTML for the content card
   return `
-    <div style="margin-bottom: 32px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+    <div style="margin-bottom: 32px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: relative;">
+      ${scholarshipAmountHighlight}
+      
       ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'top' ? `
         <div style="width: 100%; height: 200px; overflow: hidden; background-color: #f3f4f6;">
           <img 
@@ -335,13 +349,20 @@ function formatContentCard(
           </p>
         ` : ''}
         
+        ${contentType === 'scholarships' && settings.contentBlocks?.includes('metadata') ? `
+          <div style="margin: 10px 0; padding: 10px; background-color: #f9fafb; border-radius: 4px;">
+            ${item.deadline ? `<p style="margin: 0; font-size: 14px;"><strong>Deadline:</strong> ${new Date(item.deadline).toLocaleDateString()}</p>` : ''}
+            ${item.provider_name ? `<p style="margin: 5px 0 0 0; font-size: 14px;"><strong>Provider:</strong> ${item.provider_name}</p>` : ''}
+          </div>
+        ` : ''}
+        
         ${settings.contentBlocks?.includes('cta') ? `
           <a 
             href="${contentLink}" 
             style="display: inline-block; padding: 8px 16px; background-color: ${colors.accent}; color: white; 
                   text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 500;"
           >
-            Read More
+            ${contentType === 'scholarships' ? 'Apply Now' : 'Read More'}
           </a>
         ` : ''}
       </div>

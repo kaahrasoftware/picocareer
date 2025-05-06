@@ -1,4 +1,3 @@
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { ContentItem } from "./types.ts";
 
@@ -22,7 +21,9 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         if (scholarshipError) throw new Error(`Error fetching scholarships: ${scholarshipError.message}`);
         data = scholarships?.map(s => ({
           ...s,
-          cover_image_url: s.image_url
+          cover_image_url: s.image_url,
+          amount: s.amount || 0, // Ensure amount is set even if null
+          formatted_amount: s.amount ? `$${s.amount.toLocaleString()}` : 'Amount varies' // Add formatted amount
         })) || [];
         break;
         
