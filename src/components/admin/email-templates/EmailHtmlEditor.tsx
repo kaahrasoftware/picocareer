@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -21,7 +22,7 @@ const TEMPLATE_TYPES = [
   { value: "base", label: "Base Template" }
 ];
 
-// Default templates
+// Default templates (shown when no templates exist in database)
 const DEFAULT_TEMPLATES: Record<string, string> = {
   header: `
 <!-- Email Header Template -->
@@ -93,7 +94,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
       
       <!-- HEADER TEMPLATE WILL BE INSERTED HERE -->
-      {{header_template}}
+      {{{header_template}}}
       
       <div style="padding: 0 24px;">
         <p style="color: #374151; font-size: 16px; line-height: 1.5;">
@@ -107,7 +108,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
 
       <div style="padding: 24px;">
         <!-- CONTENT CARDS WILL BE INSERTED HERE -->
-        {{content_cards}}
+        {{{content_cards}}}
       </div>
 
       <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
@@ -125,7 +126,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
       </div>
 
       <!-- FOOTER TEMPLATE WILL BE INSERTED HERE -->
-      {{footer_template}}
+      {{{footer_template}}}
       
     </div>
   </body>
@@ -137,8 +138,22 @@ interface EmailHtmlEditorProps {
   adminId: string;
 }
 
+interface PreviewData {
+  title: string;
+  logo_url: string;
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  site_url: string;
+  unsubscribe_url: string;
+  recipient_name: string;
+  intro_text: string;
+  cta_text: string;
+  current_year: string;
+}
+
 export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
-  const [contentType, setContentType] = useState<ContentType>("careers");
+  const [contentType, setContentType] = useState<ContentType>("blogs");
   const [templateType, setTemplateType] = useState("base");
   const [htmlContent, setHtmlContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -149,7 +164,7 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
   const debouncedHtmlContent = useDebounce(htmlContent, 500);
   
   // Preview state
-  const [previewData, setPreviewData] = useState({
+  const [previewData, setPreviewData] = useState<PreviewData>({
     title: "Sample Email Title",
     logo_url: "",
     primary_color: "#4f46e5",
@@ -172,8 +187,8 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
     
     setLoading(true);
     try {
-      // Try to load from database first
-      const { data, error } = await supabase
+      // First try to load a content-specific template
+      let { data, error } = await supabase
         .from('email_html_templates')
         .select('*')
         .eq('admin_id', adminId)
@@ -181,7 +196,23 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
         .eq('template_type', templateType)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // Not found is fine
+      // If no content-specific template exists, try to load the universal template
+      if (error && error.code === 'PGRST116') {
+        const { data: universalData, error: universalError } = await supabase
+          .from('email_html_templates')
+          .select('*')
+          .eq('admin_id', adminId)
+          .eq('content_type', 'universal')
+          .eq('template_type', templateType)
+          .single();
+          
+        if (!universalError) {
+          data = universalData;
+          error = null;
+        }
+      }
+
+      if (error && error.code !== 'PGRST116') { // not found is fine
         throw error;
       }
 
@@ -259,11 +290,11 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
         if (error && error.code !== 'PGRST116') throw error;
 
         if (data) {
-          // Fixed the data access - account for different property structure
-          const logoUrl = data.layout_settings && 
-                          typeof data.layout_settings === 'object' && 
+          // Safely handle logo_url, ensuring it's a string
+          const logoUrl = typeof data.layout_settings === 'object' && 
+                          data.layout_settings !== null && 
                           'logo_url' in data.layout_settings ? 
-                          data.layout_settings.logo_url : '';
+                          String(data.layout_settings.logo_url || '') : '';
           
           setPreviewData(prev => ({
             ...prev,
@@ -284,9 +315,9 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
   const templateVariables = {
     base: [
       { name: "{{title}}", description: "Email subject/title" },
-      { name: "{{header_template}}", description: "Inserts the header template" },
-      { name: "{{content_cards}}", description: "Inserts content card templates" },
-      { name: "{{footer_template}}", description: "Inserts the footer template" },
+      { name: "{{{header_template}}}", description: "Inserts the header template" },
+      { name: "{{{content_cards}}}", description: "Inserts content card templates" },
+      { name: "{{{footer_template}}}", description: "Inserts the footer template" },
       { name: "{{recipient_name}}", description: "Recipient's name" },
       { name: "{{intro_text}}", description: "Introductory text" },
       { name: "{{cta_text}}", description: "Call to action text" },
@@ -328,7 +359,7 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
       // Basic handling of conditionals for demo
       preview = preview.replace(/{{#if ([^}]+)}}([^]*){{\/if}}/g, (match, condition, content) => {
         const conditionKey = condition.trim();
-        return previewData[conditionKey] ? content : '';
+        return previewData[conditionKey as keyof PreviewData] ? content : '';
       });
       
       return preview;
