@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import type { EmailContentTypeSettings } from "@/types/database/email";
 import { ContentType } from "../email-campaign-form/utils";
-import { ContentEditorTab } from "./ContentEditorTab";
+import { EmailTemplateEditor } from "./EmailTemplateEditor";
 
 interface ContentTypeTemplateEditorProps {
   adminId: string;
@@ -243,8 +243,8 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                 </TabsContent>
                 
                 <TabsContent value="content" className="space-y-4">
-                  {/* This is important - replacing form with div */}
-                  <ContentEditorTab 
+                  {/* Replace ContentEditorTab with EmailTemplateEditor */}
+                  <EmailTemplateEditor 
                     adminId={adminId}
                     contentType={contentType}
                     onContentUpdate={refreshPreview}

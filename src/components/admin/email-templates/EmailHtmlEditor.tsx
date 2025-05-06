@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -44,7 +43,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
         style="width: 100%; height: auto; border-radius: 8px; margin-bottom: 12px; max-width: 600px;"
       />
     {{/if}}
-    <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: {{accent_color}};">
+    <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 18px; color: {{accent_color}}">
       {{title}}
     </h3>
     
@@ -260,12 +259,18 @@ export function EmailHtmlEditor({ adminId }: EmailHtmlEditorProps) {
         if (error && error.code !== 'PGRST116') throw error;
 
         if (data) {
+          // Fixed the data access - account for different property structure
+          const logoUrl = data.layout_settings && 
+                          typeof data.layout_settings === 'object' && 
+                          'logo_url' in data.layout_settings ? 
+                          data.layout_settings.logo_url : '';
+          
           setPreviewData(prev => ({
             ...prev,
             primary_color: data.primary_color,
             secondary_color: data.secondary_color,
             accent_color: data.accent_color,
-            logo_url: data.logo_url || "",
+            logo_url: logoUrl,
           }));
         }
       } catch (error) {

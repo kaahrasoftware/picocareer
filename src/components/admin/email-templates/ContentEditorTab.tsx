@@ -1,4 +1,7 @@
 
+// This file has been deprecated and replaced by EmailTemplateEditor.tsx
+// It's kept for reference only and should not be used in new code.
+
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
@@ -17,12 +20,16 @@ interface ContentEditorTabProps {
   onContentUpdate: () => void;
 }
 
+// DEPRECATED: Use EmailTemplateEditor instead
 export function ContentEditorTab({ adminId, contentType, onContentUpdate }: ContentEditorTabProps) {
+  console.warn("ContentEditorTab is deprecated, use EmailTemplateEditor instead");
+  
   const { register, handleSubmit, reset } = useForm<Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>>();
 
   const { data: content, isLoading } = useQuery({
     queryKey: ['email-template-content', contentType],
     queryFn: async () => {
+      console.log("ContentEditorTab: Fetching content for", contentType, adminId);
       const { data, error } = await supabase
         .from('email_template_content')
         .select('*')
@@ -30,7 +37,10 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
         .eq('admin_id', adminId)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error("ContentEditorTab fetch error:", error);
+        throw error;
+      }
       return data as EmailTemplateContent;
     },
   });
@@ -38,11 +48,12 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
   // Use useEffect instead of onSuccess in useQuery
   useEffect(() => {
     if (content) {
+      console.log("ContentEditorTab: Loaded content:", content);
       reset({
-        header_text: content.header_text,
-        intro_text: content.intro_text,
-        cta_text: content.cta_text,
-        footer_text: content.footer_text,
+        header_text: content.header_text || '',
+        intro_text: content.intro_text || '',
+        cta_text: content.cta_text || '',
+        footer_text: content.footer_text || '',
       });
     }
   }, [content, reset]);
@@ -50,6 +61,7 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
   const onSubmit = async (formData: Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>) => {
     try {
       console.log("ContentEditorTab submitting with adminId:", adminId, "content type:", contentType);
+      console.log("Form data:", formData);
       
       const { error } = await supabase
         .from('email_template_content')
@@ -61,7 +73,10 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
           onConflict: 'content_type,admin_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("ContentEditorTab save error:", error);
+        throw error;
+      }
       
       toast.success("Template content updated successfully");
       onContentUpdate();
