@@ -49,6 +49,8 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
 
   const onSubmit = async (formData: Omit<EmailTemplateContent, 'id' | 'admin_id' | 'content_type' | 'created_at' | 'updated_at'>) => {
     try {
+      console.log("ContentEditorTab submitting with adminId:", adminId, "content type:", contentType);
+      
       const { error } = await supabase
         .from('email_template_content')
         .upsert({
@@ -77,8 +79,9 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
     );
   }
 
+  // Return a div instead of a form
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <div className="space-y-6">
       <div className="space-y-4">
         <div>
           <Label htmlFor="header_text">Header Text</Label>
@@ -119,9 +122,9 @@ export function ContentEditorTab({ adminId, contentType, onContentUpdate }: Cont
         </div>
       </div>
 
-      <Button type="submit" className="w-full">
+      <Button onClick={handleSubmit(onSubmit)} className="w-full">
         Save Content
       </Button>
-    </form>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Card } from "@/components/ui/card";
@@ -244,13 +243,11 @@ export function ContentTypeTemplateEditor({ adminId, contentType }: ContentTypeT
                 </TabsContent>
                 
                 <TabsContent value="content" className="space-y-4">
+                  {/* This is important - replacing form with div */}
                   <ContentEditorTab 
                     adminId={adminId}
                     contentType={contentType}
-                    onContentUpdate={() => {
-                      // Replace loadCampaigns with refreshPreview
-                      refreshPreview();
-                    }}
+                    onContentUpdate={refreshPreview}
                   />
                 </TabsContent>
                 
