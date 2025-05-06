@@ -15,7 +15,11 @@ export interface ContentItem {
   location?: string;
   remote?: boolean;
   skills?: string[];
+  author_name?: string;
+  created_at?: string;
   avatar_url?: string; // For mentor profiles
+  categories?: string[];
+  salary_range?: string;
   [key: string]: any; // Allow other properties
 }
 
@@ -31,7 +35,7 @@ export interface Campaign {
   subject?: string;
   body?: string;
   content_type: string; // Using string type to accommodate all content types
-  content_id: string;
+  content_id?: string;
   content_ids?: string[];
   recipient_type: string;
   recipient_filter?: {
@@ -67,6 +71,12 @@ export interface EmailTemplateSettings {
     imagePosition: 'top' | 'inline' | 'side';
     contentBlocks: string[];
     metadataDisplay: string[];
+  };
+  content?: {
+    header_text?: string;
+    intro_text?: string;
+    cta_text?: string;
+    footer_text?: string;
   };
   created_at: string;
   updated_at: string;
