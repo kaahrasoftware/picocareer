@@ -638,36 +638,6 @@ export type Database = {
         }
         Relationships: []
       }
-      email_html_templates: {
-        Row: {
-          admin_id: string
-          content_type: string
-          created_at: string
-          html_content: string
-          id: string
-          template_type: string
-          updated_at: string
-        }
-        Insert: {
-          admin_id: string
-          content_type: string
-          created_at?: string
-          html_content: string
-          id?: string
-          template_type: string
-          updated_at?: string
-        }
-        Update: {
-          admin_id?: string
-          content_type?: string
-          created_at?: string
-          html_content?: string
-          id?: string
-          template_type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       email_subscriptions: {
         Row: {
           created_at: string

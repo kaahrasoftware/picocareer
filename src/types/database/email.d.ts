@@ -19,13 +19,12 @@ export interface EmailContentTypeSettings {
   secondary_color: string;
   accent_color: string;
   layout_settings: {
-    headerStyle?: 'centered' | 'banner' | 'minimal';
-    showAuthor?: boolean;  
-    showDate?: boolean;
-    imagePosition?: 'top' | 'inline' | 'side';
-    contentBlocks?: string[];
-    metadataDisplay?: string[];
-    logo_url?: string;
+    headerStyle: 'centered' | 'banner' | 'minimal';
+    showAuthor: boolean;  
+    showDate: boolean;
+    imagePosition: 'top' | 'inline' | 'side';
+    contentBlocks: string[];
+    metadataDisplay: string[];
   };
   content?: {
     header_text?: string;
@@ -33,16 +32,6 @@ export interface EmailContentTypeSettings {
     cta_text?: string;
     footer_text?: string;
   };
-  created_at: string;
-  updated_at: string;
-}
-
-export interface EmailHtmlTemplate {
-  id: string;
-  admin_id: string;
-  content_type: string;
-  template_type: string;
-  html_content: string;
   created_at: string;
   updated_at: string;
 }
@@ -72,7 +61,6 @@ export interface Campaign {
     filter_type?: string;
     [key: string]: any;
   };
-  body?: string;
 }
 
 export interface ContentItem {
@@ -81,19 +69,11 @@ export interface ContentItem {
   description?: string;
   cover_image_url?: string;
   image_url?: string;
-  avatar_url?: string;
   provider_name?: string;
   deadline?: string;
   amount?: number;
   location?: string;
   remote?: boolean;
-  company_name?: string;
-  salary_range?: string;
-  start_time?: string;
-  platform?: string;
-  author_name?: string;
-  categories?: string[];
-  created_at?: string;
   [key: string]: any;
 }
 

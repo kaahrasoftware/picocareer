@@ -32,28 +32,14 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
     }
   }, [session, loading, protectionLevel, navigate]);
 
-  // Log current auth state for debugging
-  React.useEffect(() => {
-    if (!loading) {
-      console.log("Auth session state:", { 
-        isAuthenticated: !!session, 
-        userId: session?.user?.id,
-        loading
-      });
-    }
-  }, [session, loading]);
-
   // Add session refresh helper
   const refreshSession = useCallback(async () => {
     try {
-      console.log("Attempting to refresh auth session");
       const { data, error } = await supabase.auth.refreshSession();
       if (error) {
         console.error('Error refreshing session:', error);
         return false;
       }
-      
-      console.log("Session refreshed successfully", !!data.session);
       
       // Invalidate user data queries after session refresh
       if (data.session?.user?.id && queryClient) {

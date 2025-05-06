@@ -1,5 +1,6 @@
 
 import { ContentItem } from "@/types/database/email";
+import { getContentTypeStyles } from "./styles";
 
 /**
  * Formats a content item into an HTML card for email templates
@@ -40,7 +41,7 @@ export function formatContentCard(
   // Get display properties based on content type
   const title = item.title || `Untitled ${contentType}`;
   const description = item.description || '';
-  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || '';
+  const imageUrl = item.cover_image_url || item.image_url || '';
   const author = item.author_name || '';
   const category = Array.isArray(item.categories) && item.categories.length > 0 
     ? item.categories[0] 
