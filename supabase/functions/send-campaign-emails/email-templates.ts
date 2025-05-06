@@ -213,7 +213,7 @@ function formatContentCard(
   let contentLink = `${siteUrl}`;
   switch (contentType) {
     case 'scholarships':
-      contentLink += `/scholarships/dialog/${item.id}`; // Updated link format for scholarships
+      contentLink += `/scholarships?dialog=${item.id}`; // Updated link format for scholarships to open dialog
       break;
     case 'blogs':
       contentLink += `/blog/${item.id}`;
@@ -296,7 +296,7 @@ function formatContentCard(
     }
   }
 
-  // Special scholarship highlight for amounts
+  // Special scholarship amount highlight
   let scholarshipAmountHighlight = '';
   if (contentType === 'scholarships' && item.amount) {
     scholarshipAmountHighlight = `
