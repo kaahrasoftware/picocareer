@@ -37,7 +37,7 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         break;
         
       case 'careers':
-        // Fixed query to remove non-existent location column
+        // Fixed query to remove non-existent columns (location and remote)
         const { data: careers, error: careerError } = await supabase
           .from('careers')
           .select(`
@@ -47,8 +47,7 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
             salary_range,
             image_url,
             industry,
-            growth_potential,
-            remote
+            growth_potential
           `)
           .in('id', contentIds);
         
@@ -57,8 +56,9 @@ export async function fetchContentDetails(supabase: any, contentType: string, co
         data = careers?.map(career => ({
           ...career,
           cover_image_url: career.image_url,
-          // Add any location-related display logic here if needed
-          location: career.industry || 'Various locations' // Using industry as a fallback for location display
+          // Add fallbacks for location and remote properties that might be expected by templates
+          location: career.industry || 'Various locations', // Using industry as a fallback for location display
+          remote: false // Default value for remote property
         })) || [];
         break;
         
