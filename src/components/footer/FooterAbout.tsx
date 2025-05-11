@@ -29,6 +29,13 @@ export function FooterAbout() {
           </div>
           <div className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mt-1">
             <Phone className="w-4 h-4 mr-2" />
+            <a href="tel:+254758723112" className="underline hover:text-blue-600">
+              +254 (758) 723-112
+            </a>
+            <span className="ml-2 text-xs text-muted-foreground">(Kenya)</span>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mt-1">
+            <Phone className="w-4 h-4 mr-2" />
             <a href="tel:+22897476446" className="underline hover:text-blue-600">
               +228 (97) 47-64-46
             </a>
