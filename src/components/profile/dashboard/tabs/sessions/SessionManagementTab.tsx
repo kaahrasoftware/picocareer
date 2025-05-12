@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,9 +69,9 @@ export function SessionManagementTab() {
     sortDirection
   });
 
-  // Calculate session statistics
+  // Get session statistics from the API response
   const sessionStats = React.useMemo(() => {
-    if (!sessionsData?.sessions) {
+    if (!sessionsData?.statusCounts) {
       return {
         total: 0,
         completed: 0,
@@ -82,18 +81,15 @@ export function SessionManagementTab() {
       };
     }
 
-    const total = sessionsData.sessions.length;
-    const completed = sessionsData.sessions.filter(s => s.status === 'completed').length;
-    const scheduled = sessionsData.sessions.filter(s => s.status === 'scheduled').length;
-    const cancelled = sessionsData.sessions.filter(s => s.status === 'cancelled').length;
-    const noShow = sessionsData.sessions.filter(s => s.status === 'no_show').length;
+    // Use the status counts from the API
+    const { total, completed, scheduled, cancelled, no_show } = sessionsData.statusCounts;
 
     return {
-      total: sessionsData.totalCount || total,
+      total,
       completed,
       scheduled,
       cancelled,
-      noShow
+      noShow: no_show
     };
   }, [sessionsData]);
 
