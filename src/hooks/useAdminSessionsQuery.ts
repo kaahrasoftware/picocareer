@@ -90,8 +90,32 @@ export function useAdminSessionsQuery({
         // Apply sorting
         query = query.order(sortBy, { ascending: sortDirection === 'asc' });
         
-        // Get total count for pagination
-        const countQuery = query.count();
+        // Get total count for pagination for the filtered query
+        const countQuery = supabase
+          .from("mentor_sessions")
+          .select("*", { count: "exact", head: true });
+          
+        // Apply the same filters to the count query
+        if (statusFilter !== "all") {
+          countQuery.eq("status", statusFilter);
+        }
+        
+        if (startDate) {
+          countQuery.gte("scheduled_at", startDate);
+        }
+        
+        if (endDate) {
+          countQuery.lte("scheduled_at", endDate);
+        }
+        
+        if (searchTerm && searchTerm.trim() !== '') {
+          // For the count query, we need to use a join and or statements
+          countQuery.or(`
+            mentor_id.in.(select id from profiles where full_name ilike '%${searchTerm}%'),
+            mentee_id.in.(select id from profiles where full_name ilike '%${searchTerm}%')
+          `);
+        }
+        
         const { count, error: countError } = await countQuery;
         
         if (countError) {
@@ -132,67 +156,58 @@ export function useAdminSessionsQuery({
 // Helper function to fetch counts by status
 async function fetchStatusCounts(startDate?: string, endDate?: string, searchTerm?: string): Promise<StatusCounts> {
   try {
-    // Start with a basic query
-    let query = supabase
-      .from("mentor_sessions")
-      .select('status', { count: 'exact' });
-
-    // Apply date filters if provided
-    if (startDate) {
-      query = query.gte("scheduled_at", startDate);
-    }
-    
-    if (endDate) {
-      query = query.lte("scheduled_at", endDate);
-    }
-    
-    if (searchTerm && searchTerm.trim() !== '') {
-      // Join with profiles for search
-      query = query.or(`
-        mentor.full_name.ilike.%${searchTerm}%,
-        mentee.full_name.ilike.%${searchTerm}%,
-        session_type.type.ilike.%${searchTerm}%
-      `);
-    }
-
-    // Get the total first
-    const { count: total, error: totalError } = await query;
-    
-    if (totalError) {
-      throw totalError;
-    }
-    
-    // Now get completed count
-    const { count: completed, error: completedError } = await query
-      .eq('status', 'completed');
+    // Create base queries for each status type
+    const baseQuery = () => {
+      let query = supabase.from("mentor_sessions").select("*", { count: "exact", head: true });
       
-    if (completedError) {
-      throw completedError;
-    }
-    
-    // Get scheduled count
-    const { count: scheduled, error: scheduledError } = await query
-      .eq('status', 'scheduled');
+      // Apply date filters if provided
+      if (startDate) {
+        query = query.gte("scheduled_at", startDate);
+      }
       
-    if (scheduledError) {
-      throw scheduledError;
-    }
-    
-    // Get cancelled count
-    const { count: cancelled, error: cancelledError } = await query
-      .eq('status', 'cancelled');
+      if (endDate) {
+        query = query.lte("scheduled_at", endDate);
+      }
       
-    if (cancelledError) {
-      throw cancelledError;
-    }
-    
-    // Get no_show count
-    const { count: noShow, error: noShowError } = await query
-      .eq('status', 'no_show');
+      if (searchTerm && searchTerm.trim() !== '') {
+        // For the count query, we need to use a join and or statements
+        query = query.or(`
+          mentor_id.in.(select id from profiles where full_name ilike '%${searchTerm}%'),
+          mentee_id.in.(select id from profiles where full_name ilike '%${searchTerm}%')
+        `);
+      }
       
-    if (noShowError) {
-      throw noShowError;
-    }
+      return query;
+    };
+    
+    // Query for each status type
+    const totalQuery = baseQuery();
+    const completedQuery = baseQuery().eq('status', 'completed');
+    const scheduledQuery = baseQuery().eq('status', 'scheduled');
+    const cancelledQuery = baseQuery().eq('status', 'cancelled');
+    const noShowQuery = baseQuery().eq('status', 'no_show');
+    
+    // Execute all queries concurrently
+    const [
+      { count: total, error: totalError },
+      { count: completed, error: completedError },
+      { count: scheduled, error: scheduledError },
+      { count: cancelled, error: cancelledError },
+      { count: noShow, error: noShowError }
+    ] = await Promise.all([
+      totalQuery.count(),
+      completedQuery.count(),
+      scheduledQuery.count(),
+      cancelledQuery.count(),
+      noShowQuery.count()
+    ]);
+      
+    // Check for errors
+    if (totalError) throw totalError;
+    if (completedError) throw completedError;
+    if (scheduledError) throw scheduledError;
+    if (cancelledError) throw cancelledError;
+    if (noShowError) throw noShowError;
 
     return {
       total: total || 0,

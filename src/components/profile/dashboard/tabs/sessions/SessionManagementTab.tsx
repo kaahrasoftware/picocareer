@@ -81,7 +81,7 @@ export function SessionManagementTab() {
       };
     }
 
-    // Use the status counts from the API
+    // Use the status counts directly from the API
     const { total, completed, scheduled, cancelled, no_show } = sessionsData.statusCounts;
 
     return {
