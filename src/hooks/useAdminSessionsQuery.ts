@@ -156,8 +156,8 @@ export function useAdminSessionsQuery({
 // Helper function to fetch counts by status
 async function fetchStatusCounts(startDate?: string, endDate?: string, searchTerm?: string): Promise<StatusCounts> {
   try {
-    // Create base queries for each status type
-    const baseQuery = () => {
+    // Create base query builder to apply the same filters
+    const createBaseQuery = () => {
       let query = supabase.from("mentor_sessions").select("*", { count: "exact", head: true });
       
       // Apply date filters if provided
@@ -180,14 +180,14 @@ async function fetchStatusCounts(startDate?: string, endDate?: string, searchTer
       return query;
     };
     
-    // Query for each status type
-    const totalQuery = baseQuery();
-    const completedQuery = baseQuery().eq('status', 'completed');
-    const scheduledQuery = baseQuery().eq('status', 'scheduled');
-    const cancelledQuery = baseQuery().eq('status', 'cancelled');
-    const noShowQuery = baseQuery().eq('status', 'no_show');
+    // Create separate queries for each status
+    const totalQuery = createBaseQuery();
+    const completedQuery = createBaseQuery().eq('status', 'completed');
+    const scheduledQuery = createBaseQuery().eq('status', 'scheduled');
+    const cancelledQuery = createBaseQuery().eq('status', 'cancelled');
+    const noShowQuery = createBaseQuery().eq('status', 'no_show');
     
-    // Execute all queries concurrently
+    // Execute all queries in parallel
     const [
       { count: total, error: totalError },
       { count: completed, error: completedError },
@@ -195,13 +195,13 @@ async function fetchStatusCounts(startDate?: string, endDate?: string, searchTer
       { count: cancelled, error: cancelledError },
       { count: noShow, error: noShowError }
     ] = await Promise.all([
-      totalQuery.count(),
-      completedQuery.count(),
-      scheduledQuery.count(),
-      cancelledQuery.count(),
-      noShowQuery.count()
+      totalQuery,
+      completedQuery,
+      scheduledQuery,
+      cancelledQuery,
+      noShowQuery
     ]);
-      
+    
     // Check for errors
     if (totalError) throw totalError;
     if (completedError) throw completedError;
