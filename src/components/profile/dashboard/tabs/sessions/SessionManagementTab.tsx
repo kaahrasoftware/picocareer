@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { SessionsDataTable } from './SessionsDataTable';
-import { useAdminSessionsQuery } from '@/hooks/useAdminSessionsQuery';
+import { useAdminSessionsQuery } from '@/hooks/admin-sessions';
 import { SessionMetricCards } from './SessionMetricCards';
 import { SessionFeedbackDisplay } from './SessionFeedbackDisplay';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
