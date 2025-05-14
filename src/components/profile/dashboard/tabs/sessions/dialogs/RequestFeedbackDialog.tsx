@@ -9,9 +9,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, MessageSquare } from "lucide-react";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface RequestFeedbackDialogProps {
   isOpen: boolean;
@@ -30,15 +30,25 @@ export function RequestFeedbackDialog({
   menteeName,
   onSuccess,
 }: RequestFeedbackDialogProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { session } = useAuthSession();
 
   const handleRequestFeedback = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setError("Authentication required. Please login again.");
+      return;
+    }
     
-    setIsProcessing(true);
+    setIsSubmitting(true);
+    setError(null);
     
     try {
+      console.log("Calling admin-session-actions with:", {
+        action: "requestFeedback",
+        sessionId
+      });
+      
       const { data, error } = await supabase.functions.invoke("admin-session-actions", {
         body: {
           action: "requestFeedback",
@@ -49,49 +59,56 @@ export function RequestFeedbackDialog({
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error requesting feedback:", error);
+        throw new Error(error.message || "Failed to request feedback");
+      }
       
+      console.log("Request feedback response:", data);
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error("Error requesting feedback:", error);
+    } catch (err: any) {
+      console.error("Error requesting feedback:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5" />
-            Request Session Feedback
-          </DialogTitle>
+          <DialogTitle>Request Session Feedback</DialogTitle>
           <DialogDescription>
-            This will send notifications to both participants requesting their feedback on this session.
+            This will send a notification and email to both the mentor and mentee requesting feedback for their session.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
-          <p className="text-sm">
-            Feedback requests will be sent to:
-          </p>
-          <ul className="mt-2 space-y-1 text-sm">
-            <li>• {mentorName} (Mentor)</li>
-            <li>• {menteeName} (Mentee)</li>
-          </ul>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Both in-app notifications and email notifications will be sent.
-          </p>
+          <div className="mb-4 text-sm space-y-2">
+            <p><strong>Session participants:</strong></p>
+            <p>Mentor: {mentorName}</p>
+            <p>Mentee: {menteeName}</p>
+            
+            <p className="mt-4">
+              Both participants will receive a notification and an email with a link to submit their feedback.
+            </p>
+          </div>
+          
+          {error && (
+            <div className="mt-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
         </div>
         
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onClose} disabled={isProcessing}>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleRequestFeedback} disabled={isProcessing}>
-            {isProcessing ? (
+          <Button onClick={handleRequestFeedback} disabled={isSubmitting}>
+            {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
               </>

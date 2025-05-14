@@ -29,14 +29,24 @@ export function DeleteSessionDialog({
   onSuccess,
 }: DeleteSessionDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { session } = useAuthSession();
 
   const handleDelete = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setError("Authentication required. Please login again.");
+      return;
+    }
     
     setIsDeleting(true);
+    setError(null);
     
     try {
+      console.log("Calling admin-session-actions with:", {
+        action: "delete",
+        sessionId
+      });
+      
       const { data, error } = await supabase.functions.invoke("admin-session-actions", {
         body: {
           action: "delete",
@@ -47,12 +57,17 @@ export function DeleteSessionDialog({
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting session:", error);
+        throw new Error(error.message || "Failed to delete session");
+      }
       
+      console.log("Delete session response:", data);
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error("Error deleting session:", error);
+    } catch (err: any) {
+      console.error("Error in session deletion:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setIsDeleting(false);
     }
@@ -75,6 +90,12 @@ export function DeleteSessionDialog({
         <div className="py-4 text-sm">
           <p>Are you sure you want to delete this session?</p>
           <p className="mt-2 font-medium">{sessionDetails}</p>
+          
+          {error && (
+            <div className="mt-2 text-sm text-red-600">
+              {error}
+            </div>
+          )}
         </div>
         
         <DialogFooter className="gap-2 sm:gap-0">

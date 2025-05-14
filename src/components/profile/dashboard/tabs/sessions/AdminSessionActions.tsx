@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { supabase } from "@/integrations/supabase/client";
 import {
   MoreHorizontal,
   Trash2,

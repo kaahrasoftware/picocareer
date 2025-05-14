@@ -49,3 +49,6 @@ schedule = "@hourly"
 
 [functions.one-time-no-show-sync]
 verify_jwt = false
+
+[functions.admin-session-actions]
+verify_jwt = true
