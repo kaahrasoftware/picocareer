@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, MessageSquare, ArrowUpDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { MentorSession } from "@/types/database/session";
+import { AdminSessionActions } from "./AdminSessionActions";
 
 interface SessionsDataTableProps {
   sessions: MentorSession[];
@@ -31,6 +32,7 @@ interface SessionsDataTableProps {
   onSort?: (columnName: string) => void;
   currentSortColumn?: string;
   currentSortDirection?: 'asc' | 'desc';
+  onRefresh: () => void;
 }
 
 export function SessionsDataTable({
@@ -46,7 +48,8 @@ export function SessionsDataTable({
   onViewFeedback,
   onSort,
   currentSortColumn,
-  currentSortDirection
+  currentSortDirection,
+  onRefresh
 }: SessionsDataTableProps) {
   // Status badge color mapping
   const getStatusBadge = (status: string) => {
@@ -181,18 +184,11 @@ export function SessionsDataTable({
                 <TableCell>{getStatusBadge(session.status)}</TableCell>
                 <TableCell>
                   <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onViewFeedback(session.id)}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>View feedback</TooltipContent>
-                    </Tooltip>
+                    <AdminSessionActions 
+                      session={session} 
+                      onRefresh={onRefresh}
+                      onViewFeedback={onViewFeedback}
+                    />
                   </TooltipProvider>
                 </TableCell>
               </TableRow>

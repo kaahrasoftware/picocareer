@@ -1,131 +1,116 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Check if request is from an authorized admin
-  const authHeader = req.headers.get('Authorization');
-  if (!authHeader) {
-    return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-    );
-  }
-
   try {
-    console.log("Starting one-time-no-show-sync function");
-    
-    // Create a Supabase client with the service role key
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
-
-    // Verify this is an admin user
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
+    // Get authorization header
+    const authorization = req.headers.get("Authorization");
+    if (!authorization) {
+      throw new Error("Missing Authorization header");
     }
-    
+
+    // Setup Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify the token
+    const token = authorization.replace("Bearer ", "");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      throw new Error("Invalid token");
+    }
+
     // Check if user is admin
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('user_type')
-      .eq('id', user.id)
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
       .single();
-      
-    if (profileError || profile?.user_type !== 'admin') {
+
+    if (profileError || profile.user_type !== "admin") {
+      throw new Error("Unauthorized: Admin access required");
+    }
+
+    // Find past sessions that should be marked as no-show
+    // Sessions that are still 'scheduled' but the scheduled time + duration has passed
+    const { data: pastSessions, error: sessionsError } = await supabase
+      .from("mentor_sessions")
+      .select(`
+        id,
+        scheduled_at,
+        status,
+        session_type:session_type_id(duration)
+      `)
+      .eq("status", "scheduled")
+      .lt("scheduled_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Sessions at least 24 hours old
+
+    if (sessionsError) {
+      throw sessionsError;
+    }
+
+    // Filter sessions that are past their scheduled time + duration
+    const sessionsToUpdate = pastSessions.filter((session) => {
+      const scheduledTime = new Date(session.scheduled_at).getTime();
+      const endTime = scheduledTime + (session.session_type?.duration || 60) * 60 * 1000;
+      return endTime < Date.now();
+    });
+
+    if (sessionsToUpdate.length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+        JSON.stringify({ 
+          message: "No sessions needed updating",
+          count: 0 
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
       );
     }
 
-    // Run the migration
-    const results = {
-      noShows: 0,
-      errors: []
-    };
+    // Update sessions to no_show status
+    const { error: updateError } = await supabase
+      .from("mentor_sessions")
+      .update({ status: "no_show" })
+      .in("id", sessionsToUpdate.map((s) => s.id));
 
-    // 1. Find all feedback records with did_not_show_up = true
-    const { data: noShowFeedback, error: feedbackError } = await supabaseClient
-      .from('session_feedback')
-      .select('session_id, created_at')
-      .eq('did_not_show_up', true);
-      
-    if (feedbackError) {
-      throw feedbackError;
-    }
-    
-    console.log(`Found ${noShowFeedback?.length || 0} no-show feedback records`);
-    
-    if (noShowFeedback && noShowFeedback.length > 0) {
-      const sessionIds = noShowFeedback.map(f => f.session_id);
-      
-      // Check how many of these sessions are already marked as no_show
-      const { data: existingNoShows, error: checkError } = await supabaseClient
-        .from('mentor_sessions')
-        .select('id')
-        .in('id', sessionIds)
-        .eq('status', 'no_show');
-      
-      if (checkError) {
-        results.errors.push(checkError.message);
-      } else {
-        console.log(`${existingNoShows?.length || 0} sessions already marked as no_show`);
-      }
-      
-      // Update all sessions that aren't already marked as no_show
-      const { data, error: updateError } = await supabaseClient
-        .from('mentor_sessions')
-        .update({ status: 'no_show' })
-        .in('id', sessionIds)
-        .neq('status', 'no_show');
-        
-      if (updateError) {
-        results.errors.push(updateError.message);
-      } else {
-        const updatedCount = sessionIds.length - (existingNoShows?.length || 0);
-        results.noShows = updatedCount;
-        console.log(`Updated ${updatedCount} sessions to no_show status`);
-      }
+    if (updateError) {
+      throw updateError;
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Migration complete. Updated ${results.noShows} sessions to no_show status.`,
-        errors: results.errors
+      JSON.stringify({ 
+        message: `Updated ${sessionsToUpdate.length} sessions to no-show status`,
+        count: sessionsToUpdate.length 
       }),
-      {
+      { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+        status: 200 
       }
     );
   } catch (error) {
-    console.error('Error in one-time-no-show-sync function:', error);
-    
+    console.error("Error processing request:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ error: error.message || "An unknown error occurred" }),
+      { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status: 500
       }
     );
   }

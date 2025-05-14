@@ -1,6 +1,5 @@
 
-import type { MentorSession } from "@/types/database/session";
-
+// Admin sessions types
 export interface SessionQueryParams {
   statusFilter?: string;
   page?: number;
@@ -14,15 +13,14 @@ export interface SessionQueryParams {
 
 export interface StatusCounts {
   total: number;
-  completed: number;
   scheduled: number;
+  completed: number;
   cancelled: number;
   no_show: number;
 }
 
-export interface SessionsQueryResult {
-  sessions: MentorSession[];
-  totalCount: number;
+export interface AdminSessionsResponse {
+  sessions: any[];
   totalPages: number;
   statusCounts: StatusCounts;
 }

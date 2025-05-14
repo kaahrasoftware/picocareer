@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { SessionsDataTable } from './SessionsDataTable';
-import { useAdminSessionsQuery } from '@/hooks/admin-sessions';
+import { useAdminSessionsQuery } from '@/hooks/useAdminSessionsQuery';
 import { SessionMetricCards } from './SessionMetricCards';
 import { SessionFeedbackDisplay } from './SessionFeedbackDisplay';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -284,6 +285,7 @@ export function SessionManagementTab() {
                 onSort={handleSort}
                 currentSortColumn={sortBy}
                 currentSortDirection={sortDirection}
+                onRefresh={handleRefresh}
               />
             </TabsContent>
           </Tabs>
