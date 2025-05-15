@@ -75,6 +75,17 @@ serve(async (req) => {
     
   } catch (error) {
     console.error("Error processing request:", error);
+    
+    // Determine appropriate status code based on error type
+    let statusCode = 500;
+    if (error.message.includes("Unauthorized")) {
+      statusCode = 403;
+    } else if (error.message.includes("Session not found")) {
+      statusCode = 404;
+    } else if (error.message.includes("Invalid request")) {
+      statusCode = 400;
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: error.message || "An unknown error occurred",
@@ -82,7 +93,7 @@ serve(async (req) => {
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: error.message.includes("Unauthorized") ? 403 : 500
+        status: statusCode 
       }
     );
   }

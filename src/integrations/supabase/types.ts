@@ -3862,6 +3862,10 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_session: {
+        Args: { p_session_id: string }
+        Returns: Json
+      }
       ensure_complete_hub_storage_structure: {
         Args: Record<PropertyKey, never>
         Returns: undefined
