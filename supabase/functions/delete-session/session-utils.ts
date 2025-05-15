@@ -29,8 +29,14 @@ export async function deleteSession(supabase, sessionId) {
         .rpc("delete_session", { p_session_id: sessionId });
       
       if (error) {
-        // If we get a specific error, fall back to direct transaction
-        if (error.code === "23503" && error.message.includes("mentor_availability")) {
+        // If we get a specific error about foreign key constraint with session_feedback
+        if (error.code === "23503" && error.message.includes("session_feedback")) {
+          console.log("RPC failed with session_feedback constraint, falling back to direct transaction approach");
+          return await directDeleteSession(supabase, sessionId, sessionData);
+        }
+        
+        // If we get some other foreign key constraint error
+        if (error.code === "23503") {
           console.log("RPC failed with foreign key constraint, falling back to direct transaction approach");
           return await directDeleteSession(supabase, sessionId, sessionData);
         }
