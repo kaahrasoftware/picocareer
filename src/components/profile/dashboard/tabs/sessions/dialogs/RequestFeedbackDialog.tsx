@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { toast } from "sonner";
 
 interface RequestFeedbackDialogProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export function RequestFeedbackDialog({
 }: RequestFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session } = useAuthSession();
+  const { session, refreshSession } = useAuthSession();
 
   const handleRequestFeedback = async () => {
     if (!session?.access_token) {
@@ -44,6 +45,12 @@ export function RequestFeedbackDialog({
     setError(null);
     
     try {
+      // Try to refresh the session first to ensure we have a valid token
+      const isSessionValid = await refreshSession();
+      if (!isSessionValid) {
+        throw new Error("Failed to refresh authentication session");
+      }
+      
       console.log("Calling admin-session-actions with:", {
         action: "requestFeedback",
         sessionId
@@ -65,11 +72,13 @@ export function RequestFeedbackDialog({
       }
       
       console.log("Request feedback response:", data);
+      toast.success("Feedback requests sent successfully");
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Error requesting feedback:", err);
       setError(err.message || "An unexpected error occurred");
+      toast.error(`Failed to request feedback: ${err.message || "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }

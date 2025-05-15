@@ -8,8 +8,11 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Admin session action request received");
+  
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -17,6 +20,7 @@ serve(async (req) => {
     // Get authorization header
     const authorization = req.headers.get("Authorization");
     if (!authorization) {
+      console.error("Missing Authorization header");
       throw new Error("Missing Authorization header");
     }
 
@@ -27,28 +31,42 @@ serve(async (req) => {
 
     // Verify the token
     const token = authorization.replace("Bearer ", "");
+    console.log("Verifying token");
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
+      console.error("Invalid token:", userError);
       throw new Error("Invalid token");
     }
+    console.log("User authenticated:", user.id);
 
     // Check if user is admin
+    console.log("Checking admin status for user:", user.id);
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("user_type")
       .eq("id", user.id)
       .single();
 
-    if (profileError || profile.user_type !== "admin") {
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      throw new Error("Error fetching user profile");
+    }
+    
+    if (profile.user_type !== "admin") {
+      console.error("Unauthorized: User is not an admin. User type:", profile.user_type);
       throw new Error("Unauthorized: Admin access required");
     }
+    console.log("Admin status verified");
 
     // Get action details from request
-    const { action, sessionId, status, reason } = await req.json();
+    const requestBody = await req.json();
+    const { action, sessionId, status, reason } = requestBody;
+
+    console.log("Request details:", { action, sessionId });
 
     if (!sessionId) {
       throw new Error("Session ID is required");
@@ -59,6 +77,7 @@ serve(async (req) => {
     }
 
     // Handle different actions
+    console.log(`Executing action: ${action}`);
     switch (action) {
       case "updateStatus":
         if (!status) {
@@ -90,6 +109,8 @@ serve(async (req) => {
 
 // Update session status
 async function handleStatusUpdate(supabase, sessionId, status, reason) {
+  console.log(`Updating session ${sessionId} status to ${status}`);
+  
   if (!["scheduled", "completed", "cancelled", "no_show"].includes(status)) {
     throw new Error("Invalid status value");
   }
@@ -109,6 +130,7 @@ async function handleStatusUpdate(supabase, sessionId, status, reason) {
     .single();
     
   if (fetchError) {
+    console.error("Error fetching session:", fetchError);
     throw fetchError;
   }
   
@@ -122,8 +144,11 @@ async function handleStatusUpdate(supabase, sessionId, status, reason) {
     .eq("id", sessionId);
   
   if (updateError) {
+    console.error("Error updating session:", updateError);
     throw updateError;
   }
+  
+  console.log("Session status updated successfully");
   
   // Create notifications for both parties
   const statusMap = {
@@ -178,6 +203,8 @@ async function handleStatusUpdate(supabase, sessionId, status, reason) {
 
 // Delete session
 async function handleDelete(supabase, sessionId) {
+  console.log(`Deleting session ${sessionId}`);
+  
   // Get session details first for notifications
   const { data: session, error: fetchError } = await supabase
     .from("mentor_sessions")
@@ -192,6 +219,7 @@ async function handleDelete(supabase, sessionId) {
     .single();
     
   if (fetchError) {
+    console.error("Error fetching session:", fetchError);
     throw fetchError;
   }
   
@@ -202,8 +230,11 @@ async function handleDelete(supabase, sessionId) {
     .eq("id", sessionId);
   
   if (deleteError) {
+    console.error("Error deleting session:", deleteError);
     throw deleteError;
   }
+  
+  console.log("Session deleted successfully");
   
   // Create notifications for both parties
   const notifications = [
@@ -246,6 +277,8 @@ async function handleDelete(supabase, sessionId) {
 
 // Request feedback
 async function handleRequestFeedback(supabase, sessionId) {
+  console.log(`Requesting feedback for session ${sessionId}`);
+  
   // Get session details
   const { data: session, error: fetchError } = await supabase
     .from("mentor_sessions")
@@ -260,6 +293,7 @@ async function handleRequestFeedback(supabase, sessionId) {
     .single();
     
   if (fetchError) {
+    console.error("Error fetching session:", fetchError);
     throw fetchError;
   }
   
@@ -279,6 +313,8 @@ async function handleRequestFeedback(supabase, sessionId) {
 
 // Helper function to request feedback
 async function requestFeedback(supabase, session) {
+  console.log(`Setting up feedback request for session ${session.id}`);
+  
   // Create notifications for both parties
   const notifications = [
     {
@@ -308,6 +344,7 @@ async function requestFeedback(supabase, session) {
   
   // Trigger email notifications by calling the send-session-email function
   try {
+    console.log("Attempting to send feedback request email");
     await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-session-email`, {
       method: 'POST',
       headers: {
@@ -319,6 +356,7 @@ async function requestFeedback(supabase, session) {
         type: 'feedback_request'
       })
     });
+    console.log("Email request sent successfully");
   } catch (error) {
     console.error("Error sending feedback request email:", error);
     // Don't throw, we still want to return success even if email sending fails

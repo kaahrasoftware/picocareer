@@ -58,6 +58,8 @@ export function useAuthSession(protectionLevel: AuthProtectionLevel = 'optional'
         return false;
       }
       
+      console.log('Session refreshed successfully');
+      
       // Invalidate user data queries after session refresh
       if (data.session?.user?.id && queryClient) {
         queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });

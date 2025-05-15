@@ -1,2 +1,5 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
+
+[functions.admin-session-actions]
+verify_jwt = true

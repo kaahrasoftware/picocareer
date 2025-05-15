@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { toast } from "sonner";
 
 interface DeleteSessionDialogProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function DeleteSessionDialog({
 }: DeleteSessionDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session } = useAuthSession();
+  const { session, refreshSession } = useAuthSession();
 
   const handleDelete = async () => {
     if (!session?.access_token) {
@@ -42,6 +43,12 @@ export function DeleteSessionDialog({
     setError(null);
     
     try {
+      // Try to refresh the session first to ensure we have a valid token
+      const isSessionValid = await refreshSession();
+      if (!isSessionValid) {
+        throw new Error("Failed to refresh authentication session");
+      }
+      
       console.log("Calling admin-session-actions with:", {
         action: "delete",
         sessionId
@@ -63,11 +70,13 @@ export function DeleteSessionDialog({
       }
       
       console.log("Delete session response:", data);
+      toast.success("Session deleted successfully");
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Error in session deletion:", err);
       setError(err.message || "An unexpected error occurred");
+      toast.error(`Failed to delete session: ${err.message || "Unknown error"}`);
     } finally {
       setIsDeleting(false);
     }
