@@ -1,3 +1,4 @@
+
 /**
  * Deletes a session and handles related operations
  * 
@@ -95,7 +96,19 @@ async function directDeleteSession(supabase, sessionId, sessionData) {
     const menteeName = profiles.find(p => p.id === sessionDetails.mentee_id)?.full_name || "Mentee";
     
     // Step 3: Begin transaction
-    // First clear any references in mentor_availability
+    // First delete any session feedback associated with this session
+    console.log("Checking for and removing any session feedback...");
+    const { error: feedbackError } = await supabase
+      .from("session_feedback")
+      .delete()
+      .eq("session_id", sessionId);
+      
+    if (feedbackError) {
+      console.error("Error deleting session feedback:", feedbackError);
+      throw new Error(`Failed to delete session feedback: ${feedbackError.message}`);
+    }
+    
+    // Next clear any references in mentor_availability
     console.log("Clearing availability references...");
     const { error: clearError } = await supabase
       .from("mentor_availability")

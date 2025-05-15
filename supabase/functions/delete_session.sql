@@ -30,7 +30,11 @@ BEGIN
   
   -- Begin transaction
   BEGIN
-    -- First update all availability records that reference this session
+    -- First delete any session feedback associated with this session
+    DELETE FROM session_feedback
+    WHERE session_id = p_session_id;
+    
+    -- Next update all availability records that reference this session
     UPDATE mentor_availability
     SET is_available = true, 
         booked_session_id = NULL
