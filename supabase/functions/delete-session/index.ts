@@ -58,6 +58,7 @@ serve(async (req) => {
     }
 
     console.log("Request details:", { sessionId });
+    console.log("Deleting session", sessionId);
 
     // Process the session deletion
     const result = await deleteSession(supabase, sessionId);
