@@ -54,6 +54,13 @@ export function DeleteSessionDialog({
         sessionId
       });
       
+      // For easier debugging, log the full request details
+      console.log("Request details:", {
+        url: `${supabase.functions.url}/admin-session-actions`,
+        token: `Bearer ${session.access_token.substring(0, 10)}...`, // Only log part of the token for security
+        sessionId,
+      });
+      
       const { data, error } = await supabase.functions.invoke("admin-session-actions", {
         body: {
           action: "delete",
@@ -77,6 +84,17 @@ export function DeleteSessionDialog({
       console.error("Error in session deletion:", err);
       setError(err.message || "An unexpected error occurred");
       toast.error(`Failed to delete session: ${err.message || "Unknown error"}`);
+      
+      // If we get an authentication error, try to refresh the session
+      if (err.message?.includes("authentication") || err.message?.includes("token") || err.message?.includes("auth")) {
+        toast.error("Authentication error. Trying to refresh your session...");
+        const refreshed = await refreshSession();
+        if (refreshed) {
+          toast.info("Session refreshed. Please try again.");
+        } else {
+          toast.error("Could not refresh session. Please log out and back in.");
+        }
+      }
     } finally {
       setIsDeleting(false);
     }
@@ -101,8 +119,9 @@ export function DeleteSessionDialog({
           <p className="mt-2 font-medium">{sessionDetails}</p>
           
           {error && (
-            <div className="mt-2 text-sm text-red-600">
-              {error}
+            <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+              <p><strong>Error:</strong> {error}</p>
+              <p className="text-xs mt-1">Please check your admin permissions and connection status.</p>
             </div>
           )}
         </div>
