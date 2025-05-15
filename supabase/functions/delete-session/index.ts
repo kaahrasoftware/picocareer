@@ -1,12 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-};
+import { corsHeaders } from "../_shared/cors.ts";
+import { verifyAdminAccess } from "./auth-utils.ts";
+import { deleteSession } from "./session-utils.ts";
 
 serve(async (req) => {
   console.log("Delete session request received");
@@ -40,39 +37,11 @@ serve(async (req) => {
     }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify the token
     const token = authorization.replace("Bearer ", "");
-    console.log("Verifying token");
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(token);
 
-    if (userError || !user) {
-      console.error("Invalid token:", userError);
-      throw new Error("Invalid authentication token");
-    }
-    console.log("User authenticated:", user.id);
-
-    // Check if user is admin
-    console.log("Checking admin status for user:", user.id);
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-      throw new Error("Error fetching user profile");
-    }
-    
-    if (profile.user_type !== "admin") {
-      console.error("Unauthorized: User is not an admin. User type:", profile.user_type);
-      throw new Error("Unauthorized: Admin access required");
-    }
-    console.log("Admin status verified");
+    // Verify the user has admin access
+    const userId = await verifyAdminAccess(supabase, token);
+    console.log("Admin verification successful for user:", userId);
 
     // Get session ID from request
     let requestBody;
@@ -84,28 +53,14 @@ serve(async (req) => {
     }
     
     const { sessionId } = requestBody;
-
     if (!sessionId) {
       throw new Error("Session ID is required");
     }
 
     console.log("Request details:", { sessionId });
 
-    // Call the SQL function to delete the session
-    const { data, error } = await supabase
-      .rpc("delete_session", { p_session_id: sessionId });
-    
-    if (error) {
-      console.error("Error deleting session:", error);
-      throw error;
-    }
-    
-    console.log("Delete session response:", data);
-    
-    // Check if deletion was successful
-    if (!data.success) {
-      throw new Error(data.message || "Failed to delete session");
-    }
+    // Process the session deletion
+    const result = await deleteSession(supabase, sessionId);
     
     return new Response(
       JSON.stringify({ 
