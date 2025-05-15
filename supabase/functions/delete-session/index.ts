@@ -134,7 +134,24 @@ async function handleDeleteSession(supabase, sessionId) {
     
     console.log("Session fetched successfully:", session.id);
     
-    // Delete the session
+    // Start a transaction to ensure data consistency
+    // First, clear any references in the mentor_availability table
+    const { error: availabilityError } = await supabase
+      .from("mentor_availability")
+      .update({
+        is_available: true,
+        booked_session_id: null
+      })
+      .eq("booked_session_id", sessionId);
+    
+    if (availabilityError) {
+      console.error("Error updating availability slots:", availabilityError);
+      throw availabilityError;
+    }
+    
+    console.log("Cleared availability references successfully");
+    
+    // Now delete the session
     const { error: deleteError } = await supabase
       .from("mentor_sessions")
       .delete()

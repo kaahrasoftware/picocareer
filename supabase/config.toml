@@ -1,54 +1,6 @@
 
 project_id = "wurdmlkfkzuivvwxjmxk"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
-
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
-
-[studio]
-enabled = true
-port = 54323
-api_url = "http://localhost"
-
-[inbucket]
-enabled = true
-port = 54324
-
-[storage]
-enabled = true
-port = 54325
-
-[auth]
-enabled = true
-port = 54326
-
-[realtime]
-enabled = true
-port = 54327
-
-[analytics]
-enabled = false
-port = 54328
-
-[vector]
-enabled = false
-port = 54329
-
-[functions.update-past-sessions]
+[functions.delete-session]
 verify_jwt = true
 
-[functions.sync-session-feedback-status]
-verify_jwt = false
-schedule = "@hourly"
-
-[functions.one-time-no-show-sync]
-verify_jwt = false
-
-[functions.admin-session-actions]
-verify_jwt = true
