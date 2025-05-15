@@ -91,8 +91,32 @@ serve(async (req) => {
 
     console.log("Request details:", { sessionId });
 
-    // Handle session deletion
-    return await handleDeleteSession(supabase, sessionId);
+    // Call the SQL function to delete the session
+    const { data, error } = await supabase
+      .rpc("delete_session", { p_session_id: sessionId });
+    
+    if (error) {
+      console.error("Error deleting session:", error);
+      throw error;
+    }
+    
+    console.log("Delete session response:", data);
+    
+    // Check if deletion was successful
+    if (!data.success) {
+      throw new Error(data.message || "Failed to delete session");
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        message: "Session deleted successfully",
+        session: sessionId
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200 
+      }
+    );
     
   } catch (error) {
     console.error("Error processing request:", error);
@@ -108,102 +132,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Delete session function
-async function handleDeleteSession(supabase, sessionId) {
-  console.log(`Deleting session ${sessionId}`);
-  
-  try {
-    // Get session details first for notifications
-    const { data: session, error: fetchError } = await supabase
-      .from("mentor_sessions")
-      .select(`
-        id, 
-        mentor_id,
-        mentee_id,
-        mentor:profiles!mentor_sessions_mentor_id_fkey(full_name, email),
-        mentee:profiles!mentor_sessions_mentee_id_fkey(full_name, email)
-      `)
-      .eq("id", sessionId)
-      .single();
-      
-    if (fetchError) {
-      console.error("Error fetching session:", fetchError);
-      throw fetchError;
-    }
-    
-    console.log("Session fetched successfully:", session.id);
-    
-    // Start a transaction to ensure data consistency
-    // First, clear any references in the mentor_availability table
-    const { error: availabilityError } = await supabase
-      .from("mentor_availability")
-      .update({
-        is_available: true,
-        booked_session_id: null
-      })
-      .eq("booked_session_id", sessionId);
-    
-    if (availabilityError) {
-      console.error("Error updating availability slots:", availabilityError);
-      throw availabilityError;
-    }
-    
-    console.log("Cleared availability references successfully");
-    
-    // Now delete the session
-    const { error: deleteError } = await supabase
-      .from("mentor_sessions")
-      .delete()
-      .eq("id", sessionId);
-    
-    if (deleteError) {
-      console.error("Error deleting session:", deleteError);
-      throw deleteError;
-    }
-    
-    console.log("Session deleted successfully");
-    
-    // Create notifications for both parties
-    const notifications = [
-      {
-        profile_id: session.mentor_id,
-        title: "Session deleted",
-        message: `Your session with ${session.mentee.full_name} has been deleted by an administrator.`,
-        type: "session_update",
-        action_url: `/profile?tab=calendar`
-      },
-      {
-        profile_id: session.mentee_id,
-        title: "Session deleted",
-        message: `Your session with ${session.mentor.full_name} has been deleted by an administrator.`,
-        type: "session_update",
-        action_url: `/profile?tab=calendar`
-      }
-    ];
-    
-    console.log("Creating notifications for session deletion");
-    const { error: notificationError } = await supabase
-      .from("notifications")
-      .insert(notifications);
-    
-    if (notificationError) {
-      console.error("Error creating notifications:", notificationError);
-      // Don't throw, we still want to return success for the deletion
-    }
-    
-    return new Response(
-      JSON.stringify({ 
-        message: "Session deleted successfully",
-        session: sessionId
-      }),
-      { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200 
-      }
-    );
-  } catch (error) {
-    console.error("Error in handleDeleteSession function:", error);
-    throw error; // Let the main error handler deal with it
-  }
-}

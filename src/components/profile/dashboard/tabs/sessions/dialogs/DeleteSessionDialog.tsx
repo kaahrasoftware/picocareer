@@ -51,13 +51,6 @@ export function DeleteSessionDialog({
       
       console.log("Calling delete-session function with:", { sessionId });
       
-      // For easier debugging, log the full request details
-      console.log("Request details:", {
-        url: `${supabase.functions.url}/delete-session`,
-        token: `Bearer ${session.access_token.substring(0, 10)}...`, // Only log part of the token for security
-        sessionId,
-      });
-      
       const { data, error } = await supabase.functions.invoke("delete-session", {
         body: { sessionId },
         headers: {
@@ -71,6 +64,12 @@ export function DeleteSessionDialog({
       }
       
       console.log("Delete session response:", data);
+      
+      // Check if there's an error message in the response
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
       toast.success("Session deleted successfully");
       onSuccess();
       onClose();

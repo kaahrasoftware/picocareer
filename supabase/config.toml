@@ -3,4 +3,3 @@ project_id = "wurdmlkfkzuivvwxjmxk"
 
 [functions.delete-session]
 verify_jwt = true
-
