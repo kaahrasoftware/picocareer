@@ -49,23 +49,17 @@ export function DeleteSessionDialog({
         throw new Error("Failed to refresh authentication session");
       }
       
-      console.log("Calling admin-session-actions with:", {
-        action: "delete",
-        sessionId
-      });
+      console.log("Calling delete-session function with:", { sessionId });
       
       // For easier debugging, log the full request details
       console.log("Request details:", {
-        url: `${supabase.functions.url}/admin-session-actions`,
+        url: `${supabase.functions.url}/delete-session`,
         token: `Bearer ${session.access_token.substring(0, 10)}...`, // Only log part of the token for security
         sessionId,
       });
       
-      const { data, error } = await supabase.functions.invoke("admin-session-actions", {
-        body: {
-          action: "delete",
-          sessionId,
-        },
+      const { data, error } = await supabase.functions.invoke("delete-session", {
+        body: { sessionId },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
