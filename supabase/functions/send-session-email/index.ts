@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatInTimeZone } from "npm:date-fns-tz";
@@ -506,7 +507,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <div class="meeting-link">
                   <h3>Share Your Feedback</h3>
                   <p>Please take a moment to share your feedback about this session:</p>
-                  <a href="https://picocareer.com/profile/calendar" target="_blank">Provide Feedback</a>
+                  <a href="https://picocareer.com/profile?tab=calendar&feedbackSession=${sessionId}" target="_blank">Provide Feedback</a>
                 </div>
                 
                 <div class="actions">

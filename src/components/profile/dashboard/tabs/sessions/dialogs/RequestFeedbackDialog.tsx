@@ -174,16 +174,23 @@ export function RequestFeedbackDialog({
       
       // 3. Send email notifications
       try {
-        await supabase.functions.invoke("send-session-email", {
+        const { data: emailResponse, error: emailError } = await supabase.functions.invoke("send-session-email", {
           body: {
             sessionId,
             type: "feedback_request"
           }
         });
-        console.log("Email notifications sent successfully");
+        
+        if (emailError) {
+          // Log but don't throw error for email failures
+          console.error("Error sending email notifications:", emailError);
+          console.log("Continuing process despite email failure");
+        } else {
+          console.log("Email notifications sent successfully:", emailResponse);
+        }
       } catch (emailError) {
         // Log but don't throw error for email failures
-        console.error("Error sending email notifications:", emailError);
+        console.error("Error invoking email function:", emailError);
         // We continue even if emails fail
       }
       
