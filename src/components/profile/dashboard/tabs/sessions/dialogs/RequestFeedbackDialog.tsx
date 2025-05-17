@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 interface RequestFeedbackDialogProps {
   isOpen: boolean;
@@ -33,10 +33,11 @@ export function RequestFeedbackDialog({
 }: RequestFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { session, refreshSession } = useAuthSession();
+  const { session } = useAuthSession();
+  const { toast } = useToast();
 
   const handleRequestFeedback = async () => {
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       setError("Authentication required. Please login again.");
       return;
     }
@@ -45,40 +46,86 @@ export function RequestFeedbackDialog({
     setError(null);
     
     try {
-      // Try to refresh the session first to ensure we have a valid token
-      const isSessionValid = await refreshSession();
-      if (!isSessionValid) {
-        throw new Error("Failed to refresh authentication session");
+      // 1. Get session details for notifications
+      const { data: sessionData, error: fetchError } = await supabase
+        .from("mentor_sessions")
+        .select(`
+          id, 
+          mentor_id, 
+          mentee_id, 
+          mentor:profiles!mentor_sessions_mentor_id_fkey(full_name, email), 
+          mentee:profiles!mentor_sessions_mentee_id_fkey(full_name, email)
+        `)
+        .eq("id", sessionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!sessionData) throw new Error("Session not found");
+      
+      console.log("Retrieved session data:", sessionData);
+      
+      // 2. Create notifications for both parties
+      const notificationsToCreate = [
+        {
+          profile_id: sessionData.mentor_id,
+          title: "Session Feedback Request",
+          message: `Please provide feedback for your session with ${sessionData.mentee.full_name}`,
+          type: "session_reminder",
+          action_url: `/profile?tab=calendar&feedbackSession=${sessionId}&feedbackType=mentor_feedback`,
+          category: "mentorship"
+        },
+        {
+          profile_id: sessionData.mentee_id,
+          title: "Session Feedback Request",
+          message: `Please provide feedback for your session with ${sessionData.mentor.full_name}`,
+          type: "session_reminder",
+          action_url: `/profile?tab=calendar&feedbackSession=${sessionId}&feedbackType=mentee_feedback`,
+          category: "mentorship"
+        }
+      ];
+      
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert(notificationsToCreate);
+      
+      if (notificationError) {
+        console.error("Error creating notifications:", notificationError);
+        throw notificationError;
       }
       
-      console.log("Calling admin-session-actions with:", {
-        action: "requestFeedback",
-        sessionId
-      });
+      console.log("Notifications created successfully");
       
-      const { data, error } = await supabase.functions.invoke("admin-session-actions", {
-        body: {
-          action: "requestFeedback",
-          sessionId,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-      
-      if (error) {
-        console.error("Error requesting feedback:", error);
-        throw new Error(error.message || "Failed to request feedback");
+      // 3. Send email notifications
+      try {
+        await supabase.functions.invoke("send-session-email", {
+          body: {
+            sessionId,
+            type: "feedback_request"
+          }
+        });
+        console.log("Email notifications sent successfully");
+      } catch (emailError) {
+        // Log but don't throw error for email failures
+        console.error("Error sending email notifications:", emailError);
+        // We continue even if emails fail
       }
       
-      console.log("Request feedback response:", data);
-      toast.success("Feedback requests sent successfully");
+      toast({
+        title: "Feedback requested",
+        description: "Feedback requests have been sent to both participants.",
+      });
+      
       onSuccess();
       onClose();
     } catch (err: any) {
       console.error("Error requesting feedback:", err);
       setError(err.message || "An unexpected error occurred");
-      toast.error(`Failed to request feedback: ${err.message || "Unknown error"}`);
+      
+      toast({
+        title: "Request failed",
+        description: err.message || "Failed to send feedback requests",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
