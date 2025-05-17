@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpdateStatusDialogProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export function UpdateStatusDialog({
   const [reason, setReason] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const { session } = useAuthSession();
+  const { toast } = useToast();
 
   const statusLabels: Record<string, string> = {
     completed: "Mark as Completed",
@@ -44,7 +46,7 @@ export function UpdateStatusDialog({
   };
 
   const handleSubmit = async () => {
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       setError("Authentication required. Please login again.");
       return;
     }
@@ -53,36 +55,84 @@ export function UpdateStatusDialog({
     setError(null);
     
     try {
-      console.log("Calling admin-session-actions with:", {
-        action: "updateStatus",
-        sessionId,
-        status: targetStatus,
-        reason
-      });
+      // 1. Get session details for notifications
+      const { data: sessionData, error: fetchError } = await supabase
+        .from("mentor_sessions")
+        .select(`
+          id, 
+          mentor_id, 
+          mentee_id, 
+          mentor:profiles!mentor_sessions_mentor_id_fkey(full_name), 
+          mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
+        `)
+        .eq("id", sessionId)
+        .single();
       
-      const { data, error } = await supabase.functions.invoke("admin-session-actions", {
-        body: {
-          action: "updateStatus",
-          sessionId,
+      if (fetchError) throw fetchError;
+      if (!sessionData) throw new Error("Session not found");
+      
+      console.log("Retrieved session data:", sessionData);
+      
+      // 2. Update the session status directly
+      const { error: updateError } = await supabase
+        .from("mentor_sessions")
+        .update({ 
           status: targetStatus,
-          reason: reason.trim() || null,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+          notes: reason.trim() ? `${reason.trim()} [Status changed to ${targetStatus}]` : `Status changed to ${targetStatus}`
+        })
+        .eq("id", sessionId);
       
-      if (error) {
-        console.error("Error updating session status:", error);
-        throw new Error(error.message || "Failed to update session status");
+      if (updateError) throw updateError;
+      
+      console.log("Session status updated successfully");
+      
+      // 3. Create notifications for both parties
+      const notificationsToCreate = [
+        {
+          profile_id: sessionData.mentor_id,
+          title: `Session ${targetStatus}`,
+          message: `Your session with ${sessionData.mentee.full_name} has been marked as ${targetStatus}${reason ? `: "${reason}"` : ""}.`,
+          type: "session_update",
+          action_url: "/profile?tab=calendar",
+          category: "general"
+        },
+        {
+          profile_id: sessionData.mentee_id,
+          title: `Session ${targetStatus}`,
+          message: `Your session with ${sessionData.mentor.full_name} has been marked as ${targetStatus}${reason ? `: "${reason}"` : ""}.`,
+          type: "session_update",
+          action_url: "/profile?tab=calendar",
+          category: "general"
+        }
+      ];
+      
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert(notificationsToCreate);
+      
+      if (notificationError) {
+        console.error("Error creating notifications:", notificationError);
+        // We'll continue even if notifications fail
+      } else {
+        console.log("Notifications created successfully");
       }
       
-      console.log("Status update response:", data);
+      toast({
+        title: "Status updated",
+        description: `Session has been marked as ${targetStatus}.`,
+      });
+      
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Error in status update:", err);
+      console.error("Error updating session status:", err);
       setError(err.message || "An unexpected error occurred");
+      
+      toast({
+        title: "Update failed",
+        description: err.message || "Failed to update session status",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

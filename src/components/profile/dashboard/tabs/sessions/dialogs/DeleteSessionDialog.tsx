@@ -105,7 +105,7 @@ export function DeleteSessionDialog({
   };
 
   const handleDelete = async () => {
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       toast({
         title: "Authentication required",
         description: "You must be logged in as an admin to perform this action",
@@ -128,15 +128,71 @@ export function DeleteSessionDialog({
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("delete-session", {
-        body: { sessionId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
+      // 1. Get session details for notifications
+      const { data: sessionData, error: fetchError } = await supabase
+        .from("mentor_sessions")
+        .select(`
+          id, 
+          mentor_id, 
+          mentee_id, 
+          mentor:profiles!mentor_sessions_mentor_id_fkey(full_name), 
+          mentee:profiles!mentor_sessions_mentee_id_fkey(full_name)
+        `)
+        .eq("id", sessionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!sessionData) throw new Error("Session not found");
+      
+      // 2. Update any availability slot that references this session
+      const { error: availabilityError } = await supabase
+        .from("mentor_availability")
+        .update({
+          is_available: true,
+          booked_session_id: null
+        })
+        .eq("booked_session_id", sessionId);
+        
+      if (availabilityError) {
+        console.error("Error updating availability slots:", availabilityError);
+        // Continue even if this fails
+      }
+      
+      // 3. Delete the session
+      const { error: deleteError } = await supabase
+        .from("mentor_sessions")
+        .delete()
+        .eq("id", sessionId);
+        
+      if (deleteError) throw deleteError;
+      
+      // 4. Create notifications for both parties
+      const notificationsToCreate = [
+        {
+          profile_id: sessionData.mentor_id,
+          title: "Session Deleted",
+          message: `Your session with ${sessionData.mentee.full_name} has been deleted by an administrator.`,
+          type: "session_update",
+          action_url: "/profile?tab=calendar",
+          category: "general"
         },
-      });
-
-      if (error) {
-        throw new Error(error.message || "Failed to delete session");
+        {
+          profile_id: sessionData.mentee_id,
+          title: "Session Deleted",
+          message: `Your session with ${sessionData.mentor.full_name} has been deleted by an administrator.`,
+          type: "session_update",
+          action_url: "/profile?tab=calendar",
+          category: "general"
+        }
+      ];
+      
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert(notificationsToCreate);
+      
+      if (notificationError) {
+        console.error("Error creating notifications:", notificationError);
+        // We'll continue even if notifications fail
       }
 
       toast({

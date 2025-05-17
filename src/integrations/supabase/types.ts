@@ -4356,6 +4356,7 @@ export type Database = {
         | "availability_request"
         | "hub_invite"
         | "hub_membership"
+        | "session_update"
       onboarding_status:
         | "Pending"
         | "Under Review"
@@ -5068,6 +5069,7 @@ export const Constants = {
         "availability_request",
         "hub_invite",
         "hub_membership",
+        "session_update",
       ],
       onboarding_status: [
         "Pending",
