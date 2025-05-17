@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useToast } from "@/hooks/use-toast";
@@ -32,9 +32,70 @@ export function RequestFeedbackDialog({
   onSuccess,
 }: RequestFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mentorFeedbackProvided, setMentorFeedbackProvided] = useState(false);
+  const [menteeFeedbackProvided, setMenteeFeedbackProvided] = useState(false);
   const { session } = useAuthSession();
   const { toast } = useToast();
+
+  // Check if feedback already exists for this session
+  useEffect(() => {
+    if (isOpen && sessionId) {
+      setIsChecking(true);
+      checkExistingFeedback();
+    }
+  }, [isOpen, sessionId]);
+
+  const checkExistingFeedback = async () => {
+    try {
+      if (!sessionId) return;
+      
+      const { data: sessionData, error: fetchError } = await supabase
+        .from("mentor_sessions")
+        .select(`
+          id, 
+          mentor_id, 
+          mentee_id
+        `)
+        .eq("id", sessionId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!sessionData) throw new Error("Session not found");
+      
+      // Check for existing feedback
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from("session_feedback")
+        .select("*")
+        .eq("session_id", sessionId);
+        
+      if (feedbackError) throw feedbackError;
+      
+      // Check if mentor and mentee have already provided feedback
+      if (feedbackData && feedbackData.length > 0) {
+        const mentorFeedback = feedbackData.find(f => 
+          f.from_profile_id === sessionData.mentor_id && 
+          f.feedback_type === 'mentor_feedback'
+        );
+        const menteeFeedback = feedbackData.find(f => 
+          f.from_profile_id === sessionData.mentee_id && 
+          f.feedback_type === 'mentee_feedback'
+        );
+        
+        setMentorFeedbackProvided(!!mentorFeedback);
+        setMenteeFeedbackProvided(!!menteeFeedback);
+      } else {
+        setMentorFeedbackProvided(false);
+        setMenteeFeedbackProvided(false);
+      }
+    } catch (err: any) {
+      console.error("Error checking existing feedback:", err);
+      setError("Failed to check existing feedback: " + err.message);
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   const handleRequestFeedback = async () => {
     if (!session?.user?.id) {
@@ -64,25 +125,41 @@ export function RequestFeedbackDialog({
       
       console.log("Retrieved session data:", sessionData);
       
-      // 2. Create notifications for both parties
-      const notificationsToCreate = [
-        {
+      // 2. Create notifications for parties that haven't provided feedback yet
+      const notificationsToCreate = [];
+      
+      if (!mentorFeedbackProvided) {
+        notificationsToCreate.push({
           profile_id: sessionData.mentor_id,
           title: "Session Feedback Request",
           message: `Please provide feedback for your session with ${sessionData.mentee.full_name}`,
           type: "session_reminder",
           action_url: `/profile?tab=calendar&feedbackSession=${sessionId}&feedbackType=mentor_feedback`,
           category: "mentorship"
-        },
-        {
+        });
+      }
+      
+      if (!menteeFeedbackProvided) {
+        notificationsToCreate.push({
           profile_id: sessionData.mentee_id,
           title: "Session Feedback Request",
           message: `Please provide feedback for your session with ${sessionData.mentor.full_name}`,
           type: "session_reminder",
           action_url: `/profile?tab=calendar&feedbackSession=${sessionId}&feedbackType=mentee_feedback`,
           category: "mentorship"
-        }
-      ];
+        });
+      }
+      
+      // Only proceed if there's at least one notification to create
+      if (notificationsToCreate.length === 0) {
+        toast({
+          title: "No action needed",
+          description: "Both participants have already provided feedback for this session.",
+        });
+        onSuccess();
+        onClose();
+        return;
+      }
       
       const { error: notificationError } = await supabase
         .from("notifications")
@@ -112,7 +189,7 @@ export function RequestFeedbackDialog({
       
       toast({
         title: "Feedback requested",
-        description: "Feedback requests have been sent to both participants.",
+        description: "Feedback requests have been sent to participants who haven't provided feedback yet.",
       });
       
       onSuccess();
@@ -131,26 +208,53 @@ export function RequestFeedbackDialog({
     }
   };
 
+  const getFeedbackStatusMessage = () => {
+    if (mentorFeedbackProvided && menteeFeedbackProvided) {
+      return "Both participants have already provided feedback for this session.";
+    } else if (mentorFeedbackProvided) {
+      return `${mentorName} has already provided feedback. Only ${menteeName} will be sent a request.`;
+    } else if (menteeFeedbackProvided) {
+      return `${menteeName} has already provided feedback. Only ${mentorName} will be sent a request.`;
+    }
+    return "Neither participant has provided feedback yet.";
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Request Session Feedback</DialogTitle>
           <DialogDescription>
-            This will send a notification and email to both the mentor and mentee requesting feedback for their session.
+            This will send a notification and email to participants who haven't provided feedback for their session yet.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
-          <div className="mb-4 text-sm space-y-2">
-            <p><strong>Session participants:</strong></p>
-            <p>Mentor: {mentorName}</p>
-            <p>Mentee: {menteeName}</p>
-            
-            <p className="mt-4">
-              Both participants will receive a notification and an email with a link to submit their feedback.
-            </p>
-          </div>
+          {isChecking ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <span>Checking feedback status...</span>
+            </div>
+          ) : (
+            <div className="mb-4 text-sm space-y-4">
+              <div className="mb-4">
+                <p><strong>Session participants:</strong></p>
+                <p>Mentor: {mentorName} {mentorFeedbackProvided && <CheckCircle2 className="inline h-4 w-4 text-green-500 ml-1" />}</p>
+                <p>Mentee: {menteeName} {menteeFeedbackProvided && <CheckCircle2 className="inline h-4 w-4 text-green-500 ml-1" />}</p>
+              </div>
+              
+              <div className={`p-3 rounded-md flex items-start ${(mentorFeedbackProvided || menteeFeedbackProvided) ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
+                {(mentorFeedbackProvided || menteeFeedbackProvided) ? (
+                  <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                ) : null}
+                <p>{getFeedbackStatusMessage()}</p>
+              </div>
+              
+              <p className="mt-4">
+                Participants will receive a notification and an email with a link to submit their feedback.
+              </p>
+            </div>
+          )}
           
           {error && (
             <div className="mt-2 text-sm text-red-600">
@@ -160,10 +264,13 @@ export function RequestFeedbackDialog({
         </div>
         
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting || isChecking}>
             Cancel
           </Button>
-          <Button onClick={handleRequestFeedback} disabled={isSubmitting}>
+          <Button 
+            onClick={handleRequestFeedback} 
+            disabled={isSubmitting || isChecking || (mentorFeedbackProvided && menteeFeedbackProvided)}
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
