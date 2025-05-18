@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useSchoolById, useSchoolMajors } from "@/hooks/useAllSchools";
+import { useSchoolById } from "@/hooks/useAllSchools";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,12 +20,11 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { AcademicRequirements } from "@/components/major-details/AcademicRequirements";
-import { MajorCard } from "@/components/MajorCard";
+import { SchoolMajorsList } from "@/components/schools/SchoolMajorsList";
 
 export default function SchoolDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: school, isLoading: isSchoolLoading, error } = useSchoolById(id);
-  const { data: schoolMajors, isLoading: isMajorsLoading } = useSchoolMajors(id);
 
   if (isSchoolLoading) {
     return (
@@ -310,66 +309,7 @@ export default function SchoolDetail() {
         </TabsContent>
         
         <TabsContent value="programs" className="space-y-8">
-          {isMajorsLoading ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, index) => (
-                  <Skeleton key={index} className="h-64 w-full rounded-lg" />
-                ))}
-              </div>
-            </div>
-          ) : schoolMajors && schoolMajors.length > 0 ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-semibold">Available Programs & Majors</h2>
-                <Badge variant="outline">{schoolMajors.length} Programs</Badge>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {schoolMajors.map((schoolMajor) => {
-                  const major = schoolMajor.majors;
-                  if (!major) return null;
-                  
-                  return (
-                    <MajorCard
-                      key={schoolMajor.id}
-                      id={major.id}
-                      title={major.title}
-                      description={major.description}
-                      potential_salary={major.potential_salary}
-                      skill_match={major.skill_match}
-                      tools_knowledge={major.tools_knowledge}
-                      common_courses={major.common_courses}
-                      degree_levels={major.degree_levels}
-                      learning_objectives={major.learning_objectives}
-                      interdisciplinary_connections={major.interdisciplinary_connections}
-                      job_prospects={major.job_prospects}
-                      certifications_to_consider={major.certifications_to_consider}
-                      affiliated_programs={major.affiliated_programs}
-                      gpa_expectations={major.gpa_expectations}
-                      transferable_skills={major.transferable_skills}
-                      passion_for_subject={major.passion_for_subject}
-                      professional_associations={major.professional_associations}
-                      global_applicability={major.global_applicability}
-                      common_difficulties={major.common_difficulties}
-                      career_opportunities={major.career_opportunities}
-                      intensity={major.intensity}
-                      stress_level={major.stress_level}
-                      dropout_rates={major.dropout_rates}
-                      majors_to_consider_switching_to={major.majors_to_consider_switching_to}
-                      profiles_count={major.profiles_count}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/60 mb-4" />
-              <h3 className="text-lg font-medium">No programs or majors found</h3>
-              <p className="text-muted-foreground">This institution hasn't listed any specific programs or majors yet.</p>
-            </div>
-          )}
+          {id && <SchoolMajorsList schoolId={id} />}
         </TabsContent>
         
         <TabsContent value="tuition" className="space-y-8">
