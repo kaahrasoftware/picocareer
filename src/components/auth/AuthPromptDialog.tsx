@@ -36,13 +36,13 @@ export function AuthPromptDialog({
     setIsClosing(true);
     onClose();
     // Add redirect URL as state to return after login
-    navigate("/auth?tab=login", { state: { redirectUrl } });
+    navigate("/auth?tab=signin", { state: { redirectUrl } });
   };
 
   const handleRegister = () => {
     setIsClosing(true);
     onClose();
-    navigate("/auth?tab=register", { state: { redirectUrl } });
+    navigate("/auth?tab=signup", { state: { redirectUrl } });
   };
 
   return (
