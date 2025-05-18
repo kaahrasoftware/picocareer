@@ -19,7 +19,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, SetValue<T
     }
   };
 
-  const [storedValue, setStoredValue] = useState<T>(getStoredValue);
+  // Initialize state with the value from localStorage
+  const [storedValue, setStoredValue] = useState<T>(getStoredValue());
 
   // Update localStorage when the state changes
   useEffect(() => {
