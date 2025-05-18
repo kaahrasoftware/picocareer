@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { useAllSchools } from "@/hooks/useAllSchools";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { SchoolsDataTable } from "./SchoolsDataTable";
@@ -11,8 +10,7 @@ export function SchoolsManagementTab() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { refetch } = useAllSchools();
-
+  
   const handleEditSchool = (school: School) => {
     setSelectedSchool(school);
     setIsEditDialogOpen(true);
@@ -22,7 +20,11 @@ export function SchoolsManagementTab() {
     setIsAddDialogOpen(false);
     setIsEditDialogOpen(false);
     setSelectedSchool(null);
-    refetch();
+  };
+
+  const handleDataChange = () => {
+    // This function will be called when data changes in SchoolsDataTable
+    // It allows us to refresh data in parent components if needed
   };
 
   return (
@@ -35,7 +37,10 @@ export function SchoolsManagementTab() {
         </Button>
       </div>
       
-      <SchoolsDataTable onEditSchool={handleEditSchool} />
+      <SchoolsDataTable 
+        onEditSchool={handleEditSchool} 
+        onDataChange={handleDataChange}
+      />
 
       {/* Add School Dialog */}
       {isAddDialogOpen && (

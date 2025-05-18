@@ -1,7 +1,6 @@
 
 import { useState } from "react";
-import { useAllSchools } from "@/hooks/useAllSchools";
-import { School, SchoolStatus, SchoolType } from "@/types/database/schools";
+import { School, SchoolStatus } from "@/types/database/schools";
 import {
   Table,
   TableBody,
@@ -34,53 +33,63 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { SchoolDetailsDialog } from "./SchoolDetailsDialog";
+import { usePaginatedSchools, SortField, SortDirection } from "@/hooks/usePaginatedSchools";
+import { StandardPagination } from "@/components/common/StandardPagination";
+import { PageSizeSelector } from "@/components/common/PageSizeSelector";
 
 interface SchoolsDataTableProps {
   onEditSchool: (school: School) => void;
+  onDataChange?: () => void;
 }
 
-export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
-  const { data: schools, isLoading, refetch } = useAllSchools();
+export function SchoolsDataTable({ onEditSchool, onDataChange }: SchoolsDataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<keyof School>("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [pageSize, setPageSize] = useState(50);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
-  const handleSort = (field: keyof School) => {
+  // Use our new paginated schools hook
+  const {
+    data: schools,
+    isLoading,
+    count: totalSchools,
+    page,
+    setPage,
+    totalPages,
+    refetch
+  } = usePaginatedSchools({
+    pageSize,
+    sortField,
+    sortDirection,
+    searchQuery: searchTerm,
+  });
+
+  const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("asc");
     }
+    // Reset to first page when sorting changes
+    setPage(1);
   };
 
-  const filteredSchools = schools
-    ?.filter(school => 
-      school.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (school.location && school.location.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
-    .sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when changing page size
+  };
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (aValue === null) return sortDirection === "asc" ? -1 : 1;
-      if (bValue === null) return sortDirection === "asc" ? 1 : -1;
-
-      return sortDirection === "asc"
-        ? (aValue as any) > (bValue as any) ? 1 : -1
-        : (aValue as any) < (bValue as any) ? 1 : -1;
-    }) || [];
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setPage(1); // Reset to first page when search changes
+  };
 
   const handleDeleteClick = (school: School) => {
     setSelectedSchool(school);
@@ -109,6 +118,7 @@ export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
         description: `${selectedSchool.name} has been successfully deleted.`,
       });
       refetch();
+      if (onDataChange) onDataChange();
     } catch (error) {
       console.error("Error deleting school:", error);
       toast({
@@ -132,17 +142,27 @@ export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
     }
   };
 
+  // Calculate display range
+  const startIndex = (page - 1) * pageSize + 1;
+  const endIndex = Math.min(startIndex + schools.length - 1, totalSchools);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <Input
           placeholder="Search schools..."
           className="max-w-sm"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
         />
-        <div className="text-sm text-muted-foreground">
-          {filteredSchools.length} schools
+        <div className="flex items-center gap-4">
+          <PageSizeSelector 
+            pageSize={pageSize} 
+            onPageSizeChange={handlePageSizeChange} 
+          />
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex}-{endIndex} of {totalSchools} schools
+          </div>
         </div>
       </div>
 
@@ -199,7 +219,7 @@ export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredSchools.length === 0 ? (
+            ) : schools.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-10">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -210,7 +230,7 @@ export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredSchools.map((school) => (
+              schools.map((school) => (
                 <TableRow key={school.id}>
                   <TableCell className="font-medium">{school.name}</TableCell>
                   <TableCell>{school.type}</TableCell>
@@ -249,6 +269,19 @@ export function SchoolsDataTable({ onEditSchool }: SchoolsDataTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      {!isLoading && schools.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex}-{endIndex} of {totalSchools} schools
+          </div>
+          <StandardPagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
