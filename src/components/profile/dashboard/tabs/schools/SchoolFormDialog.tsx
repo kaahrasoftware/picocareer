@@ -34,11 +34,12 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { COUNTRIES, US_STATES } from "@/constants/geography";
+import { mapStateToDbFormat, mapDbStateToUiFormat } from "@/utils/stateUtils";
 
 // Define the form schema with Zod
 const schoolFormSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  type: z.enum(["University", "College", "High School", "Other"]),
+  type: z.enum(["University", "Community College", "High School", "Other"]),
   location: z.string().optional(),
   country: z.string().min(1, { message: "Country is required" }),
   state: z.string().optional(),
@@ -79,7 +80,7 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         type: school.type,
         location: school.location || "",
         country: school.country,
-        state: school.state || "",
+        state: mapDbStateToUiFormat(school.state || ""),
         website: school.website || "",
         status: school.status,
         logo_url: school.logo_url || "",
@@ -126,9 +127,11 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
     setIsSubmitting(true);
 
     try {
-      // Format the numbers properly
+      // Format the numbers properly and prepare state for database
       const formattedValues = {
         ...values,
+        // Format the state for database storage
+        state: values.state ? mapStateToDbFormat(values.state) : null,
         acceptance_rate: values.acceptance_rate === null ? null : values.acceptance_rate,
         student_population: values.student_population === null ? null : values.student_population
       };
@@ -145,7 +148,10 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
           .from("schools")
           .update(formattedValues)
           .eq("id", school.id);
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
         toast({
           title: "School updated",
           description: "The school has been successfully updated.",
@@ -218,7 +224,7 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="University">University</SelectItem>
-                          <SelectItem value="College">College</SelectItem>
+                          <SelectItem value="Community College">Community College</SelectItem>
                           <SelectItem value="High School">High School</SelectItem>
                           <SelectItem value="Other">Other</SelectItem>
                         </SelectContent>
