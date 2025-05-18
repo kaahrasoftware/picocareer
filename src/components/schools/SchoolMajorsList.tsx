@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { ExternalLink, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MajorCard } from "@/components/MajorCard";
 
 interface SchoolMajor {
   major_id: string;
@@ -13,6 +13,33 @@ interface SchoolMajor {
   program_url: string | null;
   major_title: string;
   degree_levels: string[] | null;
+  majors?: {
+    id: string;
+    title: string;
+    description: string;
+    potential_salary: string | null;
+    skill_match: string[] | null;
+    tools_knowledge: string[] | null;
+    common_courses: string[] | null;
+    degree_levels: string[] | null;
+    learning_objectives: string[] | null;
+    interdisciplinary_connections: string[] | null;
+    job_prospects: string | null;
+    certifications_to_consider: string[] | null;
+    affiliated_programs: string[] | null;
+    gpa_expectations: number | null;
+    transferable_skills: string[] | null;
+    passion_for_subject: string | null;
+    professional_associations: string[] | null;
+    global_applicability: string | null;
+    common_difficulties: string[] | null;
+    career_opportunities: string[] | null;
+    intensity: string | null;
+    stress_level: string | null;
+    dropout_rates: string | null;
+    majors_to_consider_switching_to: string[] | null;
+    profiles_count: number | null;
+  }
 }
 
 interface SchoolMajorsListProps {
@@ -40,23 +67,38 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
           program_details,
           program_url,
           majors (
+            id,
             title,
-            degree_levels
+            description,
+            potential_salary,
+            skill_match,
+            tools_knowledge,
+            common_courses,
+            degree_levels,
+            learning_objectives,
+            interdisciplinary_connections,
+            job_prospects,
+            certifications_to_consider,
+            affiliated_programs,
+            gpa_expectations,
+            transferable_skills,
+            passion_for_subject,
+            professional_associations,
+            global_applicability,
+            common_difficulties,
+            career_opportunities,
+            intensity,
+            stress_level,
+            dropout_rates,
+            majors_to_consider_switching_to,
+            profiles_count
           )
         `)
         .eq('school_id', schoolId);
 
       if (error) throw error;
 
-      const formattedData = data.map(item => ({
-        major_id: item.major_id,
-        program_details: item.program_details,
-        program_url: item.program_url,
-        major_title: item.majors?.title || 'Unknown Program',
-        degree_levels: item.majors?.degree_levels || []
-      }));
-
-      setMajors(formattedData);
+      setMajors(data as SchoolMajor[]);
     } catch (error) {
       console.error('Error fetching school majors:', error);
       toast({
@@ -71,17 +113,9 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[...Array(3)].map((_, index) => (
-          <div key={index} className="flex flex-col gap-2">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex gap-2 mt-1">
-              <Skeleton className="h-7 w-24" />
-              <Skeleton className="h-7 w-20" />
-            </div>
-            <Skeleton className="h-px w-full mt-3" />
-          </div>
+          <Skeleton key={index} className="h-64 w-full rounded-lg" />
         ))}
       </div>
     );
@@ -98,37 +132,47 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
 
   return (
     <div className="space-y-5">
-      {majors.map((major) => (
-        <div key={major.major_id} className="pb-4 border-b last:border-b-0 last:pb-0">
-          <h3 className="text-lg font-medium">{major.major_title}</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium">Available Programs</h3>
+        <Badge variant="outline">{majors.length} Programs</Badge>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {majors.map((major) => {
+          if (!major.majors) return null;
           
-          {major.program_details && (
-            <p className="text-sm text-muted-foreground mt-1">{major.program_details}</p>
-          )}
-          
-          <div className="flex flex-wrap gap-2 mt-3">
-            {major.degree_levels?.map((level) => (
-              <Badge key={level} variant="outline">
-                {level}
-              </Badge>
-            ))}
-            
-            {major.program_url && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="mt-1"
-                asChild
-              >
-                <a href={major.program_url} target="_blank" rel="noopener noreferrer">
-                  Program Website
-                  <ExternalLink className="ml-2 h-3 w-3" />
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-      ))}
+          return (
+            <MajorCard
+              key={major.major_id}
+              id={major.majors.id}
+              title={major.majors.title}
+              description={major.majors.description}
+              potential_salary={major.majors.potential_salary}
+              skill_match={major.majors.skill_match}
+              tools_knowledge={major.majors.tools_knowledge}
+              common_courses={major.majors.common_courses}
+              degree_levels={major.majors.degree_levels}
+              learning_objectives={major.majors.learning_objectives}
+              interdisciplinary_connections={major.majors.interdisciplinary_connections}
+              job_prospects={major.majors.job_prospects}
+              certifications_to_consider={major.majors.certifications_to_consider}
+              affiliated_programs={major.majors.affiliated_programs}
+              gpa_expectations={major.majors.gpa_expectations}
+              transferable_skills={major.majors.transferable_skills}
+              passion_for_subject={major.majors.passion_for_subject}
+              professional_associations={major.majors.professional_associations}
+              global_applicability={major.majors.global_applicability}
+              common_difficulties={major.majors.common_difficulties}
+              career_opportunities={major.majors.career_opportunities}
+              intensity={major.majors.intensity}
+              stress_level={major.majors.stress_level}
+              dropout_rates={major.majors.dropout_rates}
+              majors_to_consider_switching_to={major.majors.majors_to_consider_switching_to}
+              profiles_count={major.majors.profiles_count}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useSchoolById, useSchoolMajors } from "@/hooks/useAllSchools";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { AcademicRequirements } from "@/components/major-details/AcademicRequirements";
+import { MajorCard } from "@/components/MajorCard";
 
 export default function SchoolDetail() {
   const { id } = useParams<{ id: string }>();
@@ -312,58 +312,56 @@ export default function SchoolDetail() {
         <TabsContent value="programs" className="space-y-8">
           {isMajorsLoading ? (
             <div className="space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-48 w-full" />
-              <Skeleton className="h-48 w-full" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(3)].map((_, index) => (
+                  <Skeleton key={index} className="h-64 w-full rounded-lg" />
+                ))}
+              </div>
             </div>
           ) : schoolMajors && schoolMajors.length > 0 ? (
             <div className="space-y-6">
-              <h2 className="text-2xl font-semibold">Available Programs & Majors</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">Available Programs & Majors</h2>
+                <Badge variant="outline">{schoolMajors.length} Programs</Badge>
+              </div>
               
-              {schoolMajors.map((schoolMajor) => (
-                <div key={schoolMajor.id} className="bg-card border rounded-lg p-6">
-                  <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold">{schoolMajor.majors?.title}</h3>
-                      <p className="text-muted-foreground mt-1">{schoolMajor.majors?.description}</p>
-                    </div>
-                    
-                    {schoolMajor.program_url && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="md:self-start shrink-0"
-                        asChild
-                      >
-                        <a 
-                          href={schoolMajor.program_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center"
-                        >
-                          Program Details
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </a>
-                      </Button>
-                    )}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {schoolMajors.map((schoolMajor) => {
+                  const major = schoolMajor.majors;
+                  if (!major) return null;
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                    {schoolMajor.majors?.degree_levels && (
-                      <AcademicRequirements 
-                        degree_levels={schoolMajor.majors.degree_levels}
-                      />
-                    )}
-                    
-                    {schoolMajor.program_details && (
-                      <div className="space-y-2">
-                        <h4 className="text-md font-medium">Program Details</h4>
-                        <p className="text-sm text-muted-foreground">{schoolMajor.program_details}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  return (
+                    <MajorCard
+                      key={schoolMajor.id}
+                      id={major.id}
+                      title={major.title}
+                      description={major.description}
+                      potential_salary={major.potential_salary}
+                      skill_match={major.skill_match}
+                      tools_knowledge={major.tools_knowledge}
+                      common_courses={major.common_courses}
+                      degree_levels={major.degree_levels}
+                      learning_objectives={major.learning_objectives}
+                      interdisciplinary_connections={major.interdisciplinary_connections}
+                      job_prospects={major.job_prospects}
+                      certifications_to_consider={major.certifications_to_consider}
+                      affiliated_programs={major.affiliated_programs}
+                      gpa_expectations={major.gpa_expectations}
+                      transferable_skills={major.transferable_skills}
+                      passion_for_subject={major.passion_for_subject}
+                      professional_associations={major.professional_associations}
+                      global_applicability={major.global_applicability}
+                      common_difficulties={major.common_difficulties}
+                      career_opportunities={major.career_opportunities}
+                      intensity={major.intensity}
+                      stress_level={major.stress_level}
+                      dropout_rates={major.dropout_rates}
+                      majors_to_consider_switching_to={major.majors_to_consider_switching_to}
+                      profiles_count={major.profiles_count}
+                    />
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
