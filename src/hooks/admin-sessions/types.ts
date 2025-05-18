@@ -1,5 +1,5 @@
 
-// Admin sessions types
+// Define types for session queries
 export interface SessionQueryParams {
   statusFilter?: string;
   page?: number;
@@ -17,10 +17,4 @@ export interface StatusCounts {
   completed: number;
   cancelled: number;
   no_show: number;
-}
-
-export interface AdminSessionsResponse {
-  sessions: any[];
-  totalPages: number;
-  statusCounts: StatusCounts;
 }
