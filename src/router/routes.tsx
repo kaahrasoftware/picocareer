@@ -16,6 +16,7 @@ import CareerUpload from "../pages/CareerUpload";
 import EventUpload from "../pages/EventUpload";
 import BlogUpload from "../pages/BlogUpload";
 import School from "../pages/School";
+import SchoolDetail from "../pages/SchoolDetail";
 import MajorUpload from "../pages/MajorUpload";
 import Profile from "../pages/Profile";
 import PersonalityTest from "../pages/PersonalityTest";
@@ -132,6 +133,10 @@ export const router = createBrowserRouter([
       {
         path: "school",
         element: <School />,
+      },
+      {
+        path: "school/:id",
+        element: <SchoolDetail />,
       },
       {
         path: "major/upload",

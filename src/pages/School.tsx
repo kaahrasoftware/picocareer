@@ -12,6 +12,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { StandardPagination } from "@/components/common/StandardPagination";
+import { SchoolCard } from "@/components/SchoolCard";
+import { GoToTopButton } from "@/components/ui/go-to-top-button";
 import type { School } from "@/types/database/schools";
 
 export default function School() {
@@ -135,31 +137,7 @@ export default function School() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {schools.length > 0 ? (
               schools.map((school) => (
-                <Card key={school.id}>
-                  <CardHeader>
-                    <CardTitle className="line-clamp-2">{school.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">Type:</span> {school.type || 'Not specified'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        <span className="font-medium">Location:</span> {school.location || 'Not specified'}
-                      </p>
-                      {school.acceptance_rate && (
-                        <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Acceptance Rate:</span> {(school.acceptance_rate * 100).toFixed(1)}%
-                        </p>
-                      )}
-                      {school.country && (
-                        <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Country:</span> {school.country}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <SchoolCard key={school.id} school={school} />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
@@ -169,13 +147,17 @@ export default function School() {
           </div>
           
           {/* Pagination */}
-          <StandardPagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+          <div className="mt-8">
+            <StandardPagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
         </>
       )}
+      
+      <GoToTopButton />
     </div>
   );
 }
