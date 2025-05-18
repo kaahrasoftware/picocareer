@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -39,6 +40,7 @@ import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
+import Schools from "../pages/Schools";
 
 export const router = createBrowserRouter([
   {
@@ -133,6 +135,10 @@ export const router = createBrowserRouter([
       {
         path: "school",
         element: <School />,
+      },
+      {
+        path: "schools",
+        element: <Schools />,
       },
       {
         path: "major/upload",

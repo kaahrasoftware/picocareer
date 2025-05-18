@@ -1,9 +1,9 @@
 
-import { useState } from "react";
 import { SchoolsGrid } from "@/components/schools/SchoolsGrid";
 import { SchoolFilters, SchoolFilters as SchoolFiltersType } from "@/components/schools/SchoolFilters";
+import { useState } from "react";
 
-export function SchoolsPage() {
+export default function Schools() {
   const [filters, setFilters] = useState<SchoolFiltersType>({
     type: "all",
     country: "all"
