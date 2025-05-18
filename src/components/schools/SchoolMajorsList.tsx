@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MajorCard } from "@/components/MajorCard";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 
 interface SchoolMajor {
   major_id: string;
@@ -113,9 +114,9 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[...Array(3)].map((_, index) => (
-          <Skeleton key={index} className="h-64 w-full rounded-lg" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, index) => (
+          <SkeletonCard key={index} />
         ))}
       </div>
     );
@@ -137,7 +138,7 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
         <Badge variant="outline">{majors.length} Programs</Badge>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {majors.map((major) => {
           if (!major.majors) return null;
           
