@@ -3117,44 +3117,128 @@ export type Database = {
           },
         ]
       }
+      school_majors: {
+        Row: {
+          created_at: string
+          id: string
+          major_id: string
+          program_details: string | null
+          program_url: string | null
+          school_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          major_id: string
+          program_details?: string | null
+          program_url?: string | null
+          school_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          major_id?: string
+          program_details?: string | null
+          program_url?: string | null
+          school_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_majors_major_id_fkey"
+            columns: ["major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_majors_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           acceptance_rate: number | null
+          admissions_page_url: string | null
           country: Database["public"]["Enums"]["country"] | null
+          cover_image_url: string | null
           created_at: string
+          financial_aid_url: string | null
+          gallery_images: Json | null
+          graduate_application_url: string | null
           id: string
+          international_students_url: string | null
           location: string | null
+          logo_url: string | null
           name: string
+          ranking: string | null
           state: Database["public"]["Enums"]["states"] | null
           status: Database["public"]["Enums"]["status"] | null
+          student_faculty_ratio: string | null
+          student_population: number | null
+          tuition_fees: Json | null
           type: Database["public"]["Enums"]["school_type"] | null
+          undergraduate_application_url: string | null
           updated_at: string
+          virtual_tour_url: string | null
           website: string | null
         }
         Insert: {
           acceptance_rate?: number | null
+          admissions_page_url?: string | null
           country?: Database["public"]["Enums"]["country"] | null
+          cover_image_url?: string | null
           created_at?: string
+          financial_aid_url?: string | null
+          gallery_images?: Json | null
+          graduate_application_url?: string | null
           id?: string
+          international_students_url?: string | null
           location?: string | null
+          logo_url?: string | null
           name: string
+          ranking?: string | null
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
+          student_faculty_ratio?: string | null
+          student_population?: number | null
+          tuition_fees?: Json | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          undergraduate_application_url?: string | null
           updated_at?: string
+          virtual_tour_url?: string | null
           website?: string | null
         }
         Update: {
           acceptance_rate?: number | null
+          admissions_page_url?: string | null
           country?: Database["public"]["Enums"]["country"] | null
+          cover_image_url?: string | null
           created_at?: string
+          financial_aid_url?: string | null
+          gallery_images?: Json | null
+          graduate_application_url?: string | null
           id?: string
+          international_students_url?: string | null
           location?: string | null
+          logo_url?: string | null
           name?: string
+          ranking?: string | null
           state?: Database["public"]["Enums"]["states"] | null
           status?: Database["public"]["Enums"]["status"] | null
+          student_faculty_ratio?: string | null
+          student_population?: number | null
+          tuition_fees?: Json | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          undergraduate_application_url?: string | null
           updated_at?: string
+          virtual_tour_url?: string | null
           website?: string | null
         }
         Relationships: []
