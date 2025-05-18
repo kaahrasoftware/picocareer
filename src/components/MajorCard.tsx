@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,8 @@ import { MajorDetails } from "./MajorDetails";
 import { MajorHeader } from "./major/MajorHeader";
 import { MajorSalary } from "./major/MajorSalary";
 import { MajorSkillsList } from "./major/MajorSkillsList";
+import { Badge } from "./ui/badge";
+import { ExternalLink } from "lucide-react";
 
 interface MajorCardProps {
   id?: string;
@@ -32,6 +35,8 @@ interface MajorCardProps {
   stress_level?: string;
   dropout_rates?: string;
   majors_to_consider_switching_to?: string[];
+  programDetails?: string | null;
+  programUrl?: string | null;
 }
 
 export function MajorCard(props: MajorCardProps) {
@@ -70,6 +75,31 @@ export function MajorCard(props: MajorCardProps) {
             icon="courses"
             badgeStyle="bg-[#FFDEE2] text-[#4B5563] hover:bg-[#FFD1D6] transition-colors border border-[#FFD1D6] dark:bg-[#2D2326] dark:text-[#D4A1A8]"
           />
+
+          {props.programDetails && (
+            <div className="mt-3 pt-3 border-t border-dashed border-muted">
+              <div className="flex items-start gap-2">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60 mt-0.5">
+                  Program
+                </Badge>
+                <div className="text-sm text-muted-foreground">
+                  <p className="italic">{props.programDetails}</p>
+                  {props.programUrl && (
+                    <a 
+                      href={props.programUrl} 
+                      target="_blank"
+                      rel="noopener noreferrer" 
+                      className="text-primary hover:underline inline-flex items-center gap-1 text-xs mt-1 group-hover:text-primary/80 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View program details
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mt-auto pt-4">
             <Button 

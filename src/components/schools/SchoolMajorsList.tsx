@@ -170,6 +170,8 @@ export function SchoolMajorsList({ schoolId }: SchoolMajorsListProps) {
               dropout_rates={major.majors.dropout_rates}
               majors_to_consider_switching_to={major.majors.majors_to_consider_switching_to}
               profiles_count={major.majors.profiles_count}
+              programDetails={major.program_details}
+              programUrl={major.program_url}
             />
           );
         })}
