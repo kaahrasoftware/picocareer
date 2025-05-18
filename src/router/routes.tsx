@@ -25,8 +25,6 @@ import TokenShop from "../pages/TokenShop";
 import EmailConfirmation from "../pages/EmailConfirmation";
 import Funding from "../pages/Funding";
 import MentorRegistration from "../pages/MentorRegistration";
-import Institutions from "../pages/Institutions";
-import Institution from "../pages/Institution";
 import PasswordReset from "../pages/PasswordReset";
 import Dashboard from "../pages/Dashboard";
 import Error from "../pages/Error";
@@ -40,7 +38,6 @@ import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
-import Schools from "../pages/Schools";
 
 export const router = createBrowserRouter([
   {
@@ -137,10 +134,6 @@ export const router = createBrowserRouter([
         element: <School />,
       },
       {
-        path: "schools",
-        element: <Schools />,
-      },
-      {
         path: "major/upload",
         element: <MajorUpload />,
       },
@@ -175,14 +168,6 @@ export const router = createBrowserRouter([
       {
         path: "mentor-registration",
         element: <MentorRegistration />,
-      },
-      {
-        path: "institutions",
-        element: <Institutions />,
-      },
-      {
-        path: "institutions/:id",
-        element: <Institution />,
       },
       {
         path: "password-reset",
