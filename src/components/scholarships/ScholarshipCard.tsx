@@ -12,6 +12,8 @@ import { ScholarshipDetailsDialog } from "./ScholarshipDetailsDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
+import { useLocation } from "react-router-dom";
 
 interface ScholarshipCardProps {
   scholarship: {
@@ -74,11 +76,13 @@ export function ScholarshipCard({
   const {
     user
   } = useAuthState();
+  const location = useLocation();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [recentlyBookmarked, setRecentlyBookmarked] = useState(false);
   const [recentBookmarks, setRecentBookmarks] = useLocalStorage<string[]>("recent-scholarship-bookmarks", []);
   const [isHovered, setIsHovered] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkBookmarkStatus = async () => {
@@ -177,6 +181,21 @@ export function ScholarshipCard({
     setDetailsDialogOpen(true);
   };
 
+  const handleApplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (!user) {
+      // Show auth prompt if not logged in
+      setAuthDialogOpen(true);
+      return;
+    }
+
+    // If logged in and there's an application URL, open it
+    if (scholarship.application_url) {
+      window.open(scholarship.application_url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (compact) {
     return <>
         <Card className={cn("h-full transition-all duration-300 overflow-hidden border cursor-pointer group", cardGradient, "transform hover:translate-y-[-4px] hover:shadow-lg", isHovered && "ring-2 ring-primary/40")} onClick={openDetailsDialog} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -225,6 +244,12 @@ export function ScholarshipCard({
         </Card>
 
         <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
+        
+        <AuthPromptDialog 
+          isOpen={authDialogOpen} 
+          onClose={() => setAuthDialogOpen(false)} 
+          redirectUrl={location.pathname + `?dialog=${scholarship.id}`}
+        />
       </>;
   }
 
@@ -313,14 +338,24 @@ export function ScholarshipCard({
             <FileText className="h-4 w-4 mr-1 group-hover:text-primary" /> Details
           </Button>
           
-          {scholarship.application_url && <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90" asChild>
-              <a href={scholarship.application_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-                Apply <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>}
+          {scholarship.application_url && (
+            <Button 
+              size="sm" 
+              className="flex-1 bg-primary hover:bg-primary/90"
+              onClick={handleApplyClick}
+            >
+              {user ? "Apply" : "Sign in to Apply"} <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          )}
         </CardFooter>
       </Card>
 
       <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
+      
+      <AuthPromptDialog 
+        isOpen={authDialogOpen} 
+        onClose={() => setAuthDialogOpen(false)} 
+        redirectUrl={location.pathname + `?dialog=${scholarship.id}`}
+      />
     </>;
 }
