@@ -26,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/forms/ImageUpload";
 import { School, SchoolStatus, SchoolType } from "@/types/database/schools";
@@ -34,6 +33,7 @@ import { BasicInputField } from "@/components/forms/fields/BasicInputField";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { COUNTRIES, US_STATES } from "@/constants/geography";
 
 // Define the form schema with Zod
 const schoolFormSchema = z.object({
@@ -70,7 +70,8 @@ interface SchoolFormDialogProps {
 export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
+  const [selectedCountry, setSelectedCountry] = useState<string>(school?.country || "");
+  
   // Set default values based on mode
   const defaultValues: Partial<SchoolFormValues> = mode === "edit" && school
     ? {
@@ -125,8 +126,15 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
     setIsSubmitting(true);
 
     try {
+      // Format the numbers properly
+      const formattedValues = {
+        ...values,
+        acceptance_rate: values.acceptance_rate === null ? null : values.acceptance_rate,
+        student_population: values.student_population === null ? null : values.student_population
+      };
+
       if (mode === "add") {
-        const { error } = await supabase.from("schools").insert([values]);
+        const { error } = await supabase.from("schools").insert([formattedValues]);
         if (error) throw error;
         toast({
           title: "School added",
@@ -135,7 +143,7 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
       } else if (mode === "edit" && school) {
         const { error } = await supabase
           .from("schools")
-          .update(values)
+          .update(formattedValues)
           .eq("id", school.id);
         if (error) throw error;
         toast({
@@ -153,6 +161,15 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handle country change to potentially reset state
+  const handleCountryChange = (countryValue: string) => {
+    setSelectedCountry(countryValue);
+    // If changing from US to another country, clear the state
+    if (countryValue !== "United States" && form.getValues("state")) {
+      form.setValue("state", "");
     }
   };
 
@@ -243,27 +260,76 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Country*</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleCountryChange(value);
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px] overflow-y-auto">
+                          {COUNTRIES.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State/Province</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {selectedCountry === "United States" && (
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State/Province</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[200px] overflow-y-auto">
+                            {US_STATES.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {selectedCountry !== "United States" && (
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State/Province</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -358,7 +424,10 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                           min="0"
                           max="1"
                           value={field.value === null ? '' : field.value}
-                          onChange={(e) => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === '' ? null : parseFloat(value));
+                          }}
                           placeholder="e.g., 0.15 for 15%"
                         />
                       </FormControl>
@@ -377,7 +446,10 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                         <Input 
                           type="number" 
                           value={field.value === null ? '' : field.value}
-                          onChange={(e) => field.onChange(e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === '' ? null : parseInt(value, 10));
+                          }}
                           placeholder="e.g., 25000"
                         />
                       </FormControl>
