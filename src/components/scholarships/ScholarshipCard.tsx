@@ -1,3 +1,4 @@
+
 import { formatDistanceToNow } from "date-fns";
 import { CalendarIcon, Award, FileText, Bookmark, ExternalLink, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -211,8 +212,8 @@ export function ScholarshipCard({
                 </div>}
             </div>
             
-            {scholarship.featured && <Badge className="mt-3 bg-amber-500 hover:bg-amber-600 text-white border-none">
-                Featured
+            {scholarship.featured && <Badge className="mt-3 bg-amber-500/90 hover:bg-amber-600 text-white border-none flex items-center gap-1">
+                <Award className="h-3 w-3" /> Featured
               </Badge>}
           </CardContent>
           <CardFooter className="pt-2">
@@ -221,10 +222,6 @@ export function ScholarshipCard({
               View Details
             </Button>
           </CardFooter>
-          
-          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-          
-          <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-r-[40px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />
         </Card>
 
         <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
@@ -257,7 +254,7 @@ export function ScholarshipCard({
           </div>
           
           <div className="flex flex-wrap gap-1 mt-2">
-            {scholarship.featured && <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none flex items-center gap-1">
+            {scholarship.featured && <Badge className="bg-amber-500/90 hover:bg-amber-600 text-white border-none flex items-center gap-1">
                 <Award className="h-3 w-3" /> Featured
               </Badge>}
             {scholarship.status !== "Active" && <Badge variant={scholarship.status === "Coming Soon" ? "outline" : "secondary"}>
@@ -322,10 +319,6 @@ export function ScholarshipCard({
               </a>
             </Button>}
         </CardFooter>
-        
-        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        
-        {scholarship.featured && <div className="absolute top-0 right-0 w-0 h-0 border-t-[60px] border-r-[60px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />}
       </Card>
 
       <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
