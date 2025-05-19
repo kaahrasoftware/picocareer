@@ -1,10 +1,9 @@
 
-import { GraduationCap, ExternalLink } from "lucide-react";
+import { GraduationCap, ExternalLink, Trophy, CheckSquare, MapPin, Building } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -19,8 +18,11 @@ interface SchoolOffering {
     id: string;
     name: string;
     logo_url?: string;
+    cover_image_url?: string;
     location?: string;
     type?: string;
+    ranking?: string;
+    acceptance_rate?: number;
   };
 }
 
@@ -39,8 +41,11 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
             id,
             name,
             logo_url,
+            cover_image_url,
             location,
-            type
+            type,
+            ranking,
+            acceptance_rate
           )
         `)
         .eq('major_id', majorId);
@@ -95,12 +100,24 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
         {schoolsOffering.map((item, index) => (
           <Card 
             key={index} 
-            className="overflow-hidden h-full flex flex-col hover:shadow-md transition-all duration-200 bg-card/50 backdrop-blur-sm border border-muted/30"
+            className="overflow-hidden h-full flex flex-col hover:shadow-md transition-all duration-200 bg-card/50 backdrop-blur-sm border border-muted/30 cursor-pointer"
+            onClick={() => navigate(`/school/${item.schools?.id}`)}
           >
+            {/* Cover Image */}
+            {item.schools?.cover_image_url && (
+              <div className="w-full h-36 overflow-hidden">
+                <img 
+                  src={item.schools.cover_image_url} 
+                  alt={`${item.schools.name} campus`}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                />
+              </div>
+            )}
+            
             <div className="p-4 flex flex-col h-full">
               {/* School logo and name */}
               <div className="flex flex-col items-center mb-3">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center mb-2">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white flex items-center justify-center mb-2">
                   {item.schools?.logo_url ? (
                     <img 
                       src={item.schools.logo_url} 
@@ -111,13 +128,44 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
                     <GraduationCap className="h-6 w-6 text-muted-foreground" />
                   )}
                 </div>
-                <h5 className="font-medium text-sm text-center line-clamp-1">{item.schools?.name}</h5>
-                <span className="text-xs text-muted-foreground line-clamp-1">{item.schools?.location}</span>
+                <h5 className="font-semibold text-lg line-clamp-1">{item.schools?.name}</h5>
+                
+                <div className="space-y-1 mb-4 text-muted-foreground text-sm">
+                  {item.schools?.location && (
+                    <div className="flex items-center gap-1 justify-center">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="line-clamp-1">{item.schools.location}</span>
+                    </div>
+                  )}
+                  
+                  {item.schools?.type && (
+                    <div className="flex items-center gap-1 justify-center">
+                      <Building className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="line-clamp-1 capitalize">{item.schools.type}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Ranking and Acceptance Rate */}
+              <div className="grid grid-cols-2 gap-2 text-xs mt-2 text-muted-foreground">
+                {item.schools?.ranking && (
+                  <div className="flex items-center gap-1">
+                    <Trophy className="h-3 w-3 text-amber-500" />
+                    <span>{item.schools.ranking} Ranking</span>
+                  </div>
+                )}
+                {item.schools?.acceptance_rate !== null && item.schools?.acceptance_rate !== undefined && (
+                  <div className="flex items-center gap-1 justify-end">
+                    <CheckSquare className="h-3 w-3 text-green-500" />
+                    <span>{Math.round(item.schools.acceptance_rate * 100)}% Acceptance</span>
+                  </div>
+                )}
               </div>
               
               {/* Program details indicator if available */}
               {item.program_details && (
-                <div className="mt-auto">
+                <div className="mt-auto pt-3">
                   <Badge variant="outline" className="text-xs w-full flex justify-center gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60">
                     {item.program_url ? (
                       <a 
@@ -136,15 +184,6 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
                   </Badge>
                 </div>
               )}
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="w-full mt-2 text-xs"
-                onClick={() => navigate(`/school/${item.schools?.id}`)}
-              >
-                View School
-              </Button>
             </div>
           </Card>
         ))}
