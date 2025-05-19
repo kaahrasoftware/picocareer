@@ -104,11 +104,6 @@ export function CareerProspects({
                 className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60"
               >
                 {relation.career.title}
-                {relation.career.salary_range && (
-                  <span className="ml-1 text-green-600 dark:text-green-400">
-                    ({relation.career.salary_range})
-                  </span>
-                )}
               </Badge>
             ))}
           </div>
