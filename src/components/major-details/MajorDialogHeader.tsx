@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Bookmark, Share2, BookmarkCheck } from "lucide-react";
+import { X, Bookmark, Share2, BookmarkCheck, Users, DollarSign } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export function MajorDialogHeader({
             className={cn(
               "rounded-full transition-colors",
               isBookmarked 
-                ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/60 dark:hover:bg-amber-900/50" 
+                ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/60" 
                 : "hover:bg-muted"
             )}
             title={isBookmarked ? "Remove Bookmark" : "Bookmark"}
@@ -61,7 +61,6 @@ export function MajorDialogHeader({
           <Button 
             variant="outline" 
             size="icon" 
-            onClick={() => onShare}
             className="rounded-full hover:bg-muted/80 hover:text-destructive"
             title="Close"
             asChild
@@ -74,12 +73,14 @@ export function MajorDialogHeader({
       </div>
       
       <div className="flex flex-wrap items-center gap-2 mt-3">
-        <Badge 
-          variant="outline" 
-          className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
-        >
-          {major.field}
-        </Badge>
+        {major.field && (
+          <Badge 
+            variant="outline" 
+            className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
+          >
+            {major.field}
+          </Badge>
+        )}
         
         {major.degree_levels && major.degree_levels.length > 0 && (
           <Badge 
@@ -98,6 +99,26 @@ export function MajorDialogHeader({
             className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800/60"
           >
             {major.intensity} Intensity
+          </Badge>
+        )}
+
+        {major.potential_salary && (
+          <Badge 
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/60"
+          >
+            <DollarSign className="h-3 w-3 mr-1" />
+            {major.potential_salary}
+          </Badge>
+        )}
+
+        {major.profiles_count !== undefined && major.profiles_count > 0 && (
+          <Badge 
+            variant="outline"
+            className="bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-800/60"
+          >
+            <Users className="h-3 w-3 mr-1" />
+            {major.profiles_count} {major.profiles_count === 1 ? 'User' : 'Users'}
           </Badge>
         )}
       </div>

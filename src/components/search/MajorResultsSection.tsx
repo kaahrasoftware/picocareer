@@ -1,9 +1,11 @@
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/types/search";
 import { useState } from "react";
 import { MajorDetails } from "@/components/MajorDetails";
 import { isMajorResult } from "@/types/search";
+import { Users, DollarSign } from "lucide-react";
 
 interface MajorResultsSectionProps {
   majors: SearchResult[];
@@ -42,9 +44,28 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
                   {major.description}
                 </p>
               </div>
-              <Badge variant="secondary" className="self-start">
-                {major.degree_levels?.join(", ") || 'Major'}
-              </Badge>
+              
+              <div className="flex flex-wrap gap-2 mb-2">
+                {major.degree_levels && (
+                  <Badge variant="secondary" className="self-start">
+                    {major.degree_levels?.join(", ") || 'Major'}
+                  </Badge>
+                )}
+                
+                {major.profiles_count !== undefined && major.profiles_count > 0 && (
+                  <Badge variant="outline" className="self-start flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {major.profiles_count}
+                  </Badge>
+                )}
+                
+                {major.potential_salary && (
+                  <Badge variant="outline" className="self-start flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
+                    <DollarSign className="h-3 w-3" />
+                    {major.potential_salary}
+                  </Badge>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -69,7 +90,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             gpa_expectations: null,
             transferable_skills: [],
             tools_knowledge: [],
-            potential_salary: null,
+            potential_salary: selectedMajor.potential_salary || null,
             passion_for_subject: null,
             skill_match: [],
             professional_associations: [],
@@ -80,7 +101,7 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             stress_level: null,
             dropout_rates: null,
             majors_to_consider_switching_to: [],
-            profiles_count: 0,
+            profiles_count: selectedMajor.profiles_count || 0,
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}
