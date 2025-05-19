@@ -1,16 +1,14 @@
-import { Briefcase, DollarSign } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { Briefcase, Globe, Users, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CareerProspectsProps {
-  job_prospects?: string;
-  career_opportunities?: string[];
-  potential_salary?: string;
-  professional_associations?: string[];
-  global_applicability?: string;
+  job_prospects: string | null;
+  career_opportunities: string[] | null;
+  professional_associations: string[] | null;
+  global_applicability: string | null;
+  potential_salary?: string | null;
   related_careers?: {
     career: {
       id: string;
@@ -21,116 +19,92 @@ interface CareerProspectsProps {
 }
 
 export function CareerProspects({ 
-  job_prospects,
-  career_opportunities,
-  potential_salary,
+  job_prospects, 
+  career_opportunities, 
   professional_associations,
   global_applicability,
+  potential_salary,
   related_careers
 }: CareerProspectsProps) {
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
-
-  // Fetch all careers with their relations to match against opportunities
-  const { data: careersWithRelations } = useQuery({
-    queryKey: ['careers-with-relations'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select(`
-          id,
-          title,
-          career_major_relations!inner(
-            major_id
-          )
-        `)
-        .eq('status', 'Approved');
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Function to find matching career using career_major_relations
-  const findMatchingCareer = (opportunity: string) => {
-    return careersWithRelations?.find(career => 
-      career.title.toLowerCase() === opportunity.toLowerCase()
-    );
-  };
-
   return (
-    <div className="space-y-4">
-      <h4 className="text-lg font-semibold flex items-center gap-2">
-        <Briefcase className="h-5 w-5 text-primary" />
+    <div>
+      <h3 className="text-xl font-semibold mb-4 flex items-center">
+        <Briefcase className="mr-2 h-5 w-5 text-green-600" />
         Career Prospects
-      </h4>
-      
+      </h3>
+
       {potential_salary && (
-        <div className="flex items-center gap-2 text-sm">
-          <DollarSign className="h-4 w-4 text-primary" />
-          <span>Potential Salary: {potential_salary}</span>
-        </div>
-      )}
-
-      {job_prospects && (
-        <div>
-          <h5 className="text-sm font-medium mb-2">Job Prospects</h5>
-          <p className="text-sm text-muted-foreground">{job_prospects}</p>
-        </div>
-      )}
-
-      {career_opportunities && career_opportunities.length > 0 && (
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium">Career Opportunities</h5>
-          <div className="flex flex-wrap gap-2">
-            {career_opportunities.map((career, index) => {
-              const matchingCareer = findMatchingCareer(career);
-              return (
-                <Badge 
-                  key={index} 
-                  variant="secondary"
-                  className={`bg-[#D3E4FD] text-[#4B5563] border-[#C1D9F9] ${
-                    matchingCareer ? 'cursor-pointer hover:bg-[#C1D9F9] transition-colors' : ''
-                  }`}
-                  onClick={() => matchingCareer && setSelectedCareerId(matchingCareer.id)}
-                >
-                  {career}
-                </Badge>
-              );
-            })}
+        <div className="mb-4 p-3 bg-green-50/50 rounded-md border border-green-100 dark:bg-green-900/20 dark:border-green-800/30">
+          <div className="flex items-center">
+            <DollarSign className="h-5 w-5 text-green-600 mr-2" />
+            <div className="flex-1">
+              <h4 className="font-medium text-green-800 dark:text-green-300">Potential Salary</h4>
+              <p className="text-green-700 dark:text-green-400 font-medium">{potential_salary}</p>
+            </div>
           </div>
         </div>
       )}
-
-      {professional_associations && professional_associations.length > 0 && (
-        <div className="space-y-2">
-          <h5 className="text-sm font-medium">Professional Associations</h5>
+      
+      {job_prospects && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Job Outlook</h4>
+          <p className="text-gray-700 dark:text-gray-300">{job_prospects}</p>
+        </div>
+      )}
+      
+      {career_opportunities && career_opportunities.length > 0 && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2">Career Opportunities</h4>
           <div className="flex flex-wrap gap-2">
-            {professional_associations.map((association, index) => (
-              <Badge 
-                key={index} 
-                variant="outline"
-                className="bg-[#F2FCE2] text-[#4B5563]"
-              >
-                {association}
+            {career_opportunities.map((opportunity, index) => (
+              <Badge key={index} variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                {opportunity}
               </Badge>
             ))}
           </div>
         </div>
       )}
-
+      
+      {professional_associations && professional_associations.length > 0 && (
+        <div className="mb-4">
+          <h4 className="font-medium mb-2 flex items-center">
+            <Users className="mr-1 h-4 w-4 text-green-600" />
+            Professional Associations
+          </h4>
+          <ul className="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
+            {professional_associations.map((association, index) => (
+              <li key={index}>{association}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
       {global_applicability && (
-        <div className="mt-4">
-          <h5 className="text-sm font-medium mb-2">Global Applicability</h5>
-          <p className="text-sm text-muted-foreground">{global_applicability}</p>
+        <div className="mb-4">
+          <h4 className="font-medium mb-2 flex items-center">
+            <Globe className="mr-1 h-4 w-4 text-green-600" /> 
+            Global Applicability
+          </h4>
+          <p className="text-gray-700 dark:text-gray-300">{global_applicability}</p>
         </div>
       )}
 
-      {selectedCareerId && (
-        <CareerDetailsDialog
-          careerId={selectedCareerId}
-          open={!!selectedCareerId}
-          onOpenChange={(open) => !open && setSelectedCareerId(null)}
-        />
+      {related_careers && related_careers.length > 0 && (
+        <div className="mt-4">
+          <h4 className="font-medium mb-2">Related Careers</h4>
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+            {related_careers.map((relation, index) => (
+              <div key={index} className="p-2 rounded border bg-white/50 dark:bg-gray-800/50">
+                <p className="font-medium">{relation.career.title}</p>
+                {relation.career.salary_range && (
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    {relation.career.salary_range}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

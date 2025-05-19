@@ -47,6 +47,7 @@ export function MajorDetailsContent({ major, majorWithCareers }: MajorDetailsCon
               professional_associations={major.professional_associations}
               global_applicability={major.global_applicability}
               related_careers={majorWithCareers?.career_major_relations}
+              potential_salary={major.potential_salary}
             />
           </div>
 

@@ -172,7 +172,36 @@ export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => 
 
       {result.type === 'major' && (
         <MajorDetails
-          major={result}
+          major={{
+            id: result.id,
+            title: result.title,
+            description: result.description || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            featured: false,
+            learning_objectives: result.learning_objectives || [],
+            common_courses: result.common_courses || [],
+            interdisciplinary_connections: result.interdisciplinary_connections || [],
+            job_prospects: result.job_prospects || null,
+            certifications_to_consider: result.certifications_to_consider || [],
+            degree_levels: result.degree_levels || [],
+            affiliated_programs: result.affiliated_programs || [],
+            gpa_expectations: result.gpa_expectations || null,
+            transferable_skills: result.transferable_skills || [],
+            tools_knowledge: result.tools_knowledge || [],
+            potential_salary: result.potential_salary || null,
+            passion_for_subject: result.passion_for_subject || null,
+            skill_match: result.skill_match || [],
+            professional_associations: result.professional_associations || [],
+            global_applicability: result.global_applicability || null,
+            common_difficulties: result.common_difficulties || [],
+            career_opportunities: result.career_opportunities || [],
+            intensity: result.intensity || null,
+            stress_level: result.stress_level || null,
+            dropout_rates: result.dropout_rates || null,
+            majors_to_consider_switching_to: result.majors_to_consider_switching_to || [],
+            profiles_count: result.profiles_count || 0,
+          }}
           open={isMajorDialogOpen}
           onOpenChange={setIsMajorDialogOpen}
         />

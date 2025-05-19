@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { SearchResult } from "@/types/search";
@@ -27,13 +28,13 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
       <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
       <div className="w-full">
         <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 place-items-center' 
-          : 'flex gap-4 justify-center'}`}
+          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
+          : 'flex gap-4 flex-wrap'}`}
         >
           {validMajors.map((major) => (
             <Card 
               key={major.id}
-              className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
+              className="flex-shrink-0 flex flex-col p-4 w-full md:w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => setSelectedMajor(major)}
             >
               <div className="flex-1 min-w-0 mb-3">
@@ -42,9 +43,16 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
                   {major.description}
                 </p>
               </div>
-              <Badge variant="secondary" className="self-start">
-                {major.degree_levels?.join(", ") || 'Major'}
-              </Badge>
+              <div className="flex flex-wrap gap-1">
+                {major.degree_levels?.map((level, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs">
+                    {level}
+                  </Badge>
+                ))}
+                {!major.degree_levels?.length && (
+                  <Badge variant="secondary" className="text-xs">Major</Badge>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -59,28 +67,28 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             featured: false,
-            learning_objectives: [],
+            learning_objectives: selectedMajor.learning_objectives || [],
             common_courses: selectedMajor.common_courses || [],
-            interdisciplinary_connections: [],
-            job_prospects: null,
-            certifications_to_consider: [],
+            interdisciplinary_connections: selectedMajor.interdisciplinary_connections || [],
+            job_prospects: selectedMajor.job_prospects || null,
+            certifications_to_consider: selectedMajor.certifications_to_consider || [],
             degree_levels: selectedMajor.degree_levels || [],
-            affiliated_programs: [],
-            gpa_expectations: null,
-            transferable_skills: [],
-            tools_knowledge: [],
-            potential_salary: null,
-            passion_for_subject: null,
-            skill_match: [],
-            professional_associations: [],
-            global_applicability: null,
-            common_difficulties: [],
+            affiliated_programs: selectedMajor.affiliated_programs || [],
+            gpa_expectations: selectedMajor.gpa_expectations || null,
+            transferable_skills: selectedMajor.transferable_skills || [],
+            tools_knowledge: selectedMajor.tools_knowledge || [],
+            potential_salary: selectedMajor.potential_salary || null,
+            passion_for_subject: selectedMajor.passion_for_subject || null,
+            skill_match: selectedMajor.skill_match || [],
+            professional_associations: selectedMajor.professional_associations || [],
+            global_applicability: selectedMajor.global_applicability || null,
+            common_difficulties: selectedMajor.common_difficulties || [],
             career_opportunities: selectedMajor.career_opportunities || [],
-            intensity: null,
-            stress_level: null,
-            dropout_rates: null,
-            majors_to_consider_switching_to: [],
-            profiles_count: 0,
+            intensity: selectedMajor.intensity || null,
+            stress_level: selectedMajor.stress_level || null,
+            dropout_rates: selectedMajor.dropout_rates || null,
+            majors_to_consider_switching_to: selectedMajor.majors_to_consider_switching_to || [],
+            profiles_count: selectedMajor.profiles_count || 0,
           }}
           open={!!selectedMajor}
           onOpenChange={(open) => !open && setSelectedMajor(null)}
@@ -88,4 +96,4 @@ export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
       )}
     </div>
   );
-};
+}
