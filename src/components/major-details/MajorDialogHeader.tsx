@@ -5,7 +5,6 @@ import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X, Bookmark, Share2, BookmarkCheck } from "lucide-react";
 import type { Major } from "@/types/database/majors";
 import { cn } from "@/lib/utils";
-import { MajorSalary } from "@/components/major/MajorSalary";
 
 interface MajorDialogHeaderProps {
   major: Major;
@@ -62,6 +61,7 @@ export function MajorDialogHeader({
           <Button 
             variant="outline" 
             size="icon" 
+            onClick={() => onShare}
             className="rounded-full hover:bg-muted/80 hover:text-destructive"
             title="Close"
             asChild
@@ -73,10 +73,14 @@ export function MajorDialogHeader({
         </div>
       </div>
       
-      {/* Salary display */}
-      <MajorSalary potentialSalary={major.potential_salary} />
-      
       <div className="flex flex-wrap items-center gap-2 mt-3">
+        <Badge 
+          variant="outline" 
+          className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
+        >
+          {major.field}
+        </Badge>
+        
         {major.degree_levels && major.degree_levels.length > 0 && (
           <Badge 
             variant="outline"
