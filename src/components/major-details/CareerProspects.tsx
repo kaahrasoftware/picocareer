@@ -1,7 +1,5 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Globe, Users, DollarSign } from "lucide-react";
-
 interface CareerProspectsProps {
   job_prospects: string | null;
   career_opportunities: string[] | null;
@@ -16,7 +14,6 @@ interface CareerProspectsProps {
   }[];
   potential_salary: string | null;
 }
-
 export function CareerProspects({
   job_prospects,
   career_opportunities,
@@ -25,90 +22,55 @@ export function CareerProspects({
   related_careers,
   potential_salary
 }: CareerProspectsProps) {
-  return (
-    <div>
+  return <div>
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <Briefcase className="h-5 w-5 text-green-600 dark:text-green-400" />
         Career Prospects
       </h3>
 
-      {potential_salary && (
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-            Potential Salary
-          </h4>
-          <Badge 
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/60"
-          >
-            {potential_salary}
-          </Badge>
-        </div>
-      )}
+      {potential_salary}
 
-      {job_prospects && (
-        <div className="mb-4">
+      {job_prospects && <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Job Market</h4>
           <p className="text-sm text-muted-foreground">{job_prospects}</p>
-        </div>
-      )}
+        </div>}
 
-      {career_opportunities && career_opportunities.length > 0 && (
-        <div className="mb-4">
+      {career_opportunities && career_opportunities.length > 0 && <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Career Paths</h4>
           <div className="flex flex-wrap gap-2">
-            {career_opportunities.map((opportunity, index) => (
-              <Badge key={index} variant="outline" className="bg-background">
+            {career_opportunities.map((opportunity, index) => <Badge key={index} variant="outline" className="bg-background">
                 {opportunity}
-              </Badge>
-            ))}
+              </Badge>)}
           </div>
-        </div>
-      )}
+        </div>}
 
-      {professional_associations && professional_associations.length > 0 && (
-        <div className="mb-4">
+      {professional_associations && professional_associations.length > 0 && <div className="mb-4">
           <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
             <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
             Professional Associations
           </h4>
           <div className="flex flex-wrap gap-2">
-            {professional_associations.map((association, index) => (
-              <Badge key={index} variant="outline" className="bg-background">
+            {professional_associations.map((association, index) => <Badge key={index} variant="outline" className="bg-background">
                 {association}
-              </Badge>
-            ))}
+              </Badge>)}
           </div>
-        </div>
-      )}
+        </div>}
 
-      {global_applicability && (
-        <div className="mb-4">
+      {global_applicability && <div className="mb-4">
           <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
             <Globe className="h-4 w-4 text-green-600 dark:text-green-400" />
             Global Applicability
           </h4>
           <p className="text-sm text-muted-foreground">{global_applicability}</p>
-        </div>
-      )}
+        </div>}
 
-      {related_careers && related_careers.length > 0 && (
-        <div>
+      {related_careers && related_careers.length > 0 && <div>
           <h4 className="text-sm font-semibold mb-2">Related Careers</h4>
           <div className="flex flex-wrap gap-2">
-            {related_careers.map((relation) => (
-              <Badge 
-                key={relation.career.id} 
-                variant="outline" 
-                className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60"
-              >
+            {related_careers.map(relation => <Badge key={relation.career.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800/60">
                 {relation.career.title}
-              </Badge>
-            ))}
+              </Badge>)}
           </div>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 }
