@@ -28,7 +28,7 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 shadow-lg border-primary/10">
         <MajorDialogHeader 
           major={major}
           isBookmarked={isBookmarked}
