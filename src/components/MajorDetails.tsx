@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Major } from "@/types/database/majors";
@@ -6,6 +7,7 @@ import { AcademicRequirements } from "./major-details/AcademicRequirements";
 import { CareerProspects } from "./major-details/CareerProspects";
 import { SkillsAndTools } from "./major-details/SkillsAndTools";
 import { AdditionalInfo } from "./major-details/AdditionalInfo";
+import { SchoolsOfferingSection } from "./major-details/SchoolsOfferingSection";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
@@ -188,6 +190,8 @@ export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
                 interdisciplinary_connections={major.interdisciplinary_connections}
                 majorId={major.id}
               />
+
+              <SchoolsOfferingSection majorId={major.id} />
 
               <AcademicRequirements 
                 gpa_expectations={major.gpa_expectations}
