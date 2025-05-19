@@ -272,6 +272,14 @@ export default function SchoolDetail() {
                     "default",
                     "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-none"
                   )}
+                  
+                  {renderExternalLink(
+                    school.international_students_url,
+                    "International Students",
+                    <Globe className="h-4 w-4" />,
+                    "default",
+                    "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white border-none"
+                  )}
                 </div>
               </div>
             </div>
@@ -335,14 +343,6 @@ export default function SchoolDetail() {
                     <Wallet className="h-4 w-4" />,
                     "outline",
                     "border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
-                  )}
-                  
-                  {renderExternalLink(
-                    school.international_students_url,
-                    "International Students",
-                    <Globe className="h-4 w-4" />,
-                    "outline",
-                    "border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/50"
                   )}
                 </div>
               </div>
