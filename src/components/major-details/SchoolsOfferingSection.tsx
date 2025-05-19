@@ -103,21 +103,21 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
             className="overflow-hidden h-full flex flex-col hover:shadow-md transition-all duration-200 bg-card/50 backdrop-blur-sm border border-muted/30 cursor-pointer"
             onClick={() => navigate(`/school/${item.schools?.id}`)}
           >
-            {/* Cover Image */}
-            {item.schools?.cover_image_url && (
-              <div className="w-full h-36 overflow-hidden">
-                <img 
-                  src={item.schools.cover_image_url} 
-                  alt={`${item.schools.name} campus`}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
-                />
+            {/* Cover Image with Logo Overlay */}
+            <div className="relative">
+              <div className="w-full h-24 overflow-hidden bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/10">
+                {item.schools?.cover_image_url && (
+                  <img 
+                    src={item.schools.cover_image_url} 
+                    alt={`${item.schools.name} campus`}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                  />
+                )}
               </div>
-            )}
-            
-            <div className="p-4 flex flex-col h-full">
-              {/* School logo and name */}
-              <div className="flex flex-col items-center mb-3">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white flex items-center justify-center mb-2">
+              
+              {/* Logo overlay */}
+              <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white bg-white flex items-center justify-center">
                   {item.schools?.logo_url ? (
                     <img 
                       src={item.schools.logo_url} 
@@ -128,27 +128,31 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
                     <GraduationCap className="h-6 w-6 text-muted-foreground" />
                   )}
                 </div>
-                <h5 className="font-semibold text-lg line-clamp-1">{item.schools?.name}</h5>
+              </div>
+            </div>
+            
+            <div className="p-3 pt-7 flex flex-col h-full">
+              {/* School name */}
+              <h5 className="font-semibold text-center line-clamp-1 mb-1">{item.schools?.name}</h5>
+              
+              <div className="text-xs text-muted-foreground space-y-0.5 mb-2">
+                {item.schools?.location && (
+                  <div className="flex items-center gap-1 justify-center">
+                    <MapPin className="h-3 w-3 flex-shrink-0" />
+                    <span className="line-clamp-1">{item.schools.location}</span>
+                  </div>
+                )}
                 
-                <div className="space-y-1 mb-4 text-muted-foreground text-sm">
-                  {item.schools?.location && (
-                    <div className="flex items-center gap-1 justify-center">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="line-clamp-1">{item.schools.location}</span>
-                    </div>
-                  )}
-                  
-                  {item.schools?.type && (
-                    <div className="flex items-center gap-1 justify-center">
-                      <Building className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="line-clamp-1 capitalize">{item.schools.type}</span>
-                    </div>
-                  )}
-                </div>
+                {item.schools?.type && (
+                  <div className="flex items-center gap-1 justify-center">
+                    <Building className="h-3 w-3 flex-shrink-0" />
+                    <span className="line-clamp-1 capitalize">{item.schools.type}</span>
+                  </div>
+                )}
               </div>
               
               {/* Ranking and Acceptance Rate */}
-              <div className="grid grid-cols-2 gap-2 text-xs mt-2 text-muted-foreground">
+              <div className="grid grid-cols-2 gap-2 text-xs mt-auto mb-2 text-muted-foreground">
                 {item.schools?.ranking && (
                   <div className="flex items-center gap-1">
                     <Trophy className="h-3 w-3 text-amber-500" />
@@ -165,7 +169,7 @@ export function SchoolsOfferingSection({ majorId }: SchoolsOfferingSectionProps)
               
               {/* Program details indicator if available */}
               {item.program_details && (
-                <div className="mt-auto pt-3">
+                <div className="mt-auto pt-1">
                   <Badge variant="outline" className="text-xs w-full flex justify-center gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60">
                     {item.program_url ? (
                       <a 
