@@ -3171,6 +3171,7 @@ export type Database = {
           created_at: string
           financial_aid_url: string | null
           gallery_images: Json | null
+          grad_programs_link: string | null
           graduate_application_url: string | null
           id: string
           international_students_url: string | null
@@ -3184,6 +3185,7 @@ export type Database = {
           student_population: number | null
           tuition_fees: Json | null
           type: Database["public"]["Enums"]["school_type"] | null
+          undergrad_programs_link: string | null
           undergraduate_application_url: string | null
           updated_at: string
           virtual_tour_url: string | null
@@ -3197,6 +3199,7 @@ export type Database = {
           created_at?: string
           financial_aid_url?: string | null
           gallery_images?: Json | null
+          grad_programs_link?: string | null
           graduate_application_url?: string | null
           id?: string
           international_students_url?: string | null
@@ -3210,6 +3213,7 @@ export type Database = {
           student_population?: number | null
           tuition_fees?: Json | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          undergrad_programs_link?: string | null
           undergraduate_application_url?: string | null
           updated_at?: string
           virtual_tour_url?: string | null
@@ -3223,6 +3227,7 @@ export type Database = {
           created_at?: string
           financial_aid_url?: string | null
           gallery_images?: Json | null
+          grad_programs_link?: string | null
           graduate_application_url?: string | null
           id?: string
           international_students_url?: string | null
@@ -3236,6 +3241,7 @@ export type Database = {
           student_population?: number | null
           tuition_fees?: Json | null
           type?: Database["public"]["Enums"]["school_type"] | null
+          undergrad_programs_link?: string | null
           undergraduate_application_url?: string | null
           updated_at?: string
           virtual_tour_url?: string | null

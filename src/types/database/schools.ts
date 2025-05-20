@@ -1,4 +1,3 @@
-
 import { SchoolStatus, SchoolType } from "./supabase";
 
 export { SchoolType, SchoolStatus };
@@ -28,6 +27,8 @@ export interface School {
   tuition_fees?: Record<string, string> | null;
   student_population?: number;
   student_faculty_ratio?: string;
+  undergrad_programs_link?: string;
+  grad_programs_link?: string;
 }
 
 export interface SchoolCreateInput {

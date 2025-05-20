@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { useSchoolById } from "@/hooks/useAllSchools";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
-import { Percent, DollarSign, Wallet } from "lucide-react";
 import { SchoolMajorsList } from "@/components/schools/SchoolMajorsList";
 import { SchoolDetailHeader } from "@/components/schools/SchoolDetailHeader";
 import { SchoolOverviewTab } from "@/components/schools/SchoolOverviewTab";
@@ -40,7 +39,7 @@ export default function SchoolDetail() {
         </TabsContent>
         
         <TabsContent value="programs" className="space-y-8">
-          {id && <SchoolMajorsList schoolId={id} />}
+          {id && <SchoolMajorsList schoolId={id} school={school} />}
         </TabsContent>
         
         <TabsContent value="tuition" className="space-y-8">
