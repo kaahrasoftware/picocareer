@@ -8,7 +8,10 @@ import {
   Award,
   Building,
   Briefcase,
-  ExternalLink
+  ExternalLink,
+  Percent,
+  DollarSign,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
