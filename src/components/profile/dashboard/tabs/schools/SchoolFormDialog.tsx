@@ -53,6 +53,8 @@ const schoolFormSchema = z.object({
   international_students_url: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
   financial_aid_url: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
   virtual_tour_url: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
+  undergrad_programs_link: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
+  grad_programs_link: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
   ranking: z.string().optional(),
   acceptance_rate: z.number().min(0).max(1).optional().nullable(),
   student_population: z.number().int().positive().optional().nullable(),
@@ -91,6 +93,8 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         international_students_url: school.international_students_url || "",
         financial_aid_url: school.financial_aid_url || "",
         virtual_tour_url: school.virtual_tour_url || "",
+        undergrad_programs_link: school.undergrad_programs_link || "",
+        grad_programs_link: school.grad_programs_link || "",
         ranking: school.ranking || "",
         acceptance_rate: school.acceptance_rate !== null ? school.acceptance_rate : null,
         student_population: school.student_population !== null ? school.student_population : null,
@@ -112,6 +116,8 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         international_students_url: "",
         financial_aid_url: "",
         virtual_tour_url: "",
+        undergrad_programs_link: "",
+        grad_programs_link: "",
         ranking: "",
         acceptance_rate: null,
         student_population: null,
@@ -475,6 +481,37 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                       </FormControl>
                       <FormMessage />
                     </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Program Links</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="undergrad_programs_link"
+                  render={({ field }) => (
+                    <BasicInputField
+                      field={field}
+                      label="Undergraduate Programs Directory URL"
+                      placeholder="https://"
+                      type="text"
+                    />
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="grad_programs_link"
+                  render={({ field }) => (
+                    <BasicInputField
+                      field={field}
+                      label="Graduate Programs Directory URL"
+                      placeholder="https://"
+                      type="text"
+                    />
                   )}
                 />
               </div>
