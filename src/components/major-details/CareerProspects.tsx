@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Briefcase, Globe, Users, DollarSign } from "lucide-react";
 interface CareerProspectsProps {
@@ -71,7 +72,5 @@ export function CareerProspects({
           </h4>
           <p className="text-sm text-muted-foreground">{global_applicability}</p>
         </div>}
-
-      {related_careers && related_careers.length > 0}
     </div>;
 }
