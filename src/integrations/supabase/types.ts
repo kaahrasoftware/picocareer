@@ -3169,6 +3169,7 @@ export type Database = {
           country: Database["public"]["Enums"]["country"] | null
           cover_image_url: string | null
           created_at: string
+          featured: boolean | null
           financial_aid_url: string | null
           grad_programs_link: string | null
           graduate_application_url: string | null
@@ -3196,6 +3197,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           cover_image_url?: string | null
           created_at?: string
+          featured?: boolean | null
           financial_aid_url?: string | null
           grad_programs_link?: string | null
           graduate_application_url?: string | null
@@ -3223,6 +3225,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           cover_image_url?: string | null
           created_at?: string
+          featured?: boolean | null
           financial_aid_url?: string | null
           grad_programs_link?: string | null
           graduate_application_url?: string | null

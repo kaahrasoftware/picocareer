@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -48,9 +49,7 @@ export function MajorDialogHeader({
         
         {major.degree_levels && major.degree_levels.length > 0}
         
-        {major.intensity && <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800/60">
-            {major.intensity} Intensity
-          </Badge>}
+        {/* Removed the Intensity Badge */}
 
         {major.potential_salary && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/60">
             <DollarSign className="h-3 w-3 mr-1" />
