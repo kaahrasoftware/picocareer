@@ -1,6 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Globe, Users, DollarSign } from "lucide-react";
+import { Briefcase, Globe, Users } from "lucide-react";
+
 interface CareerProspectsProps {
   job_prospects: string | null;
   career_opportunities: string[] | null;
@@ -15,6 +16,7 @@ interface CareerProspectsProps {
   }[];
   potential_salary: string | null;
 }
+
 export function CareerProspects({
   job_prospects,
   career_opportunities,
@@ -28,16 +30,6 @@ export function CareerProspects({
         <Briefcase className="h-5 w-5 text-green-600 dark:text-green-400" />
         Career Prospects
       </h3>
-
-      {potential_salary && <div className="mb-4">
-          <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-            Potential Salary
-          </h4>
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/60">
-            {potential_salary}
-          </Badge>
-        </div>}
 
       {job_prospects && <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Job Market</h4>
