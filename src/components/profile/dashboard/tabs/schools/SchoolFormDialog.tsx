@@ -35,6 +35,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { COUNTRIES, US_STATES } from "@/constants/geography";
 import { mapStateToDbFormat, mapDbStateToUiFormat } from "@/utils/stateUtils";
+import { FeatureField } from "@/components/forms/fields/FeatureField";
 
 // Define the form schema with Zod
 const schoolFormSchema = z.object({
@@ -59,6 +60,8 @@ const schoolFormSchema = z.object({
   acceptance_rate: z.number().min(0).max(1).optional().nullable(),
   student_population: z.number().int().positive().optional().nullable(),
   student_faculty_ratio: z.string().optional(),
+  featured: z.boolean().optional(),
+  featured_priority: z.number().int().optional().nullable(),
 });
 
 type SchoolFormValues = z.infer<typeof schoolFormSchema>;
@@ -99,6 +102,8 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         acceptance_rate: school.acceptance_rate !== null ? school.acceptance_rate : null,
         student_population: school.student_population !== null ? school.student_population : null,
         student_faculty_ratio: school.student_faculty_ratio || "",
+        featured: school.featured || false,
+        featured_priority: school.featured_priority || null,
       }
     : {
         name: "",
@@ -122,6 +127,8 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         acceptance_rate: null,
         student_population: null,
         student_faculty_ratio: "",
+        featured: false,
+        featured_priority: null,
       };
 
   const form = useForm<SchoolFormValues>({
@@ -139,7 +146,8 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
         // Format the state for database storage
         state: values.state ? mapStateToDbFormat(values.state) : null,
         acceptance_rate: values.acceptance_rate === null ? null : values.acceptance_rate,
-        student_population: values.student_population === null ? null : values.student_population
+        student_population: values.student_population === null ? null : values.student_population,
+        featured_priority: values.featured_priority === null ? null : values.featured_priority
       };
 
       if (mode === "add") {
@@ -407,6 +415,43 @@ export function SchoolFormDialog({ open, onClose, mode, school }: SchoolFormDial
                     />
                   )}
                 />
+
+                <h3 className="text-lg font-medium mt-8">Featured Settings</h3>
+                <FormField
+                  control={form.control}
+                  name="featured"
+                  render={({ field }) => (
+                    <FeatureField
+                      field={field}
+                      label="Featured School"
+                      description="Feature this school on the homepage"
+                    />
+                  )}
+                />
+
+                {form.watch('featured') && (
+                  <FormField
+                    control={form.control}
+                    name="featured_priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Featured Priority (Lower number = Higher priority)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            value={field.value === null ? '' : field.value}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === '' ? null : parseInt(value, 10));
+                            }}
+                            placeholder="e.g., 1, 2, 3..."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <h3 className="text-lg font-medium mt-8">Statistics</h3>
                 <FormField
