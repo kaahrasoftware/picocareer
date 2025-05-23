@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CommunityFilters } from "@/components/community/CommunityFilters";
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -14,17 +14,6 @@ export default function Program() {
   const [fieldFilter, setFieldFilter] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(12);
   const { toast } = useToast();
-  const [forceRender, setForceRender] = useState(false);
-
-  // Force a rerender to ensure styles are properly applied
-  useEffect(() => {
-    // Use requestAnimationFrame to ensure the component is fully mounted
-    const timeoutId = setTimeout(() => {
-      setForceRender(true);
-    }, 50);
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
 
   const { data: majors = [], isLoading, error } = useQuery({
     queryKey: ['majors'],
@@ -143,9 +132,7 @@ export default function Program() {
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ProgramGrid">
                     {displayedMajors?.map((major) => (
-                      <div key={major.id} className={`program-card-wrapper ${forceRender ? 'forced-render' : ''}`}>
-                        <MajorCard {...major} />
-                      </div>
+                      <MajorCard key={major.id} {...major} />
                     ))}
                   </div>
                   
@@ -162,24 +149,6 @@ export default function Program() {
           </div>
         </div>
       </div>
-
-      {/* Add style to fix initial rendering */}
-      <style jsx global>{`
-        .program-card-wrapper {
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          perspective: 1000px;
-        }
-        
-        .forced-render .bg-\\[\\#F2FCE2\\],
-        .forced-render .bg-\\[\\#D3E4FD\\],
-        .forced-render .bg-\\[\\#FFDEE2\\],
-        .forced-render .bg-blue-50 {
-          will-change: background-color;
-          contain: paint;
-        }
-      `}</style>
-      
     </SidebarProvider>
   );
 }
