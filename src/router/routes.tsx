@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -15,6 +16,7 @@ import CareerUpload from "../pages/CareerUpload";
 import EventUpload from "../pages/EventUpload";
 import BlogUpload from "../pages/BlogUpload";
 import School from "../pages/School";
+import SchoolDetail from "../pages/SchoolDetail";
 import MajorUpload from "../pages/MajorUpload";
 import Profile from "../pages/Profile";
 import PersonalityTest from "../pages/PersonalityTest";
@@ -24,8 +26,6 @@ import TokenShop from "../pages/TokenShop";
 import EmailConfirmation from "../pages/EmailConfirmation";
 import Funding from "../pages/Funding";
 import MentorRegistration from "../pages/MentorRegistration";
-import Institutions from "../pages/Institutions";
-import Institution from "../pages/Institution";
 import PasswordReset from "../pages/PasswordReset";
 import Dashboard from "../pages/Dashboard";
 import Error from "../pages/Error";
@@ -135,6 +135,10 @@ export const router = createBrowserRouter([
         element: <School />,
       },
       {
+        path: "school/:id",
+        element: <SchoolDetail />,
+      },
+      {
         path: "major/upload",
         element: <MajorUpload />,
       },
@@ -169,14 +173,6 @@ export const router = createBrowserRouter([
       {
         path: "mentor-registration",
         element: <MentorRegistration />,
-      },
-      {
-        path: "institutions",
-        element: <Institutions />,
-      },
-      {
-        path: "institutions/:id",
-        element: <Institution />,
       },
       {
         path: "password-reset",

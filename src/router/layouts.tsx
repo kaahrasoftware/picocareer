@@ -33,8 +33,8 @@ export function MainLayout({ children }: LayoutProps) {
   const noopCloseMobileMenu = () => {};
 
   return (
-    <GuideProvider>
-      <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+      <GuideProvider>
         <div className="min-h-screen flex flex-col">
           <LoadingBar isLoading={isLoading} progress={progress} />
           <MenuSidebar />
@@ -47,8 +47,8 @@ export function MainLayout({ children }: LayoutProps) {
           <WelcomeDialog />
           <GuideButton floating={true} />
         </div>
-      </MobileMenuProvider>
-    </GuideProvider>
+      </GuideProvider>
+    </MobileMenuProvider>
   );
 }
 

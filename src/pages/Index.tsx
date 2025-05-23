@@ -4,6 +4,7 @@ import { StatisticsSection } from "@/components/sections/StatisticsSection";
 import { CallToActionSection } from "@/components/sections/CallToActionSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
+import { FeaturedSchoolsSection } from "@/components/sections/FeaturedSchoolsSection";
 import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
 import { ResourcesHighlightSection } from "@/components/sections/ResourcesHighlightSection";
 import { useEffect, useState } from "react";
@@ -48,6 +49,7 @@ const Index = () => {
               <FeaturedCareersSection />
             </div>
             <FeaturedMajorsSection />
+            <FeaturedSchoolsSection />
           </div>
         </div>
       </div>

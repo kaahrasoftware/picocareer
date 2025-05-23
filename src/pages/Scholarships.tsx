@@ -4,7 +4,6 @@ import { MenuSidebar } from "@/components/MenuSidebar";
 import { ScholarshipHeader } from "@/components/scholarships/ScholarshipHeader";
 import { ScholarshipFilters } from "@/components/scholarships/ScholarshipFilters";
 import { ScholarshipGrid } from "@/components/scholarships/ScholarshipGrid";
-import { FeaturedScholarships } from "@/components/scholarships/FeaturedScholarships";
 import { useScholarshipFilters } from "@/hooks/useScholarshipFilters";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -73,8 +72,6 @@ export default function Scholarships() {
     }
   }
 
-  const featuredScholarships = scholarships.filter((s) => s.featured);
-
   return (
     <SidebarProvider>
       <div className="app-layout">
@@ -84,8 +81,6 @@ export default function Scholarships() {
             <div className="space-y-8">
               <ScholarshipHeader />
               
-              <FeaturedScholarships scholarships={featuredScholarships} />
-
               <ScholarshipFilters
                 onFilterChange={handleFilterChange}
                 categories={categories}

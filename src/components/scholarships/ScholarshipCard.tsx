@@ -1,3 +1,4 @@
+
 import { formatDistanceToNow } from "date-fns";
 import { CalendarIcon, Award, FileText, Bookmark, ExternalLink, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,8 @@ import { ScholarshipDetailsDialog } from "./ScholarshipDetailsDialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
+import { useLocation } from "react-router-dom";
 
 interface ScholarshipCardProps {
   scholarship: {
@@ -73,11 +76,13 @@ export function ScholarshipCard({
   const {
     user
   } = useAuthState();
+  const location = useLocation();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [recentlyBookmarked, setRecentlyBookmarked] = useState(false);
   const [recentBookmarks, setRecentBookmarks] = useLocalStorage<string[]>("recent-scholarship-bookmarks", []);
   const [isHovered, setIsHovered] = useState(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   useEffect(() => {
     const checkBookmarkStatus = async () => {
@@ -176,6 +181,21 @@ export function ScholarshipCard({
     setDetailsDialogOpen(true);
   };
 
+  const handleApplyClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (!user) {
+      // Show auth prompt if not logged in
+      setAuthDialogOpen(true);
+      return;
+    }
+
+    // If logged in and there's an application URL, open it
+    if (scholarship.application_url) {
+      window.open(scholarship.application_url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   if (compact) {
     return <>
         <Card className={cn("h-full transition-all duration-300 overflow-hidden border cursor-pointer group", cardGradient, "transform hover:translate-y-[-4px] hover:shadow-lg", isHovered && "ring-2 ring-primary/40")} onClick={openDetailsDialog} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
@@ -211,8 +231,8 @@ export function ScholarshipCard({
                 </div>}
             </div>
             
-            {scholarship.featured && <Badge className="mt-3 bg-amber-500 hover:bg-amber-600 text-white border-none">
-                Featured
+            {scholarship.featured && <Badge className="mt-3 bg-amber-500/90 hover:bg-amber-600 text-white border-none flex items-center gap-1">
+                <Award className="h-3 w-3" /> Featured
               </Badge>}
           </CardContent>
           <CardFooter className="pt-2">
@@ -221,13 +241,15 @@ export function ScholarshipCard({
               View Details
             </Button>
           </CardFooter>
-          
-          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-          
-          <div className="absolute top-0 right-0 w-0 h-0 border-t-[40px] border-r-[40px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />
         </Card>
 
         <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
+        
+        <AuthPromptDialog 
+          isOpen={authDialogOpen} 
+          onClose={() => setAuthDialogOpen(false)} 
+          redirectUrl={location.pathname + `?dialog=${scholarship.id}`}
+        />
       </>;
   }
 
@@ -257,7 +279,7 @@ export function ScholarshipCard({
           </div>
           
           <div className="flex flex-wrap gap-1 mt-2">
-            {scholarship.featured && <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none flex items-center gap-1">
+            {scholarship.featured && <Badge className="bg-amber-500/90 hover:bg-amber-600 text-white border-none flex items-center gap-1">
                 <Award className="h-3 w-3" /> Featured
               </Badge>}
             {scholarship.status !== "Active" && <Badge variant={scholarship.status === "Coming Soon" ? "outline" : "secondary"}>
@@ -316,18 +338,24 @@ export function ScholarshipCard({
             <FileText className="h-4 w-4 mr-1 group-hover:text-primary" /> Details
           </Button>
           
-          {scholarship.application_url && <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90" asChild>
-              <a href={scholarship.application_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}>
-                Apply <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>}
+          {scholarship.application_url && (
+            <Button 
+              size="sm" 
+              className="flex-1 bg-primary hover:bg-primary/90"
+              onClick={handleApplyClick}
+            >
+              {user ? "Apply" : "Sign in to Apply"} <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          )}
         </CardFooter>
-        
-        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        
-        {scholarship.featured && <div className="absolute top-0 right-0 w-0 h-0 border-t-[60px] border-r-[60px] border-t-amber-500/80 border-r-transparent transform rotate-0 -translate-y-0 translate-x-0" />}
       </Card>
 
       <ScholarshipDetailsDialog scholarship={scholarship} open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen} />
+      
+      <AuthPromptDialog 
+        isOpen={authDialogOpen} 
+        onClose={() => setAuthDialogOpen(false)} 
+        redirectUrl={location.pathname + `?dialog=${scholarship.id}`}
+      />
     </>;
 }

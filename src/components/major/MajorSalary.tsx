@@ -1,3 +1,4 @@
+
 import { DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -14,7 +15,7 @@ export function MajorSalary({ potentialSalary }: MajorSalaryProps) {
       <span>Potential Salary: </span>
       <Badge 
         variant="outline"
-        className="bg-[#FFDEE2] text-picocareer-dark border-[#FFD1D6] font-semibold"
+        className="bg-green-50 text-green-700 border-green-200 font-medium dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/60"
       >
         {potentialSalary}
       </Badge>

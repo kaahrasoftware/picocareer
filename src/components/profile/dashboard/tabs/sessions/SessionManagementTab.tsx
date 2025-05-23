@@ -15,7 +15,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { SessionsDataTable } from './SessionsDataTable';
-import { useAdminSessionsQuery } from '@/hooks/useAdminSessionsQuery';
 import { SessionMetricCards } from './SessionMetricCards';
 import { SessionFeedbackDisplay } from './SessionFeedbackDisplay';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminSessionsQuery } from '@/hooks/admin-sessions/useAdminSessionsQuery';
 
 export function SessionManagementTab() {
   // State for filters and pagination
@@ -51,7 +51,7 @@ export function SessionManagementTab() {
   // Toast notification
   const { toast } = useToast();
   
-  // Fetch sessions data
+  // Fetch sessions data using our updated hook
   const { 
     data: sessionsData, 
     isLoading, 
@@ -69,33 +69,6 @@ export function SessionManagementTab() {
     sortBy,
     sortDirection
   });
-
-  // Calculate session statistics
-  const sessionStats = React.useMemo(() => {
-    if (!sessionsData?.sessions) {
-      return {
-        total: 0,
-        completed: 0,
-        scheduled: 0,
-        cancelled: 0,
-        noShow: 0
-      };
-    }
-
-    const total = sessionsData.sessions.length;
-    const completed = sessionsData.sessions.filter(s => s.status === 'completed').length;
-    const scheduled = sessionsData.sessions.filter(s => s.status === 'scheduled').length;
-    const cancelled = sessionsData.sessions.filter(s => s.status === 'cancelled').length;
-    const noShow = sessionsData.sessions.filter(s => s.status === 'no_show').length;
-
-    return {
-      total: sessionsData.totalCount || total,
-      completed,
-      scheduled,
-      cancelled,
-      noShow
-    };
-  }, [sessionsData]);
 
   // Handlers
   const handleRefresh = useCallback(() => {
@@ -257,7 +230,17 @@ export function SessionManagementTab() {
         </div>
       </div>
 
-      <SessionMetricCards stats={sessionStats} isLoading={isLoading} />
+      {/* Use the status counts directly from the API response */}
+      <SessionMetricCards 
+        stats={{
+          total: sessionsData?.statusCounts?.total || 0,
+          completed: sessionsData?.statusCounts?.completed || 0,
+          scheduled: sessionsData?.statusCounts?.scheduled || 0, 
+          cancelled: sessionsData?.statusCounts?.cancelled || 0,
+          noShow: sessionsData?.statusCounts?.no_show || 0
+        }} 
+        isLoading={isLoading} 
+      />
 
       <Card>
         <CardHeader className="pb-2">
@@ -288,6 +271,7 @@ export function SessionManagementTab() {
                 onSort={handleSort}
                 currentSortColumn={sortBy}
                 currentSortDirection={sortDirection}
+                onRefresh={handleRefresh}
               />
             </TabsContent>
           </Tabs>

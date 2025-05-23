@@ -1,7 +1,9 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 
 export default function Funding() {
   const { data: scholarships, isLoading } = useQuery({
@@ -35,16 +37,7 @@ export default function Funding() {
       <h1 className="text-3xl font-bold mb-8">Scholarships & Funding</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {scholarships?.map((scholarship) => (
-          <Card key={scholarship.id}>
-            <CardHeader>
-              <CardTitle>{scholarship.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Posted: {new Date(scholarship.created_at).toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
+          <ScholarshipCard key={scholarship.id} scholarship={scholarship} />
         ))}
       </div>
     </div>

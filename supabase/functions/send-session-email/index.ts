@@ -15,7 +15,7 @@ const corsHeaders = {
 
 interface EmailRequest {
   sessionId: string;
-  type: 'confirmation' | 'cancellation' | 'update' | 'reminder';
+  type: 'confirmation' | 'cancellation' | 'update' | 'reminder' | 'feedback_request';
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -454,6 +454,64 @@ const handler = async (req: Request): Promise<Response> => {
                 <div class="actions">
                   <p>Need to make changes?</p>
                   <a href="https://picocareer.com/profile/calendar" target="_blank">View Calendar</a>
+                </div>
+              </div>
+              <div class="footer">
+                <p>© ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
+                <p>If you have any questions, please contact us at info@picocareer.com</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+        break;
+
+      case 'feedback_request':
+        subject = `Feedback Requested: Session with ${session.mentor.full_name}`;
+        content = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+            <style>${baseStyles}</style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header" style="background-color: #8B5CF6;">
+                <h1>Session Feedback Request</h1>
+              </div>
+              <div class="content">
+                <p>Hello,</p>
+                <p>We'd like to hear about your experience in the recent mentoring session. Your feedback helps us improve our platform and services.</p>
+                
+                <div class="session-time">
+                  <h3>📅 Session Details</h3>
+                  <p><strong>Date:</strong> ${menteeTime}</p>
+                  <p><strong>Session Type:</strong> ${session.session_type.type}</p>
+                  <p><strong>Duration:</strong> ${session.session_type.duration} minutes</p>
+                </div>
+                
+                <div class="session-details">
+                  <div class="detail-row">
+                    <div class="detail-label">Mentor:</div>
+                    <div class="detail-value">${session.mentor.full_name}</div>
+                  </div>
+                  <div class="detail-row">
+                    <div class="detail-label">Mentee:</div>
+                    <div class="detail-value">${session.mentee.full_name}</div>
+                  </div>
+                </div>
+                
+                <div class="meeting-link">
+                  <h3>Share Your Feedback</h3>
+                  <p>Please take a moment to share your feedback about this session:</p>
+                  <a href="https://picocareer.com/profile?tab=calendar&feedbackSession=${sessionId}" target="_blank">Provide Feedback</a>
+                </div>
+                
+                <div class="actions">
+                  <p>Your feedback is valuable to us and helps improve the mentoring experience.</p>
                 </div>
               </div>
               <div class="footer">
