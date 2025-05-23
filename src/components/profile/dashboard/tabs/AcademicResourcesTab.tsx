@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Briefcase, School } from "lucide-react";
 import { SchoolsManagementTab } from "./schools/SchoolsManagementTab";
+import { MajorsManagementTab } from "./majors/MajorsManagementTab";
 
 export function AcademicResourcesTab() {
   return (
@@ -10,7 +11,7 @@ export function AcademicResourcesTab() {
         <h2 className="text-2xl font-bold">Academic Resources</h2>
       </div>
       
-      <Tabs defaultValue="schools" className="space-y-4">
+      <Tabs defaultValue="majors" className="space-y-4">
         <TabsList>
           <TabsTrigger value="majors" className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
@@ -27,11 +28,7 @@ export function AcademicResourcesTab() {
         </TabsList>
         
         <TabsContent value="majors">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Majors Management</h3>
-            {/* Add majors management UI */}
-            <p className="text-muted-foreground">Manage academic majors, their descriptions, requirements, and career paths.</p>
-          </div>
+          <MajorsManagementTab />
         </TabsContent>
         
         <TabsContent value="careers">

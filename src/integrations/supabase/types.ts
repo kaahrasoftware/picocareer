@@ -3170,6 +3170,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           featured: boolean | null
+          featured_priority: number | null
           financial_aid_url: string | null
           grad_programs_link: string | null
           graduate_application_url: string | null
@@ -3198,6 +3199,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           featured?: boolean | null
+          featured_priority?: number | null
           financial_aid_url?: string | null
           grad_programs_link?: string | null
           graduate_application_url?: string | null
@@ -3226,6 +3228,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           featured?: boolean | null
+          featured_priority?: number | null
           financial_aid_url?: string | null
           grad_programs_link?: string | null
           graduate_application_url?: string | null
