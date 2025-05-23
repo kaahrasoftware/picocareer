@@ -8,6 +8,7 @@ import { MajorSalary } from "./major/MajorSalary";
 import { MajorSkillsList } from "./major/MajorSkillsList";
 import { Badge } from "./ui/badge";
 import { ExternalLink } from "lucide-react";
+import { useEffect } from "react";
 
 interface MajorCardProps {
   id?: string;
@@ -41,11 +42,26 @@ interface MajorCardProps {
 
 export function MajorCard(props: MajorCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [rendered, setRendered] = useState(false);
+
+  // Force a rerender once mounted to ensure styles are properly applied
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure the component is fully mounted
+    const timeoutId = setTimeout(() => {
+      setRendered(true);
+    }, 10);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   return (
     <>
-      <Card className="group relative overflow-hidden p-6 h-full flex flex-col">
-        <div className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <Card className={`group relative overflow-hidden p-6 h-full flex flex-col ${rendered ? 'rendered' : ''}`}>
+        {/* Add a key based on rendered state to force proper gradient rendering */}
+        <div 
+          key={`gradient-${rendered ? 'rendered' : 'initial'}`}
+          className="absolute inset-0 bg-gradient-to-br from-background/50 to-background opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+        />
         <div className="relative flex flex-col h-full">
           <MajorHeader 
             title={props.title}
@@ -112,6 +128,21 @@ export function MajorCard(props: MajorCardProps) {
           </div>
         </div>
       </Card>
+
+      <style jsx global>{`
+        /* Force immediate rendering of background gradients and colors */
+        .rendered .bg-\\[\\#F2FCE2\\],
+        .rendered .bg-\\[\\#D3E4FD\\],
+        .rendered .bg-\\[\\#FFDEE2\\],
+        .rendered .bg-blue-50,
+        .rendered .dark\\:bg-\\[\\#2A3428\\],
+        .rendered .dark\\:bg-\\[\\#1E2A3D\\],
+        .rendered .dark\\:bg-\\[\\#2D2326\\],
+        .rendered .dark\\:bg-blue-950\\/40 {
+          will-change: background-color;
+          contain: paint;
+        }
+      `}</style>
 
       <MajorDetails
         major={{

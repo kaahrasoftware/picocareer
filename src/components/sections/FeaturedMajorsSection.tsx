@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { MajorCard } from "@/components/MajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
@@ -61,7 +62,9 @@ export const FeaturedMajorsSection = () => {
           <CarouselContent className="-ml-4">
             {majors.map((major) => (
               <CarouselItem key={major.id} className="pl-4 basis-full md:basis-1/3">
-                <MajorCard {...major} />
+                <div className="render-fix">
+                  <MajorCard {...major} />
+                </div>
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -69,6 +72,16 @@ export const FeaturedMajorsSection = () => {
           <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
         </Carousel>
       </div>
+
+      {/* Add style to fix initial rendering */}
+      <style jsx global>{`
+        .render-fix {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+      `}</style>
+
       <MajorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
