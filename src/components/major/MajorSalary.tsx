@@ -15,7 +15,7 @@ export function MajorSalary({ potentialSalary }: MajorSalaryProps) {
       <span>Potential Salary: </span>
       <Badge 
         variant="outline"
-        className="bg-red-50 text-red-800 border-red-200 font-medium dark:bg-red-900/20 dark:text-red-300 dark:border-red-800/40"
+        className="bg-red-100 text-black border-red-300 font-medium dark:bg-red-900/40 dark:text-white dark:border-red-700"
       >
         {potentialSalary}
       </Badge>
