@@ -1,6 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Globe, Users } from "lucide-react";
+import { Briefcase, Globe, Users, DollarSign } from "lucide-react";
 
 interface CareerProspectsProps {
   job_prospects: string | null;
@@ -25,44 +25,73 @@ export function CareerProspects({
   related_careers,
   potential_salary
 }: CareerProspectsProps) {
-  return <div>
+  return (
+    <div>
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <Briefcase className="h-5 w-5 text-green-600 dark:text-green-400" />
         Career Prospects
       </h3>
 
-      {job_prospects && <div className="mb-4">
+      {potential_salary && (
+        <div className="mb-4">
+          <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
+            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+            Potential Salary
+          </h4>
+          <Badge 
+            variant="outline"
+            className="bg-red-100 text-black border-red-300 font-medium dark:bg-red-900/40 dark:text-white dark:border-red-700"
+          >
+            {potential_salary}
+          </Badge>
+        </div>
+      )}
+
+      {job_prospects && (
+        <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Job Market</h4>
           <p className="text-sm text-muted-foreground">{job_prospects}</p>
-        </div>}
+        </div>
+      )}
 
-      {career_opportunities && career_opportunities.length > 0 && <div className="mb-4">
+      {career_opportunities && career_opportunities.length > 0 && (
+        <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Career Paths</h4>
           <div className="flex flex-wrap gap-2">
-            {career_opportunities.map((opportunity, index) => <Badge key={index} variant="outline" className="bg-background">
+            {career_opportunities.map((opportunity, index) => (
+              <Badge key={index} variant="outline" className="bg-background">
                 {opportunity}
-              </Badge>)}
+              </Badge>
+            ))}
           </div>
-        </div>}
+        </div>
+      )}
 
-      {professional_associations && professional_associations.length > 0 && <div className="mb-4">
+      {professional_associations && professional_associations.length > 0 && (
+        <div className="mb-4">
           <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
             <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
             Professional Associations
           </h4>
           <div className="flex flex-wrap gap-2">
-            {professional_associations.map((association, index) => <Badge key={index} variant="outline" className="bg-background">
+            {professional_associations.map((association, index) => (
+              <Badge key={index} variant="outline" className="bg-background">
                 {association}
-              </Badge>)}
+              </Badge>
+            ))}
           </div>
-        </div>}
+        </div>
+      )}
 
-      {global_applicability && <div className="mb-4">
+      {global_applicability && (
+        <div className="mb-4">
           <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
             <Globe className="h-4 w-4 text-green-600 dark:text-green-400" />
             Global Applicability
           </h4>
           <p className="text-sm text-muted-foreground">{global_applicability}</p>
-        </div>}
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 }

@@ -48,24 +48,24 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div className="md:col-span-2 space-y-6">
         {/* School Information */}
-        <div className="bg-card border rounded-lg p-6 space-y-4 shadow-sm bg-card/50 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold">About {school.name}</h2>
+        <div className="border rounded-lg p-6 space-y-4 shadow-sm bg-white dark:bg-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">About {school.name}</h2>
           
           <div className="flex flex-wrap gap-2 my-4">
             {school.type && (
-              <Badge variant="outline" className="capitalize bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/60">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
                 {school.type}
               </Badge>
             )}
             
             {school.country && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-900/60">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-950 dark:text-green-300 dark:border-green-800">
                 {school.country}
               </Badge>
             )}
             
             {school.acceptance_rate !== null && (
-              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-900/60">
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">
                 {Math.round((school.acceptance_rate || 0) * 100)}% Acceptance Rate
               </Badge>
             )}
@@ -75,19 +75,19 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
             <div className="space-y-2">
               {school.location && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-rose-500 dark:text-rose-400" />
-                  <span>{school.location}</span>
+                  <MapPin className="h-4 w-4 text-rose-500" />
+                  <span className="text-gray-700 dark:text-gray-300">{school.location}</span>
                 </div>
               )}
               
               {school.website && (
                 <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-cyan-500 dark:text-cyan-400" />
+                  <Globe className="h-4 w-4 text-cyan-500" />
                   <a 
                     href={school.website} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                    className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
                   >
                     {school.website.replace(/(^\w+:|^)\/\//, '')}
                   </a>
@@ -96,8 +96,8 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               
               {school.ranking && (
                 <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                  <span>Ranking: {school.ranking}</span>
+                  <Award className="h-4 w-4 text-amber-500" />
+                  <span className="text-gray-700 dark:text-gray-300">Ranking: {school.ranking}</span>
                 </div>
               )}
             </div>
@@ -105,15 +105,15 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
             <div className="space-y-2">
               {school.student_population && (
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-                  <span>{school.student_population.toLocaleString()} Students</span>
+                  <Users className="h-4 w-4 text-indigo-500" />
+                  <span className="text-gray-700 dark:text-gray-300">{school.student_population.toLocaleString()} Students</span>
                 </div>
               )}
               
               {school.student_faculty_ratio && (
                 <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-green-500 dark:text-green-400" />
-                  <span>{school.student_faculty_ratio} Student-Faculty Ratio</span>
+                  <GraduationCap className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-700 dark:text-gray-300">{school.student_faculty_ratio} Student-Faculty Ratio</span>
                 </div>
               )}
             </div>
@@ -121,15 +121,15 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
         </div>
 
         {/* Application Links */}
-        <div className="bg-card border rounded-lg p-6 shadow-sm bg-card/50 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold mb-4">Application Resources</h2>
+        <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-gray-900">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Application Resources</h2>
           <div className="flex flex-wrap gap-3">
             {renderExternalLink(
               school.undergraduate_application_url,
               "Undergraduate Application",
               <GraduationCap className="h-4 w-4" />,
               "default",
-              "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-none"
+              "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
             )}
             
             {renderExternalLink(
@@ -137,7 +137,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               "Graduate Application",
               <GraduationCap className="h-4 w-4" />,
               "default",
-              "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white border-none"
+              "bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
             )}
             
             {renderExternalLink(
@@ -145,7 +145,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               "Admissions Page",
               <Building className="h-4 w-4" />,
               "default",
-              "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-none"
+              "bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
             )}
             
             {renderExternalLink(
@@ -153,7 +153,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               "Virtual Tour",
               <Briefcase className="h-4 w-4" />,
               "default",
-              "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white border-none"
+              "bg-green-600 hover:bg-green-700 text-white border-green-600"
             )}
             
             {renderExternalLink(
@@ -161,7 +161,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               "International Students",
               <Globe className="h-4 w-4" />,
               "default",
-              "bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white border-none"
+              "bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600"
             )}
           </div>
         </div>
@@ -214,8 +214,8 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
         </div>
 
         {/* Financial Aid Card */}
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/40 dark:to-blue-900/20 border border-indigo-100 dark:border-indigo-800/40 rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
             <DollarSign className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> 
             Financial Resources
           </h2>
@@ -225,7 +225,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               "Financial Aid",
               <Wallet className="h-4 w-4" />,
               "outline",
-              "border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+              "border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-900"
             )}
           </div>
         </div>
