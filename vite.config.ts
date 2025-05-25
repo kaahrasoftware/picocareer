@@ -10,8 +10,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     strictPort: true, // Don't try other ports if 8080 is taken
     hmr: {
-      clientPort: 8080, // Use same port as server
-      protocol: 'ws' // Use regular WebSocket instead of WSS
+      clientPort: 8080, // Use same port as server,
+      protocol: 'wss', // Use regular WebSocket instead of WSS
     }
   },
   plugins: [

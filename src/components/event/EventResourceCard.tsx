@@ -13,6 +13,7 @@ interface EventResourceCardProps {
   onDownload?: (resource: EventResource) => void;
   onEdit?: (resource: EventResource) => void;
   onDelete?: (resource: EventResource) => void;
+  onPreview?: (resource: EventResource) => void;
   showActions?: boolean;
 }
 
@@ -65,18 +66,22 @@ const formatFileSize = (bytes?: number) => {
 export function EventResourceCard({ 
   resource, 
   onView, 
-  onDownload, 
-  onEdit, 
+  onDownload,
+  onEdit,
   onDelete, 
+  onPreview,
   showActions = false 
 }: EventResourceCardProps) {
-  const handleView = () => {
-    if (resource.external_url) {
-      window.open(resource.external_url, '_blank');
+  const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (onPreview) {
+      event.preventDefault(); // Prevent default link behavior
+      onPreview(resource);
+      // No return here, as the onPreview logic handles the flow
+    } else if (resource.external_url) {
+      window.open(resource.external_url, '_blank'); // Fallback to opening in new tab
     } else if (resource.file_url) {
-      window.open(resource.file_url, '_blank');
+ window.open(resource.file_url, '_blank');
     }
-    onView?.(resource);
   };
 
   const handleDownload = () => {
@@ -89,7 +94,7 @@ export function EventResourceCard({
     onDownload?.(resource);
   };
 
-  return (
+ return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -154,7 +159,7 @@ export function EventResourceCard({
           </div>
           
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={handleView}>
+            <Button size="sm" variant="outline" onClick={(e) => handleView(e)}>
               <Eye className="h-4 w-4 mr-1" />
               View
             </Button>

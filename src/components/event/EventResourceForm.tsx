@@ -74,205 +74,207 @@ export function EventResourceForm({
   ];
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter resource title" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Enter resource description" 
-                  rows={3}
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="resource_type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Resource Type *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+      <div className="max-h-[600px] overflow-y-auto pr-4"> {/* Add max-h and overflow-y */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title *</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select resource type" />
-                  </SelectTrigger>
+                  <Input placeholder="Enter resource title" {...field} />
                 </FormControl>
-                <SelectContent>
-                  {resourceTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="space-y-4">
-          <FormLabel>Resource URL</FormLabel>
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant={urlType === 'file' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setUrlType('file')}
-            >
-              File URL
-            </Button>
-            <Button
-              type="button"
-              variant={urlType === 'external' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setUrlType('external')}
-            >
-              External URL
-            </Button>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Enter resource description" 
+                    rows={3}
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="resource_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resource Type *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select resource type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {resourceTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-4">
+            <FormLabel>Resource URL</FormLabel>
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant={urlType === 'file' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUrlType('file')}
+              >
+                File URL
+              </Button>
+              <Button
+                type="button"
+                variant={urlType === 'external' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setUrlType('external')}
+              >
+                External URL
+              </Button>
+            </div>
+
+            {urlType === 'file' ? (
+              <FormField
+                control={form.control}
+                name="file_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Enter file URL" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <FormField
+                control={form.control}
+                name="external_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Enter external URL" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
-          {urlType === 'file' ? (
-            <FormField
-              control={form.control}
-              name="file_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="Enter file URL" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ) : (
-            <FormField
-              control={form.control}
-              name="external_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input placeholder="Enter external URL" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
-
-        <FormField
-          control={form.control}
-          name="file_format"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>File Format</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., PDF, MP4, PPTX" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="access_level"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Access Level *</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+          <FormField
+            control={form.control}
+            name="file_format"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>File Format</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select access level" />
-                  </SelectTrigger>
+                  <Input placeholder="e.g., PDF, MP4, PPTX" {...field} />
                 </FormControl>
-                <SelectContent>
-                  {accessLevels.map((level) => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="is_downloadable"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">
-                  Allow Downloads
-                </FormLabel>
-                <div className="text-sm text-muted-foreground">
-                  Enable users to download this resource
+          <FormField
+            control={form.control}
+            name="access_level"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Access Level *</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select access level" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {accessLevels.map((level) => (
+                      <SelectItem key={level.value} value={level.value}>
+                        {level.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="is_downloadable"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Allow Downloads
+                  </FormLabel>
+                  <div className="text-sm text-muted-foreground">
+                    Enable users to download this resource
+                  </div>
                 </div>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="sort_order"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Sort Order</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  placeholder="0" 
-                  {...field} 
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="sort_order"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sort Order</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="0" 
+                    {...field} 
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isAdding || isUpdating}>
-            {isAdding || isUpdating ? 'Saving...' : initialResource ? 'Update Resource' : 'Add Resource'}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isAdding || isUpdating}>
+              {isAdding || isUpdating ? 'Saving...' : initialResource ? 'Update Resource' : 'Add Resource'}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div> 
   );
 }
