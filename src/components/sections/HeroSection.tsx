@@ -11,14 +11,12 @@ export const HeroSection = () => {
   const isLoggedIn = !!session?.user;
 
   return (
-    <>
-      {/* Hero Section */}
-      <section className="text-center mb-12">
+    <div className="relative isolate overflow-hidden">
+      {/* Hero Section - Title and Description */}
+      <section className="text-center mb-12 backdrop-filter backdrop-blur-md p-6 rounded-lg">
         <div className="space-y-4">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2">
-            <span className="bg-gradient-to-r from-[#333333] to-[#555555] bg-clip-text text-transparent py-2">
-              The Key to Unlocking Your Career Potential
-            </span>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 flex items-center justify-center flex-wrap gap-2 text-black">
+            The <span style={{ color: '#00A6D4' }}>All-in-One</span> Platform for International Students
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Navigate your educational and career journey with confidence, backed by expert guidance and personalized support
@@ -27,7 +25,7 @@ export const HeroSection = () => {
       </section>
 
       {/* Header */}
-      <header className="flex justify-between items-center mb-8 relative">
+      <header className="flex justify-between items-center mb-8 relative bg-white/30 backdrop-filter backdrop-blur-lg rounded-xl p-6">
         <div className="w-full SearchBar">
           <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
@@ -92,6 +90,6 @@ export const HeroSection = () => {
         </div>
       </section>
       {/* Removed duplicate <Slides /> section here */}
-    </>
+    </div>
   );
 };
