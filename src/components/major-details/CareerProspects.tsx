@@ -32,21 +32,6 @@ export function CareerProspects({
         Career Prospects
       </h3>
 
-      {potential_salary && (
-        <div className="mb-4">
-          <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
-            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-            Potential Salary
-          </h4>
-          <Badge 
-            variant="outline"
-            className="bg-red-100 text-black border-red-300 font-medium dark:bg-red-900/40 dark:text-white dark:border-red-700"
-          >
-            {potential_salary}
-          </Badge>
-        </div>
-      )}
-
       {job_prospects && (
         <div className="mb-4">
           <h4 className="text-sm font-semibold mb-2">Job Market</h4>

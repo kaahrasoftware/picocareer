@@ -83,7 +83,7 @@ export function MajorDialogHeader({
         {major.potential_salary && (
           <Badge 
             variant="outline" 
-            className="bg-red-100 text-black border-red-300 font-medium dark:bg-red-900/40 dark:text-white dark:border-red-700"
+            className="bg-red-100 text-black border-red-300 font-medium dark:border-red-700"
           >
             <DollarSign className="h-3 w-3 mr-1" />
             {major.potential_salary}
