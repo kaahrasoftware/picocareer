@@ -4,15 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm";
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventCard } from "@/components/event/EventCard";
 import { EmptyState } from "@/components/event/EmptyState";
 import { EventResourcesSection } from "@/components/event/EventResourcesSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { EventResource } from "@/types/event-resources";
 
 interface Event {
   id: string;
@@ -27,6 +29,7 @@ interface Event {
   host_id?: string;
   organized_by?: string;
   registrations_count?: number;
+  timezone: string;
 }
 
 export default function Event() {
@@ -37,6 +40,18 @@ export default function Event() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
+  const [previewingResource, setPreviewingResource] = useState<EventResource | null>(null);
+
+  const { data: allResources, isLoading: isLoadingResources } = useQuery({
+    queryKey: ['all-event-resources'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('event_resources')
+        .select(`*`);
+      if (error) throw error;
+      return data as EventResource[];
+    },
+  });
 
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', filter],
@@ -190,27 +205,47 @@ export default function Event() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="space-y-6">
-        <EventHeader filter={filter} onFilterChange={setFilter} />
+ <div className="container mx-auto py-8">
+ <Tabs defaultValue="events">
+ <TabsList className="grid w-full grid-cols-2 md:w-[300px]">
+ <TabsTrigger value="events">Events</TabsTrigger>
+ <TabsTrigger value="resources">Resources</TabsTrigger>
+ </TabsList>
+ <TabsContent value="events" className="space-y-6 pt-6">
+ <div className="space-y-6">
+ <EventHeader filter={filter} onFilterChange={setFilter} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events?.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              isRegistering={registering === event.id}
-              isRegistered={registrations?.includes(event.id) || false}
-              onRegister={handleRegister}
-              onViewDetails={handleViewDetails}
-            />
-          ))}
-        </div>
+ <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+ {events?.map((event) => (
+ <EventCard
+ key={event.id}
+ event={event}
+ isRegistering={registering === event.id}
+ isRegistered={registrations?.includes(event.id) || false}
+ onRegister={handleRegister}
+ onViewDetails={handleViewDetails}
+ />
+ ))}
+ </div>
 
-        {events?.length === 0 && <EmptyState filter={filter} />}
-      </div>
+ {events?.length === 0 && <EmptyState filter={filter} />}
+ </div>
+ </TabsContent>
+ <TabsContent value="resources" className="pt-6">
+ {isLoadingResources ? (
+ <p>Loading resources...</p>
+ ) : (
+ <EventResourcesSection
+ resources={allResources || []}
+ onPreview={(resource) => {
+ console.log("Previewing resource:", resource);
+ setPreviewingResource(resource);
+ }} />
+ )}
+ </TabsContent>
+ </Tabs>
 
-      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+ <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -232,7 +267,7 @@ export default function Event() {
           <DialogHeader>
             <DialogTitle>{viewingEvent?.title}</DialogTitle>
           </DialogHeader>
-          
+
           {viewingEvent && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -271,15 +306,13 @@ export default function Event() {
                 </div>
               </div>
 
-              <div 
+              <div
                 className="prose prose-sm max-w-none text-muted-foreground"
                 dangerouslySetInnerHTML={{ __html: viewingEvent.description }}
               />
 
-              <EventResourcesSection eventId={viewingEvent.id} />
-
               <div className="flex justify-center pt-4">
-                <Button 
+                <Button
                   className="w-[200px]"
                   onClick={() => {
                     setViewingEvent(null);
@@ -287,15 +320,50 @@ export default function Event() {
                   }}
                   disabled={registering === viewingEvent.id || registrations?.includes(viewingEvent.id) || filter === 'past'}
                 >
-                  {filter === 'past' 
-                    ? "Event Ended"
-                    : registering === viewingEvent.id 
-                      ? "Registering..." 
-                      : registrations?.includes(viewingEvent.id)
-                        ? "Registered"
-                        : "Register Now"}
+                  {filter === 'past' ? "Event Ended" : registering === viewingEvent.id ? "Registering..." : registrations?.includes(viewingEvent.id) ? "Registered" : "Register Now"}
                 </Button>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!previewingResource} onOpenChange={() => setPreviewingResource(null)}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{previewingResource?.title}</DialogTitle>
+          </DialogHeader>
+          {previewingResource?.description && (
+ <DialogDescription>{previewingResource.description}</DialogDescription>
+ )}
+          {previewingResource && (
+            <div className="space-y-4">
+              {previewingResource.resource_type === 'video' && (
+                <div className="relative" style={{ paddingBottom: '56.25%', height: 0 }}>
+                  <iframe
+                    src={previewingResource.external_url || previewingResource.file_url}
+                    title={previewingResource.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                  ></iframe>
+                </div>
+              )}
+              {previewingResource.resource_type === 'document' && (previewingResource.external_url || previewingResource.file_url) ? (
+                 <div className="relative" style={{ paddingBottom: 'calc(90vh - 100px)', height: 0 }}>
+ <iframe
+ src={previewingResource.external_url || previewingResource.file_url}
+ title={previewingResource.title}
+ style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                  ></iframe>
+                </div>
+              ) : previewingResource.resource_type !== 'video' && (previewingResource.external_url || previewingResource.file_url) ? (
+                 // Fallback for other types with URLs, provide a link
+                 <Button variant="outline" asChild><a href={previewingResource.external_url || previewingResource.file_url} target="_blank" rel="noopener noreferrer">View Resource</a></Button>
+              ) : (previewingResource.resource_type !== 'video' && !previewingResource.external_url && !previewingResource.file_url) && (
+                <Button variant="outline" asChild><a href={previewingResource.external_url || previewingResource.file_url} target="_blank" rel="noopener noreferrer">View Resource</a></Button>
+              )}
             </div>
           )}
         </DialogContent>
