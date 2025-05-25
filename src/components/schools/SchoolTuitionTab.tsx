@@ -39,13 +39,13 @@ export function SchoolTuitionTab({ school }: SchoolTuitionTabProps) {
           Tuition & Fees Information
         </h2>
         
-        <div className="bg-gradient-to-br from-green-50/80 to-emerald-100/80 dark:from-green-900/30 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/40 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-gradient-to-br from-green-50/80 to-emerald-100/80 border border-green-200 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-green-100/80 dark:bg-green-900/50">
-                  <th className="px-6 py-3 text-left font-medium text-green-800 dark:text-green-300">Program</th>
-                  <th className="px-6 py-3 text-left font-medium text-green-800 dark:text-green-300">Tuition</th>
+                <tr className="bg-green-100/80">
+                  <th className="px-6 py-3 text-left font-medium text-green-800">Program</th>
+                  <th className="px-6 py-3 text-left font-medium text-green-800">Tuition</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,12 +53,12 @@ export function SchoolTuitionTab({ school }: SchoolTuitionTabProps) {
                   <tr 
                     key={program} 
                     className={cn(
-                      "border-t border-green-200/70 dark:border-green-800/30 hover:bg-green-100/50 dark:hover:bg-green-900/30",
-                      index % 2 === 0 ? "bg-green-50/50 dark:bg-green-900/20" : "bg-transparent"
+                      "border-t border-green-200/70 hover:bg-green-100/50",
+                      index % 2 === 0 ? "bg-green-50/50" : "bg-transparent"
                     )}
                   >
                     <td className="px-6 py-4 capitalize">{program.replace(/_/g, ' ')}</td>
-                    <td className="px-6 py-4 font-medium text-green-800 dark:text-green-300">{fee}</td>
+                    <td className="px-6 py-4 font-medium text-green-800">{fee}</td>
                   </tr>
                 ))}
               </tbody>
@@ -66,9 +66,9 @@ export function SchoolTuitionTab({ school }: SchoolTuitionTabProps) {
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-cyan-50 to-blue-100/80 dark:from-cyan-900/40 dark:to-blue-900/20 border border-cyan-200 dark:border-cyan-800/40 rounded-lg p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-cyan-50 to-blue-100/80 border border-cyan-200 rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+            <Wallet className="h-5 w-5 text-cyan-600" />
             Financial Resources
           </h3>
           <div className="space-y-3">
@@ -101,7 +101,7 @@ export function SchoolTuitionTab({ school }: SchoolTuitionTabProps) {
       
       {school.financial_aid_url && (
         <div className="mt-6">
-          <Button asChild variant="outline" className="bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 dark:from-blue-900/20 dark:to-cyan-900/20 dark:hover:from-blue-900/40 dark:hover:to-cyan-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800/60">
+          <Button asChild variant="outline" className="bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 text-blue-700 border-blue-200">
             <a href={school.financial_aid_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
               Visit Financial Aid Website <ExternalLink className="h-3 w-3 ml-1" />
             </a>
