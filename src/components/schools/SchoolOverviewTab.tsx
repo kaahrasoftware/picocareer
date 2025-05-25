@@ -48,24 +48,24 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div className="md:col-span-2 space-y-6">
         {/* School Information */}
-        <div className="border rounded-lg p-6 space-y-4 shadow-sm bg-white dark:bg-gray-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">About {school.name}</h2>
+        <div className="border rounded-lg p-6 space-y-4 shadow-sm bg-white">
+          <h2 className="text-xl font-semibold text-gray-900">About {school.name}</h2>
           
           <div className="flex flex-wrap gap-2 my-4">
             {school.type && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
                 {school.type}
               </Badge>
             )}
             
             {school.country && (
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
                 {school.country}
               </Badge>
             )}
             
             {school.acceptance_rate !== null && (
-              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800">
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100">
                 {Math.round((school.acceptance_rate || 0) * 100)}% Acceptance Rate
               </Badge>
             )}
@@ -76,7 +76,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               {school.location && (
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-rose-500" />
-                  <span className="text-gray-700 dark:text-gray-300">{school.location}</span>
+                  <span className="text-gray-700">{school.location}</span>
                 </div>
               )}
               
@@ -87,7 +87,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
                     href={school.website} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
                   >
                     {school.website.replace(/(^\w+:|^)\/\//, '')}
                   </a>
@@ -97,7 +97,7 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               {school.ranking && (
                 <div className="flex items-center gap-2">
                   <Award className="h-4 w-4 text-amber-500" />
-                  <span className="text-gray-700 dark:text-gray-300">Ranking: {school.ranking}</span>
+                  <span className="text-gray-700">Ranking: {school.ranking}</span>
                 </div>
               )}
             </div>
@@ -106,14 +106,14 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
               {school.student_population && (
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-indigo-500" />
-                  <span className="text-gray-700 dark:text-gray-300">{school.student_population.toLocaleString()} Students</span>
+                  <span className="text-gray-700">{school.student_population.toLocaleString()} Students</span>
                 </div>
               )}
               
               {school.student_faculty_ratio && (
                 <div className="flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-700 dark:text-gray-300">{school.student_faculty_ratio} Student-Faculty Ratio</span>
+                  <span className="text-gray-700">{school.student_faculty_ratio} Student-Faculty Ratio</span>
                 </div>
               )}
             </div>
@@ -121,8 +121,8 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
         </div>
 
         {/* Application Links */}
-        <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-gray-900">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Application Resources</h2>
+        <div className="border rounded-lg p-6 shadow-sm bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Application Resources</h2>
           <div className="flex flex-wrap gap-3">
             {renderExternalLink(
               school.undergraduate_application_url,
@@ -214,18 +214,18 @@ export function SchoolOverviewTab({ school }: SchoolOverviewTabProps) {
         </div>
 
         {/* Financial Aid Card */}
-        <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-            <DollarSign className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> 
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+            <DollarSign className="h-5 w-5 text-indigo-600" /> 
             Financial Resources
           </h2>
           <div className="space-y-3">
             {renderExternalLink(
               school.financial_aid_url,
               "Financial Aid",
-              <Wallet className="h-4 w-4" />,
+              <Wallet className="h-4 w-4 text-indigo-700" />,
               "outline",
-              "border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-600 dark:text-indigo-400 dark:hover:bg-indigo-900"
+              "border-indigo-300 text-indigo-700 hover:bg-indigo-100"
             )}
           </div>
         </div>
