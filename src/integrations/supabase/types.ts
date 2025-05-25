@@ -838,6 +838,75 @@ export type Database = {
           },
         ]
       }
+      event_resources: {
+        Row: {
+          access_level: string
+          created_at: string
+          description: string | null
+          event_id: string
+          external_url: string | null
+          file_format: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          is_downloadable: boolean
+          resource_type: string
+          sort_order: number | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          access_level?: string
+          created_at?: string
+          description?: string | null
+          event_id: string
+          external_url?: string | null
+          file_format?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_downloadable?: boolean
+          resource_type: string
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          access_level?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          external_url?: string | null
+          file_format?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_downloadable?: boolean
+          resource_type?: string
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_resources_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_resources_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           author_id: string | null

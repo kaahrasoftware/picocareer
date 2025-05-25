@@ -9,6 +9,7 @@ import { EventRegistrationForm } from "@/components/forms/EventRegistrationForm"
 import { EventHeader } from "@/components/event/EventHeader";
 import { EventCard } from "@/components/event/EventCard";
 import { EmptyState } from "@/components/event/EmptyState";
+import { EventResourcesSection } from "@/components/event/EventResourcesSection";
 import { Calendar, Clock, Users, Video, Building } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -227,7 +228,7 @@ export default function Event() {
       </Dialog>
 
       <Dialog open={!!viewingEvent} onOpenChange={() => setViewingEvent(null)}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{viewingEvent?.title}</DialogTitle>
           </DialogHeader>
@@ -274,6 +275,8 @@ export default function Event() {
                 className="prose prose-sm max-w-none text-muted-foreground"
                 dangerouslySetInnerHTML={{ __html: viewingEvent.description }}
               />
+
+              <EventResourcesSection eventId={viewingEvent.id} />
 
               <div className="flex justify-center pt-4">
                 <Button 
