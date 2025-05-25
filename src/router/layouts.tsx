@@ -2,6 +2,7 @@
 import { MenuSidebar } from "@/components/MenuSidebar";
 import { Footer } from "@/components/Footer";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import { ScrollToTop } from "@/components/ScrollToTop";
 import { Outlet, useLocation } from "react-router-dom";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -36,6 +37,7 @@ export function MainLayout({ children }: LayoutProps) {
     <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
       <GuideProvider>
         <div className="min-h-screen flex flex-col">
+          <ScrollToTop />
           <LoadingBar isLoading={isLoading} progress={progress} />
           <MenuSidebar />
           <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
@@ -66,6 +68,7 @@ export function AuthLayout({ children }: LayoutProps) {
   return (
     <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
       <div className="min-h-screen flex flex-col">
+        <ScrollToTop />
         <LoadingBar isLoading={isLoading} progress={progress} />
         <MenuSidebar />
         <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
