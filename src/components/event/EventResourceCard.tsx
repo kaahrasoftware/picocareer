@@ -1,11 +1,13 @@
 
-import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal } from "lucide-react";
+import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EventResource } from "@/types/event-resources";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface EventResourceCardProps {
   resource: EventResource;
@@ -72,29 +74,104 @@ export function EventResourceCard({
   onPreview,
   showActions = false 
 }: EventResourceCardProps) {
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
+
   const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (onPreview) {
-      event.preventDefault(); // Prevent default link behavior
+      event.preventDefault();
       onPreview(resource);
-      // No return here, as the onPreview logic handles the flow
     } else if (resource.external_url) {
-      window.open(resource.external_url, '_blank'); // Fallback to opening in new tab
+      window.open(resource.external_url, '_blank', 'noopener,noreferrer');
     } else if (resource.file_url) {
- window.open(resource.file_url, '_blank');
+      window.open(resource.file_url, '_blank', 'noopener,noreferrer');
     }
   };
 
-  const handleDownload = () => {
-    if (resource.file_url && resource.is_downloadable) {
-      const link = document.createElement('a');
-      link.href = resource.file_url;
-      link.download = resource.title;
-      link.click();
+  const handleDownload = async () => {
+    if (!resource.file_url || !resource.is_downloadable) {
+      toast({
+        title: "Download not available",
+        description: "This resource cannot be downloaded.",
+        variant: "destructive"
+      });
+      return;
     }
-    onDownload?.(resource);
+
+    try {
+      setDownloading(true);
+      
+      // Track download event
+      console.log('Download started for resource:', resource.id);
+      
+      // Create a filename from the resource title and format
+      const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
+      const fileName = `${resource.title}${fileExtension}`;
+      
+      // Try to fetch the file as blob first for better download handling
+      try {
+        const response = await fetch(resource.file_url);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch file');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} is being downloaded.`
+        });
+        
+      } catch (fetchError) {
+        // Fallback to simple link download if blob fetch fails (e.g., CORS issues)
+        console.log('Blob download failed, using fallback method:', fetchError);
+        
+        const link = document.createElement('a');
+        link.href = resource.file_url;
+        link.download = fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} download has been initiated.`
+        });
+      }
+      
+      // Call the callback if provided
+      onDownload?.(resource);
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloading(false);
+    }
   };
 
- return (
+  return (
     <Card className="group hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -164,9 +241,13 @@ export function EventResourceCard({
               View
             </Button>
             {resource.is_downloadable && resource.file_url && (
-              <Button size="sm" onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-1" />
-                Download
+              <Button size="sm" onClick={handleDownload} disabled={downloading}>
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-1" />
+                )}
+                {downloading ? 'Downloading...' : 'Download'}
               </Button>
             )}
           </div>

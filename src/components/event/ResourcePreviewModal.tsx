@@ -18,11 +18,13 @@ import {
   Shield,
   HardDrive,
   Play,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { cn } from '@/lib/utils';
 import { detectUrlType, getEmbeddableUrl, isEmbeddable, getYouTubeThumbnail } from './utils/urlUtils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResourcePreviewModalProps {
   resource: EventResource | null;
@@ -79,25 +81,95 @@ const formatFileSize = (bytes?: number) => {
 export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePreviewModalProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const { toast } = useToast();
   
   if (!resource) return null;
 
-  const handleDownload = () => {
-    if (resource.file_url && resource.is_downloadable) {
-      // Track download event
-      console.log('Download tracked for resource:', resource.id);
+  const handleDownload = async () => {
+    if (!resource.file_url || !resource.is_downloadable) {
+      toast({
+        title: "Download not available",
+        description: "This resource cannot be downloaded.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setDownloading(true);
       
-      const link = document.createElement('a');
-      link.href = resource.file_url;
-      link.download = resource.title;
-      link.click();
+      // Track download event
+      console.log('Download started for resource:', resource.id);
+      
+      // Create a filename from the resource title and format
+      const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
+      const fileName = `${resource.title}${fileExtension}`;
+      
+      // Try to fetch the file as blob first for better download handling
+      try {
+        const response = await fetch(resource.file_url);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch file');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} is being downloaded.`
+        });
+        
+      } catch (fetchError) {
+        // Fallback to simple link download if blob fetch fails (e.g., CORS issues)
+        console.log('Blob download failed, using fallback method:', fetchError);
+        
+        const link = document.createElement('a');
+        link.href = resource.file_url;
+        link.download = fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} download has been initiated.`
+        });
+      }
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloading(false);
     }
   };
 
   const handleOpenExternal = () => {
     const url = resource.external_url || resource.file_url;
     if (url) {
-      window.open(url, '_blank');
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -168,6 +240,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="absolute top-0 left-0 w-full h-full"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                 onLoad={() => {
                   console.log('YouTube iframe loaded successfully');
                   setIframeLoaded(true);
@@ -285,7 +358,6 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               controls
               className="w-full"
               src={url}
-              controlsList="nodownload"
             >
               Your browser does not support the audio element.
             </audio>
@@ -313,7 +385,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
 
       case 'document':
       case 'presentation':
-        // For PDFs, use Google Docs viewer as a fallback for better compatibility
+        // For PDFs, use Google Docs viewer for better compatibility
         if (isPdfUrl(url)) {
           const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
           return (
@@ -469,9 +541,13 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
             )}
             
             {resource.is_downloadable && resource.file_url && (
-              <Button onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
+              <Button onClick={handleDownload} disabled={downloading}>
+                {downloading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {downloading ? 'Downloading...' : 'Download'}
               </Button>
             )}
           </div>
