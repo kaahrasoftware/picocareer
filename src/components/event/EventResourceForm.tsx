@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEventResources } from "@/hooks/useEventResources";
 import { EventResource, EventResourceFormData } from "@/types/event-resources";
+import { FileUploadSection } from "./FileUploadSection";
 
 interface EventResourceFormProps {
   eventId: string;
@@ -85,8 +86,9 @@ export function EventResourceForm({
   onCancel 
 }: EventResourceFormProps) {
   const { addResource, updateResource, isAdding, isUpdating } = useEventResources(eventId);
-  const [urlType, setUrlType] = useState<'file' | 'external'>(
-    initialResource?.external_url ? 'external' : 'file'
+  const [urlType, setUrlType] = useState<'file' | 'external' | 'upload'>(
+    initialResource?.external_url ? 'external' : 
+    initialResource?.file_url ? 'file' : 'upload'
   );
   const [showCustomFormat, setShowCustomFormat] = useState(false);
 
@@ -105,17 +107,40 @@ export function EventResourceForm({
   });
 
   const resourceType = form.watch('resource_type');
-  const fileFormat = form.watch('file_format');
 
   // Get available file formats based on resource type
   const getFileFormats = (type: string) => {
     return FILE_FORMATS[type as keyof typeof FILE_FORMATS] || FILE_FORMATS.other;
   };
 
+  const handleFileUploaded = (url: string, metadata: { fileName: string; size: number; type: string }) => {
+    form.setValue('file_url', url);
+    
+    // Auto-detect file format from the file name
+    const fileExt = metadata.fileName.split('.').pop()?.toUpperCase();
+    if (fileExt && !form.getValues('file_format')) {
+      form.setValue('file_format', fileExt);
+    }
+
+    // Auto-detect resource type if not set
+    if (!form.getValues('resource_type') || form.getValues('resource_type') === 'document') {
+      const currentResourceType = form.getValues('resource_type');
+      if (metadata.type.startsWith('video/') && currentResourceType !== 'video') {
+        form.setValue('resource_type', 'video');
+      } else if (metadata.type.startsWith('audio/') && currentResourceType !== 'audio') {
+        form.setValue('resource_type', 'audio');
+      } else if (metadata.type.startsWith('image/') && currentResourceType !== 'image') {
+        form.setValue('resource_type', 'image');
+      } else if (metadata.type.includes('presentation') && currentResourceType !== 'presentation') {
+        form.setValue('resource_type', 'presentation');
+      }
+    }
+  };
+
   const onSubmit = (data: EventResourceFormData) => {
     const resourceData = {
       ...data,
-      file_url: urlType === 'file' ? data.file_url : undefined,
+      file_url: urlType === 'file' || urlType === 'upload' ? data.file_url : undefined,
       external_url: urlType === 'external' ? data.external_url : undefined,
     };
 
@@ -205,53 +230,68 @@ export function EventResourceForm({
           />
 
           <div className="space-y-4">
-            <FormLabel>Resource URL</FormLabel>
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant={urlType === 'file' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setUrlType('file')}
-              >
-                File URL
-              </Button>
-              <Button
-                type="button"
-                variant={urlType === 'external' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setUrlType('external')}
-              >
-                External URL
-              </Button>
-            </div>
+            <FormLabel>Resource Source</FormLabel>
+            <Tabs value={urlType} onValueChange={(value) => setUrlType(value as any)}>
+              <TabsList>
+                <TabsTrigger value="upload">Upload File</TabsTrigger>
+                <TabsTrigger value="file">File URL</TabsTrigger>
+                <TabsTrigger value="external">External URL</TabsTrigger>
+              </TabsList>
 
-            {urlType === 'file' ? (
-              <FormField
-                control={form.control}
-                name="file_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Enter file URL" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <TabsContent value="upload" className="space-y-4">
+                <FileUploadSection
+                  eventId={eventId}
+                  onFileUploaded={handleFileUploaded}
+                  maxFiles={1}
+                />
+                {form.watch('file_url') && (
+                  <FormField
+                    control={form.control}
+                    name="file_url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Uploaded File URL</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly className="bg-gray-50" />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-            ) : (
-              <FormField
-                control={form.control}
-                name="external_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Enter external URL" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+              </TabsContent>
+
+              <TabsContent value="file">
+                <FormField
+                  control={form.control}
+                  name="file_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>File URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter file URL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="external">
+                <FormField
+                  control={form.control}
+                  name="external_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>External URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter external URL" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           <FormField
