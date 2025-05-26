@@ -11,28 +11,46 @@ import {
 import { useEventResources } from '@/hooks/useEventResources';
 
 interface EventResourcesManagementTabProps {
-  eventId: string;
+  eventId?: string;
 }
 
 export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabProps> = ({ eventId }) => { 
-  const { resources, isLoading } = useEventResources(eventId);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+
+  // Only fetch resources if eventId is provided
+  const { resources, isLoading } = useEventResources(eventId || '');
+
+  // If no event is selected, show message to select an event
+  if (!eventId) {
+    return (
+      <Card className="w-full text-center py-8">
+        <CardHeader>
+          <CardTitle>No Event Selected</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>
+            Please select an event from the "Events" tab to manage its resources.
+          </CardDescription>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return <div>Loading resources...</div>;
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Event Resources</h2>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsFormOpen(true)}>
+            <Button>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Resource
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Add New Resource</DialogTitle>
             </DialogHeader>
@@ -53,7 +71,9 @@ export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabPr
             <CardTitle>No Resources Found</CardTitle>
           </CardHeader>
           <CardContent>
-            <CardDescription>There are no resources available for this event yet. Add a new resource to get started.</CardDescription>
+            <CardDescription>
+              There are no resources available for this event yet. Add a new resource to get started.
+            </CardDescription>
           </CardContent>
         </Card>
       )}
