@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useEventResources } from '@/hooks/useEventResources';
-import { useEventRegistrations } from './useEventRegistrations';
+import { useEvents } from '@/hooks/useEvents';
 
 interface EventResourcesManagementTabProps {
   eventId?: string;
@@ -21,7 +21,7 @@ export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabPr
   const [selectedEventId, setSelectedEventId] = useState(initialEventId || '');
 
   // Fetch events for the selector
-  const { events, registrationCounts, isLoading: eventsLoading } = useEventRegistrations();
+  const { events, registrationCounts, isLoading: eventsLoading } = useEvents();
 
   // Fetch resources for the selected event
   const { resources, isLoading: resourcesLoading } = useEventResources(selectedEventId);
@@ -64,7 +64,7 @@ export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabPr
               <div>
                 <CardTitle>{selectedEvent.title}</CardTitle>
                 <CardDescription>
-                  {selectedEvent.date && new Date(selectedEvent.date).toLocaleDateString()} • {selectedEvent.location}
+                  {selectedEvent.start_time && new Date(selectedEvent.start_time).toLocaleDateString()} • {selectedEvent.location || 'Virtual'}
                 </CardDescription>
               </div>
               <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

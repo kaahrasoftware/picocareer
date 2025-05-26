@@ -1,63 +1,67 @@
 
 import React from 'react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import type { Event } from '@/hooks/useEvents';
 
 interface EventSelectorProps {
-  events: any[];
+  events: Event[];
   selectedEvent: string;
-  onEventChange: (value: string) => void;
+  onEventChange: (eventId: string) => void;
   registrationCounts: Record<string, number>;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
-export function EventSelector({
+export const EventSelector: React.FC<EventSelectorProps> = ({
   events,
   selectedEvent,
   onEventChange,
   registrationCounts,
-  isLoading
-}: EventSelectorProps) {
+  isLoading = false
+}) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <span>Loading events...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-2 w-full sm:w-1/2">
-      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-      <Select
-        value={selectedEvent}
-        onValueChange={onEventChange}
-        disabled={isLoading}
-      >
+    <div className="space-y-2">
+      <Select value={selectedEvent} onValueChange={onEventChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select an event" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">
-            <div className="flex justify-between items-center w-full">
-              <span>All Events</span>
-              <Badge variant="outline">
-                {Object.values(registrationCounts).reduce((a, b) => a + b, 0)}
-              </Badge>
-            </div>
-          </SelectItem>
-          
-          {events.map(event => (
-            <SelectItem key={event.id} value={event.id}>
-              <div className="flex justify-between items-center w-full">
-                <span>{event.title || 'Untitled Event'}</span>
-                {registrationCounts[event.id] && (
-                  <Badge variant="outline">{registrationCounts[event.id]}</Badge>
-                )}
-              </div>
+          {events.length === 0 ? (
+            <SelectItem value="none" disabled>
+              No events available
             </SelectItem>
-          ))}
+          ) : (
+            events.map((event) => (
+              <SelectItem key={event.id} value={event.id}>
+                <div className="flex items-center justify-between w-full">
+                  <span>{event.title}</span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <Badge variant="outline" className="text-xs">
+                      {registrationCounts[event.id] || 0} registered
+                    </Badge>
+                    <Badge 
+                      variant={event.status === 'Approved' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {event.status}
+                    </Badge>
+                  </div>
+                </div>
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     </div>
   );
-}
+};

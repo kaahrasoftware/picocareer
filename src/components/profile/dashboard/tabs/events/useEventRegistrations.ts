@@ -2,17 +2,18 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { supabase } from '@/integrations/supabase/client';
+import { useEvents } from '@/hooks/useEvents';
 
 export function useEventRegistrations() {
   const [selectedEvent, setSelectedEvent] = useState<string>('all');
-  const [events, setEvents] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [registrationCounts, setRegistrationCounts] = useState<Record<string, number>>({});
   const [selectedEventTitle, setSelectedEventTitle] = useState<string | undefined>(undefined);
   const [countriesData, setCountriesData] = useState<Record<string, number>>({});
   const [academicFieldsData, setAcademicFieldsData] = useState<Record<string, number>>({});
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
+  // Use the new events hook
+  const { events, registrationCounts, isLoading } = useEvents();
 
   // Fetch registrations with pagination
   const {
@@ -40,51 +41,6 @@ export function useEventRegistrations() {
       events(id, title)
     `
   });
-
-  // Fetch all events for the selector
-  const fetchEvents = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('id, title, start_time')
-        .order('start_time', { ascending: false });
-      
-      if (error) throw error;
-      setEvents(data || []);
-
-      // Also get registration counts for each event
-      await fetchRegistrationCounts();
-    } catch (error: any) {
-      console.error('Error fetching events:', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Fetch registration counts for each event
-  const fetchRegistrationCounts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('event_registrations')
-        .select('event_id, count()', { count: 'exact' })
-        .groupBy('event_id');
-      
-      if (error) throw error;
-      
-      // Transform the results into a record object
-      const counts: Record<string, number> = {};
-      data.forEach((item: any) => {
-        if (item.event_id) {
-          counts[item.event_id] = item.count;
-        }
-      });
-      
-      setRegistrationCounts(counts);
-    } catch (error: any) {
-      console.error('Error fetching registration counts:', error.message);
-    }
-  };
 
   // Fetch analytics data when an event is selected
   const fetchEventAnalytics = useCallback(async () => {
@@ -151,7 +107,7 @@ export function useEventRegistrations() {
     setPage,
     totalPages,
     events,
-    fetchEvents,
+    fetchEvents: () => {}, // Not needed anymore since useEvents handles this
     isLoading,
     selectedEvent,
     setSelectedEvent,
