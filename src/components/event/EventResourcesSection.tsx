@@ -9,7 +9,6 @@ import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton';
 import { AuthPromptDialog } from '@/components/auth/AuthPromptDialog';
-import { useThemeReady } from './hooks/useThemeReady';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
