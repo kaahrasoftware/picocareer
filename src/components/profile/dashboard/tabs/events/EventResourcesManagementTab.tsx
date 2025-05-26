@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { PlusCircle, Calendar } from 'lucide-react';
-import { EventResourceCard } from '@/components/event/EventResourceCard';
+import { EventResourceTable } from '@/components/event/EventResourceTable';
 import { EventResourceForm } from '@/components/event/EventResourceForm';
 import { EventSelector } from './EventSelector';
 import {
@@ -95,21 +95,19 @@ export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabPr
                 <p>Loading resources...</p>
               </CardContent>
             </Card>
-          ) : resources && resources.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {resources.map((resource) => (
-                <EventResourceCard key={resource.id} resource={resource} />
-              ))}
-            </div>
           ) : (
-            <Card className="w-full text-center py-8">
+            <Card>
               <CardHeader>
-                <CardTitle>No Resources Found</CardTitle>
+                <CardTitle>Event Resources</CardTitle>
+                <CardDescription>
+                  Manage resources for this event. You can view, edit, or delete existing resources.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <CardDescription>
-                  There are no resources available for this event yet. Add a new resource to get started.
-                </CardDescription>
+                <EventResourceTable 
+                  eventId={selectedEventId}
+                  resources={resources || []}
+                />
               </CardContent>
             </Card>
           )}
