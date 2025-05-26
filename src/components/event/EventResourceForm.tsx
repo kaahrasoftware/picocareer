@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEventResources } from "@/hooks/useEventResources";
 import { EventResource, EventResourceFormData } from "@/types/event-resources";
 import { FileUploadSection } from "./FileUploadSection";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle, FileText } from "lucide-react";
 
 interface EventResourceFormProps {
   eventId: string;
@@ -86,11 +89,11 @@ export function EventResourceForm({
   onCancel 
 }: EventResourceFormProps) {
   const { addResource, updateResource, isAdding, isUpdating } = useEventResources(eventId);
-  const [urlType, setUrlType] = useState<'file' | 'external' | 'upload'>(
-    initialResource?.external_url ? 'external' : 
-    initialResource?.file_url ? 'file' : 'upload'
+  const [resourceSource, setResourceSource] = useState<'upload' | 'external'>(
+    initialResource?.external_url ? 'external' : 'upload'
   );
   const [showCustomFormat, setShowCustomFormat] = useState(false);
+  const [fileUploaded, setFileUploaded] = useState(false);
 
   const form = useForm<EventResourceFormData>({
     defaultValues: {
@@ -107,6 +110,8 @@ export function EventResourceForm({
   });
 
   const resourceType = form.watch('resource_type');
+  const currentFileUrl = form.watch('file_url');
+  const currentExternalUrl = form.watch('external_url');
 
   // Get available file formats based on resource type
   const getFileFormats = (type: string) => {
@@ -115,6 +120,7 @@ export function EventResourceForm({
 
   const handleFileUploaded = (url: string, metadata: { fileName: string; size: number; type: string }) => {
     form.setValue('file_url', url);
+    setFileUploaded(true);
     
     // Auto-detect file format from the file name
     const fileExt = metadata.fileName.split('.').pop()?.toUpperCase();
@@ -135,13 +141,19 @@ export function EventResourceForm({
         form.setValue('resource_type', 'presentation');
       }
     }
+
+    // Auto-fill title if empty
+    if (!form.getValues('title')) {
+      const fileName = metadata.fileName.replace(/\.[^/.]+$/, ""); // Remove extension
+      form.setValue('title', fileName);
+    }
   };
 
   const onSubmit = (data: EventResourceFormData) => {
     const resourceData = {
       ...data,
-      file_url: urlType === 'file' || urlType === 'upload' ? data.file_url : undefined,
-      external_url: urlType === 'external' ? data.external_url : undefined,
+      file_url: resourceSource === 'upload' ? data.file_url : undefined,
+      external_url: resourceSource === 'external' ? data.external_url : undefined,
     };
 
     if (initialResource) {
@@ -167,6 +179,12 @@ export function EventResourceForm({
     { value: 'registered', label: 'Registered Users Only' },
     { value: 'participants_only', label: 'Event Participants Only' },
   ];
+
+  const isFormValid = () => {
+    const title = form.getValues('title');
+    const hasResource = resourceSource === 'upload' ? currentFileUrl : currentExternalUrl;
+    return title && hasResource;
+  };
 
   return (
     <div className="max-h-[600px] overflow-y-auto pr-4">
@@ -230,12 +248,11 @@ export function EventResourceForm({
           />
 
           <div className="space-y-4">
-            <FormLabel>Resource Source</FormLabel>
-            <Tabs value={urlType} onValueChange={(value) => setUrlType(value as any)}>
-              <TabsList>
-                <TabsTrigger value="upload">Upload File</TabsTrigger>
-                <TabsTrigger value="file">File URL</TabsTrigger>
-                <TabsTrigger value="external">External URL</TabsTrigger>
+            <FormLabel>Resource Source *</FormLabel>
+            <Tabs value={resourceSource} onValueChange={(value) => setResourceSource(value as any)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="upload">Upload New File</TabsTrigger>
+                <TabsTrigger value="external">Link to External Resource</TabsTrigger>
               </TabsList>
 
               <TabsContent value="upload" className="space-y-4">
@@ -244,36 +261,25 @@ export function EventResourceForm({
                   onFileUploaded={handleFileUploaded}
                   maxFiles={1}
                 />
-                {form.watch('file_url') && (
-                  <FormField
-                    control={form.control}
-                    name="file_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Uploaded File URL</FormLabel>
-                        <FormControl>
-                          <Input {...field} readOnly className="bg-gray-50" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                
+                {fileUploaded && currentFileUrl && (
+                  <Alert className="border-green-200 bg-green-50">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <strong>File uploaded successfully!</strong> Please complete the form below and click "Save Resource" to finish.
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </TabsContent>
 
-              <TabsContent value="file">
-                <FormField
-                  control={form.control}
-                  name="file_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>File URL</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter file URL" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {currentFileUrl && (
+                  <div className="p-3 bg-gray-50 rounded-md border">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm font-medium">Uploaded file:</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1 break-all">{currentFileUrl}</p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="external">
@@ -282,9 +288,9 @@ export function EventResourceForm({
                   name="external_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>External URL</FormLabel>
+                      <FormLabel>External URL *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter external URL" {...field} />
+                        <Input placeholder="Enter external URL (e.g., https://example.com/resource)" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -408,12 +414,24 @@ export function EventResourceForm({
             )}
           />
 
-          <div className="flex justify-end gap-3">
+          {!isFormValid() && (resourceSource === 'upload' ? currentFileUrl : currentExternalUrl) && !form.getValues('title') && (
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertDescription className="text-amber-800">
+                Please enter a title for your resource.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isAdding || isUpdating}>
-              {isAdding || isUpdating ? 'Saving...' : initialResource ? 'Update Resource' : 'Add Resource'}
+            <Button 
+              type="submit" 
+              disabled={isAdding || isUpdating || !isFormValid()}
+              className="min-w-[120px]"
+            >
+              {isAdding || isUpdating ? 'Saving...' : initialResource ? 'Update Resource' : 'Save Resource'}
             </Button>
           </div>
         </form>
