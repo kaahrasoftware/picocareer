@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,31 +42,66 @@ export default function Event() {
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  const { data: allResources, isLoading: isLoadingResources } = useQuery({
+  // Fixed query to get all event resources with proper joins
+  const { data: allResources, isLoading: isLoadingResources, error: resourcesError } = useQuery({
     queryKey: ['all-event-resources'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching all event resources...');
+      
+      // First get all event resources
+      const { data: resources, error: resourcesError } = await supabase
         .from('event_resources')
-        .select(`
-          *,
-          events!inner(
-            id,
-            title,
-            start_time,
-            organized_by
-          )
-        `);
-      if (error) throw error;
-      return data as (EventResource & {
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (resourcesError) {
+        console.error('Error fetching resources:', resourcesError);
+        throw resourcesError;
+      }
+
+      console.log('Raw resources:', resources);
+
+      if (!resources || resources.length === 0) {
+        console.log('No resources found');
+        return [];
+      }
+
+      // Get unique event IDs from resources
+      const eventIds = [...new Set(resources.map(r => r.event_id))];
+      
+      // Get event details for these resources
+      const { data: events, error: eventsError } = await supabase
+        .from('events')
+        .select('id, title, start_time, organized_by')
+        .in('id', eventIds);
+
+      if (eventsError) {
+        console.error('Error fetching events:', eventsError);
+        // Continue without event data rather than failing
+      }
+
+      // Map resources with their event data
+      const resourcesWithEvents = resources.map(resource => ({
+        ...resource,
+        events: events?.find(event => event.id === resource.event_id) || null
+      }));
+
+      console.log('Resources with events:', resourcesWithEvents);
+      return resourcesWithEvents as (EventResource & {
         events: {
           id: string;
           title: string;
           start_time: string;
           organized_by?: string;
-        };
+        } | null;
       })[];
     },
   });
+
+  // Log data for debugging
+  console.log('All resources data:', allResources);
+  console.log('Resources loading:', isLoadingResources);
+  console.log('Resources error:', resourcesError);
 
   const { data: events, isLoading } = useQuery({
     queryKey: ['events', filter],

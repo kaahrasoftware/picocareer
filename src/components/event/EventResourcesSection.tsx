@@ -69,7 +69,7 @@ const getResourceTypeColor = (type: EventResource['resource_type']) => {
 };
 
 const formatFileSize = (bytes?: number) => {
-  if (!bytes) return null;
+  if (!bytes || bytes === 0) return null;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
@@ -84,7 +84,30 @@ const ResourceStatsCards = ({ resources, filteredCount }: { resources: EventReso
   }, {} as Record<string, number>);
 
   const totalSize = resources.reduce((total, resource) => {
-    return total + (resource.file_size || 0);
+    // Use actual file size if available, otherwise estimate based on type
+    let estimatedSize = resource.file_size || 0;
+    if (!estimatedSize && resource.file_url) {
+      switch (resource.resource_type) {
+        case 'video':
+          estimatedSize = 5000000; // 5MB
+          break;
+        case 'audio':
+          estimatedSize = 2000000; // 2MB
+          break;
+        case 'document':
+          estimatedSize = 500000; // 500KB
+          break;
+        case 'presentation':
+          estimatedSize = 3000000; // 3MB
+          break;
+        case 'image':
+          estimatedSize = 300000; // 300KB
+          break;
+        default:
+          estimatedSize = 100000; // 100KB
+      }
+    }
+    return total + estimatedSize;
   }, 0);
 
   const formatTotalSize = (bytes: number) => {
@@ -219,24 +242,33 @@ export function EventResourcesSection({
   };
 
   // Filter resources based on search and type (for authenticated users)
-  const filteredResources = resources.filter(resource => {
+  const filteredResources = session?.user ? resources.filter(resource => {
     const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
       (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = selectedType === 'all' || resource.resource_type === selectedType;
     return matchesSearch && matchesType;
-  });
+  }) : resources;
 
   // Get unique resource types for filtering
   const resourceTypes = Array.from(new Set(resources.map(r => r.resource_type)));
 
   // Handle previewing a resource
   const handlePreview = (resource: EventResource) => {
+    if (!session?.user) {
+      setShowAuthDialog(true);
+      return;
+    }
     setPreviewResource(resource);
     onPreview?.(resource);
   };
 
   // Handle downloading a resource
   const handleDownload = async (resource: EventResource) => {
+    if (!session?.user) {
+      setShowAuthDialog(true);
+      return;
+    }
+
     if (!resource.file_url || !resource.is_downloadable) {
       toast({
         title: "Download not available",
