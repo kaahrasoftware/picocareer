@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,6 @@ import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton';
 import { AuthPromptDialog } from '@/components/auth/AuthPromptDialog';
-import { useThemeReady } from './hooks/useThemeReady';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -75,7 +75,7 @@ const formatFileSize = (bytes?: number) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Resource Statistics Component
+// Resource Statistics Component - Now visible to all users
 const ResourceStatsCards = ({ resources, filteredCount }: { resources: EventResource[], filteredCount: number }) => {
   const downloadableCount = resources.filter(r => r.is_downloadable).length;
   const typeBreakdown = resources.reduce((acc, resource) => {
@@ -194,12 +194,8 @@ export function EventResourcesSection({
   const [previewResource, setPreviewResource] = useState<EventResource | null>(null);
   const [downloadingResources, setDownloadingResources] = useState<Set<string>>(new Set());
   const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    session
-  } = useAuth();
+  const { toast } = useToast();
+  const { session } = useAuth();
   const navigate = useNavigate();
 
   const handleSignIn = () => {
@@ -220,91 +216,10 @@ export function EventResourcesSection({
     });
   };
 
-  // Show authentication prompt if user is not logged in
-  if (!session?.user) {
-    return <div className="space-y-6">
-        {/* Event Info Header */}
-        {eventInfo && <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                  <Calendar className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {eventInfo.title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    {eventInfo.start_time && <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {format(new Date(eventInfo.start_time), 'PPP p')}
-                      </div>}
-                    {eventInfo.platform && <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {eventInfo.platform}
-                      </div>}
-                    {eventInfo.organized_by && <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        {eventInfo.organized_by}
-                      </div>}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>}
-
-        {/* Authentication Required Message */}
-        <Card>
-          <CardContent className="py-12 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="p-4 rounded-full bg-primary/10 text-primary inline-flex mb-6">
-                <Lock className="h-8 w-8" />
-              </div>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Sign In Required
-              </h3>
-              
-              <p className="text-gray-600 mb-4">
-                You need to sign in to your account or create a new account to view event resources.
-              </p>
-              
-              {resources.length > 0 && <div className="mb-6 space-y-3">
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <Archive className="h-5 w-5 text-blue-600" />
-                      <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600 hover:bg-blue-700">
-                        {resources.length} Resource{resources.length !== 1 ? 's' : ''} Available
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-blue-700">
-                      Access exclusive event materials, downloads, and presentations
-                    </p>
-                  </div>
-                </div>}
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={handleSignIn} className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Sign In
-                </Button>
-                <Button variant="outline" onClick={handleSignUp} className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Create Account
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Auth Prompt Dialog */}
-        <AuthPromptDialog isOpen={showAuthDialog} onClose={() => setShowAuthDialog(false)} title="Access Event Resources" description="Sign in or create an account to view and download event resources." redirectUrl="/event" />
-      </div>;
-  }
-
-  // Filter resources based on search and type
+  // Filter resources based on search and type (for authenticated users)
   const filteredResources = resources.filter(resource => {
-    const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = selectedType === 'all' || resource.resource_type === selectedType;
     return matchesSearch && matchesType;
   });
@@ -337,7 +252,6 @@ export function EventResourcesSection({
       const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
       const fileName = `${safeTitle}${fileExtension}`;
 
-      // Try to fetch the file as blob first for better download handling
       try {
         const response = await fetch(resource.file_url);
         if (!response.ok) {
@@ -353,14 +267,12 @@ export function EventResourcesSection({
         link.click();
         document.body.removeChild(link);
 
-        // Clean up the blob URL
         window.URL.revokeObjectURL(url);
         toast({
           title: "Download started",
           description: `${resource.title} is being downloaded.`
         });
       } catch (fetchError) {
-        // Fallback to simple link download if blob fetch fails (e.g., CORS issues)
         console.log('Blob download failed, using fallback method:', fetchError);
         const link = document.createElement('a');
         link.href = resource.file_url;
@@ -392,13 +304,10 @@ export function EventResourcesSection({
   };
 
   // Resource card component
-  const ResourceCard = ({
-    resource
-  }: {
-    resource: EventResource;
-  }) => {
+  const ResourceCard = ({ resource }: { resource: EventResource }) => {
     const isDownloading = downloadingResources.has(resource.id);
-    return <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
+    return (
+      <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
@@ -410,43 +319,54 @@ export function EventResourcesSection({
                 {resource.title}
               </h3>
               
-              {resource.description && <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+              {resource.description && (
+                <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                   {resource.description}
-                </p>}
+                </p>
+              )}
               
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 <Badge variant="outline" className="text-xs capitalize">
                   {resource.resource_type}
                 </Badge>
                 
-                {resource.file_format && <Badge variant="secondary" className="text-xs uppercase font-mono">
+                {resource.file_format && (
+                  <Badge variant="secondary" className="text-xs uppercase font-mono">
                     {resource.file_format}
-                  </Badge>}
+                  </Badge>
+                )}
                 
                 <Badge variant={resource.access_level === 'public' ? 'default' : 'secondary'} className="text-xs">
-                  {resource.access_level === 'participants_only' ? 'Participants' : resource.access_level === 'registered' ? 'Registered' : 'Public'}
+                  {resource.access_level === 'participants_only' ? 'Participants' : 
+                   resource.access_level === 'registered' ? 'Registered' : 'Public'}
                 </Badge>
                 
-                {resource.file_size && <span className="text-xs text-gray-500">
+                {resource.file_size && (
+                  <span className="text-xs text-gray-500">
                     {formatFileSize(resource.file_size)}
-                  </span>}
+                  </span>
+                )}
 
-                {/* Event information badge */}
-                {resource.events && <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                {resource.events && (
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                     <Calendar className="h-3 w-3 mr-1" />
                     {resource.events.title}
-                  </Badge>}
+                  </Badge>
+                )}
               </div>
 
-              {/* Event date - only show if we have event info */}
-              {resource.events && <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+              {resource.events && (
+                <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
                   <Clock className="h-3 w-3" />
                   {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
-                  {resource.events.organized_by && <>
+                  {resource.events.organized_by && (
+                    <>
                       <span className="mx-1">•</span>
                       {resource.events.organized_by}
-                    </>}
-                </div>}
+                    </>
+                  )}
+                </div>
+              )}
               
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => handlePreview(resource)} className="flex-1">
@@ -454,24 +374,24 @@ export function EventResourcesSection({
                   Preview
                 </Button>
                 
-                {resource.is_downloadable && resource.file_url && <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} disabled={isDownloading}>
+                {resource.is_downloadable && resource.file_url && (
+                  <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} disabled={isDownloading}>
                     {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                  </Button>}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   };
 
   // Resource list item component
-  const ResourceListItem = ({
-    resource
-  }: {
-    resource: EventResource;
-  }) => {
+  const ResourceListItem = ({ resource }: { resource: EventResource }) => {
     const isDownloading = downloadingResources.has(resource.id);
-    return <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">
+    return (
+      <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">
         <div className="flex items-center gap-4">
           <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
             {getResourceIcon(resource.resource_type)}
@@ -483,12 +403,14 @@ export function EventResourcesSection({
                 <h3 className="font-medium text-gray-900 line-clamp-1">
                   {resource.title}
                 </h3>
-                {resource.description && <p className="text-sm text-gray-600 line-clamp-1 mt-1">
+                {resource.description && (
+                  <p className="text-sm text-gray-600 line-clamp-1 mt-1">
                     {resource.description}
-                  </p>}
+                  </p>
+                )}
 
-                {/* Event information for list view */}
-                {resource.events && <div className="flex items-center gap-2 mt-2">
+                {resource.events && (
+                  <div className="flex items-center gap-2 mt-2">
                     <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                       <Calendar className="h-3 w-3 mr-1" />
                       {resource.events.title}
@@ -496,7 +418,8 @@ export function EventResourcesSection({
                     <span className="text-xs text-gray-500">
                       {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
                     </span>
-                  </div>}
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2 shrink-0">
@@ -504,12 +427,15 @@ export function EventResourcesSection({
                   {resource.resource_type}
                 </Badge>
                 
-                {resource.file_format && <Badge variant="secondary" className="text-xs uppercase font-mono">
+                {resource.file_format && (
+                  <Badge variant="secondary" className="text-xs uppercase font-mono">
                     {resource.file_format}
-                  </Badge>}
+                  </Badge>
+                )}
                 
                 <Badge variant={resource.access_level === 'public' ? 'default' : 'secondary'} className="text-xs">
-                  {resource.access_level === 'participants_only' ? 'Participants' : resource.access_level === 'registered' ? 'Registered' : 'Public'}
+                  {resource.access_level === 'participants_only' ? 'Participants' : 
+                   resource.access_level === 'registered' ? 'Registered' : 'Public'}
                 </Badge>
               </div>
             </div>
@@ -526,20 +452,25 @@ export function EventResourcesSection({
                   Preview
                 </Button>
                 
-                {resource.is_downloadable && resource.file_url && <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} disabled={isDownloading}>
+                {resource.is_downloadable && resource.file_url && (
+                  <Button variant="outline" size="sm" onClick={() => handleDownload(resource)} disabled={isDownloading}>
                     {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                  </Button>}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   };
 
   if (resources.length === 0) {
-    return <div className="space-y-6">
+    return (
+      <div className="space-y-6">
         {/* Event Info Header */}
-        {eventInfo && <Card>
+        {eventInfo && (
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-lg bg-primary/10 text-primary">
@@ -550,23 +481,30 @@ export function EventResourcesSection({
                     {eventInfo.title}
                   </h2>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
-                    {eventInfo.start_time && <div className="flex items-center gap-1">
+                    {eventInfo.start_time && (
+                      <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         {format(new Date(eventInfo.start_time), 'PPP p')}
-                      </div>}
-                    {eventInfo.platform && <div className="flex items-center gap-1">
+                      </div>
+                    )}
+                    {eventInfo.platform && (
+                      <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
                         {eventInfo.platform}
-                      </div>}
-                    {eventInfo.organized_by && <div className="flex items-center gap-1">
+                      </div>
+                    )}
+                    {eventInfo.organized_by && (
+                      <div className="flex items-center gap-1">
                         <User className="h-4 w-4" />
                         {eventInfo.organized_by}
-                      </div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
 
         <Card>
           <CardContent className="py-12 text-center">
@@ -579,12 +517,15 @@ export function EventResourcesSection({
             </p>
           </CardContent>
         </Card>
-      </div>;
+      </div>
+    );
   }
 
-  return <div className="space-y-6">
-      {/* Event Info Header with Enhanced Resource Count */}
-      {eventInfo && <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
+  return (
+    <div className="space-y-6">
+      {/* Enhanced Event Info Header - Now visible to all users with prominent resource counts */}
+      {eventInfo && (
+        <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-lg bg-primary/10 text-primary">
@@ -609,109 +550,207 @@ export function EventResourcesSection({
                   </div>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
-                  {eventInfo.start_time && <div className="flex items-center gap-1">
+                  {eventInfo.start_time && (
+                    <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       {format(new Date(eventInfo.start_time), 'PPP p')}
-                    </div>}
-                  {eventInfo.platform && <div className="flex items-center gap-1">
+                    </div>
+                  )}
+                  {eventInfo.platform && (
+                    <div className="flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
                       {eventInfo.platform}
-                    </div>}
-                  {eventInfo.organized_by && <div className="flex items-center gap-1">
+                    </div>
+                  )}
+                  {eventInfo.organized_by && (
+                    <div className="flex items-center gap-1">
                       <User className="h-4 w-4" />
                       {eventInfo.organized_by}
-                    </div>}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </CardContent>
-        </Card>}
+        </Card>
+      )}
 
-      {/* Resource Statistics Cards */}
+      {/* Resource Statistics Cards - Now visible to all users */}
       <ResourceStatsCards resources={resources} filteredCount={filteredResources.length} />
 
-      {/* Header with Search and Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Event Resources
-              <div className="flex items-center gap-2 ml-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                  {filteredResources.length} of {resources.length}
-                </Badge>
-                {filteredResources.length !== resources.length && (
-                  <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
-                    Filtered
-                  </Badge>
-                )}
-              </div>
-            </CardTitle>
-            
-            <div className="flex items-center gap-2">
-              <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
-                <List className="h-4 w-4" />
-              </Button>
-              <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input placeholder="Search resources..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-          </div>
-          
-          {/* Type Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button variant={selectedType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType('all')}>
-              All Types
-              <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
-                {resources.length}
-              </Badge>
-            </Button>
-            {resourceTypes.map(type => {
-              const typeCount = resources.filter(r => r.resource_type === type).length;
-              return (
-                <Button key={type} variant={selectedType === type ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType(type)} className="capitalize">
-                  {getResourceIcon(type)}
-                  <span className="ml-2">{type}</span>
-                  <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700 text-xs">
-                    {typeCount}
-                  </Badge>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Resources Display */}
-      {filteredResources.length === 0 ? <Card>
+      {/* Show authentication required content if user is not logged in */}
+      {!session?.user ? (
+        <Card>
           <CardContent className="py-12 text-center">
-            <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Results Found
-            </h3>
-            <p className="text-gray-600">
-              Try adjusting your search or filter criteria.
-            </p>
-            <div className="mt-4">
-              <Badge variant="outline" className="text-gray-600">
-                {resources.length} total resources available
-              </Badge>
+            <div className="max-w-md mx-auto">
+              <div className="p-4 rounded-full bg-primary/10 text-primary inline-flex mb-6">
+                <Lock className="h-8 w-8" />
+              </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Sign In Required
+              </h3>
+              
+              <p className="text-gray-600 mb-4">
+                You need to sign in to your account or create a new account to access, preview, and download event resources.
+              </p>
+              
+              <div className="mb-6 space-y-3">
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Archive className="h-5 w-5 text-blue-600" />
+                    <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600 hover:bg-blue-700">
+                      {resources.length} Resource{resources.length !== 1 ? 's' : ''} Available
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    Access exclusive event materials, downloads, and presentations
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={handleSignIn} className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Button>
+                <Button variant="outline" onClick={handleSignUp} className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Create Account
+                </Button>
+              </div>
             </div>
           </CardContent>
-        </Card> : <div className={cn(viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3")}>
-          {filteredResources.map(resource => viewMode === 'grid' ? <ResourceCard key={resource.id} resource={resource} /> : <ResourceListItem key={resource.id} resource={resource} />)}
-        </div>}
+        </Card>
+      ) : (
+        <>
+          {/* Header with Search and Filters - Only for authenticated users */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Event Resources
+                  <div className="flex items-center gap-2 ml-2">
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+                      {filteredResources.length} of {resources.length}
+                    </Badge>
+                    {filteredResources.length !== resources.length && (
+                      <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
+                        Filtered
+                      </Badge>
+                    )}
+                  </div>
+                </CardTitle>
+                
+                <div className="flex items-center gap-2">
+                  <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input 
+                  placeholder="Search resources..." 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  className="pl-10" 
+                />
+              </div>
+              
+              {/* Type Filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button 
+                  variant={selectedType === 'all' ? 'default' : 'outline'} 
+                  size="sm" 
+                  onClick={() => setSelectedType('all')}
+                >
+                  All Types
+                  <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
+                    {resources.length}
+                  </Badge>
+                </Button>
+                {resourceTypes.map((type) => {
+                  const typeCount = resources.filter(r => r.resource_type === type).length;
+                  return (
+                    <Button 
+                      key={type} 
+                      variant={selectedType === type ? 'default' : 'outline'} 
+                      size="sm" 
+                      onClick={() => setSelectedType(type)} 
+                      className="capitalize"
+                    >
+                      {getResourceIcon(type)}
+                      <span className="ml-2">{type}</span>
+                      <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700 text-xs">
+                        {typeCount}
+                      </Badge>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resources Display - Only for authenticated users */}
+          {filteredResources.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No Results Found
+                </h3>
+                <p className="text-gray-600">
+                  Try adjusting your search or filter criteria.
+                </p>
+                <div className="mt-4">
+                  <Badge variant="outline" className="text-gray-600">
+                    {resources.length} total resources available
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className={cn(
+              viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+                : "space-y-3"
+            )}>
+              {filteredResources.map((resource) => 
+                viewMode === 'grid' ? (
+                  <ResourceCard key={resource.id} resource={resource} />
+                ) : (
+                  <ResourceListItem key={resource.id} resource={resource} />
+                )
+              )}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Preview Modal */}
-      <ResourcePreviewModal resource={previewResource} isOpen={!!previewResource} onClose={() => setPreviewResource(null)} />
-    </div>;
+      <ResourcePreviewModal 
+        resource={previewResource} 
+        isOpen={!!previewResource} 
+        onClose={() => setPreviewResource(null)} 
+      />
+
+      {/* Auth Prompt Dialog */}
+      <AuthPromptDialog 
+        isOpen={showAuthDialog} 
+        onClose={() => setShowAuthDialog(false)} 
+        title="Access Event Resources" 
+        description="Sign in or create an account to view and download event resources." 
+        redirectUrl="/event" 
+      />
+    </div>
+  );
 }
