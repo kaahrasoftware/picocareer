@@ -1,109 +1,101 @@
 
 import React from 'react';
-import { DataTable } from '@/components/ui/data-table';
-import { usePaginatedQuery } from '@/hooks/usePaginatedQuery';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ColumnDef } from '@tanstack/react-table';
-import { Eye } from 'lucide-react';
+import { Eye, Settings } from 'lucide-react';
 
 interface EventDataTableProps {
   onViewDetails: (event: any) => void;
+  onEventSelect?: (event: any) => void;
 }
 
-export function EventDataTable({ onViewDetails }: EventDataTableProps) {
-  const { 
-    data: events = [], 
-    isLoading, 
-    error
-  } = usePaginatedQuery<any>({
-    queryKey: ['admin-events'],
-    tableName: 'events',
-    paginationOptions: {
-      limit: 10,
-      orderBy: 'created_at',
-      orderDirection: 'desc'
+export function EventDataTable({ onViewDetails, onEventSelect }: EventDataTableProps) {
+  // Mock data for demonstration - replace with actual data fetching
+  const mockEvents = [
+    {
+      id: '1',
+      title: 'Career Fair 2024',
+      date: '2024-06-15',
+      location: 'Main Campus',
+      status: 'upcoming',
+      attendees: 150
+    },
+    {
+      id: '2', 
+      title: 'Tech Workshop',
+      date: '2024-06-20',
+      location: 'Virtual',
+      status: 'upcoming',
+      attendees: 75
+    },
+    {
+      id: '3',
+      title: 'Alumni Networking',
+      date: '2024-05-10',
+      location: 'Downtown Hall',
+      status: 'completed',
+      attendees: 200
     }
-  });
-
-  // Render loading state
-  if (isLoading) {
-    return <div className="flex justify-center py-8">
-      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-    </div>;
-  }
-
-  // Render error state
-  if (error) {
-    return <div className="py-8 text-center text-red-500">
-      Error loading events: {error.message || "Unknown error"}
-    </div>;
-  }
-
-  const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'title',
-      header: 'Title',
-      cell: ({ row }) => {
-        const event = row.original;
-        return <span className="font-medium">{event?.title || 'Untitled Event'}</span>;
-      },
-    },
-    {
-      accessorKey: 'event_type',
-      header: 'Type',
-      cell: ({ row }) => {
-        const type = row.original?.event_type || 'Unknown';
-        return <Badge variant="outline">{type}</Badge>;
-      },
-    },
-    {
-      accessorKey: 'start_time',
-      header: 'Date',
-      cell: ({ row }) => {
-        const startTime = row.original?.start_time;
-        if (!startTime) return <span className="text-muted-foreground">Date not set</span>;
-        
-        const date = new Date(startTime);
-        return date.toLocaleDateString();
-      },
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original?.status || 'Pending';
-        return <Badge>{status}</Badge>;
-      },
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => {
-        return (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onViewDetails(row.original)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        );
-      },
-    },
   ];
 
   return (
-    <div>
-      {events.length === 0 ? (
-        <div className="py-12 text-center border rounded-lg">
-          <p className="text-muted-foreground">No events found</p>
-        </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={events}
-        />
-      )}
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Events List</h3>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-gray-200">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-gray-200 px-4 py-2 text-left">Event Title</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Date</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Location</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Status</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Attendees</th>
+              <th className="border border-gray-200 px-4 py-2 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {mockEvents.map((event) => (
+              <tr key={event.id} className="hover:bg-gray-50">
+                <td className="border border-gray-200 px-4 py-2">{event.title}</td>
+                <td className="border border-gray-200 px-4 py-2">{event.date}</td>
+                <td className="border border-gray-200 px-4 py-2">{event.location}</td>
+                <td className="border border-gray-200 px-4 py-2">
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    event.status === 'upcoming' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-green-100 text-green-800'
+                  }`}>
+                    {event.status}
+                  </span>
+                </td>
+                <td className="border border-gray-200 px-4 py-2">{event.attendees}</td>
+                <td className="border border-gray-200 px-4 py-2">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails(event)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    {onEventSelect && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEventSelect(event)}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Manage Resources
+                      </Button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

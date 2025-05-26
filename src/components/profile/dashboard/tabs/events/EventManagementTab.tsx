@@ -16,6 +16,7 @@ export function EventManagementTab() {
   const navigate = useNavigate();
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("summary");
 
   const handleAddNewEvent = () => {
     navigate('/event/upload');
@@ -31,6 +32,12 @@ export function EventManagementTab() {
     setSelectedEvent(null);
   };
 
+  const handleEventSelect = (event: any) => {
+    setSelectedEvent(event);
+    // Switch to resources tab when an event is selected for resource management
+    setActiveTab("resources");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -40,7 +47,7 @@ export function EventManagementTab() {
         </Button>
       </div>
 
-      <Tabs defaultValue="summary" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
@@ -57,7 +64,10 @@ export function EventManagementTab() {
 
           <Card>
             <CardContent className="p-6">
-              <EventDataTable onViewDetails={handleViewDetails} />
+              <EventDataTable 
+                onViewDetails={handleViewDetails}
+                onEventSelect={handleEventSelect}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -67,27 +77,7 @@ export function EventManagementTab() {
         </TabsContent>
 
         <TabsContent value="resources">
-          {selectedEvent ? (
-            <EventResourcesManagementTab eventId={selectedEvent.id} />
-          ) : (
-            <Card className="w-full text-center py-8">
-              <CardContent>
-                <h3 className="text-lg font-semibold mb-2">No Event Selected</h3>
-                <p className="text-muted-foreground mb-4">
-                  Please select an event from the "Events" tab to manage its resources.
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    // Switch to events tab - this would need tab state management
-                    document.querySelector('[value="events"]')?.click();
-                  }}
-                >
-                  Go to Events Tab
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          <EventResourcesManagementTab eventId={selectedEvent?.id} />
         </TabsContent>
       </Tabs>
 
