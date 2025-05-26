@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventRegistrationsTab } from './EventRegistrationsTab';
 import { EventSummaryTab } from './events/EventSummaryTab';
+import { EventResourcesManagementTab } from './events';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -42,8 +43,9 @@ export function EventManagementTab() {
       <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="registrations">Registrations</TabsTrigger>
+ <TabsTrigger value="events">Events</TabsTrigger>
+ <TabsTrigger value="registrations">Registrations</TabsTrigger>
+ <TabsTrigger value="resources">Event Resources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -61,13 +63,17 @@ export function EventManagementTab() {
         </TabsContent>
 
         <TabsContent value="registrations">
-          <EventRegistrationsTab />
+ <EventRegistrationsTab />
+ </TabsContent>
+
+ <TabsContent value="resources">
+ <EventResourcesManagementTab eventId={selectedEvent?.id} />
         </TabsContent>
       </Tabs>
 
       {selectedEvent && (
-        <EventDetailsDialog 
-          event={selectedEvent} 
+        <EventDetailsDialog
+ event={selectedEvent}
           isOpen={isDetailsDialogOpen} 
           onClose={handleCloseDetailsDialog} 
         />
