@@ -66,11 +66,8 @@ export function FileUploadSection({
     url?: string;
   }>>([]);
 
-  const { uploading, uploadFile, getAcceptedTypes } = useEventResourceUpload({
-    onUploadSuccess: (url, metadata) => {
-      onFileUploaded(url, metadata);
-    }
-  });
+  // Remove the onUploadSuccess callback that was causing auto-submission
+  const { uploading, uploadFile, getAcceptedTypes } = useEventResourceUpload();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (disabled) return;
@@ -97,6 +94,14 @@ export function FileUploadSection({
               ? { ...f, status: 'completed' as const, url }
               : f
           ));
+
+          // Call the callback to update the form, but don't auto-submit
+          const metadata = {
+            fileName: file.name,
+            size: file.size,
+            type: file.type
+          };
+          onFileUploaded(url, metadata);
         } else {
           // Update file status to error
           setUploadedFiles(prev => prev.map(f => 
@@ -149,7 +154,7 @@ export function FileUploadSection({
               Supports videos, documents, audio, images (max 100MB each)
             </p>
           </div>
-          <Button variant="outline" size="sm" disabled={disabled || uploading}>
+          <Button variant="outline" size="sm" disabled={disabled || uploading} type="button">
             Choose Files
           </Button>
         </div>
@@ -195,6 +200,7 @@ export function FileUploadSection({
                 )}
 
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => removeFile(file.id)}

@@ -85,7 +85,10 @@ export function useEventResourceUpload({ onUploadSuccess }: UseEventResourceUplo
         type: file.type
       };
 
-      onUploadSuccess?.(publicUrl, metadata);
+      // Only call the success callback if provided
+      if (onUploadSuccess) {
+        onUploadSuccess(publicUrl, metadata);
+      }
 
       toast({
         title: "Upload successful",

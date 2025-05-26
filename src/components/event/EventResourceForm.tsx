@@ -12,7 +12,7 @@ import { useEventResources } from "@/hooks/useEventResources";
 import { EventResource, EventResourceFormData } from "@/types/event-resources";
 import { FileUploadSection } from "./FileUploadSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, FileText } from "lucide-react";
+import { CheckCircle, FileText, Info } from "lucide-react";
 
 interface EventResourceFormProps {
   eventId: string;
@@ -93,7 +93,7 @@ export function EventResourceForm({
     initialResource?.external_url ? 'external' : 'upload'
   );
   const [showCustomFormat, setShowCustomFormat] = useState(false);
-  const [fileUploaded, setFileUploaded] = useState(false);
+  const [fileUploaded, setFileUploaded] = useState(!!initialResource?.file_url);
 
   const form = useForm<EventResourceFormData>({
     defaultValues: {
@@ -118,7 +118,11 @@ export function EventResourceForm({
     return FILE_FORMATS[type as keyof typeof FILE_FORMATS] || FILE_FORMATS.other;
   };
 
+  // Handle file upload without auto-submitting
   const handleFileUploaded = (url: string, metadata: { fileName: string; size: number; type: string }) => {
+    console.log('File uploaded, updating form fields:', { url, metadata });
+    
+    // Update form field
     form.setValue('file_url', url);
     setFileUploaded(true);
     
@@ -128,18 +132,16 @@ export function EventResourceForm({
       form.setValue('file_format', fileExt);
     }
 
-    // Auto-detect resource type if not set
-    if (!form.getValues('resource_type') || form.getValues('resource_type') === 'document') {
-      const currentResourceType = form.getValues('resource_type');
-      if (metadata.type.startsWith('video/') && currentResourceType !== 'video') {
-        form.setValue('resource_type', 'video');
-      } else if (metadata.type.startsWith('audio/') && currentResourceType !== 'audio') {
-        form.setValue('resource_type', 'audio');
-      } else if (metadata.type.startsWith('image/') && currentResourceType !== 'image') {
-        form.setValue('resource_type', 'image');
-      } else if (metadata.type.includes('presentation') && currentResourceType !== 'presentation') {
-        form.setValue('resource_type', 'presentation');
-      }
+    // Auto-detect resource type if not set or still default
+    const currentResourceType = form.getValues('resource_type');
+    if (metadata.type.startsWith('video/') && currentResourceType !== 'video') {
+      form.setValue('resource_type', 'video');
+    } else if (metadata.type.startsWith('audio/') && currentResourceType !== 'audio') {
+      form.setValue('resource_type', 'audio');
+    } else if (metadata.type.startsWith('image/') && currentResourceType !== 'image') {
+      form.setValue('resource_type', 'image');
+    } else if (metadata.type.includes('presentation') && currentResourceType !== 'presentation') {
+      form.setValue('resource_type', 'presentation');
     }
 
     // Auto-fill title if empty
@@ -147,9 +149,13 @@ export function EventResourceForm({
       const fileName = metadata.fileName.replace(/\.[^/.]+$/, ""); // Remove extension
       form.setValue('title', fileName);
     }
+
+    console.log('Form fields updated, file upload complete');
   };
 
   const onSubmit = (data: EventResourceFormData) => {
+    console.log('Form submitted with data:', data);
+    
     const resourceData = {
       ...data,
       file_url: resourceSource === 'upload' ? data.file_url : undefined,
@@ -266,7 +272,16 @@ export function EventResourceForm({
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
-                      <strong>File uploaded successfully!</strong> Please complete the form below and click "Save Resource" to finish.
+                      <strong>File uploaded successfully!</strong> Please complete the remaining form fields and click "Save Resource" to finish.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {!fileUploaded && (
+                  <Alert className="border-blue-200 bg-blue-50">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <AlertDescription className="text-blue-800">
+                      Please upload a file first, then complete the form fields below.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -414,10 +429,12 @@ export function EventResourceForm({
             )}
           />
 
-          {!isFormValid() && (resourceSource === 'upload' ? currentFileUrl : currentExternalUrl) && !form.getValues('title') && (
+          {!isFormValid() && (
             <Alert className="border-amber-200 bg-amber-50">
               <AlertDescription className="text-amber-800">
-                Please enter a title for your resource.
+                {!form.getValues('title') && "Please enter a title for your resource."}
+                {form.getValues('title') && !(resourceSource === 'upload' ? currentFileUrl : currentExternalUrl) && 
+                  `Please ${resourceSource === 'upload' ? 'upload a file' : 'enter an external URL'}.`}
               </AlertDescription>
             </Alert>
           )}
