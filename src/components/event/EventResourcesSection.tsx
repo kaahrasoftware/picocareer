@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Download, Eye, FileText, Film, Image, Link, Music, Presentation, Filter, Grid3X3, List, Calendar, Clock, User, MapPin, Loader2, Lock, UserPlus, LogIn } from 'lucide-react';
+import { Search, Download, Eye, FileText, Film, Image, Link, Music, Presentation, Filter, Grid3X3, List, Calendar, Clock, User, MapPin, Loader2, Lock, UserPlus, LogIn, TrendingUp, Archive, Zap } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton';
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+
 interface EventResourcesSectionProps {
   resources: EventResource[];
   onPreview?: (resource: EventResource) => void;
@@ -27,6 +28,7 @@ interface EventResourcesSectionProps {
     organized_by?: string;
   };
 }
+
 const getResourceIcon = (type: EventResource['resource_type']) => {
   const iconClass = "h-5 w-5";
   switch (type) {
@@ -46,6 +48,7 @@ const getResourceIcon = (type: EventResource['resource_type']) => {
       return <FileText className={iconClass} />;
   }
 };
+
 const getResourceTypeColor = (type: EventResource['resource_type']) => {
   switch (type) {
     case 'video':
@@ -64,12 +67,122 @@ const getResourceTypeColor = (type: EventResource['resource_type']) => {
       return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
+
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return null;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
+
+// Resource Statistics Component
+const ResourceStatsCards = ({ resources, filteredCount }: { resources: EventResource[], filteredCount: number }) => {
+  const downloadableCount = resources.filter(r => r.is_downloadable).length;
+  const typeBreakdown = resources.reduce((acc, resource) => {
+    acc[resource.resource_type] = (acc[resource.resource_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalSize = resources.reduce((total, resource) => {
+    return total + (resource.file_size || 0);
+  }, 0);
+
+  const formatTotalSize = (bytes: number) => {
+    if (bytes === 0) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Total Resources */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+              <Archive className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Resources</p>
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold text-gray-900">{resources.length}</p>
+                {filteredCount !== resources.length && (
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredCount} shown
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Downloadable Resources */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-green-100 text-green-600">
+              <Download className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Downloadable</p>
+              <div className="flex items-center gap-2">
+                <p className="text-2xl font-bold text-gray-900">{downloadableCount}</p>
+                <Badge variant="success" className="text-xs">
+                  {Math.round((downloadableCount / resources.length) * 100)}%
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resource Types */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Resource Types</p>
+              <p className="text-2xl font-bold text-gray-900">{Object.keys(typeBreakdown).length}</p>
+              <div className="flex gap-1 mt-1">
+                {Object.entries(typeBreakdown).slice(0, 3).map(([type, count]) => (
+                  <Badge key={type} variant="outline" className="text-xs capitalize">
+                    {type}: {count}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Total Size */}
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Size</p>
+              <p className="text-2xl font-bold text-gray-900">{formatTotalSize(totalSize)}</p>
+              {resources.length > 0 && (
+                <p className="text-xs text-gray-500">
+                  Avg: {formatTotalSize(totalSize / resources.length)}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export function EventResourcesSection({
   resources,
   onPreview,
@@ -88,6 +201,7 @@ export function EventResourcesSection({
     session
   } = useAuth();
   const navigate = useNavigate();
+
   const handleSignIn = () => {
     setShowAuthDialog(false);
     navigate("/auth?tab=signin", {
@@ -96,6 +210,7 @@ export function EventResourcesSection({
       }
     });
   };
+
   const handleSignUp = () => {
     setShowAuthDialog(false);
     navigate("/auth?tab=signup", {
@@ -110,7 +225,32 @@ export function EventResourcesSection({
     return <div className="space-y-6">
         {/* Event Info Header */}
         {eventInfo && <Card>
-            
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                    {eventInfo.title}
+                  </h2>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    {eventInfo.start_time && <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {format(new Date(eventInfo.start_time), 'PPP p')}
+                      </div>}
+                    {eventInfo.platform && <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {eventInfo.platform}
+                      </div>}
+                    {eventInfo.organized_by && <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        {eventInfo.organized_by}
+                      </div>}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>}
 
         {/* Authentication Required Message */}
@@ -129,10 +269,18 @@ export function EventResourcesSection({
                 You need to sign in to your account or create a new account to view event resources.
               </p>
               
-              {resources.length > 0 && <div className="mb-6">
-                  <Badge variant="secondary" className="text-sm px-3 py-1">
-                    {resources.length} resource{resources.length !== 1 ? 's' : ''} available
-                  </Badge>
+              {resources.length > 0 && <div className="mb-6 space-y-3">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Archive className="h-5 w-5 text-blue-600" />
+                      <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600 hover:bg-blue-700">
+                        {resources.length} Resource{resources.length !== 1 ? 's' : ''} Available
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Access exclusive event materials, downloads, and presentations
+                    </p>
+                  </div>
                 </div>}
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -163,10 +311,14 @@ export function EventResourcesSection({
 
   // Get unique resource types for filtering
   const resourceTypes = Array.from(new Set(resources.map(r => r.resource_type)));
+
+  // Handle previewing a resource
   const handlePreview = (resource: EventResource) => {
     setPreviewResource(resource);
     onPreview?.(resource);
   };
+
+  // Handle downloading a resource
   const handleDownload = async (resource: EventResource) => {
     if (!resource.file_url || !resource.is_downloadable) {
       toast({
@@ -238,6 +390,8 @@ export function EventResourcesSection({
       });
     }
   };
+
+  // Resource card component
   const ResourceCard = ({
     resource
   }: {
@@ -309,6 +463,8 @@ export function EventResourcesSection({
         </CardContent>
       </Card>;
   };
+
+  // Resource list item component
   const ResourceListItem = ({
     resource
   }: {
@@ -379,6 +535,7 @@ export function EventResourcesSection({
         </div>
       </div>;
   };
+
   if (resources.length === 0) {
     return <div className="space-y-6">
         {/* Event Info Header */}
@@ -424,18 +581,33 @@ export function EventResourcesSection({
         </Card>
       </div>;
   }
+
   return <div className="space-y-6">
-      {/* Event Info Header */}
-      {eventInfo && <Card>
+      {/* Event Info Header with Enhanced Resource Count */}
+      {eventInfo && <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-lg bg-primary/10 text-primary">
                 <Calendar className="h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  {eventInfo.title}
-                </h2>
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {eventInfo.title}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 animate-pulse">
+                      <Archive className="h-4 w-4 mr-1" />
+                      {resources.length} Resources
+                    </Badge>
+                    {resources.filter(r => r.is_downloadable).length > 0 && (
+                      <Badge variant="success" className="px-3 py-1">
+                        <Download className="h-3 w-3 mr-1" />
+                        {resources.filter(r => r.is_downloadable).length} Downloadable
+                      </Badge>
+                    )}
+                  </div>
+                </div>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   {eventInfo.start_time && <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -455,6 +627,9 @@ export function EventResourcesSection({
           </CardContent>
         </Card>}
 
+      {/* Resource Statistics Cards */}
+      <ResourceStatsCards resources={resources} filteredCount={filteredResources.length} />
+
       {/* Header with Search and Filters */}
       <Card>
         <CardHeader>
@@ -462,9 +637,16 @@ export function EventResourcesSection({
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Event Resources
-              <Badge variant="secondary" className="ml-2">
-                {filteredResources.length} of {resources.length}
-              </Badge>
+              <div className="flex items-center gap-2 ml-2">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+                  {filteredResources.length} of {resources.length}
+                </Badge>
+                {filteredResources.length !== resources.length && (
+                  <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
+                    Filtered
+                  </Badge>
+                )}
+              </div>
             </CardTitle>
             
             <div className="flex items-center gap-2">
@@ -489,11 +671,22 @@ export function EventResourcesSection({
           <div className="flex items-center gap-2 flex-wrap">
             <Button variant={selectedType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType('all')}>
               All Types
+              <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
+                {resources.length}
+              </Badge>
             </Button>
-            {resourceTypes.map(type => <Button key={type} variant={selectedType === type ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType(type)} className="capitalize">
-                {getResourceIcon(type)}
-                <span className="ml-2">{type}</span>
-              </Button>)}
+            {resourceTypes.map(type => {
+              const typeCount = resources.filter(r => r.resource_type === type).length;
+              return (
+                <Button key={type} variant={selectedType === type ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType(type)} className="capitalize">
+                  {getResourceIcon(type)}
+                  <span className="ml-2">{type}</span>
+                  <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700 text-xs">
+                    {typeCount}
+                  </Badge>
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -508,6 +701,11 @@ export function EventResourcesSection({
             <p className="text-gray-600">
               Try adjusting your search or filter criteria.
             </p>
+            <div className="mt-4">
+              <Badge variant="outline" className="text-gray-600">
+                {resources.length} total resources available
+              </Badge>
+            </div>
           </CardContent>
         </Card> : <div className={cn(viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3")}>
           {filteredResources.map(resource => viewMode === 'grid' ? <ResourceCard key={resource.id} resource={resource} /> : <ResourceListItem key={resource.id} resource={resource} />)}
