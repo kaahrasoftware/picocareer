@@ -84,6 +84,9 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
 
   const handleDownload = () => {
     if (resource.file_url && resource.is_downloadable) {
+      // Track download event
+      console.log('Download tracked for resource:', resource.id);
+      
       const link = document.createElement('a');
       link.href = resource.file_url;
       link.download = resource.title;
@@ -96,6 +99,19 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
     if (url) {
       window.open(url, '_blank');
     }
+  };
+
+  // Helper function to create a restricted PDF viewer URL
+  const createRestrictedPdfUrl = (url: string) => {
+    // Add parameters to disable PDF viewer controls
+    const pdfUrl = new URL(url);
+    pdfUrl.hash = '#toolbar=0&navpanes=0&scrollbar=0&view=FitH';
+    return pdfUrl.toString();
+  };
+
+  // Helper function to check if URL is a PDF
+  const isPdfUrl = (url: string) => {
+    return url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('pdf');
   };
 
   const renderPreviewContent = () => {
@@ -201,6 +217,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                 src={embeddableUrl}
                 title={resource.title}
                 className="w-full h-full"
+                sandbox="allow-scripts allow-same-origin"
                 onLoad={() => {
                   console.log('Content iframe loaded successfully');
                   setIframeLoaded(true);
@@ -259,6 +276,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="absolute top-0 left-0 w-full h-full"
+              sandbox="allow-scripts allow-same-origin"
             />
           </div>
         );
@@ -275,6 +293,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               controls
               className="w-full"
               src={url}
+              controlsList="nodownload"
             >
               Your browser does not support the audio element.
             </audio>
@@ -302,12 +321,49 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
 
       case 'document':
       case 'presentation':
+        // Check if it's a PDF and apply restrictions
+        if (isPdfUrl(url)) {
+          const restrictedUrl = createRestrictedPdfUrl(url);
+          return (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+              <iframe
+                src={restrictedUrl}
+                title={resource.title}
+                className="w-full h-full"
+                sandbox="allow-scripts allow-same-origin"
+                onLoad={() => {
+                  // Hide PDF toolbar using postMessage if possible
+                  const iframe = document.querySelector('iframe[title="' + resource.title + '"]') as HTMLIFrameElement;
+                  if (iframe && iframe.contentWindow) {
+                    try {
+                      iframe.contentWindow.postMessage({type: 'hideToolbar'}, '*');
+                    } catch (e) {
+                      console.log('Could not hide PDF toolbar via postMessage');
+                    }
+                  }
+                }}
+                onError={() => {
+                  // Fallback for iframe loading issues
+                }}
+              />
+              {/* Overlay to prevent right-click and direct access */}
+              <div 
+                className="absolute inset-0 pointer-events-none" 
+                style={{ background: 'transparent' }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
+          );
+        }
+        
+        // For non-PDF documents
         return (
           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden" style={{ height: '500px' }}>
             <iframe
               src={url}
               title={resource.title}
               className="w-full h-full"
+              sandbox="allow-scripts allow-same-origin"
               onError={() => {
                 // Fallback for iframe loading issues
               }}
