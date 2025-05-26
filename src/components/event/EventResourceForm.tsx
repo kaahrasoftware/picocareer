@@ -17,6 +17,67 @@ interface EventResourceFormProps {
   onCancel?: () => void;
 }
 
+// File format options grouped by resource type
+const FILE_FORMATS = {
+  video: [
+    { value: 'MP4', label: 'MP4' },
+    { value: 'AVI', label: 'AVI' },
+    { value: 'MOV', label: 'MOV' },
+    { value: 'WMV', label: 'WMV' },
+    { value: 'MKV', label: 'MKV' },
+    { value: 'WEBM', label: 'WEBM' },
+    { value: 'FLV', label: 'FLV' },
+    { value: 'other', label: 'Other' }
+  ],
+  audio: [
+    { value: 'MP3', label: 'MP3' },
+    { value: 'WAV', label: 'WAV' },
+    { value: 'AAC', label: 'AAC' },
+    { value: 'FLAC', label: 'FLAC' },
+    { value: 'OGG', label: 'OGG' },
+    { value: 'M4A', label: 'M4A' },
+    { value: 'WMA', label: 'WMA' },
+    { value: 'other', label: 'Other' }
+  ],
+  document: [
+    { value: 'PDF', label: 'PDF' },
+    { value: 'DOCX', label: 'Word Document (DOCX)' },
+    { value: 'DOC', label: 'Word Document (DOC)' },
+    { value: 'TXT', label: 'Text File' },
+    { value: 'RTF', label: 'Rich Text Format' },
+    { value: 'ODT', label: 'OpenDocument Text' },
+    { value: 'other', label: 'Other' }
+  ],
+  presentation: [
+    { value: 'PPTX', label: 'PowerPoint (PPTX)' },
+    { value: 'PPT', label: 'PowerPoint (PPT)' },
+    { value: 'KEY', label: 'Keynote' },
+    { value: 'ODP', label: 'OpenDocument Presentation' },
+    { value: 'PREZI', label: 'Prezi' },
+    { value: 'other', label: 'Other' }
+  ],
+  image: [
+    { value: 'JPG', label: 'JPEG' },
+    { value: 'PNG', label: 'PNG' },
+    { value: 'GIF', label: 'GIF' },
+    { value: 'SVG', label: 'SVG' },
+    { value: 'BMP', label: 'BMP' },
+    { value: 'TIFF', label: 'TIFF' },
+    { value: 'WEBP', label: 'WebP' },
+    { value: 'other', label: 'Other' }
+  ],
+  link: [
+    { value: 'URL', label: 'Web Link' },
+    { value: 'other', label: 'Other' }
+  ],
+  other: [
+    { value: 'ZIP', label: 'ZIP Archive' },
+    { value: 'RAR', label: 'RAR Archive' },
+    { value: 'TAR', label: 'TAR Archive' },
+    { value: 'other', label: 'Other' }
+  ]
+};
+
 export function EventResourceForm({ 
   eventId, 
   initialResource, 
@@ -27,6 +88,7 @@ export function EventResourceForm({
   const [urlType, setUrlType] = useState<'file' | 'external'>(
     initialResource?.external_url ? 'external' : 'file'
   );
+  const [showCustomFormat, setShowCustomFormat] = useState(false);
 
   const form = useForm<EventResourceFormData>({
     defaultValues: {
@@ -41,6 +103,14 @@ export function EventResourceForm({
       sort_order: initialResource?.sort_order || 0,
     },
   });
+
+  const resourceType = form.watch('resource_type');
+  const fileFormat = form.watch('file_format');
+
+  // Get available file formats based on resource type
+  const getFileFormats = (type: string) => {
+    return FILE_FORMATS[type as keyof typeof FILE_FORMATS] || FILE_FORMATS.other;
+  };
 
   const onSubmit = (data: EventResourceFormData) => {
     const resourceData = {
@@ -74,7 +144,7 @@ export function EventResourceForm({
   ];
 
   return (
-      <div className="max-h-[600px] overflow-y-auto pr-4"> {/* Add max-h and overflow-y */}
+    <div className="max-h-[600px] overflow-y-auto pr-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
@@ -190,9 +260,42 @@ export function EventResourceForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>File Format</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., PDF, MP4, PPTX" {...field} />
-                </FormControl>
+                <div className="space-y-2">
+                  <Select 
+                    onValueChange={(value) => {
+                      if (value === 'other') {
+                        setShowCustomFormat(true);
+                        field.onChange('');
+                      } else {
+                        setShowCustomFormat(false);
+                        field.onChange(value);
+                      }
+                    }} 
+                    value={showCustomFormat ? 'other' : field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select file format" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {getFileFormats(resourceType).map((format) => (
+                        <SelectItem key={format.value} value={format.value}>
+                          {format.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {showCustomFormat && (
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter custom file format" 
+                        {...field}
+                      />
+                    </FormControl>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
