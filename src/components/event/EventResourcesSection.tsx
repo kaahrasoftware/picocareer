@@ -7,9 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Download, Eye, FileText, Film, Image, Link, Music, Presentation, Filter, Grid3X3, List, Calendar, Clock, User, MapPin, Loader2 } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
+import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton';
+import { useThemeReady } from './hooks/useThemeReady';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+
 interface EventResourcesSectionProps {
   resources: EventResource[];
   onPreview?: (resource: EventResource) => void;
@@ -22,6 +25,7 @@ interface EventResourcesSectionProps {
     organized_by?: string;
   };
 }
+
 const getResourceIcon = (type: EventResource['resource_type']) => {
   const iconClass = "h-5 w-5";
   switch (type) {
@@ -41,30 +45,34 @@ const getResourceIcon = (type: EventResource['resource_type']) => {
       return <FileText className={iconClass} />;
   }
 };
+
 const getResourceTypeColor = (type: EventResource['resource_type']) => {
+  // Use simpler, more reliable color classes that work better with theme loading
   switch (type) {
     case 'video':
-      return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
+      return 'bg-red-100 text-red-800 border-red-200';
     case 'audio':
-      return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800';
+      return 'bg-purple-100 text-purple-800 border-purple-200';
     case 'document':
-      return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
+      return 'bg-blue-100 text-blue-800 border-blue-200';
     case 'presentation':
-      return 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800';
+      return 'bg-orange-100 text-orange-800 border-orange-200';
     case 'image':
-      return 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800';
+      return 'bg-green-100 text-green-800 border-green-200';
     case 'link':
-      return 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/20 dark:text-cyan-300 dark:border-cyan-800';
+      return 'bg-cyan-100 text-cyan-800 border-cyan-200';
     default:
-      return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800';
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
+
 const formatFileSize = (bytes?: number) => {
   if (!bytes) return null;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
+
 export function EventResourcesSection({
   resources,
   onPreview,
@@ -75,9 +83,24 @@ export function EventResourcesSection({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [previewResource, setPreviewResource] = useState<EventResource | null>(null);
   const [downloadingResources, setDownloadingResources] = useState<Set<string>>(new Set());
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  const isThemeReady = useThemeReady();
+
+  // Show loading skeleton while theme is loading
+  if (!isThemeReady) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Event Resources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResourceLoadingSkeleton count={5} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Filter resources based on search and type
   const filteredResources = resources.filter(resource => {
@@ -258,7 +281,7 @@ export function EventResourcesSection({
 
                 {/* Event information for list view */}
                 {resource.events && <div className="flex items-center gap-2 mt-2">
-                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                    <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                       <Calendar className="h-3 w-3 mr-1" />
                       {resource.events.title}
                     </Badge>
