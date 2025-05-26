@@ -1,4 +1,3 @@
-
 import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,19 +41,19 @@ const getResourceIcon = (type: EventResource['resource_type']) => {
 const getResourceTypeColor = (type: EventResource['resource_type']) => {
   switch (type) {
     case 'video':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+      return 'bg-red-100 text-red-800';
     case 'audio':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
+      return 'bg-purple-100 text-purple-800';
     case 'document':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      return 'bg-blue-100 text-blue-800';
     case 'presentation':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
+      return 'bg-orange-100 text-orange-800';
     case 'image':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+      return 'bg-green-100 text-green-800';
     case 'link':
-      return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300';
+      return 'bg-cyan-100 text-cyan-800';
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+      return 'bg-gray-100 text-gray-800';
   }
 };
 

@@ -50,7 +50,6 @@ const getResourceIcon = (type: EventResource['resource_type']) => {
 };
 
 const getResourceTypeColor = (type: EventResource['resource_type']) => {
-  // Use simpler, more reliable color classes that work better with theme loading
   switch (type) {
     case 'video':
       return 'bg-red-100 text-red-800 border-red-200';
@@ -90,23 +89,6 @@ export function EventResourcesSection({
   const { toast } = useToast();
   const { session } = useAuth();
   const navigate = useNavigate();
-  const isThemeReady = useThemeReady();
-
-  // Show loading skeleton while theme is loading
-  if (!isThemeReady) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Event Resources</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResourceLoadingSkeleton count={5} />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const handleSignIn = () => {
     setShowAuthDialog(false);
@@ -131,10 +113,10 @@ export function EventResourcesSection({
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
                     {eventInfo.title}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
                     {eventInfo.start_time && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -168,11 +150,11 @@ export function EventResourcesSection({
                 <Lock className="h-8 w-8" />
               </div>
               
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 Sign In Required
               </h3>
               
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-gray-600 mb-4">
                 You need to sign in to your account or create a new account to view event resources.
               </p>
               
@@ -226,10 +208,12 @@ export function EventResourcesSection({
 
   // Get unique resource types for filtering
   const resourceTypes = Array.from(new Set(resources.map(r => r.resource_type)));
+  
   const handlePreview = (resource: EventResource) => {
     setPreviewResource(resource);
     onPreview?.(resource);
   };
+  
   const handleDownload = async (resource: EventResource) => {
     if (!resource.file_url || !resource.is_downloadable) {
       toast({
@@ -301,13 +285,14 @@ export function EventResourcesSection({
       });
     }
   };
+  
   const ResourceCard = ({
     resource
   }: {
     resource: EventResource;
   }) => {
     const isDownloading = downloadingResources.has(resource.id);
-    return <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700">
+    return <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
@@ -315,11 +300,11 @@ export function EventResourcesSection({
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1">
+              <h3 className="font-medium text-gray-900 line-clamp-1 mb-1">
                 {resource.title}
               </h3>
               
-              {resource.description && <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+              {resource.description && <p className="text-sm text-gray-600 line-clamp-2 mb-2">
                   {resource.description}
                 </p>}
               
@@ -341,7 +326,7 @@ export function EventResourcesSection({
                   </span>}
 
                 {/* Event information badge */}
-                {resource.events && <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                {resource.events && <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                     <Calendar className="h-3 w-3 mr-1" />
                     {resource.events.title}
                   </Badge>}
@@ -372,13 +357,14 @@ export function EventResourcesSection({
         </CardContent>
       </Card>;
   };
+  
   const ResourceListItem = ({
     resource
   }: {
     resource: EventResource;
   }) => {
     const isDownloading = downloadingResources.has(resource.id);
-    return <div className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
+    return <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">
         <div className="flex items-center gap-4">
           <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
             {getResourceIcon(resource.resource_type)}
@@ -387,10 +373,10 @@ export function EventResourcesSection({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">
+                <h3 className="font-medium text-gray-900 line-clamp-1">
                   {resource.title}
                 </h3>
-                {resource.description && <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">
+                {resource.description && <p className="text-sm text-gray-600 line-clamp-1 mt-1">
                     {resource.description}
                   </p>}
 
@@ -424,7 +410,7 @@ export function EventResourcesSection({
             <div className="flex items-center justify-between mt-3">
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 {resource.file_size && <span>{formatFileSize(resource.file_size)}</span>}
-                {resource.is_downloadable && <span className="text-green-600 dark:text-green-400">Downloadable</span>}
+                {resource.is_downloadable && <span className="text-green-600">Downloadable</span>}
               </div>
               
               <div className="flex items-center gap-2">
@@ -442,6 +428,7 @@ export function EventResourcesSection({
         </div>
       </div>;
   };
+  
   if (resources.length === 0) {
     return (
       <div className="space-y-6">
@@ -454,10 +441,10 @@ export function EventResourcesSection({
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
                     {eventInfo.title}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
                     {eventInfo.start_time && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
@@ -486,10 +473,10 @@ export function EventResourcesSection({
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
               No Resources Available
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600">
               There are no resources available for this event yet.
             </p>
           </CardContent>
@@ -509,10 +496,10 @@ export function EventResourcesSection({
                 <Calendar className="h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
                   {eventInfo.title}
                 </h2>
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-4 text-sm text-gray-600">
                   {eventInfo.start_time && (
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -588,10 +575,10 @@ export function EventResourcesSection({
         <Card>
           <CardContent className="py-12 text-center">
             <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
               No Results Found
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600">
               Try adjusting your search or filter criteria.
             </p>
           </CardContent>

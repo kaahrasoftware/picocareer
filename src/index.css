@@ -45,7 +45,7 @@
   }
 }
 
-/* High contrast mode */
+/* High contrast mode for accessibility */
 body.high-contrast {
   --background: 0 0% 0%;
   --foreground: 0 0% 100%;
@@ -59,14 +59,14 @@ body.high-contrast {
   filter: contrast(1.4);
 }
 
-/* Reduced motion */
+/* Reduced motion for accessibility */
 body.reduced-motion * {
   transition: none !important;
   animation-duration: 0.0001s !important;
   animation-iteration-count: 1 !important;
 }
 
-/* OpenDyslexic font */
+/* OpenDyslexic font for accessibility */
 @font-face {
   font-family: 'OpenDyslexic';
   src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.woff') format('woff');

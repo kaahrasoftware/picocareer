@@ -2,14 +2,12 @@
 "use client";
 
 import * as React from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { type ThemeProviderProps } from "next-themes/dist/types";
 import { useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
   const { data: profile } = useUserProfile(session);
   const [accessibilitySettings, setAccessibilitySettings] = React.useState<any>(null);
@@ -125,5 +123,5 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     }
   }, [accessibilitySettings]);
   
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return <>{children}</>;
 }
