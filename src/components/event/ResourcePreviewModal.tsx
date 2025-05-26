@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,10 +16,13 @@ import {
   Calendar,
   User,
   Shield,
-  HardDrive
+  HardDrive,
+  Play,
+  AlertCircle
 } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { cn } from '@/lib/utils';
+import { detectUrlType, getEmbeddableUrl, isEmbeddable, getYouTubeThumbnail } from './utils/urlUtils';
 
 interface ResourcePreviewModalProps {
   resource: EventResource | null;
@@ -74,6 +77,9 @@ const formatFileSize = (bytes?: number) => {
 };
 
 export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePreviewModalProps) {
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  
   if (!resource) return null;
 
   const handleDownload = () => {
@@ -106,6 +112,95 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
       );
     }
 
+    // Handle external links with smart embedding
+    if (resource.resource_type === 'link' || resource.external_url) {
+      const urlType = detectUrlType(url);
+      const embeddableUrl = isEmbeddable(urlType) ? getEmbeddableUrl(url, urlType) : null;
+
+      if (embeddableUrl && urlType === 'youtube') {
+        return (
+          <div className="space-y-4">
+            <div className="relative bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%', height: 0 }}>
+              {!iframeLoaded && !iframeError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                  <div className="text-center text-white">
+                    <Play className="h-12 w-12 mx-auto mb-2" />
+                    <p>Loading video...</p>
+                  </div>
+                </div>
+              )}
+              <iframe
+                src={embeddableUrl}
+                title={resource.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full"
+                onLoad={() => setIframeLoaded(true)}
+                onError={() => setIframeError(true)}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      if (embeddableUrl && (urlType === 'vimeo' || urlType.startsWith('google-'))) {
+        return (
+          <div className="space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+              {!iframeLoaded && !iframeError && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                  </div>
+                </div>
+              )}
+              <iframe
+                src={embeddableUrl}
+                title={resource.title}
+                className="w-full h-full"
+                onLoad={() => setIframeLoaded(true)}
+                onError={() => setIframeError(true)}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      // Fallback for non-embeddable links
+      return (
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8">
+          <div className="text-center">
+            <div className={cn("inline-flex p-4 rounded-full mb-4", getResourceTypeColor('link'))}>
+              <Link className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">External Link</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {urlType === 'youtube' ? 'YouTube Video' : 
+               urlType === 'vimeo' ? 'Vimeo Video' :
+               urlType.startsWith('google-') ? 'Google Document' :
+               'External Resource'}
+            </p>
+            {urlType === 'youtube' && (
+              <div className="mb-4">
+                <img 
+                  src={getYouTubeThumbnail(url) || ''}
+                  alt="Video thumbnail"
+                  className="mx-auto rounded-lg max-w-xs"
+                  onError={(e) => e.currentTarget.style.display = 'none'}
+                />
+              </div>
+            )}
+            <Button onClick={handleOpenExternal} className="inline-flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Open Link
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Handle other resource types
     switch (resource.resource_type) {
       case 'video':
         return (
@@ -169,23 +264,6 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                 // Fallback for iframe loading issues
               }}
             />
-          </div>
-        );
-
-      case 'link':
-        return (
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-            <div className={cn("inline-flex p-4 rounded-full mb-4", getResourceTypeColor(resource.resource_type))}>
-              <Link className="h-8 w-8" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">External Link</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              This resource links to an external website.
-            </p>
-            <Button onClick={handleOpenExternal} className="inline-flex items-center gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Open Link
-            </Button>
           </div>
         );
 
