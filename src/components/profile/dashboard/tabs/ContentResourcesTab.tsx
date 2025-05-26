@@ -26,10 +26,6 @@ export function ContentResourcesTab() {
             <Award className="h-4 w-4" />
             Scholarships
           </TabsTrigger>
-          <TabsTrigger value="events" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Events
-          </TabsTrigger>
           <TabsTrigger value="opportunities" className="flex items-center gap-2">
             <Bookmark className="h-4 w-4" />
             Opportunities
@@ -54,10 +50,6 @@ export function ContentResourcesTab() {
         
         <TabsContent value="scholarships">
           <ScholarshipManagementTab />
-        </TabsContent>
-        
-        <TabsContent value="events">
-          <EventManagementTab />
         </TabsContent>
         
         <TabsContent value="opportunities">

@@ -20,7 +20,7 @@ import { SessionManagementTab } from "./sessions/SessionManagementTab";
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue="events" className="space-y-4">
         <TabsList className="grid grid-cols-7 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
