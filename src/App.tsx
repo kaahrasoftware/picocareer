@@ -10,7 +10,7 @@ import { GuideProvider } from '@/context/GuideContext';
 import { MobileMenuProvider } from '@/context/MobileMenuContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AppRoutes } from '@/router/AppRoutes';
-import ScrollToTop from '@/components/ScrollToTop';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import './App.css';
 
 const queryClient = new QueryClient({
