@@ -239,7 +239,14 @@ export default function Event() {
               <span className="ml-3">Loading resources...</span>
             </div>
           ) : (
-            <EventResourcesSection resources={allResources || []} />
+            <EventResourcesSection 
+              resources={allResources || []} 
+              eventInfo={{
+                id: 'all-events',
+                title: 'All Event Resources',
+                organized_by: 'Platform Events'
+              }}
+            />
           )}
         </TabsContent>
       </Tabs>

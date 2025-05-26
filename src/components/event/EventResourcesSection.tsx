@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,15 +19,25 @@ import {
   List,
   Calendar,
   Clock,
-  User
+  User,
+  MapPin
 } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface EventResourcesSectionProps {
   resources: EventResource[];
   onPreview?: (resource: EventResource) => void;
+  eventInfo?: {
+    id: string;
+    title: string;
+    start_time?: string;
+    end_time?: string;
+    platform?: string;
+    organized_by?: string;
+  };
 }
 
 const getResourceIcon = (type: EventResource['resource_type']) => {
@@ -77,7 +86,7 @@ const formatFileSize = (bytes?: number) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-export function EventResourcesSection({ resources, onPreview }: EventResourcesSectionProps) {
+export function EventResourcesSection({ resources, onPreview, eventInfo }: EventResourcesSectionProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
@@ -271,22 +280,100 @@ export function EventResourcesSection({ resources, onPreview }: EventResourcesSe
 
   if (resources.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-            No Resources Available
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            There are no resources available for this event yet.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Event Info Header */}
+        {eventInfo && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    {eventInfo.title}
+                  </h2>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    {eventInfo.start_time && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {format(new Date(eventInfo.start_time), 'PPP p')}
+                      </div>
+                    )}
+                    {eventInfo.platform && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {eventInfo.platform}
+                      </div>
+                    )}
+                    {eventInfo.organized_by && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        {eventInfo.organized_by}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              No Resources Available
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              There are no resources available for this event yet.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Event Info Header */}
+      {eventInfo && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                <Calendar className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {eventInfo.title}
+                </h2>
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  {eventInfo.start_time && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {format(new Date(eventInfo.start_time), 'PPP p')}
+                    </div>
+                  )}
+                  {eventInfo.platform && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {eventInfo.platform}
+                    </div>
+                  )}
+                  {eventInfo.organized_by && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      {eventInfo.organized_by}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header with Search and Filters */}
       <Card>
         <CardHeader>
