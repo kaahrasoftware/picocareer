@@ -1,12 +1,17 @@
 
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Index from '@/pages/Index';
+import { useRoutes } from "react-router-dom";
+import { router } from "./routes";
 
-export const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-    </Routes>
-  );
-};
+/**
+ * AppRoutes component that renders the application routes
+ * Uses the routes defined in the routes.tsx file
+ */
+export function AppRoutes() {
+  // Use the routes configuration from the router object
+  const routes = router.routes;
+  
+  // Render the routes using useRoutes hook
+  const element = useRoutes(routes);
+  
+  return element;
+}

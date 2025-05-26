@@ -1,40 +1,82 @@
 
 import React from 'react';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  label?: string;
-  required?: boolean;
-  rows?: number;
+  uploadConfig?: {
+    bucket: string;
+    folderPath: string;
+  };
 }
 
-export function RichTextEditor({
-  value,
-  onChange,
-  placeholder = "Enter your content...",
-  label,
-  required = false,
-  rows = 6
-}: RichTextEditorProps) {
+const modules = {
+  toolbar: {
+    container: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['blockquote', 'code-block'],
+      ['link'],
+      ['clean']
+    ]
+  }
+};
+
+const formats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'color', 'background',
+  'align',
+  'list', 'bullet',
+  'blockquote', 'code-block',
+  'link'
+];
+
+export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
-    <div className="space-y-2">
-      {label && (
-        <Label htmlFor="rich-text-editor">
-          {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </Label>
-      )}
-      <Textarea
-        id="rich-text-editor"
+    <div className="rich-text-editor">
+      <style jsx global>{`
+        .rich-text-editor .ql-editor {
+          min-height: 200px;
+          background-color: white;
+          border-radius: 0.375rem;
+        }
+        
+        .rich-text-editor .ql-container {
+          border-bottom-left-radius: 0.375rem;
+          border-bottom-right-radius: 0.375rem;
+          background-color: white;
+        }
+        
+        .rich-text-editor .ql-toolbar {
+          border-top-left-radius: 0.375rem;
+          border-top-right-radius: 0.375rem;
+          background-color: #f9fafb;
+          border-color: hsl(var(--input));
+        }
+        
+        .rich-text-editor .ql-container {
+          border-color: hsl(var(--input));
+        }
+        
+        .rich-text-editor .ql-editor.ql-blank::before {
+          color: #9ca3af;
+          font-style: italic;
+        }
+      `}</style>
+      <ReactQuill
+        theme="snow"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
         placeholder={placeholder}
-        rows={rows}
-        className="min-h-[150px] resize-vertical"
       />
     </div>
   );

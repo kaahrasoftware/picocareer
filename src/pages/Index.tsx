@@ -1,23 +1,60 @@
 
-import React from 'react';
-import { HeroSection } from '@/components/sections/HeroSection';
-import { ResourcesHighlightSection } from '@/components/sections/ResourcesHighlightSection';
-import { FeaturedCareersSection } from '@/components/sections/FeaturedCareersSection';
-import { FeaturedMajorsSection } from '@/components/sections/FeaturedMajorsSection';
-import { StatisticsSection } from '@/components/sections/StatisticsSection';
-import { TopRatedMentorsSection } from '@/components/sections/TopRatedMentorsSection';
-import { CallToActionSection } from '@/components/sections/CallToActionSection';
+import { HeroSection } from "@/components/sections/HeroSection";
+import { StatisticsSection } from "@/components/sections/StatisticsSection";
+import { CallToActionSection } from "@/components/sections/CallToActionSection";
+import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
+import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
+import { FeaturedSchoolsSection } from "@/components/sections/FeaturedSchoolsSection";
+import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
+import { ResourcesHighlightSection } from "@/components/sections/ResourcesHighlightSection";
+import { useEffect, useState } from "react";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
+import { Slides } from "@/components/Slides";
 
 const Index = () => {
+  const { session } = useAuthSession();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      document.documentElement.classList.add("dark");
+    } catch (error) {
+      console.error("Error setting dark theme:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="min-h-screen">
-      <HeroSection />
-      <ResourcesHighlightSection />
-      <FeaturedCareersSection />
-      <FeaturedMajorsSection />
-      <StatisticsSection />
-      <TopRatedMentorsSection />
-      <CallToActionSection />
+    <div className="app-layout">
+      <div className="main-content">
+        <div className="w-full px-8 sm:px-12 lg:px-16 py-8">
+          <div className="w-full max-w-7xl mx-auto space-y-16">
+            <HeroSection />
+            <StatisticsSection />
+            <section className="mb-24">
+              <Slides />
+            </section>
+            <ResourcesHighlightSection />
+            <CallToActionSection />
+            <div className="TopRatedMentorsSection">
+              <TopRatedMentorsSection />
+            </div>
+            <div className="FeaturedCareersSection">
+              <FeaturedCareersSection />
+            </div>
+            <FeaturedMajorsSection />
+            <FeaturedSchoolsSection />
+          </div>
+        </div>
+      </div>
+      
+      <WelcomeDialog />
     </div>
   );
 };

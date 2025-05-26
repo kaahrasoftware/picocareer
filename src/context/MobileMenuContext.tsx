@@ -1,43 +1,34 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext } from "react";
 
-interface MobileMenuContextType {
-  isOpen: boolean;
+type MobileMenuContextType = {
   closeMobileMenu: () => void;
-  openMobileMenu: () => void;
-  toggleMobileMenu: () => void;
-}
+  isOpen: boolean;
+};
 
 const MobileMenuContext = createContext<MobileMenuContextType | undefined>(undefined);
 
-export const useMobileMenu = () => {
+export function useMobileMenu() {
   const context = useContext(MobileMenuContext);
-  if (context === undefined) {
-    throw new Error('useMobileMenu must be used within a MobileMenuProvider');
+  
+  // Return a no-op function if used outside of context to prevent errors
+  if (!context) {
+    return { 
+      closeMobileMenu: () => {}, 
+      isOpen: false 
+    };
   }
+  
   return context;
-};
-
-interface MobileMenuProviderProps {
-  children: ReactNode;
 }
 
-export const MobileMenuProvider: React.FC<MobileMenuProviderProps> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const closeMobileMenu = () => setIsOpen(false);
-  const openMobileMenu = () => setIsOpen(true);
-  const toggleMobileMenu = () => setIsOpen(prev => !prev);
-
-  const value = {
-    isOpen,
-    closeMobileMenu,
-    openMobileMenu,
-    toggleMobileMenu,
-  };
-
+export const MobileMenuProvider: React.FC<{
+  children: React.ReactNode;
+  closeMobileMenu: () => void;
+  isOpen: boolean;
+}> = ({ children, closeMobileMenu, isOpen }) => {
   return (
-    <MobileMenuContext.Provider value={value}>
+    <MobileMenuContext.Provider value={{ closeMobileMenu, isOpen }}>
       {children}
     </MobileMenuContext.Provider>
   );
