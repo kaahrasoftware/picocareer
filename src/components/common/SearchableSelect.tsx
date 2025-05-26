@@ -1,98 +1,89 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface Option {
+  id: string;
+  [key: string]: any;
+}
 
 interface SearchableSelectProps {
-  table: string;
-  valueField?: string;
-  labelField?: string;
-  placeholder?: string;
+  options: Option[];
   value?: string;
   onChange: (value: string) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  displayField?: string;
+  valueField?: string;
+  className?: string;
 }
 
 export function SearchableSelect({
-  table,
-  valueField = 'id',
-  labelField = 'name',
-  placeholder = 'Search...',
+  options = [],
   value,
-  onChange
+  onChange,
+  placeholder = "Select option...",
+  searchPlaceholder = "Search...",
+  displayField = "name",
+  valueField = "id",
+  className
 }: SearchableSelectProps) {
-  const [options, setOptions] = useState<{ id: string; [key: string]: any }[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
+  const [open, setOpen] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState<Option[]>([]);
+
   useEffect(() => {
-    const fetchOptions = async () => {
-      setIsLoading(true);
-      try {
-        // Convert string table name to a type-safe approach
-        const tableNames = ['profiles', 'companies', 'schools', 'majors'] as const;
-        type TableName = typeof tableNames[number];
-        
-        // Check if the provided table name is valid
-        const isValidTable = tableNames.includes(table as TableName);
-        
-        if (!isValidTable) {
-          console.error(`Invalid table name: ${table}`);
-          setOptions([]);
-          return;
-        }
-        
-        // Type-safe query
-        const { data, error } = await supabase
-          .from(table as TableName)
-          .select(`id, ${valueField}, ${labelField}`)
-          .limit(50);
-          
-        if (error) throw error;
-        
-        // Ensure all items have an id property and are the correct type
-        const validData = (data || []).filter(item => typeof item?.id === 'string') as { id: string; [key: string]: any }[];
-        setOptions(validData);
-      } catch (error) {
-        console.error('Error fetching options:', error);
-        setOptions([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchOptions();
-  }, [table, valueField, labelField]);
-  
-  // Filter options based on search query
-  const filteredOptions = searchQuery 
-    ? options.filter(option => 
-        String(option[labelField] || '').toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : options;
-  
+    // Ensure options is an array and filter out any invalid entries
+    const validOptions = Array.isArray(options) ? options.filter(option => 
+      option && typeof option === 'object' && option.id
+    ) : [];
+    setFilteredOptions(validOptions);
+  }, [options]);
+
+  const selectedOption = filteredOptions.find(option => option[valueField] === value);
+
   return (
-    <div className="relative">
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full rounded-md border border-input bg-background px-3 py-2 mb-2"
-        disabled={isLoading}
-      />
-      
-      <select 
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-input bg-background px-3 py-2"
-        disabled={isLoading}
-      >
-        <option value="">{isLoading ? 'Loading...' : 'Select an option'}</option>
-        {filteredOptions.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option[labelField] || 'Unnamed'}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
+        >
+          {selectedOption ? selectedOption[displayField] : placeholder}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full p-0">
+        <Command>
+          <CommandInput placeholder={searchPlaceholder} />
+          <CommandEmpty>No option found.</CommandEmpty>
+          <CommandGroup>
+            {filteredOptions.map((option) => (
+              <CommandItem
+                key={option[valueField]}
+                value={option[displayField]}
+                onSelect={() => {
+                  onChange(option[valueField]);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === option[valueField] ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {option[displayField]}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
