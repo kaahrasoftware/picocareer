@@ -6,41 +6,63 @@ export const detectUrlType = (url: string) => {
   
   const urlLower = url.toLowerCase();
   
+  console.log('Detecting URL type for:', url);
+  
   if (urlLower.includes('youtube.com/watch') || urlLower.includes('youtu.be/')) {
+    console.log('Detected YouTube URL');
     return 'youtube';
   }
   if (urlLower.includes('vimeo.com/')) {
+    console.log('Detected Vimeo URL');
     return 'vimeo';
   }
   if (urlLower.includes('docs.google.com/document')) {
+    console.log('Detected Google Docs URL');
     return 'google-docs';
   }
   if (urlLower.includes('docs.google.com/presentation')) {
+    console.log('Detected Google Slides URL');
     return 'google-slides';
   }
   if (urlLower.includes('docs.google.com/spreadsheets')) {
+    console.log('Detected Google Sheets URL');
     return 'google-sheets';
   }
   if (urlLower.includes('drive.google.com')) {
+    console.log('Detected Google Drive URL');
     return 'google-drive';
   }
   
+  console.log('URL type detected as generic');
   return 'generic';
 };
 
 export const getEmbeddableUrl = (url: string, type: string) => {
+  console.log('Getting embeddable URL for type:', type, 'URL:', url);
+  
   switch (type) {
     case 'youtube':
-      return transformYouTubeUrl(url);
+      const youtubeUrl = transformYouTubeUrl(url);
+      console.log('Transformed YouTube URL:', youtubeUrl);
+      return youtubeUrl;
     case 'vimeo':
-      return transformVimeoUrl(url);
+      const vimeoUrl = transformVimeoUrl(url);
+      console.log('Transformed Vimeo URL:', vimeoUrl);
+      return vimeoUrl;
     case 'google-docs':
-      return transformGoogleDocsUrl(url);
+      const docsUrl = transformGoogleDocsUrl(url);
+      console.log('Transformed Google Docs URL:', docsUrl);
+      return docsUrl;
     case 'google-slides':
-      return transformGoogleSlidesUrl(url);
+      const slidesUrl = transformGoogleSlidesUrl(url);
+      console.log('Transformed Google Slides URL:', slidesUrl);
+      return slidesUrl;
     case 'google-sheets':
-      return transformGoogleSheetsUrl(url);
+      const sheetsUrl = transformGoogleSheetsUrl(url);
+      console.log('Transformed Google Sheets URL:', sheetsUrl);
+      return sheetsUrl;
     default:
+      console.log('No transformation available for type:', type);
       return url;
   }
 };
@@ -57,7 +79,9 @@ const transformYouTubeUrl = (url: string) => {
     }
     
     if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}`;
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      console.log('YouTube video ID extracted:', videoId, 'Embed URL:', embedUrl);
+      return embedUrl;
     }
   } catch (error) {
     console.error('Error transforming YouTube URL:', error);
@@ -69,7 +93,9 @@ const transformVimeoUrl = (url: string) => {
   try {
     const match = url.match(/vimeo\.com\/(\d+)/);
     if (match && match[1]) {
-      return `https://player.vimeo.com/video/${match[1]}`;
+      const embedUrl = `https://player.vimeo.com/video/${match[1]}`;
+      console.log('Vimeo video ID extracted:', match[1], 'Embed URL:', embedUrl);
+      return embedUrl;
     }
   } catch (error) {
     console.error('Error transforming Vimeo URL:', error);
@@ -79,27 +105,36 @@ const transformVimeoUrl = (url: string) => {
 
 const transformGoogleDocsUrl = (url: string) => {
   if (url.includes('/edit')) {
-    return url.replace('/edit', '/preview');
+    const embedUrl = url.replace('/edit', '/preview');
+    console.log('Google Docs URL transformed:', embedUrl);
+    return embedUrl;
   }
   return url;
 };
 
 const transformGoogleSlidesUrl = (url: string) => {
   if (url.includes('/edit')) {
-    return url.replace('/edit', '/embed');
+    const embedUrl = url.replace('/edit', '/embed');
+    console.log('Google Slides URL transformed:', embedUrl);
+    return embedUrl;
   }
   return url;
 };
 
 const transformGoogleSheetsUrl = (url: string) => {
   if (url.includes('/edit')) {
-    return url.replace('/edit', '/preview');
+    const embedUrl = url.replace('/edit', '/preview');
+    console.log('Google Sheets URL transformed:', embedUrl);
+    return embedUrl;
   }
   return url;
 };
 
 export const isEmbeddable = (type: string) => {
-  return ['youtube', 'vimeo', 'google-docs', 'google-slides', 'google-sheets'].includes(type);
+  const embeddableTypes = ['youtube', 'vimeo', 'google-docs', 'google-slides', 'google-sheets'];
+  const result = embeddableTypes.includes(type);
+  console.log('Is embeddable check for type:', type, 'Result:', result);
+  return result;
 };
 
 export const getYouTubeThumbnail = (url: string) => {
@@ -114,7 +149,9 @@ export const getYouTubeThumbnail = (url: string) => {
     }
     
     if (videoId) {
-      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      console.log('YouTube thumbnail URL generated:', thumbnailUrl);
+      return thumbnailUrl;
     }
   } catch (error) {
     console.error('Error getting YouTube thumbnail:', error);

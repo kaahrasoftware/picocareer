@@ -101,6 +101,13 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
   const renderPreviewContent = () => {
     const url = resource.external_url || resource.file_url;
     
+    console.log('ResourcePreviewModal - Rendering preview for:', {
+      url,
+      resourceType: resource.resource_type,
+      hasExternalUrl: !!resource.external_url,
+      hasFileUrl: !!resource.file_url
+    });
+    
     if (!url) {
       return (
         <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -115,7 +122,10 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
     // Handle external links with smart embedding
     if (resource.resource_type === 'link' || resource.external_url) {
       const urlType = detectUrlType(url);
+      console.log('Detected URL type:', urlType, 'for URL:', url);
+      
       const embeddableUrl = isEmbeddable(urlType) ? getEmbeddableUrl(url, urlType) : null;
+      console.log('Embeddable URL:', embeddableUrl);
 
       if (embeddableUrl && urlType === 'youtube') {
         return (
@@ -129,14 +139,35 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                   </div>
                 </div>
               )}
+              {iframeError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+                  <div className="text-center text-white">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-2" />
+                    <p>Unable to load video</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={handleOpenExternal}
+                    >
+                      Open in YouTube
+                    </Button>
+                  </div>
+                </div>
+              )}
               <iframe
                 src={embeddableUrl}
                 title={resource.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 className="absolute top-0 left-0 w-full h-full"
-                onLoad={() => setIframeLoaded(true)}
-                onError={() => setIframeError(true)}
+                onLoad={() => {
+                  console.log('YouTube iframe loaded successfully');
+                  setIframeLoaded(true);
+                }}
+                onError={() => {
+                  console.log('YouTube iframe failed to load');
+                  setIframeError(true);
+                }}
               />
             </div>
           </div>
@@ -155,12 +186,29 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                   </div>
                 </div>
               )}
+              {iframeError && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">Unable to load content</p>
+                    <Button onClick={handleOpenExternal}>
+                      Open External
+                    </Button>
+                  </div>
+                </div>
+              )}
               <iframe
                 src={embeddableUrl}
                 title={resource.title}
                 className="w-full h-full"
-                onLoad={() => setIframeLoaded(true)}
-                onError={() => setIframeError(true)}
+                onLoad={() => {
+                  console.log('Content iframe loaded successfully');
+                  setIframeLoaded(true);
+                }}
+                onError={() => {
+                  console.log('Content iframe failed to load');
+                  setIframeError(true);
+                }}
               />
             </div>
           </div>
