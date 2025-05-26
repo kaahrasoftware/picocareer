@@ -1,78 +1,127 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Calendar } from 'lucide-react';
 import { EventResourceCard } from '@/components/event/EventResourceCard';
 import { EventResourceForm } from '@/components/event/EventResourceForm';
+import { EventSelector } from './EventSelector';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useEventResources } from '@/hooks/useEventResources';
+import { useEventRegistrations } from './useEventRegistrations';
 
 interface EventResourcesManagementTabProps {
   eventId?: string;
 }
 
-export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabProps> = ({ eventId }) => { 
+export const EventResourcesManagementTab: React.FC<EventResourcesManagementTabProps> = ({ eventId: initialEventId }) => { 
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [selectedEventId, setSelectedEventId] = useState(initialEventId || '');
 
-  // Only fetch resources if eventId is provided
-  const { resources, isLoading } = useEventResources(eventId || '');
+  // Fetch events for the selector
+  const { events, registrationCounts, isLoading: eventsLoading } = useEventRegistrations();
 
-  // If no event is selected, show message to select an event
-  if (!eventId) {
-    return (
-      <Card className="w-full text-center py-8">
-        <CardHeader>
-          <CardTitle>No Event Selected</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CardDescription>
-            Please select an event from the "Events" tab to manage its resources.
-          </CardDescription>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Fetch resources for the selected event
+  const { resources, isLoading: resourcesLoading } = useEventResources(selectedEventId);
 
-  if (isLoading) {
-    return <div>Loading resources...</div>;
-  }
+  const handleEventChange = (eventId: string) => {
+    setSelectedEventId(eventId);
+  };
+
+  const selectedEvent = events?.find(event => event.id === selectedEventId);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Event Resources</h2>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Resource
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Add New Resource</DialogTitle>
-            </DialogHeader>
-            <EventResourceForm eventId={eventId} onSuccess={() => setIsFormOpen(false)} />
-          </DialogContent> 
-        </Dialog>
-      </div>
+      {/* Event Selector Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Select Event
+          </CardTitle>
+          <CardDescription>
+            Choose an event to manage its resources
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <EventSelector
+            events={events || []}
+            selectedEvent={selectedEventId}
+            onEventChange={handleEventChange}
+            registrationCounts={registrationCounts}
+            isLoading={eventsLoading}
+          />
+        </CardContent>
+      </Card>
 
-      {resources && resources.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {resources.map((resource) => (
-            <EventResourceCard key={resource.id} resource={resource} />
-          ))}
-        </div>
+      {/* Selected Event Info & Actions */}
+      {selectedEvent && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>{selectedEvent.title}</CardTitle>
+                <CardDescription>
+                  {selectedEvent.date && new Date(selectedEvent.date).toLocaleDateString()} • {selectedEvent.location}
+                </CardDescription>
+              </div>
+              <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Resource
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Add New Resource</DialogTitle>
+                  </DialogHeader>
+                  <EventResourceForm eventId={selectedEventId} onSuccess={() => setIsFormOpen(false)} />
+                </DialogContent> 
+              </Dialog>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Resources Section */}
+      {selectedEventId ? (
+        <>
+          {resourcesLoading ? (
+            <Card className="w-full text-center py-8">
+              <CardContent>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Loading resources...</p>
+              </CardContent>
+            </Card>
+          ) : resources && resources.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {resources.map((resource) => (
+                <EventResourceCard key={resource.id} resource={resource} />
+              ))}
+            </div>
+          ) : (
+            <Card className="w-full text-center py-8">
+              <CardHeader>
+                <CardTitle>No Resources Found</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription>
+                  There are no resources available for this event yet. Add a new resource to get started.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          )}
+        </>
       ) : (
         <Card className="w-full text-center py-8">
           <CardHeader>
-            <CardTitle>No Resources Found</CardTitle>
+            <CardTitle>Select an Event</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription>
-              There are no resources available for this event yet. Add a new resource to get started.
+              Please select an event from the dropdown above to view and manage its resources.
             </CardDescription>
           </CardContent>
         </Card>
