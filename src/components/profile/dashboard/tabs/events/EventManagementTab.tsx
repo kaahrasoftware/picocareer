@@ -10,6 +10,7 @@ import { EventDataTable } from './EventDataTable';
 import { EventDashboardStats } from './EventDashboardStats';
 import { EventSummaryTab } from './EventSummaryTab';
 import { EventRegistrationsTab } from './EventRegistrationsTab';
+import { EventResourcesManagementTab } from './EventResourcesManagementTab';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export function EventManagementTab() {
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="registrations">Registrations</TabsTrigger>
+          <TabsTrigger value="resources">Event Resources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -62,6 +64,30 @@ export function EventManagementTab() {
 
         <TabsContent value="registrations">
           <EventRegistrationsTab />
+        </TabsContent>
+
+        <TabsContent value="resources">
+          {selectedEvent ? (
+            <EventResourcesManagementTab eventId={selectedEvent.id} />
+          ) : (
+            <Card className="w-full text-center py-8">
+              <CardContent>
+                <h3 className="text-lg font-semibold mb-2">No Event Selected</h3>
+                <p className="text-muted-foreground mb-4">
+                  Please select an event from the "Events" tab to manage its resources.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    // Switch to events tab - this would need tab state management
+                    document.querySelector('[value="events"]')?.click();
+                  }}
+                >
+                  Go to Events Tab
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
