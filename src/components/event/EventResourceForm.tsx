@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -103,6 +102,7 @@ export function EventResourceForm({
       file_url: initialResource?.file_url || '',
       external_url: initialResource?.external_url || '',
       file_format: initialResource?.file_format || '',
+      file_size: initialResource?.file_size || undefined,
       is_downloadable: initialResource?.is_downloadable ?? true,
       access_level: initialResource?.access_level || 'public',
       sort_order: initialResource?.sort_order || 0,
@@ -118,12 +118,13 @@ export function EventResourceForm({
     return FILE_FORMATS[type as keyof typeof FILE_FORMATS] || FILE_FORMATS.other;
   };
 
-  // Handle file upload without auto-submitting
+  // Updated handleFileUploaded to store file size
   const handleFileUploaded = (url: string, metadata: { fileName: string; size: number; type: string }) => {
     console.log('File uploaded, updating form fields:', { url, metadata });
     
-    // Update form field
+    // Update form fields including file size
     form.setValue('file_url', url);
+    form.setValue('file_size', metadata.size);
     setFileUploaded(true);
     
     // Auto-detect file format from the file name
@@ -150,7 +151,7 @@ export function EventResourceForm({
       form.setValue('title', fileName);
     }
 
-    console.log('Form fields updated, file upload complete');
+    console.log('Form fields updated, file upload complete with size:', metadata.size);
   };
 
   const onSubmit = (data: EventResourceFormData) => {
@@ -160,6 +161,8 @@ export function EventResourceForm({
       ...data,
       file_url: resourceSource === 'upload' ? data.file_url : undefined,
       external_url: resourceSource === 'external' ? data.external_url : undefined,
+      // Ensure file_size is included in the submission
+      file_size: resourceSource === 'upload' ? data.file_size : undefined,
     };
 
     if (initialResource) {
@@ -273,6 +276,11 @@ export function EventResourceForm({
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
                       <strong>File uploaded successfully!</strong> Please complete the remaining form fields and click "Save Resource" to finish.
+                      {form.getValues('file_size') && (
+                        <div className="mt-1 text-sm">
+                          File size: {(form.getValues('file_size')! / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                      )}
                     </AlertDescription>
                   </Alert>
                 )}

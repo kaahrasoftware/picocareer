@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,35 +23,16 @@ export function useEventResources(eventId: string) {
 
   const addResourceMutation = useMutation({
     mutationFn: async (resourceData: EventResourceFormData) => {
-      // Calculate file size if we have a file URL from our storage
-      let fileSizeBytes = 0;
-      if (resourceData.file_url && resourceData.file_url.includes('event-resources')) {
-        try {
-          // Try to get file info from storage
-          const fileName = resourceData.file_url.split('/').pop();
-          if (fileName) {
-            const { data: fileData } = await supabase.storage
-              .from('event-resources')
-              .list('', {
-                search: fileName
-              });
-            
-            if (fileData && fileData.length > 0) {
-              fileSizeBytes = fileData[0].metadata?.size || 0;
-            }
-          }
-        } catch (error) {
-          console.warn('Could not get file size:', error);
-        }
-      }
-
+      console.log('Adding resource with data:', resourceData);
+      
       const { data, error } = await supabase
         .from('event_resources')
         .insert({
           ...resourceData,
           event_id: eventId,
           uploaded_by: (await supabase.auth.getUser()).data.user?.id,
-          file_size: fileSizeBytes > 0 ? fileSizeBytes : undefined,
+          // Ensure file_size is included in the insert
+          file_size: resourceData.file_size || null,
         })
         .select()
         .single();
@@ -80,9 +60,15 @@ export function useEventResources(eventId: string) {
 
   const updateResourceMutation = useMutation({
     mutationFn: async ({ id, ...resourceData }: Partial<EventResource> & { id: string }) => {
+      console.log('Updating resource with data:', resourceData);
+      
       const { data, error } = await supabase
         .from('event_resources')
-        .update(resourceData)
+        .update({
+          ...resourceData,
+          // Ensure file_size is included in the update
+          file_size: resourceData.file_size || null,
+        })
         .eq('id', id)
         .select()
         .single();

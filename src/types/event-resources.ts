@@ -31,6 +31,7 @@ export interface EventResourceFormData {
   file_url?: string;
   external_url?: string;
   file_format?: string;
+  file_size?: number;
   is_downloadable: boolean;
   access_level: EventResource['access_level'];
   sort_order: number;

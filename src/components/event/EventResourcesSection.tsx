@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -82,7 +81,7 @@ const formatFileSize = (bytes?: number) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Resource Statistics Component - Now visible to all users
+// Resource Statistics Component - Now uses actual file sizes
 const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventResource & { events?: any })[], filteredCount: number }) => {
   const downloadableCount = resources.filter(r => r.is_downloadable).length;
   const typeBreakdown = resources.reduce((acc, resource) => {
@@ -90,10 +89,16 @@ const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventRes
     return acc;
   }, {} as Record<string, number>);
 
+  // Use actual file sizes when available, fall back to estimates
   const totalSize = resources.reduce((total, resource) => {
-    // Use actual file size if available, otherwise estimate based on type
-    let estimatedSize = resource.file_size || 0;
-    if (!estimatedSize && resource.file_url) {
+    // Use actual file size if available
+    if (resource.file_size && resource.file_size > 0) {
+      return total + resource.file_size;
+    }
+    
+    // Fall back to estimates for resources without recorded file sizes
+    let estimatedSize = 0;
+    if (resource.file_url) {
       switch (resource.resource_type) {
         case 'video':
           estimatedSize = 5000000; // 5MB
@@ -192,7 +197,7 @@ const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventRes
         </CardContent>
       </Card>
 
-      {/* Total Size */}
+      {/* Total Size - Now uses actual file sizes */}
       <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
