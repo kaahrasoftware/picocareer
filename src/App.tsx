@@ -9,7 +9,7 @@ import { LoadingProvider } from '@/context/LoadingContext';
 import { GuideProvider } from '@/context/GuideContext';
 import { MobileMenuProvider } from '@/context/MobileMenuContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import AppRoutes from '@/router/AppRoutes';
+import { AppRoutes } from '@/router/AppRoutes';
 import ScrollToTop from '@/components/ScrollToTop';
 import './App.css';
 
