@@ -17,7 +17,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 interface EventResourcesSectionProps {
-  resources: EventResource[];
+  resources: (EventResource & {
+    events?: {
+      id: string;
+      title: string;
+      start_time: string;
+      organized_by?: string;
+    };
+  })[];
   onPreview?: (resource: EventResource) => void;
   eventInfo?: {
     id: string;
@@ -76,7 +83,7 @@ const formatFileSize = (bytes?: number) => {
 };
 
 // Resource Statistics Component - Now visible to all users
-const ResourceStatsCards = ({ resources, filteredCount }: { resources: EventResource[], filteredCount: number }) => {
+const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventResource & { events?: any })[], filteredCount: number }) => {
   const downloadableCount = resources.filter(r => r.is_downloadable).length;
   const typeBreakdown = resources.reduce((acc, resource) => {
     acc[resource.resource_type] = (acc[resource.resource_type] || 0) + 1;
@@ -338,7 +345,7 @@ export function EventResourcesSection({
   };
 
   // Resource card component
-  const ResourceCard = ({ resource }: { resource: EventResource }) => {
+  const ResourceCard = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
     return (
       <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
@@ -422,7 +429,7 @@ export function EventResourcesSection({
   };
 
   // Resource list item component
-  const ResourceListItem = ({ resource }: { resource: EventResource }) => {
+  const ResourceListItem = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
     return (
       <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">

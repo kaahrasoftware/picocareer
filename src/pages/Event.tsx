@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,60 +41,62 @@ export default function Event() {
   const [viewingEvent, setViewingEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
 
-  // Fixed query to get all event resources with proper joins
+  // Enhanced query to get all event resources with proper joins and error handling
   const { data: allResources, isLoading: isLoadingResources, error: resourcesError } = useQuery({
     queryKey: ['all-event-resources'],
     queryFn: async () => {
       console.log('Fetching all event resources...');
       
-      // First get all event resources
-      const { data: resources, error: resourcesError } = await supabase
-        .from('event_resources')
-        .select('*')
-        .order('created_at', { ascending: false });
+      try {
+        // Get all event resources with better error handling
+        const { data: resources, error: resourcesError } = await supabase
+          .from('event_resources')
+          .select(`
+            *,
+            events!inner(
+              id,
+              title,
+              start_time,
+              organized_by
+            )
+          `)
+          .order('created_at', { ascending: false });
 
-      if (resourcesError) {
-        console.error('Error fetching resources:', resourcesError);
-        throw resourcesError;
-      }
+        if (resourcesError) {
+          console.error('Error fetching resources:', resourcesError);
+          throw resourcesError;
+        }
 
-      console.log('Raw resources:', resources);
+        console.log('Raw resources with events:', resources);
 
-      if (!resources || resources.length === 0) {
-        console.log('No resources found');
+        if (!resources || resources.length === 0) {
+          console.log('No resources found');
+          return [];
+        }
+
+        // Transform the data to match expected structure
+        const transformedResources = resources.map(resource => ({
+          ...resource,
+          events: resource.events
+        }));
+
+        console.log('Transformed resources:', transformedResources);
+        return transformedResources as (EventResource & {
+          events: {
+            id: string;
+            title: string;
+            start_time: string;
+            organized_by?: string;
+          };
+        })[];
+      } catch (error) {
+        console.error('Error in resource query:', error);
+        // Return empty array instead of throwing to prevent UI breaking
         return [];
       }
-
-      // Get unique event IDs from resources
-      const eventIds = [...new Set(resources.map(r => r.event_id))];
-      
-      // Get event details for these resources
-      const { data: events, error: eventsError } = await supabase
-        .from('events')
-        .select('id, title, start_time, organized_by')
-        .in('id', eventIds);
-
-      if (eventsError) {
-        console.error('Error fetching events:', eventsError);
-        // Continue without event data rather than failing
-      }
-
-      // Map resources with their event data
-      const resourcesWithEvents = resources.map(resource => ({
-        ...resource,
-        events: events?.find(event => event.id === resource.event_id) || null
-      }));
-
-      console.log('Resources with events:', resourcesWithEvents);
-      return resourcesWithEvents as (EventResource & {
-        events: {
-          id: string;
-          title: string;
-          start_time: string;
-          organized_by?: string;
-        } | null;
-      })[];
     },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Log data for debugging
@@ -288,6 +289,13 @@ export default function Event() {
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               <span className="ml-3">Loading resources...</span>
+            </div>
+          ) : resourcesError ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <p className="text-muted-foreground">Unable to load resources at this time.</p>
+                <p className="text-sm text-muted-foreground mt-2">Please try again later.</p>
+              </div>
             </div>
           ) : (
             <EventResourcesSection 
