@@ -4,14 +4,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Download, Eye, FileText, Film, Image, Link, Music, Presentation, Filter, Grid3X3, List, Calendar, Clock, User, MapPin, Loader2 } from 'lucide-react';
+import { Search, Download, Eye, FileText, Film, Image, Link, Music, Presentation, Filter, Grid3X3, List, Calendar, Clock, User, MapPin, Loader2, Lock, UserPlus, LogIn } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { ResourceLoadingSkeleton } from './ResourceLoadingSkeleton';
+import { AuthPromptDialog } from '@/components/auth/AuthPromptDialog';
 import { useThemeReady } from './hooks/useThemeReady';
+import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface EventResourcesSectionProps {
   resources: EventResource[];
@@ -83,7 +86,10 @@ export function EventResourcesSection({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [previewResource, setPreviewResource] = useState<EventResource | null>(null);
   const [downloadingResources, setDownloadingResources] = useState<Set<string>>(new Set());
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const isThemeReady = useThemeReady();
 
   // Show loading skeleton while theme is loading
@@ -98,6 +104,115 @@ export function EventResourcesSection({
             <ResourceLoadingSkeleton count={5} />
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  const handleSignIn = () => {
+    setShowAuthDialog(false);
+    navigate("/auth?tab=signin", { state: { redirectUrl: "/event" } });
+  };
+
+  const handleSignUp = () => {
+    setShowAuthDialog(false);
+    navigate("/auth?tab=signup", { state: { redirectUrl: "/event" } });
+  };
+
+  // Show authentication prompt if user is not logged in
+  if (!session?.user) {
+    return (
+      <div className="space-y-6">
+        {/* Event Info Header */}
+        {eventInfo && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    {eventInfo.title}
+                  </h2>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    {eventInfo.start_time && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {format(new Date(eventInfo.start_time), 'PPP p')}
+                      </div>
+                    )}
+                    {eventInfo.platform && (
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {eventInfo.platform}
+                      </div>
+                    )}
+                    {eventInfo.organized_by && (
+                      <div className="flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        {eventInfo.organized_by}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Authentication Required Message */}
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="p-4 rounded-full bg-primary/10 text-primary inline-flex mb-6">
+                <Lock className="h-8 w-8" />
+              </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                Sign In Required
+              </h3>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                You need to sign in to your account or create a new account to view event resources.
+              </p>
+              
+              {resources.length > 0 && (
+                <div className="mb-6">
+                  <Badge variant="secondary" className="text-sm px-3 py-1">
+                    {resources.length} resource{resources.length !== 1 ? 's' : ''} available
+                  </Badge>
+                </div>
+              )}
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button 
+                  onClick={handleSignIn}
+                  className="flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSignUp}
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Create Account
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Auth Prompt Dialog */}
+        <AuthPromptDialog
+          isOpen={showAuthDialog}
+          onClose={() => setShowAuthDialog(false)}
+          title="Access Event Resources"
+          description="Sign in or create an account to view and download event resources."
+          redirectUrl="/event"
+        />
       </div>
     );
   }
@@ -328,9 +443,11 @@ export function EventResourcesSection({
       </div>;
   };
   if (resources.length === 0) {
-    return <div className="space-y-6">
+    return (
+      <div className="space-y-6">
         {/* Event Info Header */}
-        {eventInfo && <Card>
+        {eventInfo && (
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-lg bg-primary/10 text-primary">
@@ -341,23 +458,30 @@ export function EventResourcesSection({
                     {eventInfo.title}
                   </h2>
                   <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                    {eventInfo.start_time && <div className="flex items-center gap-1">
+                    {eventInfo.start_time && (
+                      <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         {format(new Date(eventInfo.start_time), 'PPP p')}
-                      </div>}
-                    {eventInfo.platform && <div className="flex items-center gap-1">
+                      </div>
+                    )}
+                    {eventInfo.platform && (
+                      <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
                         {eventInfo.platform}
-                      </div>}
-                    {eventInfo.organized_by && <div className="flex items-center gap-1">
+                      </div>
+                    )}
+                    {eventInfo.organized_by && (
+                      <div className="flex items-center gap-1">
                         <User className="h-4 w-4" />
                         {eventInfo.organized_by}
-                      </div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
 
         <Card>
           <CardContent className="py-12 text-center">
@@ -370,13 +494,49 @@ export function EventResourcesSection({
             </p>
           </CardContent>
         </Card>
-      </div>;
+      </div>
+    );
   }
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       {/* Event Info Header */}
-      {eventInfo && <Card>
-          
-        </Card>}
+      {eventInfo && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-lg bg-primary/10 text-primary">
+                <Calendar className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  {eventInfo.title}
+                </h2>
+                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  {eventInfo.start_time && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {format(new Date(eventInfo.start_time), 'PPP p')}
+                    </div>
+                  )}
+                  {eventInfo.platform && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      {eventInfo.platform}
+                    </div>
+                  )}
+                  {eventInfo.organized_by && (
+                    <div className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      {eventInfo.organized_by}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Header with Search and Filters */}
       <Card>
@@ -413,16 +573,19 @@ export function EventResourcesSection({
             <Button variant={selectedType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType('all')}>
               All Types
             </Button>
-            {resourceTypes.map(type => <Button key={type} variant={selectedType === type ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType(type)} className="capitalize">
+            {resourceTypes.map(type => (
+              <Button key={type} variant={selectedType === type ? 'default' : 'outline'} size="sm" onClick={() => setSelectedType(type)} className="capitalize">
                 {getResourceIcon(type)}
                 <span className="ml-2">{type}</span>
-              </Button>)}
+              </Button>
+            ))}
           </div>
         </CardContent>
       </Card>
 
       {/* Resources Display */}
-      {filteredResources.length === 0 ? <Card>
+      {filteredResources.length === 0 ? (
+        <Card>
           <CardContent className="py-12 text-center">
             <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -432,11 +595,15 @@ export function EventResourcesSection({
               Try adjusting your search or filter criteria.
             </p>
           </CardContent>
-        </Card> : <div className={cn(viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3")}>
+        </Card>
+      ) : (
+        <div className={cn(viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-3")}>
           {filteredResources.map(resource => viewMode === 'grid' ? <ResourceCard key={resource.id} resource={resource} /> : <ResourceListItem key={resource.id} resource={resource} />)}
-        </div>}
+        </div>
+      )}
 
       {/* Preview Modal */}
       <ResourcePreviewModal resource={previewResource} isOpen={!!previewResource} onClose={() => setPreviewResource(null)} />
-    </div>;
+    </div>
+  );
 }
