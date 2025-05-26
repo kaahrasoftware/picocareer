@@ -129,9 +129,11 @@ const ResourceStatsCards = ({ resources, filteredCount }: { resources: EventReso
               <p className="text-sm text-gray-600">Downloadable</p>
               <div className="flex items-center gap-2">
                 <p className="text-2xl font-bold text-gray-900">{downloadableCount}</p>
-                <Badge variant="success" className="text-xs">
-                  {Math.round((downloadableCount / resources.length) * 100)}%
-                </Badge>
+                {resources.length > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {Math.round((downloadableCount / resources.length) * 100)}%
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -465,62 +467,6 @@ export function EventResourcesSection({
     );
   };
 
-  if (resources.length === 0) {
-    return (
-      <div className="space-y-6">
-        {/* Event Info Header */}
-        {eventInfo && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                  <Calendar className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                    {eventInfo.title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    {eventInfo.start_time && (
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {format(new Date(eventInfo.start_time), 'PPP p')}
-                      </div>
-                    )}
-                    {eventInfo.platform && (
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {eventInfo.platform}
-                      </div>
-                    )}
-                    {eventInfo.organized_by && (
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        {eventInfo.organized_by}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Resources Available
-            </h3>
-            <p className="text-gray-600">
-              There are no resources available for this event yet.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Enhanced Event Info Header - Now visible to all users with prominent resource counts */}
@@ -542,7 +488,7 @@ export function EventResourcesSection({
                       {resources.length} Resources
                     </Badge>
                     {resources.filter(r => r.is_downloadable).length > 0 && (
-                      <Badge variant="success" className="px-3 py-1">
+                      <Badge variant="secondary" className="px-3 py-1 bg-green-100 text-green-800 border-green-200">
                         <Download className="h-3 w-3 mr-1" />
                         {resources.filter(r => r.is_downloadable).length} Downloadable
                       </Badge>
@@ -595,19 +541,21 @@ export function EventResourcesSection({
                 You need to sign in to your account or create a new account to access, preview, and download event resources.
               </p>
               
-              <div className="mb-6 space-y-3">
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Archive className="h-5 w-5 text-blue-600" />
-                    <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600 hover:bg-blue-700">
-                      {resources.length} Resource{resources.length !== 1 ? 's' : ''} Available
-                    </Badge>
+              {resources.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Archive className="h-5 w-5 text-blue-600" />
+                      <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600 hover:bg-blue-700">
+                        {resources.length} Resource{resources.length !== 1 ? 's' : ''} Available
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Access exclusive event materials, downloads, and presentations
+                    </p>
                   </div>
-                  <p className="text-sm text-blue-700">
-                    Access exclusive event materials, downloads, and presentations
-                  </p>
                 </div>
-              </div>
+              )}
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button onClick={handleSignIn} className="flex items-center gap-2">
@@ -624,114 +572,131 @@ export function EventResourcesSection({
         </Card>
       ) : (
         <>
-          {/* Header with Search and Filters - Only for authenticated users */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Event Resources
-                  <div className="flex items-center gap-2 ml-2">
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
-                      {filteredResources.length} of {resources.length}
-                    </Badge>
-                    {filteredResources.length !== resources.length && (
-                      <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
-                        Filtered
-                      </Badge>
-                    )}
-                  </div>
-                </CardTitle>
-                
-                <div className="flex items-center gap-2">
-                  <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input 
-                  placeholder="Search resources..." 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  className="pl-10" 
-                />
-              </div>
-              
-              {/* Type Filters */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Button 
-                  variant={selectedType === 'all' ? 'default' : 'outline'} 
-                  size="sm" 
-                  onClick={() => setSelectedType('all')}
-                >
-                  All Types
-                  <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
-                    {resources.length}
-                  </Badge>
-                </Button>
-                {resourceTypes.map((type) => {
-                  const typeCount = resources.filter(r => r.resource_type === type).length;
-                  return (
-                    <Button 
-                      key={type} 
-                      variant={selectedType === type ? 'default' : 'outline'} 
-                      size="sm" 
-                      onClick={() => setSelectedType(type)} 
-                      className="capitalize"
-                    >
-                      {getResourceIcon(type)}
-                      <span className="ml-2">{type}</span>
-                      <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700 text-xs">
-                        {typeCount}
-                      </Badge>
-                    </Button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Resources Display - Only for authenticated users */}
-          {filteredResources.length === 0 ? (
+          {/* Content for authenticated users */}
+          {resources.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No Results Found
+                  No Resources Available
                 </h3>
                 <p className="text-gray-600">
-                  Try adjusting your search or filter criteria.
+                  There are no resources available for this event yet.
                 </p>
-                <div className="mt-4">
-                  <Badge variant="outline" className="text-gray-600">
-                    {resources.length} total resources available
-                  </Badge>
-                </div>
               </CardContent>
             </Card>
           ) : (
-            <div className={cn(
-              viewMode === 'grid' 
-                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
-                : "space-y-3"
-            )}>
-              {filteredResources.map((resource) => 
-                viewMode === 'grid' ? (
-                  <ResourceCard key={resource.id} resource={resource} />
-                ) : (
-                  <ResourceListItem key={resource.id} resource={resource} />
-                )
+            <>
+              {/* Header with Search and Filters - Only for authenticated users */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      Event Resources
+                      <div className="flex items-center gap-2 ml-2">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1">
+                          {filteredResources.length} of {resources.length}
+                        </Badge>
+                        {filteredResources.length !== resources.length && (
+                          <Badge variant="outline" className="text-orange-700 border-orange-300 bg-orange-50">
+                            Filtered
+                          </Badge>
+                        )}
+                      </div>
+                    </CardTitle>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
+                        <List className="h-4 w-4" />
+                      </Button>
+                      <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
+                        <Grid3X3 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input 
+                      placeholder="Search resources..." 
+                      value={searchQuery} 
+                      onChange={(e) => setSearchQuery(e.target.value)} 
+                      className="pl-10" 
+                    />
+                  </div>
+                  
+                  {/* Type Filters */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button 
+                      variant={selectedType === 'all' ? 'default' : 'outline'} 
+                      size="sm" 
+                      onClick={() => setSelectedType('all')}
+                    >
+                      All Types
+                      <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700">
+                        {resources.length}
+                      </Badge>
+                    </Button>
+                    {resourceTypes.map((type) => {
+                      const typeCount = resources.filter(r => r.resource_type === type).length;
+                      return (
+                        <Button 
+                          key={type} 
+                          variant={selectedType === type ? 'default' : 'outline'} 
+                          size="sm" 
+                          onClick={() => setSelectedType(type)} 
+                          className="capitalize"
+                        >
+                          {getResourceIcon(type)}
+                          <span className="ml-2">{type}</span>
+                          <Badge variant="secondary" className="ml-2 bg-gray-100 text-gray-700 text-xs">
+                            {typeCount}
+                          </Badge>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Resources Display - Only for authenticated users */}
+              {filteredResources.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Search className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Results Found
+                    </h3>
+                    <p className="text-gray-600">
+                      Try adjusting your search or filter criteria.
+                    </p>
+                    <div className="mt-4">
+                      <Badge variant="outline" className="text-gray-600">
+                        {resources.length} total resources available
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className={cn(
+                  viewMode === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+                    : "space-y-3"
+                )}>
+                  {filteredResources.map((resource) => 
+                    viewMode === 'grid' ? (
+                      <ResourceCard key={resource.id} resource={resource} />
+                    ) : (
+                      <ResourceListItem key={resource.id} resource={resource} />
+                    )
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
         </>
       )}

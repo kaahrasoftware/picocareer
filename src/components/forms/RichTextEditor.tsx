@@ -41,7 +41,7 @@ const formats = [
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   return (
     <div className="rich-text-editor">
-      <style jsx global>{`
+      <style>{`
         .rich-text-editor .ql-editor {
           min-height: 200px;
           background-color: white;
