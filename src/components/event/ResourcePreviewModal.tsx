@@ -101,14 +101,6 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
     }
   };
 
-  // Helper function to create a restricted PDF viewer URL
-  const createRestrictedPdfUrl = (url: string) => {
-    // Add parameters to disable PDF viewer controls
-    const pdfUrl = new URL(url);
-    pdfUrl.hash = '#toolbar=0&navpanes=0&scrollbar=0&view=FitH';
-    return pdfUrl.toString();
-  };
-
   // Helper function to check if URL is a PDF
   const isPdfUrl = (url: string) => {
     return url.toLowerCase().includes('.pdf') || url.toLowerCase().includes('pdf');
@@ -217,7 +209,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
                 src={embeddableUrl}
                 title={resource.title}
                 className="w-full h-full"
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                 onLoad={() => {
                   console.log('Content iframe loaded successfully');
                   setIframeLoaded(true);
@@ -276,7 +268,7 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="absolute top-0 left-0 w-full h-full"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
             />
           </div>
         );
@@ -321,36 +313,43 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
 
       case 'document':
       case 'presentation':
-        // Check if it's a PDF and apply restrictions
+        // For PDFs, use Google Docs viewer as a fallback for better compatibility
         if (isPdfUrl(url)) {
-          const restrictedUrl = createRestrictedPdfUrl(url);
+          const googleDocsUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
           return (
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden" style={{ height: '500px' }}>
+              {!iframeLoaded && !iframeError && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading document...</p>
+                  </div>
+                </div>
+              )}
+              {iframeError && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">Unable to load document preview</p>
+                    <Button onClick={handleOpenExternal}>
+                      Open Document
+                    </Button>
+                  </div>
+                </div>
+              )}
               <iframe
-                src={restrictedUrl}
+                src={googleDocsUrl}
                 title={resource.title}
                 className="w-full h-full"
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                 onLoad={() => {
-                  // Hide PDF toolbar using postMessage if possible
-                  const iframe = document.querySelector('iframe[title="' + resource.title + '"]') as HTMLIFrameElement;
-                  if (iframe && iframe.contentWindow) {
-                    try {
-                      iframe.contentWindow.postMessage({type: 'hideToolbar'}, '*');
-                    } catch (e) {
-                      console.log('Could not hide PDF toolbar via postMessage');
-                    }
-                  }
+                  console.log('Document iframe loaded successfully');
+                  setIframeLoaded(true);
                 }}
                 onError={() => {
-                  // Fallback for iframe loading issues
+                  console.log('Document iframe failed to load');
+                  setIframeError(true);
                 }}
-              />
-              {/* Overlay to prevent right-click and direct access */}
-              <div 
-                className="absolute inset-0 pointer-events-none" 
-                style={{ background: 'transparent' }}
-                onContextMenu={(e) => e.preventDefault()}
               />
             </div>
           );
@@ -363,9 +362,9 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               src={url}
               title={resource.title}
               className="w-full h-full"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
               onError={() => {
-                // Fallback for iframe loading issues
+                setIframeError(true);
               }}
             />
           </div>
