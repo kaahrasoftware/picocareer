@@ -1,5 +1,6 @@
+
 import { ExternalLink, Instagram, Facebook, Linkedin, Youtube, Twitter } from "lucide-react";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 // Social media links configuration
@@ -36,22 +37,31 @@ const socialLinks = [{
   label: "YouTube",
   color: "group-hover:text-red-600 dark:group-hover:text-red-500"
 }];
+
 export function FooterSocials() {
-  return <div className="flex flex-wrap justify-center gap-3">
-      <TooltipProvider delayDuration={300}>
-        {socialLinks.map((link, index) => <Tooltip key={index}>
-            <TooltipTrigger asChild>
-              <a href={link.href} target="_blank" rel="noopener noreferrer" className={cn("group text-muted-foreground transition-all duration-300 p-2.5 hover:bg-muted/80 rounded-full hover:scale-110", link.color)} aria-label={link.label}>
-                {link.icon}
-                
-                {/* Subtle animated ring effect on hover */}
-                
-              </a>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs font-medium">
-              {link.label}
-            </TooltipContent>
-          </Tooltip>)}
-      </TooltipProvider>
-    </div>;
+  return (
+    <div className="flex flex-wrap justify-center gap-3">
+      {socialLinks.map((link, index) => (
+        <Tooltip key={index}>
+          <TooltipTrigger asChild>
+            <a 
+              href={link.href} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className={cn(
+                "group text-muted-foreground transition-all duration-300 p-2.5 hover:bg-muted/80 rounded-full hover:scale-110", 
+                link.color
+              )} 
+              aria-label={link.label}
+            >
+              {link.icon}
+            </a>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs font-medium">
+            {link.label}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </div>
+  );
 }

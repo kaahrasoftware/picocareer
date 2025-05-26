@@ -1,29 +1,25 @@
 
-import React from 'react';
-import { RouterProvider } from 'react-router-dom';
-import { router } from './router/routes';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { AuthProvider } from "@/context/AuthContext";
-import './App.css';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { Toaster } from "./components/ui/toaster";
+import routes from "./router";
+import "./App.css";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
+const queryClient = new QueryClient();
+const router = createBrowserRouter(routes);
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-          <RouterProvider router={router} />
-          <Toaster />
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          <TooltipProvider delayDuration={300}>
+            <RouterProvider router={router} />
+            <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
