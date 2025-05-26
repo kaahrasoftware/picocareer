@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
-import { AuthContextProvider } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import { LoadingProvider } from '@/context/LoadingContext';
 import { GuideProvider } from '@/context/GuideContext';
 import { MobileMenuProvider } from '@/context/MobileMenuContext';
@@ -26,7 +26,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthContextProvider>
+        <AuthProvider>
           <ThemeProvider>
             <LoadingProvider>
               <GuideProvider>
@@ -41,7 +41,7 @@ function App() {
               </GuideProvider>
             </LoadingProvider>
           </ThemeProvider>
-        </AuthContextProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
