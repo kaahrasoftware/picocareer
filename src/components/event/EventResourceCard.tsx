@@ -101,19 +101,19 @@ export function EventResourceCard({
     try {
       setDownloading(true);
       
-      // Track download event
       console.log('Download started for resource:', resource.id);
       
-      // Create a filename from the resource title and format
+      // Create a safe filename from the resource title and format
+      const safeTitle = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
-      const fileName = `${resource.title}${fileExtension}`;
+      const fileName = `${safeTitle}${fileExtension}`;
       
       // Try to fetch the file as blob first for better download handling
       try {
         const response = await fetch(resource.file_url);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch file');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const blob = await response.blob();
