@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -139,7 +140,7 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
               </p>
             )}
             
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Badge variant="outline" className="text-xs capitalize">
                 {resource.resource_type}
               </Badge>
@@ -166,7 +167,32 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
                   {formatFileSize(resource.file_size)}
                 </span>
               )}
+
+              {/* Event information badge */}
+              {resource.events && (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                >
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {resource.events.title}
+                </Badge>
+              )}
             </div>
+
+            {/* Event date - only show if we have event info */}
+            {resource.events && (
+              <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                <Clock className="h-3 w-3" />
+                {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
+                {resource.events.organized_by && (
+                  <>
+                    <span className="mx-1">•</span>
+                    {resource.events.organized_by}
+                  </>
+                )}
+              </div>
+            )}
             
             <div className="flex items-center gap-2">
               <Button
@@ -215,6 +241,22 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">
                   {resource.description}
                 </p>
+              )}
+
+              {/* Event information for list view */}
+              {resource.events && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                  >
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {resource.events.title}
+                  </Badge>
+                  <span className="text-xs text-gray-500">
+                    {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
+                  </span>
+                </div>
               )}
             </div>
             

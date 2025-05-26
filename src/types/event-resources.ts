@@ -15,6 +15,13 @@ export interface EventResource {
   uploaded_by?: string;
   created_at: string;
   updated_at: string;
+  // Optional event information for resources with event context
+  events?: {
+    id: string;
+    title: string;
+    start_time: string;
+    organized_by?: string;
+  };
 }
 
 export interface EventResourceFormData {

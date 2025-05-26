@@ -46,9 +46,24 @@ export default function Event() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('event_resources')
-        .select(`*`);
+        .select(`
+          *,
+          events!inner(
+            id,
+            title,
+            start_time,
+            organized_by
+          )
+        `);
       if (error) throw error;
-      return data as EventResource[];
+      return data as (EventResource & {
+        events: {
+          id: string;
+          title: string;
+          start_time: string;
+          organized_by?: string;
+        };
+      })[];
     },
   });
 
