@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,12 +20,14 @@ import {
   Calendar,
   Clock,
   User,
-  MapPin
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { EventResource } from '@/types/event-resources';
 import { ResourcePreviewModal } from './ResourcePreviewModal';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface EventResourcesSectionProps {
   resources: EventResource[];
@@ -92,6 +93,8 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
   const [selectedType, setSelectedType] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [previewResource, setPreviewResource] = useState<EventResource | null>(null);
+  const [downloadingResources, setDownloadingResources] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   // Filter resources based on search and type
   const filteredResources = resources.filter(resource => {
@@ -109,19 +112,208 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
     onPreview?.(resource);
   };
 
-  const handleDownload = (resource: EventResource) => {
-    if (resource.file_url && resource.is_downloadable) {
-      const link = document.createElement('a');
-      link.href = resource.file_url;
-      link.download = resource.title;
-      link.click();
+  const handleDownload = async (resource: EventResource) => {
+    if (!resource.file_url || !resource.is_downloadable) {
+      toast({
+        title: "Download not available",
+        description: "This resource cannot be downloaded.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setDownloadingResources(prev => new Set(prev).add(resource.id));
+      
+      console.log('Download started for resource:', resource.id);
+      
+      // Create a safe filename from the resource title and format
+      const safeTitle = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
+      const fileName = `${safeTitle}${fileExtension}`;
+      
+      // Try to fetch the file as blob first for better download handling
+      try {
+        const response = await fetch(resource.file_url);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        window.URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} is being downloaded.`
+        });
+        
+      } catch (fetchError) {
+        // Fallback to simple link download if blob fetch fails (e.g., CORS issues)
+        console.log('Blob download failed, using fallback method:', fetchError);
+        
+        const link = document.createElement('a');
+        link.href = resource.file_url;
+        link.download = fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Download started",
+          description: `${resource.title} download has been initiated.`
+        });
+      }
+      
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading the file. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloadingResources(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(resource.id);
+        return newSet;
+      });
     }
   };
 
-  const ResourceCard = ({ resource }: { resource: EventResource }) => (
-    <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+  const ResourceCard = ({ resource }: { resource: EventResource }) => {
+    const isDownloading = downloadingResources.has(resource.id);
+    
+    return (
+      <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className={cn(
+              "p-2 rounded-lg shrink-0",
+              getResourceTypeColor(resource.resource_type)
+            )}>
+              {getResourceIcon(resource.resource_type)}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1">
+                {resource.title}
+              </h3>
+              
+              {resource.description && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                  {resource.description}
+                </p>
+              )}
+              
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <Badge variant="outline" className="text-xs capitalize">
+                  {resource.resource_type}
+                </Badge>
+                
+                {resource.file_format && (
+                  <Badge variant="secondary" className="text-xs uppercase font-mono">
+                    {resource.file_format}
+                  </Badge>
+                )}
+                
+                <Badge 
+                  variant={resource.access_level === 'public' ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {resource.access_level === 'participants_only' 
+                    ? 'Participants' 
+                    : resource.access_level === 'registered'
+                    ? 'Registered'
+                    : 'Public'}
+                </Badge>
+                
+                {resource.file_size && (
+                  <span className="text-xs text-gray-500">
+                    {formatFileSize(resource.file_size)}
+                  </span>
+                )}
+
+                {/* Event information badge */}
+                {resource.events && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                  >
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {resource.events.title}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Event date - only show if we have event info */}
+              {resource.events && (
+                <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                  <Clock className="h-3 w-3" />
+                  {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
+                  {resource.events.organized_by && (
+                    <>
+                      <span className="mx-1">•</span>
+                      {resource.events.organized_by}
+                    </>
+                  )}
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePreview(resource)}
+                  className="flex-1"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </Button>
+                
+                {resource.is_downloadable && resource.file_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownload(resource)}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const ResourceListItem = ({ resource }: { resource: EventResource }) => {
+    const isDownloading = downloadingResources.has(resource.id);
+    
+    return (
+      <div className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
+        <div className="flex items-center gap-4">
           <div className={cn(
             "p-2 rounded-lg shrink-0",
             getResourceTypeColor(resource.resource_type)
@@ -130,195 +322,99 @@ export function EventResourcesSection({ resources, onPreview, eventInfo }: Event
           </div>
           
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1 mb-1">
-              {resource.title}
-            </h3>
-            
-            {resource.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
-                {resource.description}
-              </p>
-            )}
-            
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
-              <Badge variant="outline" className="text-xs capitalize">
-                {resource.resource_type}
-              </Badge>
-              
-              {resource.file_format && (
-                <Badge variant="secondary" className="text-xs uppercase font-mono">
-                  {resource.file_format}
-                </Badge>
-              )}
-              
-              <Badge 
-                variant={resource.access_level === 'public' ? 'default' : 'secondary'}
-                className="text-xs"
-              >
-                {resource.access_level === 'participants_only' 
-                  ? 'Participants' 
-                  : resource.access_level === 'registered'
-                  ? 'Registered'
-                  : 'Public'}
-              </Badge>
-              
-              {resource.file_size && (
-                <span className="text-xs text-gray-500">
-                  {formatFileSize(resource.file_size)}
-                </span>
-              )}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">
+                  {resource.title}
+                </h3>
+                {resource.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">
+                    {resource.description}
+                  </p>
+                )}
 
-              {/* Event information badge */}
-              {resource.events && (
-                <Badge 
-                  variant="outline" 
-                  className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
-                >
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {resource.events.title}
-                </Badge>
-              )}
-            </div>
-
-            {/* Event date - only show if we have event info */}
-            {resource.events && (
-              <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
-                <Clock className="h-3 w-3" />
-                {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
-                {resource.events.organized_by && (
-                  <>
-                    <span className="mx-1">•</span>
-                    {resource.events.organized_by}
-                  </>
+                {/* Event information for list view */}
+                {resource.events && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                    >
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {resource.events.title}
+                    </Badge>
+                    <span className="text-xs text-gray-500">
+                      {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
+                    </span>
+                  </div>
                 )}
               </div>
-            )}
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePreview(resource)}
-                className="flex-1"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </Button>
               
-              {resource.is_downloadable && resource.file_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(resource)}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const ResourceListItem = ({ resource }: { resource: EventResource }) => (
-    <div className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors">
-      <div className="flex items-center gap-4">
-        <div className={cn(
-          "p-2 rounded-lg shrink-0",
-          getResourceTypeColor(resource.resource_type)
-        )}>
-          {getResourceIcon(resource.resource_type)}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">
-                {resource.title}
-              </h3>
-              {resource.description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-1">
-                  {resource.description}
-                </p>
-              )}
-
-              {/* Event information for list view */}
-              {resource.events && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
-                  >
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {resource.events.title}
-                  </Badge>
-                  <span className="text-xs text-gray-500">
-                    {format(new Date(resource.events.start_time), 'MMM d, yyyy')}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2 shrink-0">
-              <Badge variant="outline" className="text-xs capitalize">
-                {resource.resource_type}
-              </Badge>
-              
-              {resource.file_format && (
-                <Badge variant="secondary" className="text-xs uppercase font-mono">
-                  {resource.file_format}
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant="outline" className="text-xs capitalize">
+                  {resource.resource_type}
                 </Badge>
-              )}
-              
-              <Badge 
-                variant={resource.access_level === 'public' ? 'default' : 'secondary'}
-                className="text-xs"
-              >
-                {resource.access_level === 'participants_only' 
-                  ? 'Participants' 
-                  : resource.access_level === 'registered'
-                  ? 'Registered'
-                  : 'Public'}
-              </Badge>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center gap-4 text-xs text-gray-500">
-              {resource.file_size && (
-                <span>{formatFileSize(resource.file_size)}</span>
-              )}
-              {resource.is_downloadable && (
-                <span className="text-green-600 dark:text-green-400">Downloadable</span>
-              )}
+                
+                {resource.file_format && (
+                  <Badge variant="secondary" className="text-xs uppercase font-mono">
+                    {resource.file_format}
+                  </Badge>
+                )}
+                
+                <Badge 
+                  variant={resource.access_level === 'public' ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {resource.access_level === 'participants_only' 
+                    ? 'Participants' 
+                    : resource.access_level === 'registered'
+                    ? 'Registered'
+                    : 'Public'}
+                </Badge>
+              </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handlePreview(resource)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </Button>
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                {resource.file_size && (
+                  <span>{formatFileSize(resource.file_size)}</span>
+                )}
+                {resource.is_downloadable && (
+                  <span className="text-green-600 dark:text-green-400">Downloadable</span>
+                )}
+              </div>
               
-              {resource.is_downloadable && resource.file_url && (
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDownload(resource)}
+                  onClick={() => handlePreview(resource)}
                 >
-                  <Download className="h-4 w-4" />
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
                 </Button>
-              )}
+                
+                {resource.is_downloadable && resource.file_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownload(resource)}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (resources.length === 0) {
     return (
