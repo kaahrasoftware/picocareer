@@ -1,4 +1,5 @@
-import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2 } from "lucide-react";
+
+import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { EventResource } from "@/types/event-resources";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useResourceTracking } from "@/hooks/useResourceTracking";
 
 interface EventResourceCardProps {
   resource: EventResource;
@@ -64,6 +66,14 @@ const formatFileSize = (bytes?: number) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
 
+const getEngagementLevel = (views: number, downloads: number) => {
+  const total = views + downloads;
+  if (total >= 50) return { level: 'high', label: 'Trending', color: 'bg-red-100 text-red-800' };
+  if (total >= 20) return { level: 'medium', label: 'Popular', color: 'bg-orange-100 text-orange-800' };
+  if (total >= 5) return { level: 'low', label: 'Active', color: 'bg-green-100 text-green-800' };
+  return null;
+};
+
 export function EventResourceCard({ 
   resource, 
   onView, 
@@ -75,8 +85,19 @@ export function EventResourceCard({
 }: EventResourceCardProps) {
   const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
+  const { trackView, trackDownload } = useResourceTracking();
+
+  const views = resource.view_count || 0;
+  const downloads = resource.download_count || 0;
+  const engagement = getEngagementLevel(views, downloads);
 
   const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
+    // Track the view
+    trackView(resource.id, {
+      source: 'resource_card',
+      action: 'view_button_click'
+    });
+
     if (onPreview) {
       event.preventDefault();
       onPreview(resource);
@@ -100,14 +121,20 @@ export function EventResourceCard({
     try {
       setDownloading(true);
       
+      // Track the download
+      trackDownload(resource.id, {
+        source: 'resource_card',
+        action: 'download_button_click',
+        file_size: resource.file_size,
+        file_format: resource.file_format
+      });
+      
       console.log('Download started for resource:', resource.id);
       
-      // Create a safe filename from the resource title and format
       const safeTitle = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
       const fileName = `${safeTitle}${fileExtension}`;
       
-      // Try to fetch the file as blob first for better download handling
       try {
         const response = await fetch(resource.file_url);
         
@@ -127,7 +154,6 @@ export function EventResourceCard({
         link.click();
         document.body.removeChild(link);
         
-        // Clean up the blob URL
         window.URL.revokeObjectURL(url);
         
         toast({
@@ -136,7 +162,6 @@ export function EventResourceCard({
         });
         
       } catch (fetchError) {
-        // Fallback to simple link download if blob fetch fails (e.g., CORS issues)
         console.log('Blob download failed, using fallback method:', fetchError);
         
         const link = document.createElement('a');
@@ -155,7 +180,6 @@ export function EventResourceCard({
         });
       }
       
-      // Call the callback if provided
       onDownload?.(resource);
       
     } catch (error) {
@@ -192,6 +216,12 @@ export function EventResourceCard({
                     {resource.access_level === 'participants_only' ? 'Participants Only' : 'Registered Users'}
                   </Badge>
                 )}
+                {engagement && (
+                  <Badge className={cn("text-xs", engagement.color)}>
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    {engagement.label}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -220,6 +250,24 @@ export function EventResourceCard({
           <CardDescription className="mb-3 line-clamp-2">
             {resource.description}
           </CardDescription>
+        )}
+        
+        {/* Engagement Stats */}
+        {(views > 0 || downloads > 0) && (
+          <div className="flex items-center gap-4 mb-3 text-xs text-muted-foreground">
+            {views > 0 && (
+              <div className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                <span>{views.toLocaleString()} views</span>
+              </div>
+            )}
+            {downloads > 0 && (
+              <div className="flex items-center gap-1">
+                <Download className="h-3 w-3" />
+                <span>{downloads.toLocaleString()} downloads</span>
+              </div>
+            )}
+          </div>
         )}
         
         <div className="flex items-center justify-between">

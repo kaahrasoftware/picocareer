@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { FileText, HardDrive, Download, Shield, TrendingUp, RefreshCw } from 'lucide-react';
+import { FileText, HardDrive, Download, Shield, TrendingUp, RefreshCw, Eye, Activity } from 'lucide-react';
 import { ColorfulStatCard } from '@/components/ui/colorful-stat-card';
 import { Button } from '@/components/ui/button';
 import { useEventResourceStats } from '@/hooks/useEventResourceStats';
@@ -128,7 +128,7 @@ export function EventResourceMetrics() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <ColorfulStatCard
           title="Total Resources"
           value={stats.totalResources.toLocaleString()}
@@ -146,13 +146,19 @@ export function EventResourceMetrics() {
         />
         
         <ColorfulStatCard
-          title="Downloadable"
-          value={`${Math.round((stats.downloadableStats.downloadable / stats.totalResources) * 100)}%`}
-          icon={<Download className="h-5 w-5" />}
+          title="Total Views"
+          value={stats.totalViews?.toLocaleString() || '0'}
+          icon={<Eye className="h-5 w-5" />}
           variant="purple"
-          footer={`${stats.downloadableStats.downloadable} of ${stats.totalResources} files`}
-          showProgress={true}
-          progressValue={Math.round((stats.downloadableStats.downloadable / stats.totalResources) * 100)}
+          footer="resource views"
+        />
+
+        <ColorfulStatCard
+          title="Total Downloads"
+          value={stats.totalDownloads?.toLocaleString() || '0'}
+          icon={<Download className="h-5 w-5" />}
+          variant="orange"
+          footer="file downloads"
         />
       </div>
 
@@ -215,16 +221,62 @@ export function EventResourceMetrics() {
           </CardContent>
         </Card>
 
+        {/* Most Engaging Resources */}
+        {stats.topEngagingResources && stats.topEngagingResources.length > 0 && (
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-purple-700">
+                <div className="p-2 bg-purple-200 rounded-full">
+                  <Activity className="h-4 w-4" />
+                </div>
+                Most Engaging
+              </CardTitle>
+              <p className="text-sm text-purple-600">Top resources by engagement</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={stats.topEngagingResources} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="title" 
+                    width={100} 
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                            <p className="font-medium text-gray-900">{label}</p>
+                            <p className="text-sm text-gray-600">
+                              Total Engagement: <span className="font-semibold text-primary">{payload[0].value}</span>
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="engagement" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Top Events by Resources */}
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 hover:shadow-lg transition-all duration-300">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-purple-700">
-              <div className="p-2 bg-purple-200 rounded-full">
+            <CardTitle className="flex items-center gap-2 text-orange-700">
+              <div className="p-2 bg-orange-200 rounded-full">
                 <TrendingUp className="h-4 w-4" />
               </div>
               Top Events
             </CardTitle>
-            <p className="text-sm text-purple-600">Most resource-rich events</p>
+            <p className="text-sm text-orange-600">Most resource-rich events</p>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
@@ -253,11 +305,39 @@ export function EventResourceMetrics() {
                     return null;
                   }}
                 />
-                <Bar dataKey="count" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="count" fill="#f97316" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+        {/* Engagement by Type */}
+        {stats.engagementByType && stats.engagementByType.length > 0 && (
+          <Card className="lg:col-span-2 bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-cyan-700">
+                <div className="p-2 bg-cyan-200 rounded-full">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                Engagement by Resource Type
+              </CardTitle>
+              <p className="text-sm text-cyan-600">Views and downloads by type</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={stats.engagementByType}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis dataKey="type" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="views" fill="#06b6d4" name="Views" />
+                  <Bar dataKey="downloads" fill="#10b981" name="Downloads" />
+                  <Legend />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -15,6 +15,13 @@ export interface EventResource {
   uploaded_by?: string;
   created_at: string;
   updated_at: string;
+  // New tracking fields
+  view_count?: number;
+  download_count?: number;
+  last_viewed_at?: string;
+  last_downloaded_at?: string;
+  unique_viewers?: number;
+  unique_downloaders?: number;
   // Optional event information for resources with event context
   events?: {
     id: string;
@@ -35,4 +42,13 @@ export interface EventResourceFormData {
   is_downloadable: boolean;
   access_level: EventResource['access_level'];
   sort_order: number;
+}
+
+export interface ResourceInteraction {
+  id: string;
+  resource_id: string;
+  profile_id?: string;
+  interaction_type: 'view' | 'download';
+  created_at: string;
+  metadata?: Record<string, any>;
 }

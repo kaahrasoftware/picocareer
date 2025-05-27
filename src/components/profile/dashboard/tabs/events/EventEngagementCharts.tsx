@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Globe, Briefcase, GraduationCap, Users, TrendingUp, RefreshCw } from 'lucide-react';
 import { ColorfulStatCard } from '@/components/ui/colorful-stat-card';
 import { Button } from '@/components/ui/button';
-import { EventResourceMetrics } from './EventResourceMetrics';
+import { EventResourceAnalytics } from './EventResourceAnalytics';
 
 const MODERN_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f97316', '#f59e0b', '#ef4444', '#06b6d4'];
 
@@ -230,146 +230,148 @@ export function EventEngagementCharts() {
   const diversityScore = Math.min(100, Math.round((engagementData.countries.length / engagementData.totalParticipants) * 100 * 10));
 
   return (
-    <div className="space-y-6">
-      {/* Modern Summary Cards */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Participant Demographics & Engagement</h3>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <ColorfulStatCard
-          title="Total Participants"
-          value={engagementData.totalParticipants.toLocaleString()}
-          icon={<Users className="h-5 w-5" />}
-          variant="blue"
-          footer="across all events"
-        />
-        
-        <ColorfulStatCard
-          title="Top Location"
-          value={topCountry?.count || 0}
-          icon={<Globe className="h-5 w-5" />}
-          variant="green"
-          footer={topCountry ? `${topCountry.name} (${topCountry.percentage}%)` : 'No data'}
-        />
-        
-        <ColorfulStatCard
-          title="Diversity Score"
-          value={`${diversityScore}%`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          variant="purple"
-          footer="geographic diversity"
-          showProgress={true}
-          progressValue={diversityScore}
-        />
-      </div>
-
-      {/* Modern Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Top Countries */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-blue-700">
-              <div className="p-2 bg-blue-200 rounded-full">
-                <Globe className="h-4 w-4" />
-              </div>
-              Top Countries
-            </CardTitle>
-            <p className="text-sm text-blue-600">{engagementData.countries.length} countries represented</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={engagementData.countries} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Top Careers */}
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-green-700">
-              <div className="p-2 bg-green-200 rounded-full">
-                <Briefcase className="h-4 w-4" />
-              </div>
-              Top Career Fields
-            </CardTitle>
-            <p className="text-sm text-green-600">{engagementData.careers.length} different fields</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={engagementData.careers}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Top Organizations */}
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-purple-700">
-              <div className="p-2 bg-purple-200 rounded-full">
-                <GraduationCap className="h-4 w-4" />
-              </div>
-              Top Organizations
-            </CardTitle>
-            <p className="text-sm text-purple-600">{engagementData.organizations.length} institutions</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={engagementData.organizations}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Event Resource Analytics - Replaces Participant Types Breakdown */}
-        <div className="md:col-span-2 lg:col-span-3">
-          <EventResourceMetrics />
+    <div className="space-y-8">
+      {/* Participant Demographics Section */}
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900">Participant Demographics & Engagement</h3>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
-        {/* Acquisition Channels */}
-        <Card className="lg:col-span-1 bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-cyan-700">
-              <div className="p-2 bg-cyan-200 rounded-full">
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              How Participants Found Us
-            </CardTitle>
-            <p className="text-sm text-cyan-600">Top {engagementData.acquisitionChannels.length} acquisition channels</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={engagementData.acquisitionChannels}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ColorfulStatCard
+            title="Total Participants"
+            value={engagementData.totalParticipants.toLocaleString()}
+            icon={<Users className="h-5 w-5" />}
+            variant="blue"
+            footer="across all events"
+          />
+          
+          <ColorfulStatCard
+            title="Top Location"
+            value={topCountry?.count || 0}
+            icon={<Globe className="h-5 w-5" />}
+            variant="green"
+            footer={topCountry ? `${topCountry.name} (${topCountry.percentage}%)` : 'No data'}
+          />
+          
+          <ColorfulStatCard
+            title="Diversity Score"
+            value={`${diversityScore}%`}
+            icon={<TrendingUp className="h-5 w-5" />}
+            variant="purple"
+            footer="geographic diversity"
+            showProgress={true}
+            progressValue={diversityScore}
+          />
+        </div>
+
+        {/* Demographics Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Top Countries */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-blue-700">
+                <div className="p-2 bg-blue-200 rounded-full">
+                  <Globe className="h-4 w-4" />
+                </div>
+                Top Countries
+              </CardTitle>
+              <p className="text-sm text-blue-600">{engagementData.countries.length} countries represented</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={engagementData.countries} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Top Careers */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-green-700">
+                <div className="p-2 bg-green-200 rounded-full">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                Top Career Fields
+              </CardTitle>
+              <p className="text-sm text-green-600">{engagementData.careers.length} different fields</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={engagementData.careers}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Top Organizations */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-purple-700">
+                <div className="p-2 bg-purple-200 rounded-full">
+                  <GraduationCap className="h-4 w-4" />
+                </div>
+                Top Organizations
+              </CardTitle>
+              <p className="text-sm text-purple-600">{engagementData.organizations.length} institutions</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={engagementData.organizations}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Acquisition Channels */}
+          <Card className="lg:col-span-1 bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 hover:shadow-lg transition-all duration-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-cyan-700">
+                <div className="p-2 bg-cyan-200 rounded-full">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                How Participants Found Us
+              </CardTitle>
+              <p className="text-sm text-cyan-600">Top {engagementData.acquisitionChannels.length} acquisition channels</p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={engagementData.acquisitionChannels}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Resource Analytics Section */}
+      <div className="border-t pt-8">
+        <EventResourceAnalytics />
       </div>
     </div>
   );

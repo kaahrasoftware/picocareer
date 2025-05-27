@@ -5,11 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 interface ResourceStats {
   totalResources: number;
   totalStorage: number;
+  totalViews?: number;
+  totalDownloads?: number;
   resourceTypes: Array<{ type: string; count: number; percentage: number }>;
   accessLevels: Array<{ level: string; count: number; percentage: number }>;
   downloadableStats: { downloadable: number; nonDownloadable: number };
   averageFileSize: number;
-  resourcesPerEvent: Array<{ eventTitle: string; count: number }>;
+  resourcesPerEvent: Array<{ eventTitle: string; count: number; title: string }>;
+  topEngagingResources?: Array<{ title: string; engagement: number; views: number; downloads: number }>;
+  engagementByType?: Array<{ type: string; views: number; downloads: number; engagement_rate: number }>;
 }
 
 export function useEventResourceStats() {
@@ -19,7 +23,7 @@ export function useEventResourceStats() {
       console.log('Fetching event resource statistics...');
       
       try {
-        // Get all event resources with event information
+        // Get all event resources with event information and engagement data
         const { data: resources, error } = await supabase
           .from('event_resources')
           .select(`
@@ -40,11 +44,15 @@ export function useEventResourceStats() {
           return {
             totalResources: 0,
             totalStorage: 0,
+            totalViews: 0,
+            totalDownloads: 0,
             resourceTypes: [],
             accessLevels: [],
             downloadableStats: { downloadable: 0, nonDownloadable: 0 },
             averageFileSize: 0,
-            resourcesPerEvent: []
+            resourcesPerEvent: [],
+            topEngagingResources: [],
+            engagementByType: []
           };
         }
 
@@ -52,22 +60,39 @@ export function useEventResourceStats() {
 
         const totalResources = resources.length;
         const totalStorage = resources.reduce((sum, resource) => sum + (resource.file_size || 0), 0);
+        const totalViews = resources.reduce((sum, resource) => sum + (resource.view_count || 0), 0);
+        const totalDownloads = resources.reduce((sum, resource) => sum + (resource.download_count || 0), 0);
         const averageFileSize = totalStorage / totalResources;
 
         // Resource types distribution
-        const typeMap = new Map<string, number>();
+        const typeMap = new Map<string, { count: number; views: number; downloads: number }>();
         resources.forEach(resource => {
           const type = resource.resource_type || 'other';
-          typeMap.set(type, (typeMap.get(type) || 0) + 1);
+          const existing = typeMap.get(type) || { count: 0, views: 0, downloads: 0 };
+          typeMap.set(type, {
+            count: existing.count + 1,
+            views: existing.views + (resource.view_count || 0),
+            downloads: existing.downloads + (resource.download_count || 0),
+          });
         });
 
         const resourceTypes = Array.from(typeMap.entries())
-          .map(([type, count]) => ({
+          .map(([type, data]) => ({
             type: type.charAt(0).toUpperCase() + type.slice(1),
-            count,
-            percentage: Math.round((count / totalResources) * 100)
+            count: data.count,
+            percentage: Math.round((data.count / totalResources) * 100)
           }))
           .sort((a, b) => b.count - a.count);
+
+        // Engagement by type
+        const engagementByType = Array.from(typeMap.entries())
+          .map(([type, data]) => ({
+            type: type.charAt(0).toUpperCase() + type.slice(1),
+            views: data.views,
+            downloads: data.downloads,
+            engagement_rate: data.count > 0 ? Math.round(((data.views + data.downloads) / data.count) * 100) / 100 : 0,
+          }))
+          .sort((a, b) => (b.views + b.downloads) - (a.views + a.downloads));
 
         // Access levels distribution
         const accessMap = new Map<string, number>();
@@ -87,6 +112,18 @@ export function useEventResourceStats() {
         const downloadable = resources.filter(r => r.is_downloadable).length;
         const nonDownloadable = totalResources - downloadable;
 
+        // Top engaging resources
+        const topEngagingResources = resources
+          .map(resource => ({
+            title: resource.title.length > 20 ? resource.title.substring(0, 20) + '...' : resource.title,
+            engagement: (resource.view_count || 0) + (resource.download_count || 0),
+            views: resource.view_count || 0,
+            downloads: resource.download_count || 0,
+          }))
+          .filter(r => r.engagement > 0)
+          .sort((a, b) => b.engagement - a.engagement)
+          .slice(0, 5);
+
         // Resources per event
         const eventMap = new Map<string, { title: string; count: number }>();
         resources.forEach(resource => {
@@ -99,11 +136,18 @@ export function useEventResourceStats() {
 
         const resourcesPerEvent = Array.from(eventMap.values())
           .sort((a, b) => b.count - a.count)
-          .slice(0, 5); // Top 5 events
+          .slice(0, 5)
+          .map(event => ({
+            ...event,
+            title: event.title.length > 20 ? event.title.substring(0, 20) + '...' : event.title,
+            eventTitle: event.title, // Keep original for tooltip
+          }));
 
         console.log('Event resource stats processed:', {
           totalResources,
           totalStorage,
+          totalViews,
+          totalDownloads,
           resourceTypes: resourceTypes.length,
           accessLevels: accessLevels.length
         });
@@ -111,11 +155,15 @@ export function useEventResourceStats() {
         return {
           totalResources,
           totalStorage,
+          totalViews,
+          totalDownloads,
           resourceTypes,
           accessLevels,
           downloadableStats: { downloadable, nonDownloadable },
           averageFileSize,
-          resourcesPerEvent
+          resourcesPerEvent,
+          topEngagingResources,
+          engagementByType
         };
       } catch (error) {
         console.error('Error in resource stats query:', error);
@@ -123,11 +171,15 @@ export function useEventResourceStats() {
         return {
           totalResources: 0,
           totalStorage: 0,
+          totalViews: 0,
+          totalDownloads: 0,
           resourceTypes: [],
           accessLevels: [],
           downloadableStats: { downloadable: 0, nonDownloadable: 0 },
           averageFileSize: 0,
-          resourcesPerEvent: []
+          resourcesPerEvent: [],
+          topEngagingResources: [],
+          engagementByType: []
         };
       }
     },

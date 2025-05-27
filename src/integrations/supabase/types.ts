@@ -838,11 +838,54 @@ export type Database = {
           },
         ]
       }
+      event_resource_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          profile_id: string | null
+          resource_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          profile_id?: string | null
+          resource_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          profile_id?: string | null
+          resource_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_resource_interactions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_resource_interactions_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "event_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_resources: {
         Row: {
           access_level: string
           created_at: string
           description: string | null
+          download_count: number | null
           event_id: string
           external_url: string | null
           file_format: string | null
@@ -850,16 +893,22 @@ export type Database = {
           file_url: string | null
           id: string
           is_downloadable: boolean
+          last_downloaded_at: string | null
+          last_viewed_at: string | null
           resource_type: string
           sort_order: number | null
           title: string
+          unique_downloaders: number | null
+          unique_viewers: number | null
           updated_at: string
           uploaded_by: string | null
+          view_count: number | null
         }
         Insert: {
           access_level?: string
           created_at?: string
           description?: string | null
+          download_count?: number | null
           event_id: string
           external_url?: string | null
           file_format?: string | null
@@ -867,16 +916,22 @@ export type Database = {
           file_url?: string | null
           id?: string
           is_downloadable?: boolean
+          last_downloaded_at?: string | null
+          last_viewed_at?: string | null
           resource_type: string
           sort_order?: number | null
           title: string
+          unique_downloaders?: number | null
+          unique_viewers?: number | null
           updated_at?: string
           uploaded_by?: string | null
+          view_count?: number | null
         }
         Update: {
           access_level?: string
           created_at?: string
           description?: string | null
+          download_count?: number | null
           event_id?: string
           external_url?: string | null
           file_format?: string | null
@@ -884,11 +939,16 @@ export type Database = {
           file_url?: string | null
           id?: string
           is_downloadable?: boolean
+          last_downloaded_at?: string | null
+          last_viewed_at?: string | null
           resource_type?: string
           sort_order?: number | null
           title?: string
+          unique_downloaders?: number | null
+          unique_viewers?: number | null
           updated_at?: string
           uploaded_by?: string | null
+          view_count?: number | null
         }
         Relationships: [
           {
