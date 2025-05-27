@@ -1,196 +1,241 @@
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BookOpen } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
-import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
-import { format } from "date-fns";
-import { BlogWithAuthor } from "@/types/blog/types";
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileText, Image, Video, ExternalLink, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ProfileContentTabProps {
   profileId: string;
 }
 
+interface BlogItem {
+  id: string;
+  title: string;
+  summary: string;
+  categories: string[];
+  created_at: string;
+  status: string;
+  cover_image_url?: string;
+}
+
+interface HubResource {
+  id: string;
+  title: string;
+  description?: string;
+  resource_type: string;
+  created_at: string;
+  file_url?: string;
+  external_url?: string;
+}
+
+interface MentorContent {
+  id: string;
+  title: string;
+  description?: string;
+  content_type: string;
+  created_at: string;
+  file_url?: string;
+  external_url?: string;
+}
+
 export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
-  const [selectedBlog, setSelectedBlog] = useState<BlogWithAuthor | null>(null);
-  const [selectedResource, setSelectedResource] = useState<any | null>(null);
-  
-  const { data: blogs, isLoading: isLoadingBlogs } = useQuery({
+  const { data: blogs = [], isLoading: blogsLoading } = useQuery({
     queryKey: ['profile-blogs', profileId],
-    queryFn: async () => {
+    queryFn: async (): Promise<BlogItem[]> => {
       const { data, error } = await supabase
         .from('blogs')
-        .select('*')
+        .select('id, title, summary, categories, created_at, status, cover_image_url')
         .eq('author_id', profileId)
         .order('created_at', { ascending: false });
-
+      
       if (error) throw error;
       return data || [];
-    },
-    enabled: !!profileId,
+    }
   });
 
-  const { data: resources, isLoading: isLoadingResources } = useQuery({
-    queryKey: ['profile-resources', profileId],
-    queryFn: async () => {
+  const { data: hubResources = [], isLoading: hubResourcesLoading } = useQuery({
+    queryKey: ['profile-hub-resources', profileId],
+    queryFn: async (): Promise<HubResource[]> => {
       const { data, error } = await supabase
         .from('hub_resources')
-        .select('*')
-        .eq('uploaded_by', profileId)
+        .select('id, title, description, resource_type, created_at, file_url, external_url')
+        .eq('created_by', profileId)
         .order('created_at', { ascending: false });
-
+      
       if (error) throw error;
       return data || [];
-    },
-    enabled: !!profileId,
+    }
   });
 
-  const handleOpenBlog = (blog: BlogWithAuthor) => {
-    setSelectedBlog(blog);
+  const { data: mentorContent = [], isLoading: mentorContentLoading } = useQuery({
+    queryKey: ['profile-mentor-content', profileId],
+    queryFn: async (): Promise<MentorContent[]> => {
+      const { data, error } = await supabase
+        .from('mentor_content')
+        .select('id, title, description, content_type, created_at, file_url, external_url')
+        .eq('mentor_id', profileId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const getIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'video':
+        return <Video className="h-4 w-4" />;
+      case 'image':
+        return <Image className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
   };
 
-  const handleOpenResource = (resource: any) => {
-    setSelectedResource(resource);
-  };
+  const isLoading = blogsLoading || hubResourcesLoading || mentorContentLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const totalContent = blogs.length + hubResources.length + mentorContent.length;
+
+  if (totalContent === 0) {
+    return (
+      <div className="text-center py-12">
+        <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No content yet</h3>
+        <p className="text-gray-500">This user hasn't created any content yet.</p>
+      </div>
+    );
+  }
 
   return (
-    <ScrollArea className="h-full">
-      <div className="px-1 sm:px-2 py-4">
-        <Tabs defaultValue="blogs" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="blogs" className="flex items-center gap-1">
-              <BookOpen className="h-4 w-4" />
-              Blogs
-            </TabsTrigger>
-            <TabsTrigger value="resources" className="flex items-center gap-1">
-              <FileText className="h-4 w-4" />
-              Resources
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="blogs" className="mt-0">
-            {isLoadingBlogs ? (
-              <div className="space-y-4">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-            ) : blogs && blogs.length > 0 ? (
-              <div className="space-y-4">
-                {blogs.map((blog) => (
-                  <Card 
-                    key={blog.id} 
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
-                    onClick={() => handleOpenBlog(blog as BlogWithAuthor)}
-                  >
-                    <div className="flex flex-col md:flex-row">
-                      <div className="md:w-1/3 h-48">
-                        <img 
-                          src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/400/300`} 
-                          alt={blog.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="md:w-2/3">
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">{blog.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground line-clamp-2">{blog.summary}</p>
-                          <div className="flex justify-between items-center mt-4">
-                            <span className="text-xs text-muted-foreground">{format(new Date(blog.created_at), 'MMM d, yyyy')}</span>
-                            {blog.categories && blog.categories[0] && (
-                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                                {blog.categories[0]}
-                              </span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-muted-foreground">No blogs published yet</p>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="resources" className="mt-0">
-            {isLoadingResources ? (
-              <div className="space-y-4">
-                <Skeleton className="h-48 w-full" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-            ) : resources && resources.length > 0 ? (
-              <div className="space-y-4">
-                {resources.map((resource) => (
-                  <Card 
-                    key={resource.id} 
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
-                    onClick={() => handleOpenResource(resource)}
-                  >
-                    <div className="flex flex-col md:flex-row">
-                      <div className="md:w-1/3 h-48 bg-muted flex items-center justify-center">
-                        {resource.thumbnail_url ? (
-                          <img 
-                            src={resource.thumbnail_url} 
-                            alt={resource.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <FileText className="h-16 w-16 text-muted-foreground/50" />
-                        )}
-                      </div>
-                      <div className="md:w-2/3">
-                        <CardHeader className="p-4">
-                          <CardTitle className="text-base">{resource.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
-                          <div className="flex justify-between items-center mt-4">
-                            <span className="text-xs text-muted-foreground">{format(new Date(resource.created_at), 'MMM d, yyyy')}</span>
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{resource.content_type}</span>
-                          </div>
-                        </CardContent>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-muted-foreground">No resources shared yet</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Content Overview</h3>
+        <Badge variant="outline">
+          {totalContent} item{totalContent !== 1 ? 's' : ''}
+        </Badge>
       </div>
 
-      {/* Blog post dialog */}
-      {selectedBlog && (
-        <BlogPostDialog
-          blog={selectedBlog}
-          isOpen={!!selectedBlog}
-          onClose={() => setSelectedBlog(null)}
-        />
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Blog Posts */}
+        {blogs.map((blog) => (
+          <Card key={`blog-${blog.id}`} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <Badge variant="outline" className="text-xs">Blog</Badge>
+                </div>
+                <Badge 
+                  variant={blog.status === 'Published' ? 'default' : 'secondary'}
+                  className="text-xs"
+                >
+                  {blog.status}
+                </Badge>
+              </div>
+              <CardTitle className="text-base line-clamp-2">{blog.title}</CardTitle>
+              <CardDescription className="text-sm line-clamp-2">
+                {blog.summary}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(blog.created_at), 'MMM d, yyyy')}
+                </div>
+                <Button size="sm" variant="ghost">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
 
-      {/* Resource dialog - we'd need to implement this component */}
-      {/* {selectedResource && (
-        <ResourceViewDialog
-          resource={selectedResource}
-          isOpen={!!selectedResource}
-          onClose={() => setSelectedResource(null)}
-        />
-      )} */}
-    </ScrollArea>
+        {/* Hub Resources */}
+        {hubResources.map((resource) => (
+          <Card key={`hub-${resource.id}`} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 mb-2">
+                {getIcon(resource.resource_type)}
+                <Badge variant="outline" className="text-xs">Hub Resource</Badge>
+              </div>
+              <CardTitle className="text-base line-clamp-2">{resource.title}</CardTitle>
+              {resource.description && (
+                <CardDescription className="text-sm line-clamp-2">
+                  {resource.description}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(resource.created_at), 'MMM d, yyyy')}
+                </div>
+                <Button size="sm" variant="ghost">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Mentor Content */}
+        {mentorContent.map((content) => (
+          <Card key={`mentor-${content.id}`} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 mb-2">
+                {getIcon(content.content_type)}
+                <Badge variant="outline" className="text-xs">Mentor Content</Badge>
+              </div>
+              <CardTitle className="text-base line-clamp-2">{content.title}</CardTitle>
+              {content.description && (
+                <CardDescription className="text-sm line-clamp-2">
+                  {content.description}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
+                  {format(new Date(content.created_at), 'MMM d, yyyy')}
+                </div>
+                <Button size="sm" variant="ghost">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  View
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }

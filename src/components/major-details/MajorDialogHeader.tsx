@@ -1,112 +1,51 @@
-
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Bookmark, Share2, BookmarkCheck, Users, DollarSign } from "lucide-react";
-import type { Major } from "@/types/database/majors";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { GraduationCap, TrendingUp } from "lucide-react";
+
+interface Major {
+  id: string;
+  title: string;
+  description: string;
+  featured?: boolean;
+  careers_count?: number;
+  average_salary?: number;
+  demand_score?: number;
+  code?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface MajorDialogHeaderProps {
   major: Major;
-  isBookmarked: boolean;
-  onBookmarkToggle: () => void;
-  onShare: () => void;
 }
 
-export function MajorDialogHeader({
-  major,
-  isBookmarked,
-  onBookmarkToggle,
-  onShare
-}: MajorDialogHeaderProps) {
+export function MajorDialogHeader({ major }: MajorDialogHeaderProps) {
   return (
-    <DialogHeader className="sticky top-0 z-10 px-4 sm:px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex justify-between items-center">
-        <DialogTitle className="text-lg sm:text-xl font-semibold pr-10">
-          {major.title}
-        </DialogTitle>
-        <div className="flex items-center gap-2">
-          {/* Bookmark Button */}
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={onBookmarkToggle} 
-            className={cn(
-              "rounded-full transition-colors", 
-              isBookmarked 
-                ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800/60" 
-                : "hover:bg-muted"
-            )} 
-            title={isBookmarked ? "Remove Bookmark" : "Bookmark"}
-          >
-            {isBookmarked ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
-          </Button>
-          
-          {/* Share Button */}
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={onShare} 
-            className="rounded-full hover:bg-muted" 
-            title="Share"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-          
-          {/* Close Button */}
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="rounded-full hover:bg-muted/80 hover:text-destructive" 
-            title="Close" 
-            asChild
-          >
-            <div data-dialog-close="">
-              <X className="h-4 w-4" />
+    <Card className="border-none shadow-none bg-gradient-to-r from-blue-50 to-purple-50">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <GraduationCap className="h-6 w-6 text-blue-600" />
             </div>
-          </Button>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{major.title}</h2>
+              <div className="flex items-center space-x-2 mt-2">
+                {major.featured && (
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Featured
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        {major.category && Array.isArray(major.category) && major.category.length > 0 && (
-          <Badge 
-            variant="outline" 
-            className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
-          >
-            {major.category[0]}
-          </Badge>
-        )}
         
-        {major.degree_levels && major.degree_levels.length > 0 && (
-          <Badge 
-            variant="outline" 
-            className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/60"
-          >
-            {major.degree_levels[0]}
-          </Badge>
-        )}
-
-        {major.potential_salary && (
-          <Badge 
-            variant="outline" 
-            className="bg-red-100 text-black border-red-300 font-medium dark:border-red-700"
-          >
-            <DollarSign className="h-3 w-3 mr-1" />
-            {major.potential_salary}
-          </Badge>
-        )}
-
-        {major.profiles_count !== undefined && major.profiles_count > 0 && (
-          <Badge 
-            variant="outline" 
-            className="bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-800/60"
-          >
-            <Users className="h-3 w-3 mr-1" />
-            {major.profiles_count} {major.profiles_count === 1 ? 'User' : 'Users'}
-          </Badge>
-        )}
-      </div>
-    </DialogHeader>
+        <p className="text-gray-600 leading-relaxed">
+          {major.description}
+        </p>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,182 +1,111 @@
 
-import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookMarked, User, Briefcase, BookOpen, School } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useAuthState } from "@/hooks/useAuthState";
-import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
-import { MajorDetails } from "@/components/MajorDetails";
-import { MentorBookmarks } from "./MentorBookmarks";
-import { CareerBookmarks } from "./CareerBookmarks";
-import { MajorBookmarks } from "./MajorBookmarks";
-import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
-import { MajorProfile, RealtimeBookmarkUpdate } from "./types";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CareerBookmarks } from './CareerBookmarks';
+import { MajorBookmarks } from './MajorBookmarks';
+import { MentorBookmarks } from './MentorBookmarks';
+import { ScholarshipBookmarks } from './ScholarshipBookmarks';
 
-export function BookmarksTabWrapper() {
-  const { user } = useAuthState();
-  const [activeTab, setActiveTab] = useLocalStorage("bookmarks-active-tab", "mentors");
-  const queryClient = useQueryClient();
+interface BookmarksTabWrapperProps {
+  profileId: string;
+}
 
-  // State for profile dialog
-  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
-  const [showProfileDialog, setShowProfileDialog] = useState(false);
+interface Bookmark {
+  id: string;
+  content_type: string;
+  content_id: string;
+  created_at: string;
+}
 
-  // State for career dialog
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
-  const [showCareerDialog, setShowCareerDialog] = useState(false);
-  
-  // State for major dialog
-  const [selectedMajor, setSelectedMajor] = useState<MajorProfile | null>(null);
-  const [showMajorDialog, setShowMajorDialog] = useState(false);
+export function BookmarksTabWrapper({ profileId }: BookmarksTabWrapperProps) {
+  const [activeTab, setActiveTab] = useState('careers');
 
-  // Function to handle View Profile button click
-  const handleViewProfile = (mentorId: string) => {
-    setSelectedMentorId(mentorId);
-    setShowProfileDialog(true);
-  };
+  const { data: bookmarks = [], isLoading } = useQuery({
+    queryKey: ['user-bookmarks', profileId],
+    queryFn: async (): Promise<Bookmark[]> => {
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select('id, content_type, content_id, created_at')
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-  // Function to handle View Career Details button click
-  const handleViewCareerDetails = (careerId: string) => {
-    setSelectedCareerId(careerId);
-    setShowCareerDialog(true);
-  };
-  
-  // Function to handle View Major Details button click
-  const handleViewMajorDetails = (major: MajorProfile) => {
-    setSelectedMajor(major);
-    setShowMajorDialog(true);
-  };
+  const groupedBookmarks = bookmarks.reduce((acc, bookmark) => {
+    const contentType = bookmark.content_type || 'unknown';
+    if (!acc[contentType]) {
+      acc[contentType] = [];
+    }
+    acc[contentType].push({
+      content_id: bookmark.content_id || '',
+      content_type: contentType
+    });
+    return acc;
+  }, {} as Record<string, Array<{ content_id: string; content_type: string }>>);
 
-  // Set up realtime subscriptions for bookmark changes
-  useEffect(() => {
-    if (!user) return;
-    
-    // Listen for changes to bookmarks for the current user
-    const channel = supabase
-      .channel('bookmark-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen for inserts, updates, and deletes
-          schema: 'public',
-          table: 'user_bookmarks',
-          filter: `profile_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Bookmark change detected:', payload);
-          
-          // Extract the content type and id from the payload
-          const contentType = payload.new?.content_type || payload.old?.content_type;
-          const contentId = payload.new?.content_id || payload.old?.content_id;
-          const isDelete = payload.eventType === 'DELETE';
-          
-          // Pass the update details to our processing function
-          const bookmarkUpdate: RealtimeBookmarkUpdate = {
-            contentType: contentType as any,
-            contentId,
-            action: isDelete ? 'delete' : 'add'
-          };
-          
-          // Update the query cache based on content type
-          if (bookmarkUpdate.contentType === 'mentor') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-mentors'] });
-          } else if (bookmarkUpdate.contentType === 'career') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-careers'] });
-          } else if (bookmarkUpdate.contentType === 'major') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-majors'] });
-          } else if (bookmarkUpdate.contentType === 'scholarship') {
-            queryClient.invalidateQueries({ queryKey: ['bookmarked-scholarships'] });
-          }
-        }
-      )
-      .subscribe();
-    
-    // Clean up subscription on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, queryClient]);
+  const careerBookmarks = groupedBookmarks.careers || [];
+  const majorBookmarks = groupedBookmarks.majors || [];
+  const mentorBookmarks = groupedBookmarks.mentors || [];
+  const scholarshipBookmarks = groupedBookmarks.scholarships || [];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <BookMarked className="w-6 h-6" />
-          My Bookmarks
-        </h2>
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Your Bookmarks</h3>
+        <p className="text-sm text-gray-600">
+          Manage your saved content across different categories
+        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="mentors" className="flex gap-1 items-center">
-            <User className="h-4 w-4" /> Mentors
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="careers">
+            Careers ({careerBookmarks.length})
           </TabsTrigger>
-          <TabsTrigger value="careers" className="flex gap-1 items-center">
-            <Briefcase className="h-4 w-4" /> Careers
+          <TabsTrigger value="majors">
+            Majors ({majorBookmarks.length})
           </TabsTrigger>
-          <TabsTrigger value="majors" className="flex gap-1 items-center">
-            <BookOpen className="h-4 w-4" /> Academic Majors
+          <TabsTrigger value="mentors">
+            Mentors ({mentorBookmarks.length})
           </TabsTrigger>
-          <TabsTrigger value="scholarships" className="flex gap-1 items-center">
-            <School className="h-4 w-4" /> Scholarships
+          <TabsTrigger value="scholarships">
+            Scholarships ({scholarshipBookmarks.length})
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mentors" className="space-y-4">
-          <MentorBookmarks 
-            activePage={activeTab}
-            onViewMentorProfile={handleViewProfile}
-          />
-        </TabsContent>
-
-        <TabsContent value="careers" className="space-y-4">
+        <TabsContent value="careers" className="mt-6">
           <CareerBookmarks 
-            activePage={activeTab}
-            onViewCareerDetails={handleViewCareerDetails}
+            bookmarks={careerBookmarks}
+            isLoading={isLoading}
           />
         </TabsContent>
 
-        <TabsContent value="majors" className="space-y-4">
+        <TabsContent value="majors" className="mt-6">
           <MajorBookmarks 
-            activePage={activeTab}
-            onViewMajorDetails={handleViewMajorDetails}
+            bookmarks={majorBookmarks}
+            isLoading={isLoading}
           />
         </TabsContent>
 
-        <TabsContent value="scholarships" className="space-y-4">
-          <ScholarshipBookmarks activePage={activeTab} />
+        <TabsContent value="mentors" className="mt-6">
+          <MentorBookmarks 
+            bookmarks={mentorBookmarks}
+            isLoading={isLoading}
+          />
+        </TabsContent>
+
+        <TabsContent value="scholarships" className="mt-6">
+          <ScholarshipBookmarks 
+            bookmarks={scholarshipBookmarks}
+            isLoading={isLoading}
+          />
         </TabsContent>
       </Tabs>
-
-      {/* Dialog for Mentor Profile */}
-      {selectedMentorId && (
-        <ProfileDetailsDialog 
-          userId={selectedMentorId} 
-          open={showProfileDialog} 
-          onOpenChange={setShowProfileDialog} 
-        />
-      )}
-
-      {/* Dialog for Career Details */}
-      {selectedCareerId && (
-        <CareerDetailsDialog 
-          careerId={selectedCareerId} 
-          open={showCareerDialog} 
-          onOpenChange={setShowCareerDialog} 
-        />
-      )}
-      
-      {/* Dialog for Major Details */}
-      {selectedMajor && (
-        <MajorDetails
-          major={selectedMajor}
-          open={showMajorDialog}
-          onOpenChange={setShowMajorDialog}
-        />
-      )}
     </div>
   );
 }

@@ -1,334 +1,189 @@
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
-import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
 
-type Status = Database["public"]["Enums"]["status"];
+interface SelectOption {
+  id: string;
+  title?: string;
+  name?: string;
+}
 
 interface SelectWithCustomOptionProps {
-  value: string;
+  table: string;
+  value?: string;
   onValueChange: (value: string) => void;
-  options: Array<{ id: string; title?: string; name?: string; }>;
-  placeholder: string;
-  tableName: 'majors' | 'schools' | 'companies' | 'careers';
+  placeholder?: string;
+  disabled?: boolean;
 }
 
 export function SelectWithCustomOption({
-  value = "",
+  table,
+  value,
   onValueChange,
-  options,
-  placeholder,
-  tableName,
+  placeholder = "Select an option",
+  disabled = false
 }: SelectWithCustomOptionProps) {
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customValue, setCustomValue] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [localOptions, setLocalOptions] = useState<Array<{ id: string; title?: string; name?: string; }>>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const { toast } = useToast();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [options, setOptions] = useState<SelectOption[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Pre-populate with provided options
-  useEffect(() => {
-    if (options && options.length > 0) {
-      setLocalOptions(options);
-    }
-  }, [options]);
-
-  // Get the correct field name for each table
-  const getFieldName = (table: string) => {
-    if (table === 'schools' || table === 'companies') {
-      return 'name';
-    }
-    return 'title';
-  };
-
-  // Fetch options for the given table with search
-  const { data: searchResults, isLoading } = useQuery({
-    queryKey: [tableName, 'search', searchQuery],
-    queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) {
-        return []; // Return empty if search query is too short
-      }
-      
-      console.log(`Fetching ${tableName} with search: ${searchQuery}`);
-      
+  const { data: fetchedOptions = [], isLoading, refetch } = useQuery({
+    queryKey: [table, 'select-options'],
+    queryFn: async (): Promise<SelectOption[]> => {
       try {
-        // Ensure query is safe
-        const safeQuery = String(searchQuery).toLowerCase();
-        const fieldName = getFieldName(tableName);
-        
-        // Simple query that should work for all tables
         const { data, error } = await supabase
-          .from(tableName)
-          .select(`id, ${fieldName}`)
-          .ilike(fieldName, `%${safeQuery}%`)
-          .order(fieldName)
-          .limit(50);
+          .from(table)
+          .select('id, title, name')
+          .order('title, name');
         
         if (error) {
-          console.error(`Error fetching ${tableName}:`, error);
+          console.error(`Error fetching ${table}:`, error);
           return [];
         }
-
-        console.log(`Fetched ${data?.length || 0} ${tableName}`);
         
-        // Ensure data is valid before returning and handle different field names
-        return (data || []).filter((item: any) => {
-          if (!item || typeof item !== 'object') return false;
-          if (!('id' in item) || !item.id) return false;
-          const fieldValue = item[fieldName as keyof typeof item];
-          return fieldValue !== null && fieldValue !== undefined;
-        }).map((item: any) => {
-          if (!item || typeof item !== 'object') {
-            return { id: '', [fieldName === 'name' ? 'name' : 'title']: '' };
-          }
-          const fieldValue = item[fieldName as keyof typeof item];
-          return {
-            id: item.id || '',
-            [fieldName === 'name' ? 'name' : 'title']: fieldValue || ''
-          };
-        });
+        return (data || []).map(item => ({
+          id: item.id,
+          title: item.title || item.name || '',
+          name: item.name || item.title || ''
+        }));
       } catch (error) {
-        console.error(`Error in search query:`, error);
+        console.error(`Error in query for ${table}:`, error);
         return [];
       }
     },
-    enabled: searchQuery.length >= 2,
-    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
+    retry: 1,
+    retryDelay: 1000
   });
 
-  // Update local options when new search results arrive
   useEffect(() => {
-    if (searchResults && searchResults.length > 0) {
-      // Merge with existing options, removing duplicates
-      setLocalOptions(prevOptions => {
-        const combined = [...prevOptions];
-        searchResults.forEach(option => {
-          if (option && option.id && !combined.some(existing => existing.id === option.id)) {
-            combined.push(option);
-          }
-        });
-        return combined;
-      });
-    }
-  }, [searchResults]);
+    setOptions(fetchedOptions);
+  }, [fetchedOptions]);
 
-  // Client-side filtering for immediate feedback
-  const filteredOptions = searchQuery.length > 0
-    ? localOptions.filter(option => {
-        const searchValue = (option.title || option.name || '').toLowerCase();
-        return searchValue.includes(searchQuery.toLowerCase());
-      })
-    : localOptions;
-
-  // Debounced search handler to prevent excessive API calls
-  const handleSearchChange = useDebouncedCallback((value: string) => {
-    setSearchQuery(value);
-  }, 300);
-
-  // Focus the search input when content opens
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      // Use a short timeout to ensure the select content is rendered
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 10);
-    } else {
-      setSearchQuery("");
-    }
-  };
-
-  const handleCustomSubmit = async () => {
-    if (!customValue.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a value",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleCreateNew = async () => {
+    if (!newItemName.trim()) return;
+    
+    setIsCreating(true);
     try {
-      const fieldName = getFieldName(tableName);
-      
-      // Check if entry already exists
-      const { data: existingData, error: checkError } = await supabase
-        .from(tableName)
-        .select(`id, ${fieldName}`)
-        .eq(fieldName, customValue)
-        .maybeSingle();
-
-      if (checkError) throw checkError;
-
-      if (existingData && existingData.id) {
-        onValueChange(existingData.id);
-        setShowCustomInput(false);
-        setCustomValue("");
-        return;
-      }
-
-      // Create new entry with proper field mapping based on table type
-      let insertData: any;
-      
-      if (tableName === 'majors') {
-        insertData = { 
-          title: customValue, 
-          description: `Custom major: ${customValue}`, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'careers') {
-        insertData = { 
-          title: customValue, 
-          description: `Custom career: ${customValue}`, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'schools') {
-        insertData = { 
-          name: customValue, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'companies') {
-        insertData = { 
-          name: customValue, 
-          status: 'Pending' as Status 
-        };
-      } else {
-        throw new Error(`Unsupported table: ${tableName}`);
-      }
+      const insertData = table === 'careers' 
+        ? { title: newItemName.trim(), description: `Custom ${table} entry` }
+        : { name: newItemName.trim() };
 
       const { data, error } = await supabase
-        .from(tableName)
-        .insert(insertData)
+        .from(table)
+        .insert([insertData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error(`Error creating new ${table}:`, error);
+        return;
+      }
 
-      toast({
-        title: "Success",
-        description: `Successfully added new ${tableName.slice(0, -1)}.`,
-      });
-
-      onValueChange(data.id);
-      setShowCustomInput(false);
-      setCustomValue("");
-      
-      // Add the new item to local options
-      setLocalOptions(prev => [...prev, data]);
+      if (data) {
+        const newOption: SelectOption = {
+          id: data.id,
+          title: data.title || data.name || '',
+          name: data.name || data.title || ''
+        };
+        
+        setOptions(prev => [...prev, newOption]);
+        onValueChange(data.id);
+        setNewItemName('');
+        setIsDialogOpen(false);
+        refetch();
+      }
     } catch (error) {
-      console.error(`Failed to add new ${tableName}:`, error);
-      toast({
-        title: "Error",
-        description: `Failed to add new ${tableName}. Please try again.`,
-        variant: "destructive",
-      });
+      console.error(`Error creating new ${table}:`, error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  if (showCustomInput) {
-    return (
-      <div className="space-y-2">
-        <Input
-          value={customValue}
-          onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName.slice(0, -1)} name`}
-        />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={handleCustomSubmit}
-            size="sm"
-          >
-            Add
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomValue("");
-            }}
-            variant="outline"
-            size="sm"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const displayValue = options.find(option => option.id === value);
+  const displayText = displayValue ? (displayValue.title || displayValue.name) : placeholder;
 
   return (
-    <div className="w-full">
-      <Select
-        value={value}
-        onValueChange={(newValue) => {
-          if (newValue === "other") {
-            setShowCustomInput(true);
-          } else {
-            onValueChange(newValue);
-          }
-        }}
-        onOpenChange={handleOpenChange}
+    <div className="flex gap-2">
+      <Select 
+        value={value} 
+        onValueChange={onValueChange}
+        disabled={disabled || isLoading}
       >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
+        <SelectTrigger className="flex-1">
+          <SelectValue placeholder={placeholder}>
+            {displayText}
+          </SelectValue>
         </SelectTrigger>
-        <SelectContent ref={contentRef}>
-          <div className="p-2">
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.id} value={option.id}>
+              {option.title || option.name}
+            </SelectItem>
+          ))}
+          {options.length === 0 && !isLoading && (
+            <SelectItem value="" disabled>
+              No options available
+            </SelectItem>
+          )}
+        </SelectContent>
+      </Select>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="icon"
+            disabled={disabled}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New {table.slice(0, -1)}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
             <Input
-              ref={searchInputRef}
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearchChange(e.target.value);
-              }}
-              className="mb-2"
+              placeholder={`Enter ${table.slice(0, -1)} name`}
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
               onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
                 if (e.key === 'Enter') {
-                  e.stopPropagation();
+                  e.preventDefault();
+                  handleCreateNew();
                 }
               }}
             />
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setNewItemName('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCreateNew}
+                disabled={!newItemName.trim() || isCreating}
+              >
+                {isCreating ? 'Creating...' : 'Create'}
+              </Button>
+            </div>
           </div>
-          <ScrollArea className="h-[200px]">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.title || option.name || ''}
-                </SelectItem>
-              ))
-            ) : (
-              <div className="p-2 text-center text-muted-foreground">
-                {isLoading || isSearching ? 'Searching...' : 'No results found'}
-              </div>
-            )}
-            <SelectItem value="other">Other (Add New)</SelectItem>
-          </ScrollArea>
-        </SelectContent>
-      </Select>
-      {(isLoading || isSearching) && (
-        <div className="flex items-center justify-center mt-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
