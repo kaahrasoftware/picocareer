@@ -4432,6 +4432,7 @@ export type Database = {
         | "Yemen"
         | "Zambia"
         | "Zimbabwe"
+        | "Democratic Republic of Congo"
       degree:
         | "No Degree"
         | "High School"
@@ -5159,6 +5160,7 @@ export const Constants = {
         "Yemen",
         "Zambia",
         "Zimbabwe",
+        "Democratic Republic of Congo",
       ],
       degree: [
         "No Degree",

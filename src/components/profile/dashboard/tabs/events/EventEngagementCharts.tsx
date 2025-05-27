@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Globe, Briefcase, GraduationCap, Users, TrendingUp, RefreshCw } from 'lucide-react';
 import { ColorfulStatCard } from '@/components/ui/colorful-stat-card';
 import { Button } from '@/components/ui/button';
+import { EventResourceMetrics } from './EventResourceMetrics';
 
 const MODERN_COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f97316', '#f59e0b', '#ef4444', '#06b6d4'];
 
@@ -13,7 +14,6 @@ interface EngagementData {
   countries: Array<{ name: string; count: number; percentage: number }>;
   careers: Array<{ name: string; count: number; percentage: number }>;
   organizations: Array<{ name: string; count: number; percentage: number }>;
-  studentProfessionalSplit: Array<{ name: string; count: number; percentage: number }>;
   acquisitionChannels: Array<{ name: string; count: number; percentage: number }>;
   totalParticipants: number;
 }
@@ -131,22 +131,6 @@ export function EventEngagementCharts() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 
-      // Process student vs professional split
-      const roleMap = new Map<string, number>();
-      registrations?.forEach(reg => {
-        if (reg.student_or_professional) {
-          const role = reg.student_or_professional;
-          roleMap.set(role, (roleMap.get(role) || 0) + 1);
-        }
-      });
-
-      const studentProfessionalSplit = Array.from(roleMap.entries())
-        .map(([name, count]) => ({
-          name,
-          count,
-          percentage: Math.round((count / totalParticipants) * 100)
-        }));
-
       // Process acquisition channels
       const channelMap = new Map<string, number>();
       registrations?.forEach(reg => {
@@ -169,7 +153,6 @@ export function EventEngagementCharts() {
         countries,
         careers,
         organizations,
-        studentProfessionalSplit,
         acquisitionChannels,
         totalParticipants
       };
@@ -359,100 +342,10 @@ export function EventEngagementCharts() {
           </CardContent>
         </Card>
 
-        {/* Enhanced Participant Types - Two Column Layout */}
-        <Card className="md:col-span-2 bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-amber-700">
-              <div className="p-2 bg-amber-200 rounded-full">
-                <Users className="h-4 w-4" />
-              </div>
-              Participant Types Breakdown
-            </CardTitle>
-            <p className="text-sm text-amber-600">Student vs Professional distribution</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col lg:flex-row gap-6 items-center">
-              {/* Left Side - Enhanced Donut Chart */}
-              <div className="relative flex-shrink-0">
-                <ResponsiveContainer width={200} height={200}>
-                  <PieChart>
-                    <Pie
-                      data={engagementData.studentProfessionalSplit}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="count"
-                    >
-                      {engagementData.studentProfessionalSplit.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={MODERN_COLORS[index % MODERN_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<DonutCenterTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Total Display */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-700">
-                      {engagementData.totalParticipants.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-amber-600 font-medium">Total</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side - Individual Stats */}
-              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                {engagementData.studentProfessionalSplit.map((item, index) => (
-                  <div 
-                    key={item.name}
-                    className="bg-white/80 rounded-lg p-4 border border-amber-200/50 hover:bg-white/90 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div 
-                        className="w-4 h-4 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length] }}
-                      />
-                      <span className="font-medium text-gray-900 capitalize">
-                        {item.name}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-amber-700">
-                          {item.count.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-gray-600">participants</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full transition-all duration-500"
-                            style={{ 
-                              width: `${item.percentage}%`,
-                              backgroundColor: MODERN_COLORS[index % MODERN_COLORS.length]
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium text-amber-600">
-                          {item.percentage}%
-                        </span>
-                      </div>
-                      
-                      <p className="text-xs text-gray-500">
-                        of total participants
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Event Resource Analytics - Replaces Participant Types Breakdown */}
+        <div className="md:col-span-2 lg:col-span-3">
+          <EventResourceMetrics />
+        </div>
 
         {/* Acquisition Channels */}
         <Card className="lg:col-span-1 bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 hover:shadow-lg transition-all duration-300">
