@@ -95,10 +95,13 @@ export function SelectWithCustomOption({
           const fieldValue = item[fieldName as keyof typeof item];
           return fieldValue !== null && fieldValue !== undefined;
         }).map(item => {
+          if (!item || typeof item !== 'object') {
+            return { id: '', [fieldName === 'name' ? 'name' : 'title']: '' };
+          }
           const fieldValue = item[fieldName as keyof typeof item];
           return {
-            id: item.id,
-            [fieldName === 'name' ? 'name' : 'title']: fieldValue
+            id: item.id || '',
+            [fieldName === 'name' ? 'name' : 'title']: fieldValue || ''
           };
         });
       } catch (error) {
@@ -181,7 +184,7 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry with proper field mapping
-      const insertData: Record<string, any> = { 
+      const insertData: any = { 
         [fieldName]: customValue, 
         description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, 
         status: 'Pending' as Status 

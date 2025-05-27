@@ -263,7 +263,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
 
       toast.success('Email campaign saved successfully!');
       // Safe type casting for campaign ID with proper null checking
-      const campaignId = savedData && savedData[0] && savedData[0].id ? String(savedData[0].id) : undefined;
+      const campaignId = savedData && savedData[0] && savedData[0].id ? savedData[0].id.toString() : undefined;
       onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
