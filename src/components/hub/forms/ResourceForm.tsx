@@ -10,8 +10,8 @@ import { useState } from "react";
 interface ResourceFormData {
   title: string;
   description: string;
-  resource_type: string;
-  access_level: string;
+  resource_type: "document" | "link" | "video" | "image";
+  access_level: "public" | "admin" | "faculty" | "members";
   file_url?: string;
   external_url?: string;
 }
@@ -89,6 +89,19 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
     }
   };
 
+  const resourceTypeOptions = [
+    { id: "document", name: "Document" },
+    { id: "link", name: "Link" },
+    { id: "video", name: "Video" },
+    { id: "image", name: "Image" },
+  ];
+
+  const accessLevelOptions = [
+    { id: "members", name: "Members Only" },
+    { id: "public", name: "Public" },
+    { id: "admin", name: "Admin Only" },
+  ];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -112,12 +125,7 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
           name="resource_type"
           label="Resource Type"
           type="select"
-          options={[
-            { value: "document", label: "Document" },
-            { value: "link", label: "Link" },
-            { value: "video", label: "Video" },
-            { value: "image", label: "Image" },
-          ]}
+          options={resourceTypeOptions}
           required
         />
 
@@ -126,11 +134,7 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
           name="access_level"
           label="Access Level"
           type="select"
-          options={[
-            { value: "members", label: "Members Only" },
-            { value: "public", label: "Public" },
-            { value: "admin", label: "Admin Only" },
-          ]}
+          options={accessLevelOptions}
           required
         />
 

@@ -43,7 +43,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
               avatarUrl={profile.avatar_url}
-              name={profile.full_name || 'Unknown User'}
+              imageAlt={profile.full_name || 'Unknown User'}
               size="md"
               editable={false}
             />

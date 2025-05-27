@@ -40,7 +40,7 @@ export function SearchableSelect({
           return;
         }
         
-        // Type-safe query
+        // Type-safe query with proper error handling
         const { data, error } = await supabase
           .from(table as TableName)
           .select(`id, ${valueField}, ${labelField}`)
@@ -52,9 +52,18 @@ export function SearchableSelect({
           return;
         }
         
-        // Ensure all items have an id property and are the correct type
-        const validData = (data || []).filter(item => item && typeof item.id === 'string');
-        setOptions(validData);
+        // Ensure all items have an id property and are valid objects
+        if (data && Array.isArray(data)) {
+          const validData = data.filter(item => 
+            item && 
+            typeof item === 'object' && 
+            'id' in item && 
+            typeof item.id === 'string'
+          );
+          setOptions(validData);
+        } else {
+          setOptions([]);
+        }
       } catch (error) {
         console.error('Error fetching options:', error);
         setOptions([]);

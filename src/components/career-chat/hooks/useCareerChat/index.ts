@@ -6,7 +6,27 @@ import { useProgressTracker } from './useProgressTracker';
 import { useSessionManager } from './useSessionManager';
 import { useApiConfig } from './useApiConfig';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { ChatSessionMetadata, QuestionCounts } from './types'; // Import the type from local types file
+
+// Define ChatSessionMetadata interface locally
+interface ChatSessionMetadata {
+  title?: string;
+  lastCategory?: string;
+  isComplete?: boolean;
+  overallProgress?: number;
+  startedAt?: string;
+  completedAt?: string;
+  questionCounts?: QuestionCounts;
+  careerInterests?: string[];
+  [key: string]: any;
+}
+
+interface QuestionCounts {
+  education: number;
+  skills: number;
+  workstyle: number;
+  goals: number;
+  [key: string]: number;
+}
 
 export function useCareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
