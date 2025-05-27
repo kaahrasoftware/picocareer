@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form } from '@/components/ui/form';
 import { FormField } from './FormField';
 
 // Define proper types for form data
@@ -28,37 +29,35 @@ interface EventRegistrationFormProps {
 }
 
 const STUDENT_OR_PROFESSIONAL_OPTIONS = [
-  { value: 'Student', label: 'Student' },
-  { value: 'Professional', label: 'Professional' }
+  { id: 'Student', name: 'Student' },
+  { id: 'Professional', name: 'Professional' }
 ];
 
 const COUNTRY_OPTIONS = [
-  { value: 'United States', label: 'United States' },
-  { value: 'Canada', label: 'Canada' },
-  { value: 'United Kingdom', label: 'United Kingdom' },
-  { value: 'Australia', label: 'Australia' },
-  { value: 'Germany', label: 'Germany' },
-  { value: 'France', label: 'France' },
-  { value: 'Other', label: 'Other' }
+  { id: 'United States', name: 'United States' },
+  { id: 'Canada', name: 'Canada' },
+  { id: 'United Kingdom', name: 'United Kingdom' },
+  { id: 'Australia', name: 'Australia' },
+  { id: 'Germany', name: 'Germany' },
+  { id: 'France', name: 'France' },
+  { id: 'Other', name: 'Other' }
 ];
 
 const HEARD_ABOUT_US_OPTIONS = [
-  { value: 'Social Media', label: 'Social Media' },
-  { value: 'Friend/Colleague', label: 'Friend/Colleague' },
-  { value: 'Website', label: 'Website' },
-  { value: 'Email Newsletter', label: 'Email Newsletter' },
-  { value: 'Search Engine', label: 'Search Engine' },
-  { value: 'Other', label: 'Other' }
+  { id: 'Social Media', name: 'Social Media' },
+  { id: 'Friend/Colleague', name: 'Friend/Colleague' },
+  { id: 'Website', name: 'Website' },
+  { id: 'Email Newsletter', name: 'Email Newsletter' },
+  { id: 'Search Engine', name: 'Search Engine' },
+  { id: 'Other', name: 'Other' }
 ];
 
 export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegistrationFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<RegistrationFormData>({
+  const form = useForm<RegistrationFormData>({
     resolver: zodResolver(registrationSchema)
   });
+
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = form;
 
   const onFormSubmit = async (data: RegistrationFormData) => {
     await onSubmit({
@@ -69,93 +68,99 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
     });
   };
 
-  const formFields = [
-    {
-      name: 'email' as const,
-      label: 'Email Address',
-      type: 'text' as const,
-      required: true,
-      validation: { required: 'Email is required' }
-    },
-    {
-      name: 'first_name' as const,
-      label: 'First Name',
-      type: 'text' as const,
-      required: true,
-      validation: { required: 'First name is required' }
-    },
-    {
-      name: 'last_name' as const,
-      label: 'Last Name',
-      type: 'text' as const,
-      required: true,
-      validation: { required: 'Last name is required' }
-    },
-    {
-      name: 'current_field' as const,
-      label: 'Current Academic Field/Position',
-      type: 'text' as const,
-      required: true,
-      validation: { required: 'Current academic field/position is required' }
-    },
-    {
-      name: 'student_or_professional' as const,
-      label: 'Are you a Student or Professional?',
-      type: 'select' as const,
-      required: true,
-      options: STUDENT_OR_PROFESSIONAL_OPTIONS,
-      validation: { required: 'Please select student or professional' }
-    },
-    {
-      name: 'current_organization' as const,
-      label: 'Current School/Company',
-      type: 'text' as const,
-      required: true,
-      validation: { required: 'Current school/company is required' }
-    },
-    {
-      name: 'country' as const,
-      label: 'Country',
-      type: 'select' as const,
-      required: true,
-      options: COUNTRY_OPTIONS,
-      validation: { required: 'Country is required' }
-    },
-    {
-      name: 'where_did_you_hear_about_us' as const,
-      label: 'Where did you hear about us?',
-      type: 'select' as const,
-      required: true,
-      options: HEARD_ABOUT_US_OPTIONS,
-      validation: { required: 'Please tell us how you heard about us' }
-    }
-  ];
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Register for Event</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          {formFields.map((field) => (
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
             <FormField
-              key={field.name}
-              field={field}
-              register={register}
-              errors={errors}
+              control={control}
+              name="email"
+              label="Email Address"
+              type="text"
+              placeholder="Enter your email address"
+              required={true}
             />
-          ))}
-          
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Registering...' : 'Register'}
-            </Button>
-          </div>
-        </form>
+
+            <FormField
+              control={control}
+              name="first_name"
+              label="First Name"
+              type="text"
+              placeholder="Enter your first name"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="last_name"
+              label="Last Name"
+              type="text"
+              placeholder="Enter your last name"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="current_field"
+              label="Current Academic Field/Position"
+              type="text"
+              placeholder="Enter your current field or position"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="student_or_professional"
+              label="Are you a Student or Professional?"
+              type="select"
+              options={STUDENT_OR_PROFESSIONAL_OPTIONS}
+              placeholder="Select student or professional"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="current_organization"
+              label="Current School/Company"
+              type="text"
+              placeholder="Enter your current school or company"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="country"
+              label="Country"
+              type="select"
+              options={COUNTRY_OPTIONS}
+              placeholder="Select your country"
+              required={true}
+            />
+
+            <FormField
+              control={control}
+              name="where_did_you_hear_about_us"
+              label="Where did you hear about us?"
+              type="select"
+              options={HEARD_ABOUT_US_OPTIONS}
+              placeholder="Select how you heard about us"
+              required={true}
+            />
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Registering...' : 'Register'}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );
