@@ -15,27 +15,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { StandardPagination } from '@/components/common/StandardPagination';
-import { useResourceTracking } from '@/hooks/use-resource-tracking';
-
-interface EventResourcesSectionProps {
-  resources: (EventResource & {
-    events?: {
-      id: string;
-      title: string;
-      start_time: string;
-      organized_by?: string;
-    };
-  })[];
-  onPreview?: (resource: EventResource) => void;
-  eventInfo?: {
-    id: string;
-    title: string;
-    start_time?: string;
-    end_time?: string;
-    platform?: string;
-    organized_by?: string;
-  };
-}
+import { useResourceTracking } from '@/hooks/useResourceTracking';
 
 // Constants
 const ITEMS_PER_PAGE = 18;
@@ -223,6 +203,26 @@ const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventRes
     </div>
   );
 };
+
+interface EventResourcesSectionProps {
+  resources: (EventResource & {
+    events?: {
+      id: string;
+      title: string;
+      start_time: string;
+      organized_by?: string;
+    };
+  })[];
+  onPreview?: (resource: EventResource) => void;
+  eventInfo?: {
+    id: string;
+    title: string;
+    start_time?: string;
+    end_time?: string;
+    platform?: string;
+    organized_by?: string;
+  };
+}
 
 export function EventResourcesSection({
   resources,
