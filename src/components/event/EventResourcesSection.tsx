@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { StandardPagination } from '@/components/common/StandardPagination';
+import { useResourceTracking } from '@/hooks/use-resource-tracking';
 
 interface EventResourcesSectionProps {
   resources: (EventResource & {
@@ -238,6 +239,7 @@ export function EventResourcesSection({
   const { toast } = useToast();
   const { session } = useAuth();
   const navigate = useNavigate();
+  const { trackView, trackDownload } = useResourceTracking();
 
   const handleSignIn = () => {
     setShowAuthDialog(false);
@@ -293,17 +295,28 @@ export function EventResourcesSection({
   // Get unique resource types for filtering
   const resourceTypes = Array.from(new Set(resources.map(r => r.resource_type)));
 
-  // Handle previewing a resource
+  // Enhanced preview handler with tracking
   const handlePreview = (resource: EventResource) => {
     if (!session?.user) {
       setShowAuthDialog(true);
       return;
     }
+
+    // Track the view before opening preview
+    console.log('🎯 Tracking view from resource list for:', resource.id);
+    trackView(resource.id, {
+      source: 'resource_list',
+      action: 'preview_click',
+      view_mode: viewMode,
+      resource_type: resource.resource_type,
+      resource_title: resource.title
+    });
+
     setPreviewResource(resource);
     onPreview?.(resource);
   };
 
-  // Handle downloading a resource
+  // Enhanced download handler with better tracking
   const handleDownload = async (resource: EventResource) => {
     if (!session?.user) {
       setShowAuthDialog(true);
@@ -318,10 +331,24 @@ export function EventResourcesSection({
       });
       return;
     }
+
     try {
       setDownloadingResources(prev => new Set(prev).add(resource.id));
-      console.log('Download started for resource:', resource.id);
-
+      
+      // Track the download with enhanced metadata
+      console.log('🎯 Tracking download from resource list for:', resource.id);
+      trackDownload(resource.id, {
+        source: 'resource_list',
+        action: 'download_click',
+        view_mode: viewMode,
+        resource_type: resource.resource_type,
+        resource_title: resource.title,
+        file_size: resource.file_size,
+        file_format: resource.file_format
+      });
+      
+      console.log('📁 Starting file download for resource:', resource.id);
+      
       // Create a safe filename from the resource title and format
       const safeTitle = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
@@ -378,11 +405,28 @@ export function EventResourcesSection({
     }
   };
 
-  // Resource card component
+  // Resource card component with enhanced tracking
   const ResourceCard = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
+    
+    // Track view when card comes into view (passive tracking)
+    const handleCardView = () => {
+      if (session?.user) {
+        console.log('👁️ Card viewed:', resource.id);
+        trackView(resource.id, {
+          source: 'resource_card_view',
+          action: 'card_impression',
+          view_mode: viewMode,
+          resource_type: resource.resource_type
+        });
+      }
+    };
+
     return (
-      <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
+      <Card 
+        className="group hover:shadow-md transition-all duration-200 border border-gray-200"
+        onMouseEnter={handleCardView}
+      >
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
@@ -462,11 +506,28 @@ export function EventResourcesSection({
     );
   };
 
-  // Resource list item component
+  // Resource list item component with enhanced tracking
   const ResourceListItem = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
+    
+    // Track view when list item comes into view (passive tracking)
+    const handleListItemView = () => {
+      if (session?.user) {
+        console.log('👁️ List item viewed:', resource.id);
+        trackView(resource.id, {
+          source: 'resource_list_view',
+          action: 'list_impression',
+          view_mode: viewMode,
+          resource_type: resource.resource_type
+        });
+      }
+    };
+
     return (
-      <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">
+      <div 
+        className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors"
+        onMouseEnter={handleListItemView}
+      >
         <div className="flex items-center gap-4">
           <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
             {getResourceIcon(resource.resource_type)}
