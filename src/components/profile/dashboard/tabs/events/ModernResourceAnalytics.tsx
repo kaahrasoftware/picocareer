@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,6 +116,16 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
 
         if (interactionsError) throw interactionsError;
 
+        // Get interactions for the previous 30 days for trend calculation
+        const sixtyDaysAgo = subDays(new Date(), 60);
+        const { data: previousInteractions, error: previousInteractionsError } = await supabase
+          .from('event_resource_interactions')
+          .select('interaction_type, created_at, resource_id, profile_id')
+          .gte('created_at', sixtyDaysAgo.toISOString())
+          .lt('created_at', thirtyDaysAgo.toISOString());
+
+        if (previousInteractionsError) throw previousInteractionsError;
+
         // Calculate basic metrics
         const totalViews = resources.reduce((sum, r) => sum + (r.view_count || 0), 0);
         const totalDownloads = resources.reduce((sum, r) => sum + (r.download_count || 0), 0);
@@ -217,18 +226,75 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
             type: r.resource_type || 'document'
           }));
 
-        // Calculate trends (mock data for now - would need historical data)
+        // Calculate trends based on actual data comparison
+        const currentPeriodViews = interactions?.filter(i => i.interaction_type === 'view').length || 0;
+        const previousPeriodViews = previousInteractions?.filter(i => i.interaction_type === 'view').length || 0;
+        const currentPeriodDownloads = interactions?.filter(i => i.interaction_type === 'download').length || 0;
+        const previousPeriodDownloads = previousInteractions?.filter(i => i.interaction_type === 'download').length || 0;
+
+        const viewsTrend = previousPeriodViews > 0 
+          ? Math.round(((currentPeriodViews - previousPeriodViews) / previousPeriodViews) * 100)
+          : currentPeriodViews > 0 ? 100 : 0;
+
+        const downloadsTrend = previousPeriodDownloads > 0 
+          ? Math.round(((currentPeriodDownloads - previousPeriodDownloads) / previousPeriodDownloads) * 100)
+          : currentPeriodDownloads > 0 ? 100 : 0;
+
+        const currentEngagement = currentPeriodViews > 0 ? (currentPeriodDownloads / currentPeriodViews) * 100 : 0;
+        const previousEngagement = previousPeriodViews > 0 ? (previousPeriodDownloads / previousPeriodViews) * 100 : 0;
+        const engagementTrend = previousEngagement > 0 
+          ? Math.round(((currentEngagement - previousEngagement) / previousEngagement) * 100)
+          : currentEngagement > 0 ? 100 : 0;
+
         const trends = {
-          views: Math.floor(Math.random() * 40) - 20, // -20 to +20
-          downloads: Math.floor(Math.random() * 40) - 20,
-          engagement: Math.floor(Math.random() * 30) - 15
+          views: Math.max(-100, Math.min(100, viewsTrend)), // Cap between -100% and +100%
+          downloads: Math.max(-100, Math.min(100, downloadsTrend)),
+          engagement: Math.max(-100, Math.min(100, engagementTrend))
         };
 
-        // Calculate average session time (mock for now)
-        const averageSessionTime = Math.floor(Math.random() * 300) + 120; // 2-7 minutes
+        // Calculate average session time based on interaction patterns
+        // For users with multiple interactions, calculate time between first and last interaction
+        const userSessions = new Map<string, { start: Date; end: Date }>();
+        interactions?.forEach(interaction => {
+          if (!interaction.profile_id) return;
+          
+          const interactionDate = new Date(interaction.created_at);
+          const existing = userSessions.get(interaction.profile_id);
+          
+          if (!existing) {
+            userSessions.set(interaction.profile_id, {
+              start: interactionDate,
+              end: interactionDate
+            });
+          } else {
+            if (interactionDate < existing.start) existing.start = interactionDate;
+            if (interactionDate > existing.end) existing.end = interactionDate;
+          }
+        });
 
-        // Calculate user retention rate (mock for now)
-        const userRetentionRate = Math.floor(Math.random() * 30) + 40; // 40-70%
+        const sessionDurations = Array.from(userSessions.values())
+          .map(session => (session.end.getTime() - session.start.getTime()) / 1000)
+          .filter(duration => duration > 0 && duration < 3600); // Filter out sessions longer than 1 hour
+
+        const averageSessionTime = sessionDurations.length > 0
+          ? Math.round(sessionDurations.reduce((sum, duration) => sum + duration, 0) / sessionDurations.length)
+          : 180; // Default to 3 minutes if no data
+
+        // Calculate user retention rate based on users who had interactions in multiple days
+        const userActivityDays = new Map<string, Set<string>>();
+        interactions?.forEach(interaction => {
+          if (!interaction.profile_id) return;
+          
+          const day = format(new Date(interaction.created_at), 'yyyy-MM-dd');
+          if (!userActivityDays.has(interaction.profile_id)) {
+            userActivityDays.set(interaction.profile_id, new Set());
+          }
+          userActivityDays.get(interaction.profile_id)!.add(day);
+        });
+
+        const returningUsers = Array.from(userActivityDays.values()).filter(days => days.size > 1).length;
+        const totalUsers = userActivityDays.size;
+        const userRetentionRate = totalUsers > 0 ? Math.round((returningUsers / totalUsers) * 100) : 0;
 
         return {
           totalViews,
@@ -253,7 +319,7 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
       }
     },
     retry: 1,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to prevent constant refetching
   });
 
   const analyticsCards = useMemo(() => {
@@ -268,7 +334,7 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         variant: 'blue' as const,
         trend: {
           value: analytics.trends.views,
-          period: "last 30 days",
+          period: "vs last 30 days",
           isPositive: analytics.trends.views >= 0
         },
         explanation: {
@@ -290,7 +356,7 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         variant: 'green' as const,
         trend: {
           value: analytics.trends.downloads,
-          period: "last 30 days",
+          period: "vs last 30 days",
           isPositive: analytics.trends.downloads >= 0
         },
         explanation: {
@@ -312,7 +378,7 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         variant: 'purple' as const,
         trend: {
           value: analytics.trends.engagement,
-          period: "last 30 days",
+          period: "vs last 30 days",
           isPositive: analytics.trends.engagement >= 0
         },
         explanation: {
