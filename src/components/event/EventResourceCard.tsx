@@ -1,3 +1,4 @@
+
 import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ export function EventResourceCard({
   const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
     console.log('🎯 EventResourceCard: Handling view click for resource:', resource.id);
     
-    // Track the view with enhanced metadata
+    // Track the view only once
     trackView(resource.id, {
       source: 'resource_card',
       action: 'view_button_click',
@@ -104,6 +105,11 @@ export function EventResourceCard({
       has_external_url: !!resource.external_url,
       has_file_url: !!resource.file_url
     });
+
+    // Call the parent onView handler if provided (don't track again)
+    if (onView) {
+      onView(resource);
+    }
 
     if (onPreview) {
       event.preventDefault();
@@ -130,7 +136,7 @@ export function EventResourceCard({
       
       console.log('🎯 EventResourceCard: Handling download click for resource:', resource.id);
       
-      // Track the download with enhanced metadata
+      // Track the download only once
       trackDownload(resource.id, {
         source: 'resource_card',
         action: 'download_button_click',
@@ -192,7 +198,10 @@ export function EventResourceCard({
         });
       }
       
-      onDownload?.(resource);
+      // Call the parent onDownload handler if provided (don't track again)
+      if (onDownload) {
+        onDownload(resource);
+      }
       
     } catch (error) {
       console.error('Download failed:', error);
