@@ -302,10 +302,10 @@ export function EventResourcesSection({
       return;
     }
 
-    // Track the view before opening preview
-    console.log('🎯 Tracking view from resource list for:', resource.id);
+    // Track the view when user clicks Preview button
+    console.log('🎯 Tracking view from Preview button click for:', resource.id);
     trackView(resource.id, {
-      source: 'resource_list',
+      source: 'preview_button',
       action: 'preview_click',
       view_mode: viewMode,
       resource_type: resource.resource_type,
@@ -316,7 +316,7 @@ export function EventResourcesSection({
     onPreview?.(resource);
   };
 
-  // Enhanced download handler with better tracking
+  // Enhanced download handler with tracking
   const handleDownload = async (resource: EventResource) => {
     if (!session?.user) {
       setShowAuthDialog(true);
@@ -335,10 +335,10 @@ export function EventResourcesSection({
     try {
       setDownloadingResources(prev => new Set(prev).add(resource.id));
       
-      // Track the download with enhanced metadata
-      console.log('🎯 Tracking download from resource list for:', resource.id);
+      // Track the download when user clicks Download button
+      console.log('🎯 Tracking download from Download button click for:', resource.id);
       trackDownload(resource.id, {
-        source: 'resource_list',
+        source: 'download_button',
         action: 'download_click',
         view_mode: viewMode,
         resource_type: resource.resource_type,
@@ -405,28 +405,12 @@ export function EventResourcesSection({
     }
   };
 
-  // Resource card component with enhanced tracking
+  // Resource card component (removed hover tracking)
   const ResourceCard = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
     
-    // Track view when card comes into view (passive tracking)
-    const handleCardView = () => {
-      if (session?.user) {
-        console.log('👁️ Card viewed:', resource.id);
-        trackView(resource.id, {
-          source: 'resource_card_view',
-          action: 'card_impression',
-          view_mode: viewMode,
-          resource_type: resource.resource_type
-        });
-      }
-    };
-
     return (
-      <Card 
-        className="group hover:shadow-md transition-all duration-200 border border-gray-200"
-        onMouseEnter={handleCardView}
-      >
+      <Card className="group hover:shadow-md transition-all duration-200 border border-gray-200">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
@@ -506,28 +490,12 @@ export function EventResourcesSection({
     );
   };
 
-  // Resource list item component with enhanced tracking
+  // Resource list item component (removed hover tracking)
   const ResourceListItem = ({ resource }: { resource: EventResource & { events?: any } }) => {
     const isDownloading = downloadingResources.has(resource.id);
     
-    // Track view when list item comes into view (passive tracking)
-    const handleListItemView = () => {
-      if (session?.user) {
-        console.log('👁️ List item viewed:', resource.id);
-        trackView(resource.id, {
-          source: 'resource_list_view',
-          action: 'list_impression',
-          view_mode: viewMode,
-          resource_type: resource.resource_type
-        });
-      }
-    };
-
     return (
-      <div 
-        className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors"
-        onMouseEnter={handleListItemView}
-      >
+      <div className="group hover:bg-gray-50 p-4 rounded-lg border border-gray-200 transition-colors">
         <div className="flex items-center gap-4">
           <div className={cn("p-2 rounded-lg shrink-0", getResourceTypeColor(resource.resource_type))}>
             {getResourceIcon(resource.resource_type)}
