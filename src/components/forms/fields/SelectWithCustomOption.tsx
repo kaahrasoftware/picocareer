@@ -183,12 +183,34 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // Create new entry with proper field mapping
-      const insertData: Record<string, any> = { 
-        [fieldName]: customValue, 
-        description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, 
-        status: 'Pending' as Status 
-      };
+      // Create new entry with proper field mapping based on table type
+      let insertData: Record<string, any>;
+      
+      if (tableName === 'majors') {
+        insertData = { 
+          title: customValue, 
+          description: `Custom major: ${customValue}`, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'careers') {
+        insertData = { 
+          title: customValue, 
+          description: `Custom career: ${customValue}`, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'schools') {
+        insertData = { 
+          name: customValue, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'companies') {
+        insertData = { 
+          name: customValue, 
+          status: 'Pending' as Status 
+        };
+      } else {
+        throw new Error(`Unsupported table: ${tableName}`);
+      }
 
       const { data, error } = await supabase
         .from(tableName)
@@ -200,7 +222,7 @@ export function SelectWithCustomOption({
 
       toast({
         title: "Success",
-        description: `Successfully added new ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName.slice(0, -1)}.`,
+        description: `Successfully added new ${tableName.slice(0, -1)}.`,
       });
 
       onValueChange(data.id);
