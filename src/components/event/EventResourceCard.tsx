@@ -92,31 +92,23 @@ export function EventResourceCard({
   const engagement = getEngagementLevel(views, downloads);
 
   const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log('🎯 View button clicked for resource:', resource.id, resource.title);
-    
-    // Track the view immediately
+    // Track the view
     trackView(resource.id, {
       source: 'resource_card',
-      action: 'view_button_click',
-      resource_title: resource.title,
-      resource_type: resource.resource_type
+      action: 'view_button_click'
     });
 
     if (onPreview) {
       event.preventDefault();
       onPreview(resource);
     } else if (resource.external_url) {
-      console.log('🔗 Opening external URL:', resource.external_url);
       window.open(resource.external_url, '_blank', 'noopener,noreferrer');
     } else if (resource.file_url) {
-      console.log('📁 Opening file URL:', resource.file_url);
       window.open(resource.file_url, '_blank', 'noopener,noreferrer');
     }
   };
 
   const handleDownload = async () => {
-    console.log('⬇️ Download button clicked for resource:', resource.id, resource.title);
-    
     if (!resource.file_url || !resource.is_downloadable) {
       toast({
         title: "Download not available",
@@ -129,17 +121,15 @@ export function EventResourceCard({
     try {
       setDownloading(true);
       
-      // Track the download immediately
+      // Track the download
       trackDownload(resource.id, {
         source: 'resource_card',
         action: 'download_button_click',
         file_size: resource.file_size,
-        file_format: resource.file_format,
-        resource_title: resource.title,
-        resource_type: resource.resource_type
+        file_format: resource.file_format
       });
       
-      console.log('📥 Download started for resource:', resource.id);
+      console.log('Download started for resource:', resource.id);
       
       const safeTitle = resource.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileExtension = resource.file_format ? `.${resource.file_format.toLowerCase()}` : '';
@@ -193,7 +183,7 @@ export function EventResourceCard({
       onDownload?.(resource);
       
     } catch (error) {
-      console.error('❌ Download failed:', error);
+      console.error('Download failed:', error);
       toast({
         title: "Download failed",
         description: "There was an error downloading the file. Please try again.",
