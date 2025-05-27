@@ -56,6 +56,7 @@ export function EnhancedComboBox({
           const validData = data.filter(item => {
             if (!item || typeof item !== 'object') return false;
             if (!('id' in item) || typeof item.id !== 'string') return false;
+            if (!item[valueField] || !item[labelField]) return false;
             return true;
           });
           setOptions(validData);

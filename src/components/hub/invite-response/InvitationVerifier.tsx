@@ -43,7 +43,7 @@ export function InvitationVerifier() {
 
       try {
         // For demo purposes, we'll create mock data
-        // In a real implementation, you would verify against the hub_member_invites table
+        // In a real implementation, you would verify against notifications or a custom table
         const mockInvitation: HubInvite = {
           id: "mock-invite-id",
           hub_id: "mock-hub-id",
@@ -52,6 +52,7 @@ export function InvitationVerifier() {
           status: "pending",
           token: token,
           created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
         };
 

@@ -1,37 +1,19 @@
 
-export type HubType = 'University' | 'NGO' | 'Organization' | 'High School';
-export type HubMemberRole = 'admin' | 'moderator' | 'member' | 'faculty' | 'student';
-export type InviteStatus = 'pending' | 'accepted' | 'rejected';
+export interface HubInvite {
+  id: string;
+  hub_id: string;
+  invited_email: string;
+  role: string;
+  status: string;
+  token: string;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+}
 
 export interface Hub {
   id: string;
   name: string;
   description?: string;
   logo_url?: string;
-}
-
-export interface HubInvite {
-  id: string;
-  hub_id: string;
-  invited_email: string;
-  token: string;
-  role: HubMemberRole;
-  status: InviteStatus;
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-  accepted_at?: string | null;
-  rejected_at?: string | null;
-}
-
-export interface UseHubInvitationReturn {
-  isLoading: boolean;
-  isProcessing: boolean;
-  invitation: HubInvite | null;
-  hub: Hub | null;
-  error: string | null;
-  showSuccessDialog: boolean;
-  setShowSuccessDialog: (show: boolean) => void;
-  handleAccept: () => Promise<void>;
-  handleDecline: () => Promise<void>;
 }

@@ -86,7 +86,7 @@ export function useSessionManagement(
       // Convert data to proper type
       const typedSessions: CareerChatSession[] = (data || []).map(session => {
         // Ensure progress_data has the correct structure
-        const progressData = typeof session.progress_data === 'object' ? 
+        const progressData = typeof session.progress_data === 'object' && session.progress_data !== null ? 
           session.progress_data as any : 
           { education: 0, skills: 0, workstyle: 0, goals: 0, overall: 0 };
           
