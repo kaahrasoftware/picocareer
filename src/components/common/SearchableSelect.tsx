@@ -54,12 +54,11 @@ export function SearchableSelect({
         
         // Ensure all items have an id property and are valid objects
         if (data && Array.isArray(data)) {
-          const validData = data.filter(item => 
-            item && 
-            typeof item === 'object' && 
-            'id' in item && 
-            typeof item.id === 'string'
-          );
+          const validData = data.filter(item => {
+            if (!item || typeof item !== 'object') return false;
+            if (!('id' in item) || typeof item.id !== 'string') return false;
+            return true;
+          });
           setOptions(validData);
         } else {
           setOptions([]);

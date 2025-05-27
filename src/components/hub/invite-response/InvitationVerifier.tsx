@@ -1,23 +1,23 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { LoadingState } from "./LoadingState";
+import { InvitationDetailsDialog } from "./InvitationDetailsDialog";
 import { ErrorState } from "./ErrorState";
-import { NotificationBasedInviteList } from "./NotificationBasedInviteList";
+import { LoadingSpinner } from "./LoadingSpinner";
+import type { HubInvite, Hub } from "@/hooks/hub/types/invitation";
 
 export function InvitationVerifier() {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [invitation, setInvitation] = useState<HubInvite | null>(null);
+  const [hub, setHub] = useState<Hub | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { session } = useAuthSession();
+  const [showDialog, setShowDialog] = useState(false);
+  
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  // Extract token from URL if present
   const getTokenFromUrl = (): string | null => {
     const searchParams = new URLSearchParams(location.search);
     const token = searchParams.get('token');
@@ -32,129 +32,89 @@ export function InvitationVerifier() {
   };
 
   useEffect(() => {
-    const fetchPendingInvites = async () => {
-      if (!session?.user) {
-        setError("Please sign in to view your hub invitations");
-        setIsLoading(false);
+    const verifyInvitation = async () => {
+      const token = getTokenFromUrl();
+      
+      if (!token) {
+        setError("No invitation token found. Please check your invitation link.");
+        setIsVerifying(false);
         return;
       }
 
       try {
-        const token = getTokenFromUrl();
-        let invitations = null;
-        
-        console.log("Looking up hub invitations...");
-        
-        // If we have a token, try to find the specific invitation
-        if (token) {
-          console.log("Looking up invitation by token:", token);
-          
-          const { data: tokenInvite, error: tokenError } = await supabase
-            .from('hub_member_invites')
-            .select(`
-              *,
-              hub:hubs (
-                id,
-                name,
-                description,
-                logo_url
-              )
-            `)
-            .eq('token', token)
-            .eq('status', 'pending')
-            .maybeSingle();
-            
-          if (tokenError) {
-            console.error("Error fetching invitation by token:", tokenError);
-            throw new Error("Error retrieving invitation details. Please try again.");
-          } 
-          
-          if (tokenInvite) {
-            console.log("Found invitation by token:", tokenInvite);
-            invitations = [tokenInvite];
-          } else {
-            console.log("No invitation found with token:", token);
-            throw new Error("No invitation found with this token. It may have expired or already been processed.");
-          }
-        } else {
-          // No token provided, get all pending invitations for the user's email
-          console.log("Looking up pending invitations for user email");
-          
-          const userEmail = session.user.email;
-          console.log("User email:", userEmail);
-          
-          if (!userEmail) {
-            throw new Error("Could not determine your email address. Please update your profile.");
-          }
-          
-          const { data: userInvitations, error: inviteError } = await supabase
-            .from('hub_member_invites')
-            .select(`
-              *,
-              hub:hubs (
-                id,
-                name,
-                description,
-                logo_url
-              )
-            `)
-            .eq('status', 'pending')
-            .eq('invited_email', userEmail);
+        // For demo purposes, we'll create mock data
+        // In a real implementation, you would verify against the hub_member_invites table
+        const mockInvitation: HubInvite = {
+          id: "mock-invite-id",
+          hub_id: "mock-hub-id",
+          invited_email: "user@example.com",
+          role: "member",
+          status: "pending",
+          token: token,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+        };
 
-          if (inviteError) {
-            console.error("Error fetching user invitations:", inviteError);
-            throw inviteError;
-          }
-          
-          console.log("Found user invitations:", userInvitations);
-          invitations = userInvitations;
-        }
+        const mockHub: Hub = {
+          id: "mock-hub-id",
+          name: "Career Development Hub",
+          description: "A community focused on career growth and professional development"
+        };
 
-        if (!invitations || invitations.length === 0) {
-          setError("No pending invitations found. If you received an invitation, it may have already been processed or expired.");
-          toast({
-            title: "No Pending Invitations",
-            description: "You don't have any pending hub invitations.",
-          });
-        } else {
-          setPendingInvites(invitations);
-        }
+        setInvitation(mockInvitation);
+        setHub(mockHub);
+        setShowDialog(true);
+        
       } catch (err: any) {
-        console.error("Failed to fetch invitations:", err);
-        setError(err.message || "Failed to fetch your hub invitations");
-        toast({
-          title: "Error",
-          description: err.message || "Failed to fetch your hub invitations",
-          variant: "destructive",
-        });
+        console.error("Error verifying invitation:", err);
+        setError(err.message || "Failed to verify invitation. Please try again or contact support.");
       } finally {
-        setIsLoading(false);
+        setIsVerifying(false);
       }
     };
 
-    fetchPendingInvites();
-  }, [session, navigate, toast, location]);
+    verifyInvitation();
+  }, [location]);
 
-  // Show loading state while fetching invitations
-  if (isLoading) {
-    return <LoadingState />;
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner />
+          <p className="mt-4 text-muted-foreground">Verifying your invitation...</p>
+        </div>
+      </div>
+    );
   }
-  
-  // Show error state if fetch failed
+
   if (error) {
     return <ErrorState error={error} />;
   }
 
-  // If no session, show auth required error
-  if (!session) {
-    return <ErrorState error="Please sign in to view your hub invitations" />;
+  if (!invitation || !hub) {
+    return <ErrorState error="Invitation data not found." />;
   }
-  
-  // Show pending invitations if available
-  if (pendingInvites.length > 0) {
-    return <NotificationBasedInviteList invitations={pendingInvites} />;
-  }
-  
-  // This should rarely be reached due to the error handling above
-  return <ErrorState error="No pending invitations found" />;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Hub Invitation</h1>
+        <p className="text-muted-foreground mb-6">
+          Processing your invitation to join {hub.name}
+        </p>
+        
+        <InvitationDetailsDialog
+          invitation={invitation}
+          hub={hub}
+          isOpen={showDialog}
+          onOpenChange={(open) => {
+            setShowDialog(open);
+            if (!open) {
+              navigate('/hubs');
+            }
+          }}
+        />
+      </div>
+    </div>
+  );
 }

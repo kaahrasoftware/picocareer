@@ -36,16 +36,12 @@ export function useSessionManagement(
         .insert(endMessage);
       
       // Update session status and metadata
-      const updatedMetadata = sessionMetadata ? 
-        {
-          ...sessionMetadata,
-          completedAt: new Date().toISOString(),
-          isComplete: true
-        } : 
-        {
-          completedAt: new Date().toISOString(),
-          isComplete: true
-        };
+      const currentMetadata = sessionMetadata || {};
+      const updatedMetadata = {
+        ...currentMetadata,
+        completedAt: new Date().toISOString(),
+        isComplete: true
+      };
       
       await supabase
         .from('career_chat_sessions')
@@ -220,9 +216,8 @@ export function useSessionManagement(
     if (!sessionId) return;
     
     try {
-      const updatedMetadata = sessionMetadata ? 
-        { ...sessionMetadata, ...metadata } : 
-        metadata;
+      const currentMetadata = sessionMetadata || {};
+      const updatedMetadata = { ...currentMetadata, ...metadata };
       
       await supabase
         .from('career_chat_sessions')

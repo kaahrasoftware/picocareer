@@ -44,9 +44,6 @@ export function InvitationDetailsDialog({
         throw new Error("Please sign in to respond to this invitation");
       }
       
-      // For this demo, we'll simulate checking an invitation without the hub_member_invites table
-      // In a real implementation, you would verify the invitation is still valid
-      
       const timestamp = new Date().toISOString();
       
       // If accepting, create hub member record

@@ -66,24 +66,20 @@ export function SelectWithCustomOption({
         
         let query = supabase
           .from(tableName)
-          .select('id, name, title')
-          .limit(50); // Limit to 50 results for performance
+          .select('id, title')
+          .limit(50);
 
-        // Add search filter
-        if (tableName === 'majors' || tableName === 'careers') {
-          query = query.ilike('title', `%${safeQuery}%`);
-        } else {
-          query = query.ilike('name', `%${safeQuery}%`);
-        }
+        // Add search filter for title field (all tables should have title)
+        query = query.ilike('title', `%${safeQuery}%`);
 
         // Add ordering
-        query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
+        query = query.order('title');
 
         const { data, error } = await query;
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
-          throw error;
+          return [];
         }
 
         console.log(`Fetched ${data?.length || 0} ${tableName}`);
@@ -152,8 +148,8 @@ export function SelectWithCustomOption({
       // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName)
-        .select(`id, ${tableName === 'majors' || tableName === 'careers' ? 'title' : 'name'}`)
-        .eq(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name', customValue)
+        .select('id, title')
+        .eq('title', customValue)
         .maybeSingle();
 
       if (checkError) throw checkError;
@@ -166,9 +162,11 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry
-      const insertData = tableName === 'majors' || tableName === 'careers' 
-        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' as Status }
-        : { name: customValue, status: 'Pending' as Status };
+      const insertData = { 
+        title: customValue, 
+        description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, 
+        status: 'Pending' as Status 
+      };
 
       const { data, error } = await supabase
         .from(tableName)

@@ -10,7 +10,7 @@ import { useState } from "react";
 interface ResourceFormData {
   title: string;
   description: string;
-  resource_type: "document" | "link" | "video" | "image";
+  resource_type: "document" | "external_link" | "video" | "image";
   access_level: "public" | "admin" | "faculty" | "members";
   file_url?: string;
   external_url?: string;
@@ -91,7 +91,7 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
 
   const resourceTypeOptions = [
     { id: "document", name: "Document" },
-    { id: "link", name: "Link" },
+    { id: "external_link", name: "Link" },
     { id: "video", name: "Video" },
     { id: "image", name: "Image" },
   ];
