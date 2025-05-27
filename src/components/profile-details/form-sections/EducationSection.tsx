@@ -2,8 +2,7 @@
 import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
-import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
-import { supabase } from "@/integrations/supabase/client";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 
 interface EducationSectionProps {
   highestDegree: string;
@@ -22,6 +21,16 @@ export function EducationSection({
   majors,
   schools,
 }: EducationSectionProps) {
+  const majorOptions = majors.map(major => ({
+    value: major.id,
+    label: major.title
+  }));
+
+  const schoolOptions = schools.map(school => ({
+    value: school.id,
+    label: school.name
+  }));
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Education</h3>
@@ -33,66 +42,25 @@ export function EducationSection({
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
-          <EnhancedComboBox
+          <SearchableSelect
+            options={majorOptions}
             value={academicMajorId}
             onValueChange={(value) => handleSelectChange('academic_major_id', value)}
             placeholder="Select Academic Major"
-            tableName="majors"
-            selectField="title"
-            searchField="title"
-            allowCustomValue={true}
-            onCustomValueSubmit={async (value) => {
-              try {
-                const { data, error } = await supabase
-                  .from('majors')
-                  .insert({ 
-                    title: value,
-                    description: `Custom major: ${value}`,
-                    status: 'Pending'
-                  })
-                  .select('id')
-                  .single();
-                
-                if (error) throw error;
-                if (data) {
-                  handleSelectChange('academic_major_id', data.id);
-                }
-              } catch (error) {
-                console.error('Error adding custom major:', error);
-              }
-            }}
+            searchPlaceholder="Search majors..."
+            emptyMessage="No majors found."
           />
         </div>
 
         <div>
           <label className="text-sm font-medium">School</label>
-          <EnhancedComboBox
+          <SearchableSelect
+            options={schoolOptions}
             value={schoolId}
             onValueChange={(value) => handleSelectChange('school_id', value)}
             placeholder="Select School"
-            tableName="schools"
-            selectField="name"
-            searchField="name"
-            allowCustomValue={true}
-            onCustomValueSubmit={async (value) => {
-              try {
-                const { data, error } = await supabase
-                  .from('schools')
-                  .insert({ 
-                    name: value,
-                    status: 'Pending'
-                  })
-                  .select('id')
-                  .single();
-                
-                if (error) throw error;
-                if (data) {
-                  handleSelectChange('school_id', data.id);
-                }
-              } catch (error) {
-                console.error('Error adding custom school:', error);
-              }
-            }}
+            searchPlaceholder="Search schools..."
+            emptyMessage="No schools found."
           />
         </div>
       </div>

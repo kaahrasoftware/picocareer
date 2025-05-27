@@ -176,7 +176,7 @@ export function SelectWithCustomOption({
 
       if (checkError) throw checkError;
 
-      if (existingData) {
+      if (existingData && existingData.id) {
         onValueChange(existingData.id);
         setShowCustomInput(false);
         setCustomValue("");

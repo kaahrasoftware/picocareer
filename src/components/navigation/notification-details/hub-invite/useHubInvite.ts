@@ -22,6 +22,7 @@ export function useHubInvite(token: string | null) {
       setIsLoading(true);
       console.log('Accepting invitation with token:', token);
       
+      // Since hub_member_invites table doesn't exist, use placeholder implementation
       toast({
         title: "Feature Coming Soon",
         description: "Hub invitations will be available in a future update.",
@@ -54,6 +55,7 @@ export function useHubInvite(token: string | null) {
       setIsLoading(true);
       console.log('Rejecting invitation with token:', token);
       
+      // Since hub_member_invites table doesn't exist, use placeholder implementation
       toast({
         title: "Invitation Declined",
         description: "You have declined the hub invitation.",
