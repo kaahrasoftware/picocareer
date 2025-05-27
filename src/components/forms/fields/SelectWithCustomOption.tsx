@@ -184,7 +184,7 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry with proper field mapping based on table type
-      let insertData: Record<string, any>;
+      let insertData: any;
       
       if (tableName === 'majors') {
         insertData = { 

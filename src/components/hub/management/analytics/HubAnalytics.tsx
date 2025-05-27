@@ -6,7 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { AnalyticsSummaryCards } from './AnalyticsSummaryCards';
 import { EngagementMetrics } from './EngagementMetrics';
 import { HubRecommendations } from './HubRecommendations';
-import { MemberGrowthChart, TimePeriod as ChartTimePeriod } from './MemberGrowthChart';
+import { MemberGrowthChart } from './MemberGrowthChart';
 import { useHubAnalytics } from '@/hooks/useHubAnalytics';
 
 interface HubAnalyticsProps {
@@ -24,42 +24,6 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
     refreshMetrics,
     formatDate
   } = useHubAnalytics(hubId);
-
-  // Convert between the two TimePeriod types
-  const convertTimePeriod = (period: typeof timePeriod): ChartTimePeriod => {
-    switch (period) {
-      case 'week': return 'last_7_days';
-      case 'month': return 'last_30_days';
-      case 'quarter': return 'last_90_days';
-      case 'year': return 'last_year';
-      default: return 'month';
-    }
-  };
-
-  const handleTimePeriodChange = (period: ChartTimePeriod) => {
-    switch (period) {
-      case 'last_7_days': setTimePeriod('week'); break;
-      case 'last_30_days': setTimePeriod('month'); break;
-      case 'last_90_days': setTimePeriod('quarter'); break;
-      case 'last_year': setTimePeriod('year'); break;
-      case 'month': setTimePeriod('month'); break;
-      default: setTimePeriod('month');
-    }
-  };
-
-  const handleFormatDate = (dateStr: string, period: ChartTimePeriod) => {
-    // Convert chart period back to hook period for formatting
-    let hookPeriod: typeof timePeriod;
-    switch (period) {
-      case 'last_7_days': hookPeriod = 'week'; break;
-      case 'last_30_days': hookPeriod = 'month'; break;
-      case 'last_90_days': hookPeriod = 'quarter'; break;
-      case 'last_year': hookPeriod = 'year'; break;
-      case 'month': hookPeriod = 'month'; break;
-      default: hookPeriod = 'month';
-    }
-    return formatDate(dateStr, hookPeriod);
-  };
 
   return (
     <div className="space-y-6">
@@ -88,9 +52,9 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
         <TabsContent value="growth">
           <MemberGrowthChart 
             data={memberGrowth}
-            timePeriod={convertTimePeriod(timePeriod)}
-            onTimePeriodChange={handleTimePeriodChange}
-            formatDate={handleFormatDate}
+            timePeriod="month"
+            onTimePeriodChange={() => {}}
+            formatDate={(date) => formatDate(date, timePeriod)}
           />
         </TabsContent>
 
