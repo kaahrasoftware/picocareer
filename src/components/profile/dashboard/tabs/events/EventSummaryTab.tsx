@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { EventMetricsCards } from './EventMetricsCards';
 import { EventRankingTable } from './EventRankingTable';
 import { EventEngagementCharts } from './EventEngagementCharts';
+import { ColorfulStatCard } from '@/components/ui/colorful-stat-card';
+import { TrendingUp, Users, Trophy, Activity } from 'lucide-react';
 
 export function EventSummaryTab() {
   // Fetch all events for statistics
@@ -77,6 +79,30 @@ export function EventSummaryTab() {
     };
   }, [events, registrationsData, isLoading]);
 
+  // Calculate enhanced statistics for the modern cards
+  const enhancedStats = React.useMemo(() => {
+    if (!stats) return null;
+
+    const averageRegistrations = stats.totalEvents > 0 
+      ? Math.round(stats.totalRegistrations / stats.totalEvents) 
+      : 0;
+
+    const eventsWithRegistrations = stats.rankedEvents.filter(e => e.registrationCount > 0).length;
+    
+    const engagementRate = stats.totalEvents > 0 
+      ? Math.round((eventsWithRegistrations / stats.totalEvents) * 100)
+      : 0;
+
+    const mostPopularEvent = stats.rankedEvents[0];
+
+    return {
+      averageRegistrations,
+      eventsWithRegistrations,
+      engagementRate,
+      mostPopularEvent
+    };
+  }, [stats]);
+
   return (
     <div className="space-y-6">
       <EventMetricsCards stats={stats} isLoading={isLoading} />
@@ -98,33 +124,54 @@ export function EventSummaryTab() {
           <CardHeader>
             <CardTitle>Quick Stats</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             {isLoading ? (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Average registrations per event:</span>
-                  <span className="font-medium">
-                    {stats?.totalEvents ? Math.round(stats.totalRegistrations / stats.totalEvents) : 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Events with registrations:</span>
-                  <span className="font-medium">
-                    {stats?.rankedEvents.filter(e => e.registrationCount > 0).length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Most popular event:</span>
-                  <span className="font-medium text-right max-w-32 truncate">
-                    {stats?.rankedEvents[0]?.title || 'N/A'}
-                  </span>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <ColorfulStatCard
+                  title="Average Registrations"
+                  value={enhancedStats?.averageRegistrations || 0}
+                  icon={<TrendingUp className="h-5 w-5" />}
+                  variant="blue"
+                  footer="per event"
+                />
+                
+                <ColorfulStatCard
+                  title="Active Events"
+                  value={`${enhancedStats?.eventsWithRegistrations || 0}/${stats?.totalEvents || 0}`}
+                  icon={<Activity className="h-5 w-5" />}
+                  variant="green"
+                  footer="events with registrations"
+                />
+                
+                <ColorfulStatCard
+                  title="Engagement Rate"
+                  value={`${enhancedStats?.engagementRate || 0}%`}
+                  icon={<Users className="h-5 w-5" />}
+                  variant="purple"
+                  footer="events attracting participants"
+                  showProgress={true}
+                  progressValue={enhancedStats?.engagementRate || 0}
+                />
+                
+                <ColorfulStatCard
+                  title="Top Performer"
+                  value={enhancedStats?.mostPopularEvent?.registrationCount || 0}
+                  icon={<Trophy className="h-5 w-5" />}
+                  variant="amber"
+                  footer={
+                    enhancedStats?.mostPopularEvent?.title 
+                      ? enhancedStats.mostPopularEvent.title.length > 20
+                        ? `${enhancedStats.mostPopularEvent.title.substring(0, 20)}...`
+                        : enhancedStats.mostPopularEvent.title
+                      : 'No events yet'
+                  }
+                />
               </div>
             )}
           </CardContent>
