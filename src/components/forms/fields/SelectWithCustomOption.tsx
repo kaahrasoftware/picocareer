@@ -89,12 +89,12 @@ export function SelectWithCustomOption({
         console.log(`Fetched ${data?.length || 0} ${tableName}`);
         
         // Ensure data is valid before returning and handle different field names
-        return (data || []).filter(item => {
+        return (data || []).filter((item: any) => {
           if (!item || typeof item !== 'object') return false;
           if (!('id' in item) || !item.id) return false;
           const fieldValue = item[fieldName as keyof typeof item];
           return fieldValue !== null && fieldValue !== undefined;
-        }).map(item => {
+        }).map((item: any) => {
           if (!item || typeof item !== 'object') {
             return { id: '', [fieldName === 'name' ? 'name' : 'title']: '' };
           }
