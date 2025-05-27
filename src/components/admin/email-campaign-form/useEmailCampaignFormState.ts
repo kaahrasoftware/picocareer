@@ -262,8 +262,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       }
 
       toast.success('Email campaign saved successfully!');
-      // Safe type casting for campaign ID
-      const campaignId = savedData?.[0]?.id ? String(savedData[0].id) : undefined;
+      // Safe type casting for campaign ID with proper null checking
+      const campaignId = savedData && savedData[0] && savedData[0].id ? String(savedData[0].id) : undefined;
       onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
@@ -321,7 +321,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       recipientIds: [...prev.recipientIds, recipient.id],
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: [...(prev.recipientIds || []), recipient.id] // Changed from recipient_ids to profile_ids
+        profile_ids: [...(prev.recipientIds || []), recipient.id]
       }
     }));
   };
@@ -332,7 +332,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: prev.recipientIds.filter((id) => id !== recipientId) // Changed from recipient_ids to profile_ids
+        profile_ids: prev.recipientIds.filter((id) => id !== recipientId)
       }
     }));
   };

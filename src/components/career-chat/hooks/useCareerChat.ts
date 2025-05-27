@@ -207,11 +207,16 @@ export function useCareerChat() {
         setCurrentCategory(newCategory);
         setQuestionProgress(newProgress);
         
-        // Update session metadata
+        // Update session metadata with proper categoryProgress type
+        const categoryProgressObj: { [category: string]: number } = {};
+        if (typeof categoryProgress === 'object' && categoryProgress !== null) {
+          Object.assign(categoryProgressObj, categoryProgress);
+        }
+        
         updateSessionMetadata({
           lastCategory: newCategory,
           overallProgress: newProgress,
-          categoryProgress: categoryProgress
+          categoryProgress: categoryProgressObj
         });
         
         // Send the next question, unless we're at the end

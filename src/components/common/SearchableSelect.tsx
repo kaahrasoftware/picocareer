@@ -68,7 +68,7 @@ export function SearchableSelect({
             }
             
             return {
-              ...item,
+              id: item.id || '',
               // Ensure we have fallback values
               [valueField]: item[valueField] || '',
               [labelField]: item[labelField] || 'Unnamed'
