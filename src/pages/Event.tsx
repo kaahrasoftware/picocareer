@@ -176,6 +176,10 @@ export default function Event() {
   const handleRegistrationSubmit = async (formData: any) => {
     if (!selectedEvent) return;
 
+    console.log('=== REGISTRATION SUBMISSION DEBUG ===');
+    console.log('Selected event:', selectedEvent);
+    console.log('Raw form data received:', formData);
+    
     setRegistering(selectedEvent.id);
     try {
       const { data: existingReg } = await supabase
@@ -195,24 +199,58 @@ export default function Event() {
         return;
       }
 
+      // Validate required fields before processing
+      if (!formData['current academic field/position']) {
+        console.error('Missing academic field/position in form data');
+        throw new Error('Academic field/position is required');
+      }
+
+      // Transform data to match the database schema exactly
+      const transformedData = {
+        event_id: selectedEvent.id,
+        profile_id: session?.user?.id || null,
+        email: formData.email,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        'current academic field/position': formData['current academic field/position'],
+        student_or_professional: formData.student_or_professional,
+        'current school/company': formData['current school/company'] || '', // Use default empty string if null
+        country: formData.country,
+        'where did you hear about us': formData['where did you hear about us']
+      };
+      
+      console.log('Transformed data for database:', transformedData);
+      
+      // Validate all required fields are present
+      const requiredFields = [
+        'email', 
+        'first_name', 
+        'last_name', 
+        'current academic field/position', 
+        'student_or_professional', 
+        'country', 
+        'where did you hear about us'
+      ];
+      
+      for (const field of requiredFields) {
+        if (!transformedData[field as keyof typeof transformedData]) {
+          console.error(`Missing required field: ${field}`);
+          throw new Error(`${field} is required`);
+        }
+      }
+
       const { data: registration, error: regError } = await supabase
         .from('event_registrations')
-        .insert({
-          event_id: selectedEvent.id,
-          profile_id: session?.user?.id || null,
-          email: formData.email,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          "current academic field/position": formData.current_field,
-          student_or_professional: formData.student_or_professional,
-          "current school/company": formData.current_organization,
-          country: formData.country,
-          "where did you hear about us": formData["where did you hear about us"]
-        })
+        .insert(transformedData)
         .select()
         .single();
 
-      if (regError) throw regError;
+      if (regError) {
+        console.error('Database insertion error:', regError);
+        throw regError;
+      }
+
+      console.log('Registration successful:', registration);
 
       try {
         const { error: emailError } = await supabase.functions.invoke('send-event-confirmation', {
