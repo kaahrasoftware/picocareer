@@ -95,7 +95,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
     await onSubmit(transformedData);
   };
 
-  // Helper function to get the conditional field label
+  // Helper function to get the conditional field label with clearer messaging
   const getConditionalFieldLabel = () => {
     switch (userType) {
       case 'High School Student':
@@ -106,6 +106,22 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
         return 'Your current career/profession';
       case 'Unemployed':
         return 'Career you are interested in';
+      default:
+        return '';
+    }
+  };
+
+  // Helper function to get placeholder text for conditional fields
+  const getConditionalFieldPlaceholder = () => {
+    switch (userType) {
+      case 'High School Student':
+        return 'Select the major you want to study';
+      case 'College Student':
+        return 'Select your current major';
+      case 'Professional':
+        return 'Select your current career';
+      case 'Unemployed':
+        return 'Select the career you want to pursue';
       default:
         return '';
     }
@@ -181,7 +197,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
                     name="academic_major_id"
                     label={getConditionalFieldLabel()}
                     type="select"
-                    placeholder="Select your major"
+                    placeholder={getConditionalFieldPlaceholder()}
                     required={true}
                   />
                 )}
@@ -192,7 +208,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
                     name="position"
                     label={getConditionalFieldLabel()}
                     type="select"
-                    placeholder="Select your career"
+                    placeholder={getConditionalFieldPlaceholder()}
                     required={true}
                   />
                 )}
