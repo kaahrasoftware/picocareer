@@ -64,18 +64,13 @@ export function SelectWithCustomOption({
         // Ensure query is safe
         const safeQuery = String(searchQuery).toLowerCase();
         
-        let query = supabase
+        // Simple query that should work for all tables
+        const { data, error } = await supabase
           .from(tableName)
           .select('id, title')
+          .ilike('title', `%${safeQuery}%`)
+          .order('title')
           .limit(50);
-
-        // Add search filter for title field (all tables should have title)
-        query = query.ilike('title', `%${safeQuery}%`);
-
-        // Add ordering
-        query = query.order('title');
-
-        const { data, error } = await query;
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
@@ -83,7 +78,16 @@ export function SelectWithCustomOption({
         }
 
         console.log(`Fetched ${data?.length || 0} ${tableName}`);
-        return data || [];
+        
+        // Ensure data is valid before returning
+        return (data || []).filter(item => 
+          item && 
+          typeof item === 'object' && 
+          'id' in item && 
+          'title' in item &&
+          item.id &&
+          item.title
+        );
       } catch (error) {
         console.error(`Error in search query:`, error);
         return [];
@@ -100,8 +104,8 @@ export function SelectWithCustomOption({
       setLocalOptions(prevOptions => {
         const combined = [...prevOptions];
         searchResults.forEach(option => {
-          if (!combined.some(existing => existing.id === option.id)) {
-            combined.push(option);
+          if (option && option.id && !combined.some(existing => existing.id === option.id)) {
+            combined.push({ ...option, name: option.title });
           }
         });
         return combined;

@@ -42,12 +42,16 @@ export function SessionItem({
       return session.session_metadata.overallProgress;
     }
     
-    if (session.progress_data) {
-      const total = Object.values(session.progress_data).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+    if (session.progress_data && typeof session.progress_data === 'object') {
+      const progressValues = Object.values(session.progress_data);
+      const total = progressValues.reduce((sum, val) => {
+        const numVal = typeof val === 'number' ? val : 0;
+        return sum + numVal;
+      }, 0);
       return Math.min(Math.round((total / 24) * 100), 100);
     }
     
-    if (session.total_messages) {
+    if (session.total_messages && typeof session.total_messages === 'number') {
       return Math.min(Math.round((session.total_messages / 20) * 100), 100);
     }
     

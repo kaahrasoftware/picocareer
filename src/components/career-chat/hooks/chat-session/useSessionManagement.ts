@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -217,7 +216,11 @@ export function useSessionManagement(
     
     try {
       const currentMetadata = sessionMetadata || {};
-      const updatedMetadata = { ...currentMetadata, ...metadata };
+      // Ensure both objects are valid before spreading
+      const safeCurrentMetadata = typeof currentMetadata === 'object' && currentMetadata !== null ? currentMetadata : {};
+      const safeMetadata = typeof metadata === 'object' && metadata !== null ? metadata : {};
+      
+      const updatedMetadata = { ...safeCurrentMetadata, ...safeMetadata };
       
       await supabase
         .from('career_chat_sessions')

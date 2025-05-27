@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { GuideStep } from '../guide/types';
 import { GuideDialogHeader } from './dialog/GuideDialogHeader';
@@ -66,20 +65,23 @@ export function GuideDialog({
         return;
       }
 
+      // Type assertion for HTMLElement
+      const htmlElement = targetElement as HTMLElement;
+
       // Highlight the target element with appropriate color
-      targetElement.classList.add('guide-highlight');
+      htmlElement.classList.add('guide-highlight');
       if (step.highlightColor === 'bright') {
-        targetElement.classList.add('guide-highlight-bright');
+        htmlElement.classList.add('guide-highlight-bright');
       }
       
       // Scroll the element into view if needed
-      if (!isElementInViewport(targetElement)) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!isElementInViewport(htmlElement)) {
+        htmlElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       
-      // Calculate positions
+      // Calculate positions using the fixed function
       const { dialogPosition, arrowPosition: connectorPosition, guideArrowPosition: directionalArrowPosition } = 
-        calculateDialogPosition(targetElement, dialogRef.current, step.position || 'bottom');
+        calculateDialogPosition(htmlElement, dialogRef.current, step.position || 'bottom');
       
       setPosition(dialogPosition);
       setArrowPosition(connectorPosition);

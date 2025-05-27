@@ -44,16 +44,18 @@ export function InvitationDetailsDialog({
         throw new Error("Please sign in to respond to this invitation");
       }
       
-      const timestamp = new Date().toISOString();
-      
       // If accepting, create hub member record
       if (accept) {
+        // Validate and cast role to proper enum type
+        const validRoles = ['admin', 'moderator', 'member', 'faculty', 'student'] as const;
+        const role = validRoles.includes(invitation.role as any) ? invitation.role as typeof validRoles[number] : 'member';
+        
         const { error: memberError } = await supabase
           .from('hub_members')
           .insert({
             hub_id: invitation.hub_id,
             profile_id: user.id,
-            role: invitation.role,
+            role: role,
             status: 'Approved',
           });
           

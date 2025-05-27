@@ -6,6 +6,9 @@ export interface AnalyticsSummary {
   totalAnnouncements: number;
   storageUsed: number;
   storageLimit: number;
+  memberLimit: number;
+  resourceCount: number;
+  announcementCount: number;
 }
 
 export interface ResourceEngagement {
@@ -27,6 +30,7 @@ export interface MemberGrowth {
   month: string;
   new_members: number;
   year: number;
+  date: string;
 }
 
 export interface HubStorageMetrics {
@@ -36,6 +40,7 @@ export interface HubStorageMetrics {
   announcements_count: number;
   banner_count: number;
   logo_count: number;
+  last_calculated_at: string;
 }
 
 export interface CareerChatMessage {
@@ -57,6 +62,7 @@ export interface CareerChatSession {
   session_metadata: ChatSessionMetadata;
   progress_data: any;
   total_messages: number;
+  last_active_at: string;
 }
 
 export interface ChatSessionMetadata {

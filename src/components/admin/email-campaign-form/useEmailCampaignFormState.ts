@@ -191,9 +191,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       console.log("Form submission data:", data);
       
       // Ensure we have a primary content_id from the first content_ids item
-      const primaryContentId = data.content_ids && data.content_ids.length > 0 
-        ? data.content_ids[0] 
-        : null;
+      const primaryContentId = data.content_ids && data.content_ids.length > 0 ? 
+        data.content_ids[0] : 
+        null;
         
       if (!primaryContentId) {
         toast.error('At least one content item must be selected');
@@ -208,7 +208,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       
       // Create a properly structured recipient_filter
       const recipientFilter = formData.recipientType === 'selected'
-        ? { profile_ids: formData.recipientIds } // Changed from recipient_ids to profile_ids
+        ? { profile_ids: formData.recipientIds }
         : formData.recipientFilter;
       
       const campaignData = {
@@ -216,15 +216,15 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
         subject: data.subject,
         body: data.body || '',
         content_type: data.content_type || 'blogs',
-        content_id: primaryContentId, // Required field - set from first content ID
+        content_id: primaryContentId,
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipient_filter: recipientFilter,
         scheduled_for: data.scheduled_for,
         frequency: data.frequency || 'weekly',
-        status: 'planned', // Use 'planned' instead of 'scheduled'
-        sent_count: 0, // Explicitly set to 0
-        failed_count: 0, // Explicitly set to 0
+        status: 'planned',
+        sent_count: 0,
+        failed_count: 0,
         recipients_count: recipientsCount
       };
 
@@ -262,7 +262,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       }
 
       toast.success('Email campaign saved successfully!');
-      // Cast the savedData to get proper typing
+      // Safe type casting for campaign ID
       const campaignId = savedData?.[0]?.id ? String(savedData[0].id) : undefined;
       onSuccess?.(campaignId);
     } catch (error) {

@@ -51,14 +51,21 @@ export function EnhancedComboBox({
           return;
         }
         
-        // Ensure all items have an id property and are valid objects
+        // Ensure all items have required properties and handle null values
         if (data && Array.isArray(data)) {
           const validData = data.filter(item => {
             if (!item || typeof item !== 'object') return false;
             if (!('id' in item) || typeof item.id !== 'string') return false;
             if (!item[valueField] || !item[labelField]) return false;
+            // Additional null checks
+            if (item[valueField] === null || item[labelField] === null) return false;
             return true;
-          });
+          }).map(item => ({
+            ...item,
+            // Ensure we have fallback values
+            [valueField]: item[valueField] || '',
+            [labelField]: item[labelField] || 'Unnamed'
+          }));
           setOptions(validData);
         } else {
           setOptions([]);

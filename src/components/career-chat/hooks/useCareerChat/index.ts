@@ -88,6 +88,14 @@ export function useCareerChat() {
     // Fix: Ensure message_type is the correct type
     const messageType: "system" | "user" | "bot" | "recommendation" | "session_end" = "bot";
     
+    // Create proper questionCounts object
+    const questionCounts: { [key: string]: number } = { 
+      education: 0, 
+      skills: 0, 
+      workstyle: 0, 
+      goals: 0 
+    };
+    
     return {
       id: `question-${Date.now()}`,
       session_id: sessionId,
@@ -95,11 +103,10 @@ export function useCareerChat() {
       content: "What are your career goals?",
       metadata: {
         category: currentCategory,
-        // Fix: Initialize questionCounts as a proper object with key-value pairs
-        questionCounts: { education: 0, skills: 0, workstyle: 0, goals: 0 } as QuestionCounts
+        questionCounts: questionCounts
       },
       created_at: new Date().toISOString()
-    } as CareerChatMessage; // Cast to ensure type compatibility
+    } as CareerChatMessage;
   };
 
   const {
