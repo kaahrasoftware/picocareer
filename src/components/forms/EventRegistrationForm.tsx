@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,6 +59,7 @@ const HEARD_ABOUT_US_OPTIONS = [
   // Social Media Platforms
   { id: 'Facebook', name: 'Facebook' },
   { id: 'Instagram', name: 'Instagram' },
+  { id: 'WhatsApp', name: 'WhatsApp' },
   { id: 'Twitter/X', name: 'Twitter/X' },
   { id: 'LinkedIn', name: 'LinkedIn' },
   { id: 'TikTok', name: 'TikTok' },
@@ -67,7 +69,7 @@ const HEARD_ABOUT_US_OPTIONS = [
   { id: 'Discord', name: 'Discord' },
   
   // Professional/Educational Channels
-  { id: 'Friend/Colleague', name: 'Friend/Colleague' },
+  { id: 'Friend/Family', name: 'Friend/Family' },
   { id: 'School/University', name: 'School/University' },
   { id: 'Career Fair', name: 'Career Fair' },
   { id: 'Professional Network/Association', name: 'Professional Network/Association' },
