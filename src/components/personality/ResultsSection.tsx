@@ -13,7 +13,14 @@ import { Card } from "@/components/ui/card";
 import { PersonalityCard } from "./PersonalityCard";
 import { MatchesSection } from "./MatchesSection";
 import { SkillsSection } from "./SkillsSection";
-import { TestResult, PersonalityTestResult, PersonalityType } from "./types";
+import { PersonalityType } from "./types";
+
+interface TestResult {
+  personality_traits: string[];
+  career_matches: Array<{ title: string; reasoning: string; score: number; }>;
+  major_matches: Array<{ title: string; reasoning: string; score: number; }>;
+  skill_development: string[];
+}
 
 interface ResultsSectionProps {
   profileId: string;
@@ -32,12 +39,12 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
       const mockResult: TestResult = {
         personality_traits: ['INTJ', 'Analytical', 'Creative'],
         career_matches: [
-          { title: 'Software Engineer', description: 'Build software solutions', score: 85, reasoning: 'Strong analytical skills' },
-          { title: 'Data Scientist', description: 'Analyze complex data', score: 80, reasoning: 'Good with numbers and patterns' }
+          { title: 'Software Engineer', reasoning: 'Strong analytical skills', score: 85 },
+          { title: 'Data Scientist', reasoning: 'Good with numbers and patterns', score: 80 }
         ],
         major_matches: [
-          { title: 'Computer Science', description: 'Study of algorithms and computation', score: 90, reasoning: 'Perfect match for technical skills' },
-          { title: 'Mathematics', description: 'Study of numbers and patterns', score: 75, reasoning: 'Strong analytical foundation' }
+          { title: 'Computer Science', reasoning: 'Perfect match for technical skills', score: 90 },
+          { title: 'Mathematics', reasoning: 'Strong analytical foundation', score: 75 }
         ],
         skill_development: ['Programming', 'Data Analysis', 'Problem Solving']
       };
@@ -86,7 +93,7 @@ export function ResultsSection({ profileId }: ResultsSectionProps) {
 
   // Ensure personality_traits is always a flat array of strings
   const personalityTraits = Array.isArray(results.personality_traits) 
-    ? results.personality_traits.flat().filter(Boolean)
+    ? results.personality_traits.filter(trait => typeof trait === 'string')
     : [];
 
   return (
