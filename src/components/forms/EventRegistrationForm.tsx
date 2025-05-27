@@ -1,9 +1,10 @@
 
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -56,7 +57,7 @@ const COUNTRY_OPTIONS = COUNTRIES.map(country => ({
   name: country
 }));
 
-// Updated options to match database enum values more closely
+// Updated options to match database enum values
 const HEARD_ABOUT_US_OPTIONS = [
   // Social Media Platforms
   { id: 'Facebook', name: 'Facebook' },
@@ -104,44 +105,81 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
   // Watch the user_type field to conditionally show fields
   const userType = watch('user_type');
 
+  // Fetch majors for students
+  const { data: majors } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: userType === 'High School Student' || userType === 'College Student'
+  });
+
+  // Fetch careers for professionals
+  const { data: careers } = useQuery({
+    queryKey: ['careers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('careers')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: userType === 'Professional' || userType === 'Unemployed'
+  });
+
   const onFormSubmit = async (data: RegistrationFormData) => {
     console.log('Form data before transformation:', data);
     
-    // Get the actual field value based on user type
+    // Get the actual title based on user type and selected ID
     let academicFieldPosition = '';
     
-    if (userType === 'High School Student' || userType === 'College Student') {
-      academicFieldPosition = data.academic_major_id || '';
-    } else if (userType === 'Professional' || userType === 'Unemployed') {
-      academicFieldPosition = data.position || '';
-    }
-    
-    console.log('Academic field/position value:', academicFieldPosition);
-    
-    // Ensure we have a value for the required field
-    if (!academicFieldPosition) {
-      console.error('Missing academic field/position value');
-      return;
-    }
-    
-    // Transform data to match the database schema
-    const transformedData = {
-      email: data.email,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      'current academic field/position': academicFieldPosition,
-      student_or_professional: userType,
-      'current school/company': '', // This field might need to be added later
-      country: data.country,
-      'where did you hear about us': data.where_did_you_hear_about_us
-    };
-    
-    console.log('Transformed data for submission:', transformedData);
-    
     try {
+      if (userType === 'High School Student' || userType === 'College Student') {
+        if (data.academic_major_id) {
+          const major = majors?.find(m => m.id === data.academic_major_id);
+          academicFieldPosition = major?.title || '';
+        }
+      } else if (userType === 'Professional' || userType === 'Unemployed') {
+        if (data.position) {
+          const career = careers?.find(c => c.id === data.position);
+          academicFieldPosition = career?.title || '';
+        }
+      }
+      
+      console.log('Academic field/position value:', academicFieldPosition);
+      
+      // Ensure we have a value for the required field
+      if (!academicFieldPosition) {
+        console.error('Missing academic field/position value');
+        throw new Error('Please select your academic field or career position');
+      }
+      
+      // Transform data to match the database schema
+      const transformedData = {
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        'current academic field/position': academicFieldPosition,
+        student_or_professional: userType,
+        'current school/company': '', // This field is now nullable with default empty string
+        country: data.country,
+        'where did you hear about us': data.where_did_you_hear_about_us
+      };
+      
+      console.log('Transformed data for submission:', transformedData);
+      
       await onSubmit(transformedData);
     } catch (error) {
       console.error('Error submitting registration:', error);
+      throw error; // Re-throw to allow form to handle the error
     }
   };
 
@@ -175,6 +213,16 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
       default:
         return '';
     }
+  };
+
+  // Get options based on user type
+  const getConditionalFieldOptions = () => {
+    if (userType === 'High School Student' || userType === 'College Student') {
+      return majors?.map(major => ({ id: major.id, name: major.title })) || [];
+    } else if (userType === 'Professional' || userType === 'Unemployed') {
+      return careers?.map(career => ({ id: career.id, name: career.title })) || [];
+    }
+    return [];
   };
 
   return (
@@ -247,6 +295,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
                     name="academic_major_id"
                     label={getConditionalFieldLabel()}
                     type="select"
+                    options={getConditionalFieldOptions()}
                     placeholder={getConditionalFieldPlaceholder()}
                     required={true}
                   />
@@ -258,6 +307,7 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
                     name="position"
                     label={getConditionalFieldLabel()}
                     type="select"
+                    options={getConditionalFieldOptions()}
                     placeholder={getConditionalFieldPlaceholder()}
                     required={true}
                   />
@@ -310,4 +360,3 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
     </Card>
   );
 }
-

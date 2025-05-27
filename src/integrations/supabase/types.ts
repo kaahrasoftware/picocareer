@@ -771,7 +771,7 @@ export type Database = {
           country: Database["public"]["Enums"]["country"] | null
           created_at: string
           "current academic field/position": string
-          "current school/company": string
+          "current school/company": string | null
           email: string
           event_id: string | null
           first_name: string
@@ -789,7 +789,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           "current academic field/position": string
-          "current school/company": string
+          "current school/company"?: string | null
           email: string
           event_id?: string | null
           first_name: string
@@ -807,7 +807,7 @@ export type Database = {
           country?: Database["public"]["Enums"]["country"] | null
           created_at?: string
           "current academic field/position"?: string
-          "current school/company"?: string
+          "current school/company"?: string | null
           email?: string
           event_id?: string | null
           first_name?: string
@@ -4765,6 +4765,21 @@ export type Database = {
         | "RedNote"
         | "Friend/Family"
         | "Other"
+        | "Career Fair"
+        | "Professional Network/Association"
+        | "Alumni Network"
+        | "Google Search"
+        | "Other Search Engine"
+        | "Email Newsletter"
+        | "Blog/Article"
+        | "Podcast"
+        | "Online Advertisement"
+        | "Website"
+        | "Mobile App"
+        | "QR Code"
+        | "Snapchat"
+        | "Reddit"
+        | "Discord"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5487,6 +5502,21 @@ export const Constants = {
         "RedNote",
         "Friend/Family",
         "Other",
+        "Career Fair",
+        "Professional Network/Association",
+        "Alumni Network",
+        "Google Search",
+        "Other Search Engine",
+        "Email Newsletter",
+        "Blog/Article",
+        "Podcast",
+        "Online Advertisement",
+        "Website",
+        "Mobile App",
+        "QR Code",
+        "Snapchat",
+        "Reddit",
+        "Discord",
       ],
     },
   },
