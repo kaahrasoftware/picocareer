@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,14 +55,38 @@ const COUNTRY_OPTIONS = COUNTRIES.map(country => ({
 }));
 
 const HEARD_ABOUT_US_OPTIONS = [
-  { id: 'Social Media', name: 'Social Media' },
+  // Social Media Platforms
+  { id: 'Facebook', name: 'Facebook' },
+  { id: 'Instagram', name: 'Instagram' },
+  { id: 'Twitter/X', name: 'Twitter/X' },
+  { id: 'LinkedIn', name: 'LinkedIn' },
+  { id: 'TikTok', name: 'TikTok' },
+  { id: 'YouTube', name: 'YouTube' },
+  { id: 'Snapchat', name: 'Snapchat' },
+  { id: 'Reddit', name: 'Reddit' },
+  { id: 'Discord', name: 'Discord' },
+  
+  // Professional/Educational Channels
   { id: 'Friend/Colleague', name: 'Friend/Colleague' },
-  { id: 'Website', name: 'Website' },
-  { id: 'Email Newsletter', name: 'Email Newsletter' },
-  { id: 'Search Engine', name: 'Search Engine' },
   { id: 'School/University', name: 'School/University' },
   { id: 'Career Fair', name: 'Career Fair' },
+  { id: 'Professional Network/Association', name: 'Professional Network/Association' },
+  { id: 'Alumni Network', name: 'Alumni Network' },
+  
+  // Digital Discovery
+  { id: 'Google Search', name: 'Google Search' },
+  { id: 'Other Search Engine', name: 'Other Search Engine' },
+  { id: 'Email Newsletter', name: 'Email Newsletter' },
+  { id: 'Blog/Article', name: 'Blog/Article' },
+  { id: 'Podcast', name: 'Podcast' },
   { id: 'Online Advertisement', name: 'Online Advertisement' },
+  
+  // Direct Discovery
+  { id: 'Website', name: 'Website' },
+  { id: 'Mobile App', name: 'Mobile App' },
+  { id: 'QR Code', name: 'QR Code' },
+  
+  // Other
   { id: 'Other', name: 'Other' }
 ];
 
