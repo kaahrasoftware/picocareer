@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { StandardPagination } from '@/components/common/StandardPagination';
 
 interface EventResourcesSectionProps {
   resources: (EventResource & {
@@ -34,6 +35,9 @@ interface EventResourcesSectionProps {
     organized_by?: string;
   };
 }
+
+// Constants
+const ITEMS_PER_PAGE = 18;
 
 const getResourceIcon = (type: EventResource['resource_type']) => {
   const iconClass = "h-5 w-5";
@@ -81,7 +85,6 @@ const formatFileSize = (bytes?: number) => {
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Resource Statistics Component - Now uses actual file sizes
 const ResourceStatsCards = ({ resources, filteredCount }: { resources: (EventResource & { events?: any })[], filteredCount: number }) => {
   const downloadableCount = resources.filter(r => r.is_downloadable).length;
   const typeBreakdown = resources.reduce((acc, resource) => {
@@ -228,6 +231,7 @@ export function EventResourcesSection({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
   const [previewResource, setPreviewResource] = useState<EventResource | null>(null);
   const [downloadingResources, setDownloadingResources] = useState<Set<string>>(new Set());
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -254,12 +258,37 @@ export function EventResourcesSection({
   };
 
   // Filter resources based on search and type (for authenticated users)
-  const filteredResources = session?.user ? resources.filter(resource => {
-    const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesType = selectedType === 'all' || resource.resource_type === selectedType;
-    return matchesSearch && matchesType;
-  }) : resources;
+  const filteredResources = useMemo(() => {
+    if (!session?.user) return resources;
+    
+    return resources.filter(resource => {
+      const matchesSearch = resource.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesType = selectedType === 'all' || resource.resource_type === selectedType;
+      return matchesSearch && matchesType;
+    });
+  }, [resources, searchQuery, selectedType, session?.user]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredResources.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedResources = filteredResources.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedType]);
+
+  // Scroll to top of resources when page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to the resources section
+    const resourcesSection = document.querySelector('[data-resources-section]');
+    if (resourcesSection) {
+      resourcesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Get unique resource types for filtering
   const resourceTypes = Array.from(new Set(resources.map(r => r.resource_type)));
@@ -512,7 +541,7 @@ export function EventResourcesSection({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-resources-section>
       {/* Enhanced Event Info Header - Now visible to all users with prominent resource counts */}
       {eventInfo && (
         <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-purple-50/50">
@@ -704,6 +733,18 @@ export function EventResourcesSection({
                       );
                     })}
                   </div>
+
+                  {/* Pagination Info */}
+                  {filteredResources.length > 0 && (
+                    <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t">
+                      <span>
+                        Showing {startIndex + 1}-{Math.min(endIndex, filteredResources.length)} of {filteredResources.length} resources
+                      </span>
+                      <span>
+                        Page {currentPage} of {totalPages}
+                      </span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -726,19 +767,32 @@ export function EventResourcesSection({
                   </CardContent>
                 </Card>
               ) : (
-                <div className={cn(
-                  viewMode === 'grid' 
-                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
-                    : "space-y-3"
-                )}>
-                  {filteredResources.map((resource) => 
-                    viewMode === 'grid' ? (
-                      <ResourceCard key={resource.id} resource={resource} />
-                    ) : (
-                      <ResourceListItem key={resource.id} resource={resource} />
-                    )
+                <>
+                  <div className={cn(
+                    viewMode === 'grid' 
+                      ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+                      : "space-y-3"
+                  )}>
+                    {paginatedResources.map((resource) => 
+                      viewMode === 'grid' ? (
+                        <ResourceCard key={resource.id} resource={resource} />
+                      ) : (
+                        <ResourceListItem key={resource.id} resource={resource} />
+                      )
+                    )}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <StandardPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                      showPageNumbers={true}
+                      maxPageButtons={5}
+                    />
                   )}
-                </div>
+                </>
               )}
             </>
           )}
