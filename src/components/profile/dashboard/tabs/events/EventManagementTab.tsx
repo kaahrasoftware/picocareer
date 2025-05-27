@@ -6,17 +6,17 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventDetailsDialog } from './EventDetailsDialog';
-import { EventDataTable } from './EventDataTable';
 import { EventDashboardStats } from './EventDashboardStats';
 import { EventSummaryTab } from './EventSummaryTab';
 import { EventRegistrationsTab } from './EventRegistrationsTab';
 import { EventResourcesManagementTab } from './EventResourcesManagementTab';
+import { EventManagementGrid } from './EventManagementGrid';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("summary");
+  const [activeTab, setActiveTab] = useState("events");
 
   const handleAddNewEvent = () => {
     navigate('/event/upload');
@@ -62,14 +62,10 @@ export function EventManagementTab() {
         <TabsContent value="events" className="space-y-6">
           <EventDashboardStats />
 
-          <Card>
-            <CardContent className="p-6">
-              <EventDataTable 
-                onViewDetails={handleViewDetails}
-                onEventSelect={handleEventSelect}
-              />
-            </CardContent>
-          </Card>
+          <EventManagementGrid
+            onViewDetails={handleViewDetails}
+            onManageResources={handleEventSelect}
+          />
         </TabsContent>
 
         <TabsContent value="registrations">
