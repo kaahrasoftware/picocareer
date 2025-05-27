@@ -1,4 +1,5 @@
 
+
 import { Download, Eye, FileText, Film, Image, Link, Music, Presentation, MoreHorizontal, Loader2, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -96,17 +97,19 @@ export function EventResourceCard({
   const handleView = (event: React.MouseEvent<HTMLButtonElement>) => {
     console.log('🎯 EventResourceCard: Handling view click for resource:', resource.id);
     
-    // Track the view only once
-    trackView(resource.id, {
-      source: 'resource_card',
-      action: 'view_button_click',
-      resource_type: resource.resource_type,
-      resource_title: resource.title,
-      has_external_url: !!resource.external_url,
-      has_file_url: !!resource.file_url
-    });
+    // Only track if no parent handler is provided (standalone usage)
+    if (!onView) {
+      trackView(resource.id, {
+        source: 'resource_card',
+        action: 'view_button_click',
+        resource_type: resource.resource_type,
+        resource_title: resource.title,
+        has_external_url: !!resource.external_url,
+        has_file_url: !!resource.file_url
+      });
+    }
 
-    // Call the parent onView handler if provided (don't track again)
+    // Call the parent onView handler if provided (parent handles tracking)
     if (onView) {
       onView(resource);
     }
@@ -136,16 +139,18 @@ export function EventResourceCard({
       
       console.log('🎯 EventResourceCard: Handling download click for resource:', resource.id);
       
-      // Track the download only once
-      trackDownload(resource.id, {
-        source: 'resource_card',
-        action: 'download_button_click',
-        resource_type: resource.resource_type,
-        resource_title: resource.title,
-        file_size: resource.file_size,
-        file_format: resource.file_format,
-        download_method: 'direct'
-      });
+      // Only track if no parent handler is provided (standalone usage)
+      if (!onDownload) {
+        trackDownload(resource.id, {
+          source: 'resource_card',
+          action: 'download_button_click',
+          resource_type: resource.resource_type,
+          resource_title: resource.title,
+          file_size: resource.file_size,
+          file_format: resource.file_format,
+          download_method: 'direct'
+        });
+      }
       
       console.log('📁 Starting download for resource:', resource.id);
       
@@ -198,7 +203,7 @@ export function EventResourceCard({
         });
       }
       
-      // Call the parent onDownload handler if provided (don't track again)
+      // Call the parent onDownload handler if provided (parent handles tracking)
       if (onDownload) {
         onDownload(resource);
       }
@@ -341,3 +346,4 @@ export function EventResourceCard({
     </div>
   );
 }
+
