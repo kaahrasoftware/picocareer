@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EventMetricsCards } from './EventMetricsCards';
 import { EventRankingTable } from './EventRankingTable';
+import { EventEngagementCharts } from './EventEngagementCharts';
 
 export function EventSummaryTab() {
   // Fetch all events for statistics
@@ -80,7 +81,7 @@ export function EventSummaryTab() {
     <div className="space-y-6">
       <EventMetricsCards stats={stats} isLoading={isLoading} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Top Events by Registration</CardTitle>
@@ -95,13 +96,50 @@ export function EventSummaryTab() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Event Engagement</CardTitle>
+            <CardTitle>Quick Stats</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
-            Event engagement charts coming soon
+          <CardContent className="space-y-4">
+            {isLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Average registrations per event:</span>
+                  <span className="font-medium">
+                    {stats?.totalEvents ? Math.round(stats.totalRegistrations / stats.totalEvents) : 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Events with registrations:</span>
+                  <span className="font-medium">
+                    {stats?.rankedEvents.filter(e => e.registrationCount > 0).length || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Most popular event:</span>
+                  <span className="font-medium text-right max-w-32 truncate">
+                    {stats?.rankedEvents[0]?.title || 'N/A'}
+                  </span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Event Engagement Demographics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Event Engagement & Demographics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EventEngagementCharts />
+        </CardContent>
+      </Card>
     </div>
   );
 }
