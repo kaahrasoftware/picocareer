@@ -4,197 +4,160 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ResourceAccessLevel, HubResource, ResourceType, DocumentType } from "@/types/database/hubs";
-import { ResourceBasicInfo } from "./forms/ResourceBasicInfo";
-import { ResourceTypeSelect } from "./forms/ResourceTypeSelect";
-import { ResourceUpload } from "./forms/ResourceUpload";
-import { AccessLevelSelect } from "./forms/AccessLevelSelect";
-import { updateHubStorageUsage } from "@/utils/storageUtils";
+import { FormField } from "@/components/forms/FormField";
+import { useState } from "react";
+
+interface ResourceFormData {
+  title: string;
+  description: string;
+  resource_type: string;
+  access_level: string;
+  file_url?: string;
+  external_url?: string;
+}
 
 interface ResourceFormProps {
   hubId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  existingResource?: HubResource;
 }
 
-interface FormFields {
-  title: string;
-  description?: string;
-  category?: string;
-  resource_type: ResourceType;
-  document_type?: DocumentType;
-  external_url?: string;
-  file_url?: string;
-  access_level: ResourceAccessLevel;
-}
-
-export function ResourceForm({ 
-  hubId,
-  onSuccess,
-  onCancel,
-  existingResource 
-}: ResourceFormProps) {
+export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<FormFields>({
+  const form = useForm<ResourceFormData>({
     defaultValues: {
-      title: existingResource?.title || "",
-      description: existingResource?.description || "",
-      category: existingResource?.category || "",
-      resource_type: existingResource?.resource_type || "document",
-      document_type: existingResource?.document_type,
-      external_url: existingResource?.external_url || "",
-      file_url: existingResource?.file_url || "",
-      access_level: existingResource?.access_level || "members"
-    }
+      title: "",
+      description: "",
+      resource_type: "document",
+      access_level: "members",
+      file_url: "",
+      external_url: "",
+    },
   });
 
-  const resourceType = form.watch('resource_type');
-  const documentType = form.watch('document_type');
-  const fileUrl = form.watch('file_url');
-
-  const getFileSizeFromUrl = async (url: string): Promise<number> => {
-    if (!url) return 0;
-    
+  const onSubmit = async (data: ResourceFormData) => {
+    setIsSubmitting(true);
     try {
-      // Attempt to get file metadata if possible
-      const path = url.split('/').slice(-4).join('/');
-      const { data, error } = await supabase.storage
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to create resources",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const resourceData = {
+        hub_id: hubId,
+        title: data.title,
+        description: data.description,
+        resource_type: data.resource_type,
+        access_level: data.access_level,
+        file_url: data.file_url || "",
+        external_url: data.external_url || "",
+        created_by: user.id,
+      };
+
+      const { error } = await supabase
         .from('hub_resources')
-        .getPublicUrl(path);
-      
+        .insert(resourceData);
+
       if (error) {
-        console.error('Error getting file metadata:', error);
-        return 0;
+        throw error;
       }
-      
-      // If we can't get size from metadata, make a HEAD request
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        const contentLength = response.headers.get('content-length');
-        if (contentLength) {
-          return parseInt(contentLength, 10);
-        }
-      } catch (headError) {
-        console.warn('Error getting file size via HEAD request:', headError);
-      }
-      
-      // Fallback size estimates - all in bytes
-      if (resourceType === 'image') return 500000; // 500KB = 500 * 1024 bytes
-      if (resourceType === 'video') return 5000000; // 5MB = 5 * 1024 * 1024 bytes
-      if (resourceType === 'audio') return 2000000; // 2MB = 2 * 1024 * 1024 bytes
-      if (resourceType === 'document') return 1000000; // 1MB = 1 * 1024 * 1024 bytes
-      
-      return 100000; // Default 100KB = 100 * 1024 bytes
-    } catch (error) {
-      console.error('Error determining file size:', error);
-      return 0;
-    }
-  };
-
-  const onSubmit = async (data: FormFields) => {
-    try {
-      const user = await supabase.auth.getUser();
-      
-      // Get file size for the uploaded file
-      let fileSizeInBytes = 0;
-      if (data.file_url) {
-        fileSizeInBytes = await getFileSizeFromUrl(data.file_url);
-      }
-      
-      // For updates, we only want to update specific fields
-      if (existingResource) {
-        const { error } = await supabase
-          .from('hub_resources')
-          .update({
-            title: data.title,
-            description: data.description,
-            category: data.category,
-            resource_type: data.resource_type,
-            document_type: data.document_type,
-            external_url: data.external_url,
-            file_url: data.file_url,
-            access_level: data.access_level,
-            size_in_bytes: fileSizeInBytes,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingResource.id);
-
-        if (error) throw error;
-      } else {
-        console.log('Creating new resource with file size (bytes):', fileSizeInBytes);
-
-        const { error } = await supabase
-          .from('hub_resources')
-          .insert({
-            hub_id: hubId,
-            title: data.title,
-            description: data.description,
-            category: data.category,
-            resource_type: data.resource_type,
-            document_type: data.document_type,
-            external_url: data.external_url,
-            file_url: data.file_url,
-            access_level: data.access_level,
-            content_type: data.file_url ? 'application/octet-stream' : undefined,
-            original_filename: data.file_url ? data.file_url.split('/').pop() : undefined,
-            size_in_bytes: fileSizeInBytes,
-            version: 1,
-            created_by: user.data.user?.id,
-          });
-
-        if (error) throw error;
-      }
-
-      // Update hub storage metrics after resource change
-      await updateHubStorageUsage(hubId);
 
       toast({
         title: "Success",
-        description: `Resource ${existingResource ? 'updated' : 'created'} successfully.`
+        description: "Resource created successfully",
       });
 
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      console.error('Error saving resource:', error);
+      form.reset();
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating resource:', error);
       toast({
         title: "Error",
-        description: "Failed to save resource. Please try again.",
-        variant: "destructive"
+        description: error.message || "Failed to create resource",
+        variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <ResourceBasicInfo register={form.register} />
-        
-        <ResourceTypeSelect 
+        <FormField
           control={form.control}
-          resourceType={resourceType}
-          documentType={documentType}
+          name="title"
+          label="Title"
+          type="text"
+          required
         />
 
-        <ResourceUpload
-          resourceType={resourceType}
-          documentType={documentType}
-          register={form.register}
+        <FormField
           control={form.control}
-          hubId={hubId}
+          name="description"
+          label="Description"
+          type="textarea"
         />
 
-        <AccessLevelSelect control={form.control} />
+        <FormField
+          control={form.control}
+          name="resource_type"
+          label="Resource Type"
+          type="select"
+          options={[
+            { value: "document", label: "Document" },
+            { value: "link", label: "Link" },
+            { value: "video", label: "Video" },
+            { value: "image", label: "Image" },
+          ]}
+          required
+        />
 
-        <div className="flex justify-end gap-4">
+        <FormField
+          control={form.control}
+          name="access_level"
+          label="Access Level"
+          type="select"
+          options={[
+            { value: "members", label: "Members Only" },
+            { value: "public", label: "Public" },
+            { value: "admin", label: "Admin Only" },
+          ]}
+          required
+        />
+
+        <FormField
+          control={form.control}
+          name="file_url"
+          label="File URL"
+          type="text"
+          description="Upload a file or provide a direct URL"
+        />
+
+        <FormField
+          control={form.control}
+          name="external_url"
+          label="External URL"
+          type="text"
+          description="Link to external resource"
+        />
+
+        <div className="flex justify-end gap-2">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           )}
-          <Button type="submit">
-            {form.formState.isSubmitting ? "Saving..." : "Save Resource"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Resource"}
           </Button>
         </div>
       </form>

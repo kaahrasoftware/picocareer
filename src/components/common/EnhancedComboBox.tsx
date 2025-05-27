@@ -46,10 +46,14 @@ export function EnhancedComboBox({
           .select(`id, ${valueField}, ${labelField}`)
           .limit(50);
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching options:', error);
+          setOptions([]);
+          return;
+        }
         
         // Ensure all items have an id property
-        const validData = (data || []).filter(item => item.id);
+        const validData = (data || []).filter(item => item && typeof item.id === 'string');
         setOptions(validData);
       } catch (error) {
         console.error('Error fetching options:', error);

@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,7 +43,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
               avatarUrl={profile.avatar_url}
-              fallback={profile.full_name?.[0] || 'U'}
+              name={profile.full_name || 'Unknown User'}
               size="md"
               editable={false}
             />

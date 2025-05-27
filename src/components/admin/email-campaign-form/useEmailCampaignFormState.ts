@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -261,8 +262,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       }
 
       toast.success('Email campaign saved successfully!');
-      // Cast the unknown value to string for typesafety
-      const campaignId = savedData?.[0]?.id as string | undefined;
+      // Cast the savedData to get proper typing
+      const campaignId = savedData?.[0]?.id ? String(savedData[0].id) : undefined;
       onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
