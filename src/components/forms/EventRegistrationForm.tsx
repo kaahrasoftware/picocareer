@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,6 +56,7 @@ const COUNTRY_OPTIONS = COUNTRIES.map(country => ({
   name: country
 }));
 
+// Updated options to match database enum values more closely
 const HEARD_ABOUT_US_OPTIONS = [
   // Social Media Platforms
   { id: 'Facebook', name: 'Facebook' },
@@ -103,21 +105,44 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
   const userType = watch('user_type');
 
   const onFormSubmit = async (data: RegistrationFormData) => {
+    console.log('Form data before transformation:', data);
+    
+    // Get the actual field value based on user type
+    let academicFieldPosition = '';
+    
+    if (userType === 'High School Student' || userType === 'College Student') {
+      academicFieldPosition = data.academic_major_id || '';
+    } else if (userType === 'Professional' || userType === 'Unemployed') {
+      academicFieldPosition = data.position || '';
+    }
+    
+    console.log('Academic field/position value:', academicFieldPosition);
+    
+    // Ensure we have a value for the required field
+    if (!academicFieldPosition) {
+      console.error('Missing academic field/position value');
+      return;
+    }
+    
     // Transform data to match the database schema
     const transformedData = {
       email: data.email,
       first_name: data.first_name,
       last_name: data.last_name,
-      'current academic field/position': userType === 'High School Student' || userType === 'College Student' 
-        ? data.academic_major_id 
-        : data.position,
+      'current academic field/position': academicFieldPosition,
       student_or_professional: userType,
       'current school/company': '', // This field might need to be added later
       country: data.country,
       'where did you hear about us': data.where_did_you_hear_about_us
     };
     
-    await onSubmit(transformedData);
+    console.log('Transformed data for submission:', transformedData);
+    
+    try {
+      await onSubmit(transformedData);
+    } catch (error) {
+      console.error('Error submitting registration:', error);
+    }
   };
 
   // Helper function to get the conditional field label with clearer messaging
@@ -285,3 +310,4 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
     </Card>
   );
 }
+
