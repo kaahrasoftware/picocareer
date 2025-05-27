@@ -60,12 +60,19 @@ export function EnhancedComboBox({
             // Additional null checks
             if (item[valueField] === null || item[labelField] === null) return false;
             return true;
-          }).map(item => ({
-            ...item,
-            // Ensure we have fallback values
-            [valueField]: item[valueField] || '',
-            [labelField]: item[labelField] || 'Unnamed'
-          }));
+          }).map(item => {
+            // Safe item handling with null checks
+            if (!item || typeof item !== 'object') {
+              return { id: '', [valueField]: '', [labelField]: 'Unnamed' };
+            }
+            
+            return {
+              ...item,
+              // Ensure we have fallback values
+              [valueField]: item[valueField] || '',
+              [labelField]: item[labelField] || 'Unnamed'
+            };
+          });
           setOptions(validData);
         } else {
           setOptions([]);

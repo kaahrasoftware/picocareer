@@ -81,15 +81,15 @@ export function useCareerChat() {
   };
   
   const advanceQuestion = () => {
-    setQuestionProgress(prev => prev + 10);
+    setQuestionProgress(prev => Math.min(prev + 10, 100));
   };
   
   const createQuestionMessage = (sessionId: string): CareerChatMessage => {
     // Fix: Ensure message_type is the correct type
     const messageType: "system" | "user" | "bot" | "recommendation" | "session_end" = "bot";
     
-    // Create proper questionCounts object
-    const questionCounts: { [key: string]: number } = { 
+    // Create proper questionCounts object with safe numeric values
+    const questionCounts: QuestionCounts = { 
       education: 0, 
       skills: 0, 
       workstyle: 0, 

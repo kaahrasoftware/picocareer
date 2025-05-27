@@ -57,12 +57,21 @@ export interface CareerChatMessage {
 
 export interface CareerChatSession {
   id: string;
-  status: string;
-  created_at: string;
-  session_metadata: ChatSessionMetadata;
-  progress_data: any;
-  total_messages: number;
-  last_active_at: string;
+  status?: string;
+  created_at?: string;
+  session_metadata?: ChatSessionMetadata;
+  progress_data: {
+    [key: string]: number;
+    education: number;
+    skills: number;
+    workstyle: number;
+    goals: number;
+    overall: number;
+  };
+  total_messages?: number;
+  last_active_at?: string;
+  is_suspended?: boolean;
+  profile_id?: string;
 }
 
 export interface ChatSessionMetadata {

@@ -50,6 +50,14 @@ export function SelectWithCustomOption({
     }
   }, [options]);
 
+  // Get the correct field name for each table
+  const getFieldName = (table: string) => {
+    if (table === 'schools' || table === 'companies') {
+      return 'name';
+    }
+    return 'title';
+  };
+
   // Fetch options for the given table with search
   const { data: searchResults, isLoading } = useQuery({
     queryKey: [tableName, 'search', searchQuery],
@@ -63,13 +71,14 @@ export function SelectWithCustomOption({
       try {
         // Ensure query is safe
         const safeQuery = String(searchQuery).toLowerCase();
+        const fieldName = getFieldName(tableName);
         
         // Simple query that should work for all tables
         const { data, error } = await supabase
           .from(tableName)
-          .select('id, title')
-          .ilike('title', `%${safeQuery}%`)
-          .order('title')
+          .select(`id, ${fieldName}`)
+          .ilike(fieldName, `%${safeQuery}%`)
+          .order(fieldName)
           .limit(50);
         
         if (error) {
@@ -79,15 +88,19 @@ export function SelectWithCustomOption({
 
         console.log(`Fetched ${data?.length || 0} ${tableName}`);
         
-        // Ensure data is valid before returning
-        return (data || []).filter(item => 
-          item && 
-          typeof item === 'object' && 
-          'id' in item && 
-          'title' in item &&
-          item.id &&
-          item.title
-        );
+        // Ensure data is valid before returning and handle different field names
+        return (data || []).filter(item => {
+          if (!item || typeof item !== 'object') return false;
+          if (!('id' in item) || !item.id) return false;
+          const fieldValue = item[fieldName as keyof typeof item];
+          return fieldValue !== null && fieldValue !== undefined;
+        }).map(item => {
+          const fieldValue = item[fieldName as keyof typeof item];
+          return {
+            id: item.id,
+            [fieldName === 'name' ? 'name' : 'title']: fieldValue
+          };
+        });
       } catch (error) {
         console.error(`Error in search query:`, error);
         return [];
@@ -105,7 +118,7 @@ export function SelectWithCustomOption({
         const combined = [...prevOptions];
         searchResults.forEach(option => {
           if (option && option.id && !combined.some(existing => existing.id === option.id)) {
-            combined.push({ ...option, name: option.title });
+            combined.push(option);
           }
         });
         return combined;
@@ -149,11 +162,13 @@ export function SelectWithCustomOption({
     }
 
     try {
+      const fieldName = getFieldName(tableName);
+      
       // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName)
-        .select('id, title')
-        .eq('title', customValue)
+        .select(`id, ${fieldName}`)
+        .eq(fieldName, customValue)
         .maybeSingle();
 
       if (checkError) throw checkError;
@@ -167,7 +182,7 @@ export function SelectWithCustomOption({
 
       // Create new entry
       const insertData = { 
-        title: customValue, 
+        [fieldName]: customValue, 
         description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, 
         status: 'Pending' as Status 
       };

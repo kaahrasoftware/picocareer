@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -19,7 +20,6 @@ export function MemberGrowthChart({ hubId }: MemberGrowthChartProps) {
           .from('hub_member_growth')
           .select('*')
           .eq('hub_id', hubId)
-          .order('year', { ascending: true })
           .order('month', { ascending: true });
 
         if (error) throw error;

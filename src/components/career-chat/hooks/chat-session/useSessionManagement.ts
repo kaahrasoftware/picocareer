@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -74,7 +75,8 @@ export function useSessionManagement(
           created_at, 
           session_metadata,
           progress_data,
-          total_messages
+          total_messages,
+          last_active_at
         `)
         .eq('profile_id', userId)
         .order('created_at', { ascending: false })
@@ -82,7 +84,7 @@ export function useSessionManagement(
       
       if (error) throw error;
       
-      // Convert data to proper type
+      // Convert data to proper type with proper handling of missing fields
       const typedSessions: CareerChatSession[] = (data || []).map(session => {
         // Ensure progress_data has the correct structure
         const progressData = typeof session.progress_data === 'object' && session.progress_data !== null ? 
@@ -91,11 +93,12 @@ export function useSessionManagement(
           
         return {
           id: session.id,
-          status: session.status,
-          created_at: session.created_at,
-          session_metadata: session.session_metadata as unknown as ChatSessionMetadata,
+          status: session.status || 'active',
+          created_at: session.created_at || new Date().toISOString(),
+          session_metadata: (session.session_metadata as ChatSessionMetadata) || {},
           progress_data: progressData,
-          total_messages: session.total_messages
+          total_messages: session.total_messages || 0,
+          last_active_at: session.last_active_at || session.created_at || new Date().toISOString()
         };
       });
       
@@ -147,7 +150,11 @@ export function useSessionManagement(
         // Update UI state
         setSessionId(targetSessionId);
         setMessages(typedMessages);
-        setSessionMetadata(session.session_metadata as unknown as ChatSessionMetadata);
+        // Safe metadata handling
+        const safeMetadata = session.session_metadata && typeof session.session_metadata === 'object' 
+          ? session.session_metadata as ChatSessionMetadata
+          : {};
+        setSessionMetadata(safeMetadata);
       }
       
     } catch (error) {
@@ -187,8 +194,10 @@ export function useSessionManagement(
       if (!session) return;
       
       const currentMetadata = session.session_metadata || {};
+      // Ensure safe metadata handling
+      const safeCurrentMetadata = typeof currentMetadata === 'object' && currentMetadata !== null ? currentMetadata : {};
       const updatedMetadata = {
-        ...currentMetadata,
+        ...safeCurrentMetadata,
         title
       };
       

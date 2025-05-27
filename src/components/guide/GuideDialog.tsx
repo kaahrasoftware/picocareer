@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from 'react';
 import { GuideStep } from '../guide/types';
 import { GuideDialogHeader } from './dialog/GuideDialogHeader';
@@ -24,7 +25,11 @@ export function GuideDialog({
 }: GuideDialogProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
-  const [guideArrowPosition, setGuideArrowPosition] = useState({ top: 0, left: 0, direction: 'right' as const });
+  const [guideArrowPosition, setGuideArrowPosition] = useState({ 
+    top: 0, 
+    left: 0, 
+    direction: 'right' as 'right' | 'left' | 'top' | 'bottom'
+  });
   const dialogRef = useRef<HTMLDivElement>(null);
   const highlightedElementRef = useRef<Element | null>(null);
   
@@ -85,7 +90,12 @@ export function GuideDialog({
       
       setPosition(dialogPosition);
       setArrowPosition(connectorPosition);
-      setGuideArrowPosition(directionalArrowPosition);
+      // Fix: Ensure direction type is compatible
+      setGuideArrowPosition({
+        top: directionalArrowPosition.top,
+        left: directionalArrowPosition.left,
+        direction: directionalArrowPosition.direction as 'right' | 'left' | 'top' | 'bottom'
+      });
       
       // Create the directional arrow
       const arrow = document.createElement('div');
