@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export type TimePeriod = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_year';
+export type TimePeriod = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_year' | 'month';
 
 export interface MemberGrowth {
   month: string;
@@ -37,6 +37,7 @@ export function MemberGrowthChart({
             <SelectItem value="last_30_days">Last 30 Days</SelectItem>
             <SelectItem value="last_90_days">Last 90 Days</SelectItem>
             <SelectItem value="last_year">Last Year</SelectItem>
+            <SelectItem value="month">Monthly</SelectItem>
           </SelectContent>
         </Select>
       </CardHeader>

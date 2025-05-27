@@ -4,82 +4,50 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BasicInputField } from "@/components/forms/fields/BasicInputField";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  AnnouncementCategory,
-  InstitutionAnnouncement 
-} from "@/types/database/institutions";
 
 interface AnnouncementFormProps {
   institutionId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  existingAnnouncement?: InstitutionAnnouncement;
 }
 
 interface FormFields {
   title: string;
   content: string;
-  category: AnnouncementCategory;
-  scheduled_for?: string;
-  expires_at?: string;
-  target_audience?: string[];
+  category: string;
 }
 
 export function AnnouncementForm({ 
   institutionId, 
   onSuccess,
-  onCancel,
-  existingAnnouncement 
+  onCancel
 }: AnnouncementFormProps) {
   const { toast } = useToast();
 
   const form = useForm<FormFields>({
     defaultValues: {
-      title: existingAnnouncement?.title || "",
-      content: existingAnnouncement?.content || "",
-      category: existingAnnouncement?.category || "general",
-      scheduled_for: existingAnnouncement?.scheduled_for || "",
-      expires_at: existingAnnouncement?.expires_at || "",
-      target_audience: existingAnnouncement?.target_audience || []
+      title: "",
+      content: "",
+      category: "general"
     }
   });
 
   const onSubmit = async (data: FormFields) => {
     try {
-      if (existingAnnouncement) {
-        const { error } = await supabase
-          .from('institution_announcements')
-          .update({
-            ...data,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingAnnouncement.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('institution_announcements')
-          .insert({
-            ...data,
-            institution_id: institutionId,
-            created_by: (await supabase.auth.getUser()).data.user?.id
-          });
-
-        if (error) throw error;
-      }
-
+      // Since institution_announcements table doesn't exist, show placeholder behavior
+      console.log('Would create announcement:', data);
+      
       toast({
-        title: "Success",
-        description: `Announcement ${existingAnnouncement ? 'updated' : 'created'} successfully.`
+        title: "Feature Coming Soon",
+        description: "Institution announcements will be available in a future update.",
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error saving announcement:', error);
+      console.error('Error in announcement form:', error);
       toast({
         title: "Error",
-        description: "Failed to save announcement. Please try again.",
+        description: "This feature is not yet implemented.",
         variant: "destructive"
       });
     }
@@ -107,18 +75,6 @@ export function AnnouncementForm({
           label="Category"
           placeholder="Select category"
           required
-        />
-
-        <BasicInputField
-          field={form.register("scheduled_for")}
-          label="Schedule For"
-          type="datetime-local"
-        />
-
-        <BasicInputField
-          field={form.register("expires_at")}
-          label="Expires At"
-          type="datetime-local"
         />
 
         <div className="flex justify-end gap-4">

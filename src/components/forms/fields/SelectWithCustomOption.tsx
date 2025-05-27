@@ -184,7 +184,7 @@ export function SelectWithCustomOption({
       }
 
       // Create new entry with proper field mapping
-      const insertData: any = { 
+      const insertData: Record<string, any> = { 
         [fieldName]: customValue, 
         description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, 
         status: 'Pending' as Status 
