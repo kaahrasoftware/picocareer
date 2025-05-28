@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,41 +103,43 @@ export function PartnershipApplicationForm() {
         </CardHeader>
         
         <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <CurrentStepComponent form={form} data={watchedValues} />
-            
-            <div className="flex justify-between pt-6 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className="flex items-center"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Previous
-              </Button>
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <CurrentStepComponent form={form} data={watchedValues} />
               
-              {currentStep < steps.length ? (
+              <div className="flex justify-between pt-6 border-t">
                 <Button
                   type="button"
-                  onClick={nextStep}
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
                   className="flex items-center"
                 >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
                 </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !watchedValues.terms_accepted}
-                  className="flex items-center"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                </Button>
-              )}
-            </div>
-          </form>
+                
+                {currentStep < steps.length ? (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    className="flex items-center"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !watchedValues.terms_accepted}
+                    className="flex items-center"
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </FormProvider>
         </CardContent>
       </Card>
     </div>
