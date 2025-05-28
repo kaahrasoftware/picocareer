@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider"
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
-import AppSidebar from './components/AppSidebar';
+import { AppSidebar } from './components/AppSidebar';
 import MainNavigation from './components/MainNavigation';
-import Footer from './components/Footer';
+import { Footer } from './components/Footer';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Blog from './pages/Blog';
@@ -13,7 +14,7 @@ import Opportunities from './pages/Opportunities';
 import OpportunityDetails from './pages/OpportunityDetails';
 import BlogDetails from './pages/BlogDetails';
 import ProfileEdit from './pages/ProfileEdit';
-import ScrollToTop from './components/ScrollToTop';
+import { ScrollToTop } from './components/ScrollToTop';
 import Dashboard from './pages/Dashboard';
 import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
@@ -33,10 +34,12 @@ import EmailPreferences from './pages/EmailPreferences';
 import Partnerships from "./pages/Partnerships";
 import PartnershipApplication from "./pages/PartnershipApplication";
 
+const queryClient = new QueryClient();
+
 function App() {
   return (
     <BrowserRouter>
-      <QueryClient>
+      <QueryClientProvider client={queryClient}>
         <div className="min-h-screen bg-background">
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
             <Toaster />
@@ -75,7 +78,7 @@ function App() {
             <Footer />
           </ThemeProvider>
         </div>
-      </QueryClient>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }
