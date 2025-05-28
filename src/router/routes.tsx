@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -38,6 +39,24 @@ import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
+import ProfileEdit from "../pages/ProfileEdit";
+import BlogDetails from "../pages/BlogDetails";
+import Events from "../pages/Events";
+import EventDetails from "../pages/EventDetails";
+import Careers from "../pages/Careers";
+import CareerDetails from "../pages/CareerDetails";
+import Mentors from "../pages/Mentors";
+import MentorDetails from "../pages/MentorDetails";
+import Companies from "../pages/Companies";
+import CompanyDetails from "../pages/CompanyDetails";
+import Schools from "../pages/Schools";
+import SchoolDetails from "../pages/SchoolDetails";
+import Majors from "../pages/Majors";
+import MajorDetails from "../pages/MajorDetails";
+import ScholarshipDetails from "../pages/ScholarshipDetails";
+import EmailPreferences from "../pages/EmailPreferences";
+import Partnerships from "../pages/Partnerships";
+import PartnershipApplication from "../pages/PartnershipApplication";
 
 export const router = createBrowserRouter([
   {
@@ -62,6 +81,14 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
+        path: "careers",
+        element: <Careers />,
+      },
+      {
+        path: "careers/:id",
+        element: <CareerDetails />,
+      },
+      {
         path: "career-chat",
         element: <CareerChat />,
       },
@@ -74,12 +101,20 @@ export const router = createBrowserRouter([
         element: <Mentor />,
       },
       {
+        path: "mentors",
+        element: <Mentors />,
+      },
+      {
+        path: "mentors/:id",
+        element: <MentorDetails />,
+      },
+      {
         path: "blog",
         element: <Blog />,
       },
       {
         path: "blog/:id",
-        element: <Blog />,
+        element: <BlogDetails />,
       },
       {
         path: "contact",
@@ -114,6 +149,38 @@ export const router = createBrowserRouter([
         element: <Event />,
       },
       {
+        path: "events",
+        element: <Events />,
+      },
+      {
+        path: "events/:id",
+        element: <EventDetails />,
+      },
+      {
+        path: "companies",
+        element: <Companies />,
+      },
+      {
+        path: "companies/:id",
+        element: <CompanyDetails />,
+      },
+      {
+        path: "schools",
+        element: <Schools />,
+      },
+      {
+        path: "schools/:id",
+        element: <SchoolDetails />,
+      },
+      {
+        path: "majors",
+        element: <Majors />,
+      },
+      {
+        path: "majors/:id",
+        element: <MajorDetails />,
+      },
+      {
         path: "feedback/:id",
         element: <Profile initialTab="calendar" />,
       },
@@ -146,8 +213,16 @@ export const router = createBrowserRouter([
         element: <Profile />,
       },
       {
+        path: "profile/edit",
+        element: <ProfileEdit />,
+      },
+      {
         path: "profile/:id",
         element: <Profile />,
+      },
+      {
+        path: "email-preferences",
+        element: <EmailPreferences />,
       },
       {
         path: "personality-test",
@@ -198,6 +273,10 @@ export const router = createBrowserRouter([
         element: <Scholarships />
       },
       {
+        path: "/scholarships/:id",
+        element: <ScholarshipDetails />
+      },
+      {
         path: "/scholarships/add",
         element: <ScholarshipAdd />
       },
@@ -212,6 +291,14 @@ export const router = createBrowserRouter([
       {
         path: "/opportunities/create",
         element: <CreateOpportunity />,
+      },
+      {
+        path: "/partnerships",
+        element: <Partnerships />,
+      },
+      {
+        path: "/partnerships/apply",
+        element: <PartnershipApplication />,
       },
       {
         path: "admin/email-campaigns",
