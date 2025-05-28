@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,7 +15,12 @@ export interface EmailCampaignFormData {
   recipient_filter: Record<string, any>;
 }
 
-export function useEmailCampaignFormState() {
+interface UseEmailCampaignFormStateProps {
+  onSuccess?: (campaignId: string) => void;
+  specificRecipientType?: string;
+}
+
+export function useEmailCampaignFormState(props: UseEmailCampaignFormStateProps = {}) {
   const [formData, setFormData] = useState<EmailCampaignFormData>({
     subject: '',
     body: '',
@@ -31,21 +36,21 @@ export function useEmailCampaignFormState() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [previewData, setPreviewData] = useState<any>(null);
 
-  // Query for content based on content_type
-  const { data: contentItems = [], isLoading } = useQuery({
-    queryKey: ['email-campaign-content', formData.content_type],
+  // Query for available recipients when recipient type is 'selected'
+  const { data: availableRecipients = [], isLoading: isFetchingRecipients } = useQuery({
+    queryKey: ['email-recipients', props.specificRecipientType],
     queryFn: async () => {
-      if (!formData.content_type) return [];
+      if (!props.specificRecipientType || props.specificRecipientType === 'all') return [];
       
       const { data, error } = await supabase
-        .from(formData.content_type)
-        .select('id, title, description, created_at')
-        .order('created_at', { ascending: false });
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .order('first_name');
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!formData.content_type
+    enabled: props.specificRecipientType === 'selected'
   });
 
   const updateField = (field: keyof EmailCampaignFormData, value: any) => {
@@ -70,10 +75,12 @@ export function useEmailCampaignFormState() {
     setFormData,
     selectedItems,
     updateSelectedItems,
-    contentItems,
-    isLoading,
+    contentItems: [],
+    isLoading: false,
     previewData,
     setPreviewData,
-    updateField
+    updateField,
+    availableRecipients,
+    isFetchingRecipients
   };
 }

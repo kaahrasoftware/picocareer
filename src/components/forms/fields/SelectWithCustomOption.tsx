@@ -38,21 +38,48 @@ export function SelectWithCustomOption({
     queryKey: [table, 'select-options'],
     queryFn: async (): Promise<SelectOption[]> => {
       try {
-        const { data, error } = await supabase
-          .from(table)
-          .select('id, title, name')
-          .order('title, name');
-        
-        if (error) {
-          console.error(`Error fetching ${table}:`, error);
-          return [];
+        // Type-safe query building for known tables
+        if (table === 'careers') {
+          const { data, error } = await supabase
+            .from('careers')
+            .select('id, title')
+            .order('title');
+          
+          if (error) throw error;
+          return (data || []).map(item => ({ id: item.id, title: item.title }));
         }
         
-        return (data || []).map(item => ({
-          id: item.id,
-          title: item.title || item.name || '',
-          name: item.name || item.title || ''
-        }));
+        if (table === 'companies') {
+          const { data, error } = await supabase
+            .from('companies')
+            .select('id, name')
+            .order('name');
+          
+          if (error) throw error;
+          return (data || []).map(item => ({ id: item.id, name: item.name }));
+        }
+        
+        if (table === 'schools') {
+          const { data, error } = await supabase
+            .from('schools')
+            .select('id, name')
+            .order('name');
+          
+          if (error) throw error;
+          return (data || []).map(item => ({ id: item.id, name: item.name }));
+        }
+        
+        if (table === 'majors') {
+          const { data, error } = await supabase
+            .from('majors')
+            .select('id, title')
+            .order('title');
+          
+          if (error) throw error;
+          return (data || []).map(item => ({ id: item.id, title: item.title }));
+        }
+        
+        return [];
       } catch (error) {
         console.error(`Error in query for ${table}:`, error);
         return [];
@@ -71,33 +98,43 @@ export function SelectWithCustomOption({
     
     setIsCreating(true);
     try {
-      const insertData = table === 'careers' 
-        ? { title: newItemName.trim(), description: `Custom ${table} entry` }
-        : { name: newItemName.trim() };
+      if (table === 'careers') {
+        const { data, error } = await supabase
+          .from('careers')
+          .insert([{ title: newItemName.trim(), description: `Custom ${table} entry` }])
+          .select()
+          .single();
 
-      const { data, error } = await supabase
-        .from(table)
-        .insert([insertData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error creating new ${table}:`, error);
-        return;
-      }
-
-      if (data) {
-        const newOption: SelectOption = {
-          id: data.id,
-          title: data.title || data.name || '',
-          name: data.name || data.title || ''
-        };
+        if (error) throw error;
+        if (data) {
+          const newOption: SelectOption = { id: data.id, title: data.title };
+          setOptions(prev => [...prev, newOption]);
+          onValueChange(data.id);
+          setNewItemName('');
+          setIsDialogOpen(false);
+          refetch();
+        }
+      } else {
+        // Handle other table types as needed
+        const insertData = { name: newItemName.trim() };
         
-        setOptions(prev => [...prev, newOption]);
-        onValueChange(data.id);
-        setNewItemName('');
-        setIsDialogOpen(false);
-        refetch();
+        if (table === 'companies') {
+          const { data, error } = await supabase
+            .from('companies')
+            .insert([insertData])
+            .select()
+            .single();
+
+          if (error) throw error;
+          if (data) {
+            const newOption: SelectOption = { id: data.id, name: data.name };
+            setOptions(prev => [...prev, newOption]);
+            onValueChange(data.id);
+            setNewItemName('');
+            setIsDialogOpen(false);
+            refetch();
+          }
+        }
       }
     } catch (error) {
       console.error(`Error creating new ${table}:`, error);
