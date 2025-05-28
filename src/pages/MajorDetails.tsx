@@ -1,20 +1,7 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { MajorDetails as MajorDetailsComponent } from '@/components/MajorDetails';
 
 export default function MajorDetails() {
-  const { id } = useParams();
-
-  return (
-    <div className="container py-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Major Details</h1>
-        {id ? (
-          <p className="text-muted-foreground">Viewing major: {id}</p>
-        ) : (
-          <p className="text-destructive">Major not found</p>
-        )}
-      </div>
-    </div>
-  );
+  return <MajorDetailsComponent />;
 }
