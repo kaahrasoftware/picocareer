@@ -1,177 +1,152 @@
 
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-interface SelectOption {
+interface Option {
   id: string;
+  name: string;
   title?: string;
-  name?: string;
 }
 
 interface CustomSelectProps {
-  table: string;
-  value?: string;
+  value: string;
   onValueChange: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
+  placeholder: string;
+  searchPlaceholder: string;
+  addNewLabel: string;
+  tableName: string;
+  options: Option[];
+  isLoading?: boolean;
 }
 
 export function CustomSelect({
-  table,
   value,
   onValueChange,
-  placeholder = "Select an option",
-  disabled = false
+  placeholder,
+  searchPlaceholder,
+  addNewLabel,
+  tableName,
+  options = [],
+  isLoading = false
 }: CustomSelectProps) {
-  const [options, setOptions] = useState<SelectOption[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
 
-  const { data: fetchedOptions = [], isLoading, refetch } = useQuery({
-    queryKey: [table, 'custom-select-options'],
-    queryFn: async (): Promise<SelectOption[]> => {
-      try {
-        const { data, error } = await supabase
-          .from(table)
-          .select('id, title, name')
-          .order('title, name');
-        
-        if (error) {
-          console.error(`Error fetching ${table}:`, error);
-          return [];
-        }
-        
-        return (data || []).map(item => ({
-          id: item.id,
-          title: item.title || item.name || '',
-          name: item.name || item.title || ''
-        }));
-      } catch (error) {
-        console.error(`Error in query for ${table}:`, error);
-        return [];
-      }
-    },
-    retry: 1
-  });
+  const selectedOption = options.find((option) => option.name === value);
 
-  useEffect(() => {
-    setOptions(fetchedOptions);
-  }, [fetchedOptions]);
-
-  const handleCreateNew = async () => {
+  const handleAddNew = async () => {
     if (!newItemName.trim()) return;
     
-    setIsCreating(true);
     try {
-      const insertData = table === 'careers' 
-        ? { title: newItemName.trim(), description: `Custom ${table} entry` }
-        : { name: newItemName.trim() };
-
-      const { data, error } = await supabase
-        .from(table)
-        .insert([insertData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error(`Error creating new ${table}:`, error);
-        return;
-      }
-
-      if (data) {
-        const newOption: SelectOption = {
-          id: data.id,
-          title: data.title || data.name || '',
-          name: data.name || data.title || ''
-        };
-        
-        setOptions(prev => [...prev, newOption]);
-        onValueChange(data.id);
-        setNewItemName('');
-        setIsDialogOpen(false);
-        refetch();
-      }
+      // For now, just add it to the local list
+      // In a real implementation, this would add to the database
+      console.log(`Adding new ${tableName}:`, newItemName);
+      
+      onValueChange(newItemName);
+      setNewItemName("");
+      setShowAddDialog(false);
+      setOpen(false);
     } catch (error) {
-      console.error(`Error creating new ${table}:`, error);
-    } finally {
-      setIsCreating(false);
+      console.error(`Error adding new ${tableName}:`, error);
     }
   };
 
   return (
-    <div className="flex gap-2">
-      <Select 
-        value={value} 
-        onValueChange={onValueChange}
-        disabled={disabled || isLoading}
-      >
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.title || option.name}
-            </SelectItem>
-          ))}
-          {options.length === 0 && !isLoading && (
-            <SelectItem value="" disabled>
-              No options available
-            </SelectItem>
-          )}
-        </SelectContent>
-      </Select>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="icon"
-            disabled={disabled}
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
           >
-            <Plus className="h-4 w-4" />
+            {selectedOption ? selectedOption.name : placeholder}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
-        </DialogTrigger>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder={searchPlaceholder} />
+            <CommandList>
+              <CommandEmpty>
+                <div className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">No results found.</p>
+                  <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        {addNewLabel}
+                      </Button>
+                    </DialogTrigger>
+                  </Dialog>
+                </div>
+              </CommandEmpty>
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.id}
+                    value={option.name}
+                    onSelect={(currentValue) => {
+                      onValueChange(currentValue === value ? "" : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === option.name ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {option.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New {table.slice(0, -1)}</DialogTitle>
+            <DialogTitle>{addNewLabel}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
-              placeholder={`Enter ${table.slice(0, -1)} name`}
+              placeholder={`Enter ${tableName.slice(0, -1)} name`}
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
             />
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setIsDialogOpen(false);
-                  setNewItemName('');
-                }}
-              >
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
                 Cancel
               </Button>
-              <Button
-                type="button"
-                onClick={handleCreateNew}
-                disabled={!newItemName.trim() || isCreating}
-              >
-                {isCreating ? 'Creating...' : 'Create'}
+              <Button onClick={handleAddNew}>
+                Add
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

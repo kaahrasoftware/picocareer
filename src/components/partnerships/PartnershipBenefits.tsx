@@ -1,129 +1,112 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
-import type { PartnershipBenefit, PartnershipType } from '@/types/partnership';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Star, Users, Trophy, Zap, Globe } from "lucide-react";
 
-const partnershipTypeLabels: Record<PartnershipType, string> = {
-  university: 'Universities',
-  high_school: 'High Schools',
-  trade_school: 'Trade Schools',
-  organization: 'Organizations',
-  individual: 'Individuals',
-  company: 'Companies',
-  nonprofit: 'Nonprofits'
+// Static benefits data
+const staticBenefits = [
+  {
+    id: 1,
+    title: "Brand Visibility",
+    description: "Showcase your organization to thousands of students and professionals",
+    icon: "star",
+    category: "marketing"
+  },
+  {
+    id: 2,
+    title: "Talent Pipeline",
+    description: "Connect directly with emerging talent in your industry",
+    icon: "users",
+    category: "recruitment"
+  },
+  {
+    id: 3,
+    title: "Industry Recognition",
+    description: "Position your brand as a leader in career development",
+    icon: "trophy",
+    category: "reputation"
+  },
+  {
+    id: 4,
+    title: "Innovation Access",
+    description: "Stay connected to the latest trends and innovations",
+    icon: "zap",
+    category: "innovation"
+  },
+  {
+    id: 5,
+    title: "Global Reach",
+    description: "Expand your network across different regions and markets",
+    icon: "globe",
+    category: "expansion"
+  }
+];
+
+const iconMap = {
+  star: Star,
+  users: Users,
+  trophy: Trophy,
+  zap: Zap,
+  globe: Globe
+};
+
+const categoryColors = {
+  marketing: "bg-blue-100 text-blue-800",
+  recruitment: "bg-green-100 text-green-800",
+  reputation: "bg-purple-100 text-purple-800",
+  innovation: "bg-orange-100 text-orange-800",
+  expansion: "bg-teal-100 text-teal-800"
 };
 
 export function PartnershipBenefits() {
-  const [selectedType, setSelectedType] = useState<PartnershipType>('university');
-
-  const { data: benefits, isLoading } = useQuery({
-    queryKey: ['partnership-benefits'],
-    queryFn: async (): Promise<PartnershipBenefit[]> => {
-      const { data, error } = await supabase
-        .from('partnership_benefits')
-        .select('*')
-        .order('sort_order', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  const filteredBenefits = benefits?.filter(benefit => benefit.partner_type === selectedType) || [];
-  
-  const benefitCategories = ['access', 'resources', 'support', 'marketing'];
-  
-  const getCategoryBenefits = (category: string) => 
-    filteredBenefits.filter(benefit => benefit.benefit_category === category);
-
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      access: 'bg-blue-100 text-blue-800',
-      resources: 'bg-green-100 text-green-800', 
-      support: 'bg-purple-100 text-purple-800',
-      marketing: 'bg-orange-100 text-orange-800'
-    };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
-
-  if (isLoading) {
-    return (
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <div className="py-16 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Partnership Benefits
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover the comprehensive benefits available to each type of partner
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            Discover the exclusive advantages of partnering with PicoCareer
           </p>
         </div>
 
-        <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as PartnershipType)}>
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 mb-8">
-            {Object.entries(partnershipTypeLabels).map(([key, label]) => (
-              <TabsTrigger key={key} value={key} className="text-xs lg:text-sm">
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {Object.keys(partnershipTypeLabels).map((type) => (
-            <TabsContent key={type} value={type}>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {benefitCategories.map((category) => {
-                  const categoryBenefits = getCategoryBenefits(category);
-                  if (categoryBenefits.length === 0) return null;
-
-                  return (
-                    <div key={category} className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Badge className={getCategoryColor(category)}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </Badge>
-                      </div>
-                      
-                      {categoryBenefits.map((benefit) => (
-                        <Card key={benefit.id} className={`${benefit.is_featured ? 'ring-2 ring-purple-200' : ''}`}>
-                          <CardContent className="p-4">
-                            <h4 className="font-semibold text-gray-900 mb-2">
-                              {benefit.benefit_title}
-                              {benefit.is_featured && (
-                                <Badge variant="secondary" className="ml-2 text-xs">
-                                  Featured
-                                </Badge>
-                              )}
-                            </h4>
-                            <p className="text-sm text-gray-600">
-                              {benefit.benefit_description}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      ))}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {staticBenefits.map((benefit) => {
+            const IconComponent = iconMap[benefit.icon as keyof typeof iconMap];
+            return (
+              <Card key={benefit.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <IconComponent className="h-6 w-6 text-primary" />
                     </div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+                    <Badge 
+                      variant="secondary" 
+                      className={categoryColors[benefit.category as keyof typeof categoryColors]}
+                    >
+                      {benefit.category}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                    {benefit.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {benefit.description}
+                  </p>
+                  <div className="mt-4 flex items-center text-sm text-primary font-medium">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Included in partnership
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,43 +1,53 @@
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import type { Major } from "@/types/database/majors";
-import { MajorDialogHeader } from "./major-details/MajorDialogHeader";
-import { MajorDetailsContent } from "./major-details/MajorDetailsContent";
-import { MajorDetailsErrorState } from "./major-details/MajorDetailsErrorState";
-import { useMajorDetails } from "@/hooks/useMajorDetails";
-import { useMajorSharing } from "@/hooks/useMajorSharing";
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { MajorDetailsContent } from './major-details/MajorDetailsContent';
+import { MajorDetailsErrorState } from './major-details/MajorDetailsErrorState';
+import { MajorDialogHeader } from './major-details/MajorDialogHeader';
+import type { Database } from '@/integrations/supabase/types';
 
-interface MajorDetailsProps {
-  major: Major;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+type Major = Database['public']['Tables']['majors']['Row'];
 
-export function MajorDetails({ major, open, onOpenChange }: MajorDetailsProps) {
-  const { majorWithCareers, isError, isBookmarked, handleBookmarkToggle } = useMajorDetails(major, open);
-  const { handleShare } = useMajorSharing();
+const MajorDetails = () => {
+  const { id } = useParams();
 
-  if (!major) return null;
+  const { data: major, isLoading, error } = useQuery({
+    queryKey: ['major', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Major ID is required');
+      
+      const { data, error } = await supabase
+        .from('majors')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-  // Show error state
-  if (isError) {
-    return <MajorDetailsErrorState open={open} onOpenChange={onOpenChange} />;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  const onShare = () => handleShare(major.id, major.title, major.description);
+  if (error || !major) {
+    return <MajorDetailsErrorState />;
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 shadow-lg border-primary/10">
-        <MajorDialogHeader 
-          major={major}
-          isBookmarked={isBookmarked}
-          onBookmarkToggle={handleBookmarkToggle}
-          onShare={onShare}
-        />
-        
-        <MajorDetailsContent major={major} majorWithCareers={majorWithCareers} />
-      </DialogContent>
-    </Dialog>
+    <div className="container mx-auto py-8">
+      <MajorDialogHeader major={major} />
+      <MajorDetailsContent major={major} />
+    </div>
   );
-}
+};
+
+export default MajorDetails;

@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from "./components/ThemeProvider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { router } from './router/routes';
 
 const queryClient = new QueryClient();
@@ -13,8 +14,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background">
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <Toaster />
-          <RouterProvider router={router} />
+          <TooltipProvider>
+            <Toaster />
+            <RouterProvider router={router} />
+          </TooltipProvider>
         </ThemeProvider>
       </div>
     </QueryClientProvider>
