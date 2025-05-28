@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from './components/AppSidebar';
 import { MainNavigation } from './components/navigation/MainNavigation';
 import { Footer } from './components/Footer';
@@ -27,24 +28,26 @@ function App() {
         <div className="min-h-screen bg-background">
           <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
             <TooltipProvider>
-              <Toaster />
-              <AppSidebar />
-              <main className="transition-all duration-300 ease-in-out lg:ml-64">
-                <MainNavigation />
-                <ScrollToTop />
-                <Routes>
-                  <Route path="/" element={<div>Home Page Coming Soon</div>} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/opportunities" element={<Opportunities />} />
-                  <Route path="/opportunities/:id" element={<OpportunityDetails />} />
-                  <Route path="/scholarships" element={<Scholarships />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/partnerships" element={<Partnerships />} />
-                  <Route path="/partnerships/apply" element={<PartnershipApplication />} />
-                </Routes>
-              </main>
-              <Footer />
+              <SidebarProvider>
+                <Toaster />
+                <AppSidebar />
+                <main className="transition-all duration-300 ease-in-out lg:ml-64">
+                  <MainNavigation />
+                  <ScrollToTop />
+                  <Routes>
+                    <Route path="/" element={<div>Home Page Coming Soon</div>} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/opportunities" element={<Opportunities />} />
+                    <Route path="/opportunities/:id" element={<OpportunityDetails />} />
+                    <Route path="/scholarships" element={<Scholarships />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/partnerships" element={<Partnerships />} />
+                    <Route path="/partnerships/apply" element={<PartnershipApplication />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </SidebarProvider>
             </TooltipProvider>
           </ThemeProvider>
         </div>
