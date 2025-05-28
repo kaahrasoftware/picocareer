@@ -1,18 +1,28 @@
+
 import { useState } from "react";
 import { MentorFilters } from "./MentorFilters";
 import { MentorResults } from "./MentorResults";
 import type { Mentor } from "@/types/mentor";
 
 interface MentorListContentProps {
-  mentors: Mentor[];
+  mentors?: Mentor[];
 }
 
-export function MentorListContent({ mentors }: MentorListContentProps) {
+export function MentorListContent({ mentors = [] }: MentorListContentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [companyFilter, setCompanyFilter] = useState<string>("all");
   const [educationFilter, setEducationFilter] = useState<string>("all");
   const [experienceFilter, setExperienceFilter] = useState<string>("all");
   const [sessionFilter, setSessionFilter] = useState<string>("all");
+
+  // Early return if mentors is not available
+  if (!Array.isArray(mentors)) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   const filteredMentors = mentors.filter((mentor) => {
     const matchesSearch = 
