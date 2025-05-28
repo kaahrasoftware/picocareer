@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider } from "@/components/ui/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from "@/components/ui/toaster"
 import { AppSidebar } from './components/AppSidebar';
@@ -14,6 +14,7 @@ import Blog from './pages/Blog';
 import Opportunities from './pages/Opportunities';
 import OpportunityDetails from './pages/OpportunityDetails';
 import Scholarships from './pages/Scholarships';
+import ScholarshipDetails from './pages/ScholarshipDetails';
 import Partnerships from "./pages/Partnerships";
 import PartnershipApplication from "./pages/PartnershipApplication";
 
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/opportunities" element={<Opportunities />} />
                 <Route path="/opportunities/:id" element={<OpportunityDetails />} />
                 <Route path="/scholarships" element={<Scholarships />} />
+                <Route path="/scholarships/:id" element={<ScholarshipDetails />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/partnerships" element={<Partnerships />} />
                 <Route path="/partnerships/apply" element={<PartnershipApplication />} />
