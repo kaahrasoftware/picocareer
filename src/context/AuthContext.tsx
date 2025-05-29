@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   session: Session | null;
@@ -11,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   error: Error | null;
   signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: false,
   error: null,
   signOut: async () => {},
+  signIn: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -70,8 +73,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => clearInterval(interval);
   }, [authState.session, queryClient]);
 
+  const signIn = async (email: string, password: string) => {
+    try {
+      console.log('Starting sign in process for:', email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase().trim(),
+        password,
+      });
+
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      if (data.session) {
+        console.log('Sign in successful');
+        
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      
+      toast({
+        title: "Login failed",
+        description: error.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={authState}>
+    <AuthContext.Provider value={{
+      ...authState,
+      signIn,
+    }}>
       {children}
     </AuthContext.Provider>
   );

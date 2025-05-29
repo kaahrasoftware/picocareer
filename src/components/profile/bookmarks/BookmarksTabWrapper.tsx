@@ -1,68 +1,56 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CareerBookmarks } from './CareerBookmarks';
-import { MajorBookmarks } from './MajorBookmarks';
-import { MentorBookmarks } from './MentorBookmarks';
-import { ScholarshipBookmarks } from './ScholarshipBookmarks';
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CareerBookmarks } from "./CareerBookmarks";
+import { MajorBookmarks } from "./MajorBookmarks";
+import { MentorBookmarks } from "./MentorBookmarks";
+import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface BookmarksTabWrapperProps {
+export interface BookmarksTabWrapperProps {
   profileId: string;
 }
 
 interface Bookmark {
-  id: string;
-  content_type: string;
   content_id: string;
-  created_at: string;
+  content_type: string;
 }
 
 export function BookmarksTabWrapper({ profileId }: BookmarksTabWrapperProps) {
-  const [activeTab, setActiveTab] = useState('careers');
+  const [activeTab, setActiveTab] = useState("careers");
 
   const { data: bookmarks = [], isLoading } = useQuery({
-    queryKey: ['user-bookmarks', profileId],
-    queryFn: async (): Promise<Bookmark[]> => {
+    queryKey: ['bookmarks', profileId],
+    queryFn: async () => {
+      if (!profileId) return [];
+      
       const { data, error } = await supabase
-        .from('user_bookmarks')
-        .select('id, content_type, content_id, created_at')
-        .eq('profile_id', profileId)
-        .order('created_at', { ascending: false });
+        .from('bookmarks')
+        .select('content_id, content_type')
+        .eq('user_id', profileId);
       
       if (error) throw error;
-      return data || [];
-    }
+      return data as Bookmark[];
+    },
+    enabled: !!profileId,
   });
 
-  const groupedBookmarks = bookmarks.reduce((acc, bookmark) => {
-    const contentType = bookmark.content_type || 'unknown';
-    if (!acc[contentType]) {
-      acc[contentType] = [];
-    }
-    acc[contentType].push({
-      content_id: bookmark.content_id || '',
-      content_type: contentType
-    });
-    return acc;
-  }, {} as Record<string, Array<{ content_id: string; content_type: string }>>);
-
-  const careerBookmarks = groupedBookmarks.careers || [];
-  const majorBookmarks = groupedBookmarks.majors || [];
-  const mentorBookmarks = groupedBookmarks.mentors || [];
-  const scholarshipBookmarks = groupedBookmarks.scholarships || [];
+  const careerBookmarks = bookmarks.filter(b => b.content_type === 'career');
+  const majorBookmarks = bookmarks.filter(b => b.content_type === 'major');
+  const mentorBookmarks = bookmarks.filter(b => b.content_type === 'mentor');
+  const scholarshipBookmarks = bookmarks.filter(b => b.content_type === 'scholarship');
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Your Bookmarks</h3>
-        <p className="text-sm text-gray-600">
-          Manage your saved content across different categories
+        <h2 className="text-2xl font-bold">Bookmarks</h2>
+        <p className="text-muted-foreground">
+          Your saved content across PicoCareer
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="careers">
             Careers ({careerBookmarks.length})
@@ -80,28 +68,28 @@ export function BookmarksTabWrapper({ profileId }: BookmarksTabWrapperProps) {
 
         <TabsContent value="careers" className="mt-6">
           <CareerBookmarks 
-            bookmarks={careerBookmarks}
+            bookmarkIds={careerBookmarks.map(b => b.content_id)}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="majors" className="mt-6">
           <MajorBookmarks 
-            bookmarks={majorBookmarks}
+            bookmarkIds={majorBookmarks.map(b => b.content_id)}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="mentors" className="mt-6">
           <MentorBookmarks 
-            bookmarks={mentorBookmarks}
+            bookmarkIds={mentorBookmarks.map(b => b.content_id)}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="scholarships" className="mt-6">
           <ScholarshipBookmarks 
-            bookmarks={scholarshipBookmarks}
+            bookmarkIds={scholarshipBookmarks.map(b => b.content_id)}
             isLoading={isLoading}
           />
         </TabsContent>

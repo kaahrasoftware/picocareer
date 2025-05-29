@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
 
 export function SignInForm() {
-  const { signIn, isLoading } = useAuth();
+  const { signIn, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -29,7 +29,7 @@ export function SignInForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (isLoading) {
+    if (loading) {
       console.log('Sign in already in progress');
       return;
     }
@@ -68,7 +68,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={loading}
               value={formData.email}
               onChange={handleChange}
               required
@@ -86,7 +86,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="current-password"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={loading}
               value={formData.password}
               onChange={handleChange}
               required
@@ -95,12 +95,12 @@ export function SignInForm() {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading && (
+            {loading && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}
-            {isLoading ? "Signing In..." : "Sign In"}
+            {loading ? "Signing In..." : "Sign In"}
           </Button>
         </div>
       </form>
