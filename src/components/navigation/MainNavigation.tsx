@@ -1,118 +1,118 @@
 
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
-import { useMobileMenu } from "@/context/MobileMenuContext";
+import { Button } from "@/components/ui/button";
+import { UserMenu } from "./UserMenu";
+import { NotificationPanel } from "./NotificationPanel";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { Menu, X } from "lucide-react";
 
 export function MainNavigation() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const currentPath = location.pathname;
-  const isMobile = useIsMobile();
-  const { closeMobileMenu } = useMobileMenu();
-
-  const isActive = (path: string) => {
-    if (path === "/" && currentPath !== "/") return false;
-    return currentPath.startsWith(path);
-  };
-
-  const handleNavigation = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isMobile) {
-      // Only close the mobile menu in mobile mode
-      closeMobileMenu();
-    }
-  };
+  const { session } = useAuthSession();
 
   const navItems = [
-    { path: "/", label: "Home" },
-    { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
-    { path: "/career", label: "Careers" },
-    { path: "/mentor", label: "Mentors" },
-    { path: "/about", label: "About" },
+    { href: "/", label: "Home" },
+    { href: "/career", label: "Careers" },
+    { href: "/program", label: "Programs" },
+    { href: "/mentor", label: "Mentors" },
+    { href: "/opportunities", label: "Opportunities" },
+    { href: "/partnerships", label: "Partnerships" },
+    { href: "/about", label: "About" }
   ];
 
-  const resourceItems = [
-    // Removed "/career-chat" entry
-    { path: "/scholarships", label: "Scholarships" },
-    { path: "/opportunities", label: "Opportunities" },
-    { path: "/event", label: "Events" },
-    { path: "/blog", label: "Blog" },
-  ];
+  const isActiveRoute = (href: string) => {
+    if (href === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(href);
+  };
 
   return (
-    <nav className="flex justify-center w-full">
-      <ul className={cn(
-        "flex max-w-3xl mx-auto",
-        isMobile ? "flex-col gap-2" : "gap-8 justify-center"
-      )}>
-        {navItems.map(({ path, label, className }) => (
-          <li key={path}>
-            <Link 
-              to={path} 
-              className={cn(
-                "px-4 py-2 rounded-md transition-colors block",
-                isMobile ? "w-full" : "",
-                isActive(path) && "bg-primary/20 text-primary",
-                className
-              )}
-              onClick={handleNavigation}
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link to="/" className="mr-6 flex items-center space-x-2">
+            <span className="hidden font-bold sm:inline-block text-2xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              PicoCareer
+            </span>
+          </Link>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`transition-colors hover:text-foreground/80 ${
+                  isActiveRoute(item.href) ? "text-foreground" : "text-foreground/60"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Mobile menu button */}
+        <div className="flex md:hidden">
+          <Link to="/" className="mr-6 flex items-center space-x-2">
+            <span className="font-bold text-xl bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              PicoCareer
+            </span>
+          </Link>
+        </div>
+
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Search or other components can go here */}
+          </div>
+          <nav className="flex items-center space-x-2">
+            {session && <NotificationPanel />}
+            {session ? (
+              <UserMenu />
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth">Get Started</Link>
+                </Button>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {label}
-            </Link>
-          </li>
-        ))}
-        <li>
-          {isMobile ? (
-            <>
-              {resourceItems.map(({ path, label }) => (
-                <Link
-                  key={path}
-                  to={path}
-                  className={cn(
-                    "px-4 py-2 rounded-md transition-colors block w-full",
-                    isActive(path) && "bg-primary/20 text-primary"
-                  )}
-                  onClick={handleNavigation}
-                >
-                  {label}
-                </Link>
-              ))}
-            </>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger className={cn(
-                "px-4 py-2 rounded-md transition-colors inline-flex items-center gap-1",
-                isActive("/career-chat") || isActive("/event") || isActive("/blog") || isActive("/scholarships") || isActive("/opportunities")
-                  ? "bg-primary/20 text-primary" 
-                  : ""
-              )}>
-                Resources <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                {resourceItems.map(({ path, label }) => (
-                  <DropdownMenuItem key={path} asChild>
-                    <Link 
-                      to={path}
-                      className={cn(
-                        "w-full",
-                        isActive(path) && "bg-primary/20 text-primary"
-                      )}
-                    >
-                      {label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </li>
-      </ul>
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden">
+          <div className="space-y-1 pb-3 pt-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={`block px-3 py-2 text-base font-medium ${
+                  isActiveRoute(item.href)
+                    ? "text-foreground bg-accent"
+                    : "text-foreground/60 hover:text-foreground hover:bg-accent"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
