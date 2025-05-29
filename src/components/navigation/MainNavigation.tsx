@@ -34,11 +34,11 @@ export function MainNavigation() {
     { path: "/program", label: "Fields of Study", className: "whitespace-nowrap" },
     { path: "/career", label: "Careers" },
     { path: "/mentor", label: "Mentors" },
+    { path: "/partnerships", label: "Partnerships" },
     { path: "/about", label: "About" },
   ];
 
   const resourceItems = [
-    // Removed "/career-chat" entry
     { path: "/scholarships", label: "Scholarships" },
     { path: "/opportunities", label: "Opportunities" },
     { path: "/event", label: "Events" },
