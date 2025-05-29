@@ -1,334 +1,336 @@
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
-import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
+import React, { useState, useEffect } from 'react';
+import { UseFormReturn, FieldPath } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, X, Search, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-type Status = Database["public"]["Enums"]["status"];
+type SelectOption = {
+  id: string;
+  title?: string;
+  name?: string;
+};
 
-interface SelectWithCustomOptionProps {
-  value: string;
-  onValueChange: (value: string) => void;
-  options: Array<{ id: string; title?: string; name?: string; }>;
-  placeholder: string;
-  tableName: 'majors' | 'schools' | 'companies' | 'careers';
+interface SelectWithCustomOptionProps<T extends Record<string, any>> {
+  form: UseFormReturn<T>;
+  name: FieldPath<T>;
+  label: string;
+  placeholder?: string;
+  description?: string;
+  tableName: string;
+  displayField: 'title' | 'name';
+  required?: boolean;
+  multiple?: boolean;
+  allowCustom?: boolean;
+  customPlaceholder?: string;
+  searchPlaceholder?: string;
+  className?: string;
+  disabled?: boolean;
+  maxSelections?: number;
 }
 
-export function SelectWithCustomOption({
-  value = "",
-  onValueChange,
-  options,
-  placeholder,
+export function SelectWithCustomOption<T extends Record<string, any>>({
+  form,
+  name,
+  label,
+  placeholder = "Select an option...",
+  description,
   tableName,
-}: SelectWithCustomOptionProps) {
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customValue, setCustomValue] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [localOptions, setLocalOptions] = useState<Array<{ id: string; title?: string; name?: string; }>>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  displayField,
+  required = false,
+  multiple = false,
+  allowCustom = true,
+  customPlaceholder = "Add new option...",
+  searchPlaceholder = "Search options...",
+  className,
+  disabled = false,
+  maxSelections
+}: SelectWithCustomOptionProps<T>) {
+  const [customValue, setCustomValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [options, setOptions] = useState<SelectOption[]>([]);
   const { toast } = useToast();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
 
-  // Pre-populate with provided options
-  useEffect(() => {
-    if (options && options.length > 0) {
-      setLocalOptions(options);
-    }
-  }, [options]);
+  const currentValue = form.watch(name);
 
-  // Get the correct field name for each table
-  const getFieldName = (table: string) => {
-    if (table === 'schools' || table === 'companies') {
-      return 'name';
-    }
-    return 'title';
-  };
-
-  // Fetch options for the given table with search
-  const { data: searchResults, isLoading } = useQuery({
-    queryKey: [tableName, 'search', searchQuery],
+  // Fetch options from database
+  const { data: dbOptions = [], isLoading, error } = useQuery({
+    queryKey: ['select-options', tableName, displayField],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) {
-        return []; // Return empty if search query is too short
-      }
-      
-      console.log(`Fetching ${tableName} with search: ${searchQuery}`);
-      
       try {
-        // Ensure query is safe
-        const safeQuery = String(searchQuery).toLowerCase();
-        const fieldName = getFieldName(tableName);
-        
-        // Simple query that should work for all tables
         const { data, error } = await supabase
           .from(tableName)
-          .select(`id, ${fieldName}`)
-          .ilike(fieldName, `%${safeQuery}%`)
-          .order(fieldName)
-          .limit(50);
-        
+          .select(`id, ${displayField}`)
+          .eq('status', 'Approved')
+          .order(displayField);
+
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
-          return [];
+          throw error;
         }
 
-        console.log(`Fetched ${data?.length || 0} ${tableName}`);
-        
-        // Ensure data is valid before returning and handle different field names
-        return (data || []).filter((item: any) => {
-          if (!item || typeof item !== 'object') return false;
-          if (!('id' in item) || !item.id) return false;
-          const fieldValue = item[fieldName as keyof typeof item];
-          return fieldValue !== null && fieldValue !== undefined;
-        }).map((item: any) => {
-          if (!item || typeof item !== 'object') {
-            return { id: '', [fieldName === 'name' ? 'name' : 'title']: '' };
-          }
-          const fieldValue = item[fieldName as keyof typeof item];
-          return {
-            id: item.id || '',
-            [fieldName === 'name' ? 'name' : 'title']: fieldValue || ''
-          };
-        });
+        return (data || []).map(item => ({
+          id: item.id,
+          ...(displayField === 'title' ? { title: item.title } : { name: item.name })
+        }));
       } catch (error) {
-        console.error(`Error in search query:`, error);
+        console.error(`Failed to fetch options from ${tableName}:`, error);
         return [];
       }
     },
-    enabled: searchQuery.length >= 2,
-    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
+    retry: 1
   });
 
-  // Update local options when new search results arrive
+  // Update local options when db options change
   useEffect(() => {
-    if (searchResults && searchResults.length > 0) {
-      // Merge with existing options, removing duplicates
-      setLocalOptions(prevOptions => {
-        const combined = [...prevOptions];
-        searchResults.forEach(option => {
-          if (option && option.id && !combined.some(existing => existing.id === option.id)) {
-            combined.push(option);
-          }
-        });
-        return combined;
-      });
+    if (dbOptions) {
+      setOptions(dbOptions);
     }
-  }, [searchResults]);
+  }, [dbOptions]);
 
-  // Client-side filtering for immediate feedback
-  const filteredOptions = searchQuery.length > 0
-    ? localOptions.filter(option => {
-        const searchValue = (option.title || option.name || '').toLowerCase();
-        return searchValue.includes(searchQuery.toLowerCase());
-      })
-    : localOptions;
+  // Filter options based on search query
+  const filteredOptions = options.filter(option => {
+    const displayValue = option[displayField] || '';
+    return displayValue.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  // Debounced search handler to prevent excessive API calls
-  const handleSearchChange = useDebouncedCallback((value: string) => {
-    setSearchQuery(value);
-  }, 300);
+  const handleAddCustomOption = async () => {
+    if (!customValue.trim()) return;
 
-  // Focus the search input when content opens
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      // Use a short timeout to ensure the select content is rendered
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 10);
-    } else {
-      setSearchQuery("");
-    }
-  };
-
-  const handleCustomSubmit = async () => {
-    if (!customValue.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a value",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    setIsAddingCustom(true);
     try {
-      const fieldName = getFieldName(tableName);
-      
-      // Check if entry already exists
-      const { data: existingData, error: checkError } = await supabase
-        .from(tableName)
-        .select(`id, ${fieldName}`)
-        .eq(fieldName, customValue)
-        .maybeSingle();
-
-      if (checkError) throw checkError;
-
-      if (existingData && existingData.id) {
-        onValueChange(existingData.id);
-        setShowCustomInput(false);
-        setCustomValue("");
-        return;
-      }
-
-      // Create new entry with proper field mapping based on table type
-      let insertData: any;
-      
-      if (tableName === 'majors') {
-        insertData = { 
-          title: customValue, 
-          description: `Custom major: ${customValue}`, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'careers') {
-        insertData = { 
-          title: customValue, 
-          description: `Custom career: ${customValue}`, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'schools') {
-        insertData = { 
-          name: customValue, 
-          status: 'Pending' as Status 
-        };
-      } else if (tableName === 'companies') {
-        insertData = { 
-          name: customValue, 
-          status: 'Pending' as Status 
-        };
-      } else {
-        throw new Error(`Unsupported table: ${tableName}`);
-      }
+      const newOption = {
+        [displayField]: customValue.trim(),
+        status: 'Approved'
+      };
 
       const { data, error } = await supabase
         .from(tableName)
-        .insert(insertData)
-        .select()
+        .insert([newOption])
+        .select(`id, ${displayField}`)
         .single();
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `Successfully added new ${tableName.slice(0, -1)}.`,
-      });
+      const formattedOption: SelectOption = {
+        id: data.id,
+        ...(displayField === 'title' ? { title: data.title } : { name: data.name })
+      };
 
-      onValueChange(data.id);
-      setShowCustomInput(false);
-      setCustomValue("");
-      
-      // Add the new item to local options
-      setLocalOptions(prev => [...prev, data]);
+      // Update local options list
+      setOptions(prev => [...prev, formattedOption]);
+
+      // Update form value
+      if (multiple) {
+        const currentValues = Array.isArray(currentValue) ? currentValue : [];
+        form.setValue(name, [...currentValues, data.id] as any);
+      } else {
+        form.setValue(name, data.id as any);
+      }
+
+      setCustomValue('');
+      toast({
+        title: "Option added",
+        description: `"${customValue.trim()}" has been added successfully.`
+      });
     } catch (error) {
-      console.error(`Failed to add new ${tableName}:`, error);
+      console.error('Error adding custom option:', error);
       toast({
         title: "Error",
-        description: `Failed to add new ${tableName}. Please try again.`,
-        variant: "destructive",
+        description: "Failed to add custom option. Please try again.",
+        variant: "destructive"
       });
+    } finally {
+      setIsAddingCustom(false);
     }
   };
 
-  if (showCustomInput) {
+  const handleSelectOption = (optionId: string) => {
+    if (multiple) {
+      const currentValues = Array.isArray(currentValue) ? currentValue : [];
+      
+      if (currentValues.includes(optionId)) {
+        // Remove if already selected
+        form.setValue(name, currentValues.filter(id => id !== optionId) as any);
+      } else {
+        // Add if not selected (check max selections)
+        if (maxSelections && currentValues.length >= maxSelections) {
+          toast({
+            title: "Selection limit reached",
+            description: `You can only select up to ${maxSelections} options.`,
+            variant: "destructive"
+          });
+          return;
+        }
+        form.setValue(name, [...currentValues, optionId] as any);
+      }
+    } else {
+      form.setValue(name, optionId as any);
+    }
+  };
+
+  const handleRemoveSelection = (optionId: string) => {
+    if (multiple) {
+      const currentValues = Array.isArray(currentValue) ? currentValue : [];
+      form.setValue(name, currentValues.filter(id => id !== optionId) as any);
+    } else {
+      form.setValue(name, '' as any);
+    }
+  };
+
+  const getSelectedOptions = () => {
+    if (!currentValue) return [];
+    const selectedIds = Array.isArray(currentValue) ? currentValue : [currentValue];
+    return options.filter(option => selectedIds.includes(option.id));
+  };
+
+  const selectedOptions = getSelectedOptions();
+
+  if (error) {
     return (
-      <div className="space-y-2">
-        <Input
-          value={customValue}
-          onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName.slice(0, -1)} name`}
-        />
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            onClick={handleCustomSubmit}
-            size="sm"
-          >
-            Add
-          </Button>
-          <Button
-            type="button"
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomValue("");
-            }}
-            variant="outline"
-            size="sm"
-          >
-            Cancel
-          </Button>
+      <div className={cn("space-y-2", className)}>
+        <Label htmlFor={name}>{label} {required && <span className="text-red-500">*</span>}</Label>
+        <div className="text-sm text-red-600">
+          Error loading options. Please try again later.
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full">
-      <Select
-        value={value}
-        onValueChange={(newValue) => {
-          if (newValue === "other") {
-            setShowCustomInput(true);
-          } else {
-            onValueChange(newValue);
-          }
-        }}
-        onOpenChange={handleOpenChange}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={isLoading ? "Loading..." : placeholder} />
-        </SelectTrigger>
-        <SelectContent ref={contentRef}>
-          <div className="p-2">
-            <Input
-              ref={searchInputRef}
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearchChange(e.target.value);
-              }}
-              className="mb-2"
-              onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                }
-              }}
-            />
+    <div className={cn("space-y-2", className)}>
+      <Label htmlFor={name}>{label} {required && <span className="text-red-500">*</span>}</Label>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                disabled={disabled}
+              />
+            </div>
           </div>
-          <ScrollArea className="h-[200px]">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.title || option.name || ''}
-                </SelectItem>
-              ))
-            ) : (
-              <div className="p-2 text-center text-muted-foreground">
-                {isLoading || isSearching ? 'Searching...' : 'No results found'}
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Selected Options Display */}
+          {selectedOptions.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Selected:</Label>
+              <div className="flex flex-wrap gap-2">
+                {selectedOptions.map((option) => (
+                  <Badge key={option.id} variant="secondary" className="flex items-center gap-1">
+                    {option[displayField]}
+                    {!disabled && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => handleRemoveSelection(option.id)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </Badge>
+                ))}
               </div>
-            )}
-            <SelectItem value="other">Other (Add New)</SelectItem>
-          </ScrollArea>
-        </SelectContent>
-      </Select>
-      {(isLoading || isSearching) && (
-        <div className="flex items-center justify-center mt-2">
-          <Loader2 className="h-4 w-4 animate-spin" />
-        </div>
-      )}
+            </div>
+          )}
+
+          {/* Options List */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="ml-2 text-sm">Loading options...</span>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {filteredOptions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {searchQuery ? 'No matching options found.' : 'No options available.'}
+                </p>
+              ) : (
+                filteredOptions.map((option) => {
+                  const isSelected = multiple 
+                    ? (Array.isArray(currentValue) ? currentValue : []).includes(option.id)
+                    : currentValue === option.id;
+                  
+                  return (
+                    <Button
+                      key={option.id}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      className="w-full justify-start text-left h-auto p-3"
+                      onClick={() => handleSelectOption(option.id)}
+                      disabled={disabled}
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{option[displayField]}</div>
+                      </div>
+                      {isSelected && <span className="ml-2">✓</span>}
+                    </Button>
+                  );
+                })
+              )}
+            </div>
+          )}
+
+          {/* Add Custom Option */}
+          {allowCustom && !disabled && (
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="text-sm font-medium">Add Custom Option:</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder={customPlaceholder}
+                  value={customValue}
+                  onChange={(e) => setCustomValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomOption();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddCustomOption}
+                  disabled={!customValue.trim() || isAddingCustom}
+                  size="sm"
+                >
+                  {isAddingCustom ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {/* Selection Info */}
+          {multiple && maxSelections && (
+            <p className="text-xs text-muted-foreground">
+              {selectedOptions.length} of {maxSelections} options selected
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
