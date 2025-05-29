@@ -20,6 +20,7 @@ import {
 import { EventCard } from './EventCard';
 import { EventEditDialog } from './EventEditDialog';
 import { useEventManagement, EnhancedEvent } from '@/hooks/useEventManagement';
+import { useMobileDetection } from '@/hooks/useMobileDetection';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertDialog,
@@ -44,6 +45,8 @@ export function EventManagementGrid({
   onViewDetails,
   onManageResources,
 }: EventManagementGridProps) {
+  const { isMobile, isTablet } = useMobileDetection();
+  
   const {
     events,
     isLoading,
@@ -66,6 +69,7 @@ export function EventManagementGrid({
   const [editingEvent, setEditingEvent] = useState<EnhancedEvent | null>(null);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Filter and search logic
   const filteredEvents = useMemo(() => {
@@ -149,54 +153,123 @@ export function EventManagementGrid({
   const uniqueTypes = Array.from(new Set(events.map(event => event.event_type)));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Event Management
-              <Badge variant="secondary" className="ml-2">
-                {filteredEvents.length} of {events.length}
-              </Badge>
-            </CardTitle>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'outline'} 
-                size="sm" 
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'} 
-                size="sm" 
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+                <Calendar className="h-5 w-5" />
+                Event Management
+                <Badge variant="secondary" className="ml-2">
+                  {filteredEvents.length} of {events.length}
+                </Badge>
+              </CardTitle>
             </div>
+            
+            {/* View mode toggle - desktop only */}
+            {!isMobile && !isTablet && (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                  size="sm" 
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={viewMode === 'list' ? 'default' : 'outline'} 
+                  size="sm" 
+                  onClick={() => setViewMode('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search events..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11"
+            />
+          </div>
+
+          {/* Mobile: Collapsible filters */}
+          {(isMobile || isTablet) && (
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="w-full justify-between h-11"
+              >
+                <span className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </span>
+                <Badge variant="secondary">
+                  {[statusFilter, typeFilter, dateFilter].filter(f => f !== 'all').length}
+                </Badge>
+              </Button>
+              
+              {showFilters && (
+                <div className="grid grid-cols-1 gap-3">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      {uniqueStatuses.map(status => (
+                        <SelectItem key={status} value={status.toLowerCase()}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {uniqueTypes.map(type => (
+                        <SelectItem key={type} value={type.toLowerCase()}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="Date" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Dates</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="past">Past</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-            
-            <div className="flex gap-2">
+          )}
+
+          {/* Desktop: Inline filters */}
+          {!isMobile && !isTablet && (
+            <div className="flex gap-3">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 h-11">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,7 +283,7 @@ export function EventManagementGrid({
               </Select>
               
               <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 h-11">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,7 +297,7 @@ export function EventManagementGrid({
               </Select>
               
               <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-32 h-11">
                   <SelectValue placeholder="Date" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,26 +308,29 @@ export function EventManagementGrid({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          )}
           
           {/* Bulk Actions */}
           {someSelected && (
-            <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={handleSelectAll}
-                indeterminate={someSelected && !allSelected}
-              />
-              <span className="text-sm font-medium">
-                {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
-              </span>
+            <div className="flex flex-col gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200 md:flex-row md:items-center">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  indeterminate={someSelected && !allSelected}
+                />
+                <span className="text-sm font-medium">
+                  {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
+                </span>
+              </div>
               
-              <div className="flex gap-2 ml-auto">
+              <div className="flex flex-col gap-2 md:flex-row md:ml-auto">
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleStatusUpdate('Approved')}
                   disabled={isUpdatingStatus}
+                  className="w-full md:w-auto h-10"
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
                   Approve
@@ -264,6 +340,7 @@ export function EventManagementGrid({
                   variant="outline"
                   onClick={() => handleStatusUpdate('Rejected')}
                   disabled={isUpdatingStatus}
+                  className="w-full md:w-auto h-10"
                 >
                   <XCircle className="h-4 w-4 mr-1" />
                   Reject
@@ -273,6 +350,7 @@ export function EventManagementGrid({
                   variant="destructive"
                   onClick={() => setShowBulkDeleteDialog(true)}
                   disabled={isBulkDeleting}
+                  className="w-full md:w-auto h-10"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
                   Delete
@@ -283,7 +361,7 @@ export function EventManagementGrid({
           
           {/* Pagination Info */}
           {filteredEvents.length > 0 && (
-            <div className="flex items-center justify-between text-sm text-gray-600 pt-2 border-t">
+            <div className="flex flex-col gap-2 text-sm text-gray-600 pt-2 border-t md:flex-row md:items-center md:justify-between">
               <span>
                 Showing {startIndex + 1}-{Math.min(startIndex + EVENTS_PER_PAGE, filteredEvents.length)} of {filteredEvents.length} events
               </span>
@@ -297,7 +375,7 @@ export function EventManagementGrid({
 
       {/* Events Grid/List */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
@@ -329,23 +407,42 @@ export function EventManagementGrid({
         </Card>
       ) : (
         <>
-          <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            : "space-y-4"
-          }>
-            {paginatedEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                isSelected={selectedEvents.has(event.id)}
-                onSelect={handleSelectEvent}
-                onEdit={setEditingEvent}
-                onDelete={deleteEvent}
-                onViewDetails={onViewDetails}
-                onManageResources={onManageResources}
-              />
-            ))}
-          </div>
+          {/* Mobile/Tablet: Always use single column */}
+          {(isMobile || isTablet) ? (
+            <div className="space-y-4">
+              {paginatedEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isSelected={selectedEvents.has(event.id)}
+                  onSelect={handleSelectEvent}
+                  onEdit={setEditingEvent}
+                  onDelete={deleteEvent}
+                  onViewDetails={onViewDetails}
+                  onManageResources={onManageResources}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Desktop: Use selected view mode */
+            <div className={viewMode === 'grid' 
+              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              : "space-y-4"
+            }>
+              {paginatedEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  isSelected={selectedEvents.has(event.id)}
+                  onSelect={handleSelectEvent}
+                  onEdit={setEditingEvent}
+                  onDelete={deleteEvent}
+                  onViewDetails={onViewDetails}
+                  onManageResources={onManageResources}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -353,8 +450,8 @@ export function EventManagementGrid({
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
-              showPageNumbers={true}
-              maxPageButtons={5}
+              showPageNumbers={!isMobile}
+              maxPageButtons={isMobile ? 3 : 5}
             />
           )}
         </>
@@ -374,7 +471,7 @@ export function EventManagementGrid({
 
       {/* Bulk Delete Dialog */}
       <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="mx-4 max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Events</AlertDialogTitle>
             <AlertDialogDescription>
@@ -382,9 +479,12 @@ export function EventManagementGrid({
               This action cannot be undone and will also delete all associated resources and registrations.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkDelete} 
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
+            >
               Delete Events
             </AlertDialogAction>
           </AlertDialogFooter>
