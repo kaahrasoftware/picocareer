@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
-import { useAuth } from "@/context/AuthContext";
 
 export function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -126,7 +124,6 @@ export function SignUpForm() {
             value={formData.firstName}
             onChange={handleInputChange}
             required
-            disabled={isLoading || loading}
           />
         </div>
         <div className="space-y-2">
@@ -139,7 +136,6 @@ export function SignUpForm() {
             value={formData.lastName}
             onChange={handleInputChange}
             required
-            disabled={isLoading || loading}
           />
         </div>
       </div>
@@ -153,7 +149,6 @@ export function SignUpForm() {
           value={formData.email}
           onChange={handleInputChange}
           required
-          disabled={isLoading || loading}
         />
       </div>
       <div className="space-y-2">
@@ -167,7 +162,6 @@ export function SignUpForm() {
           onChange={handleInputChange}
           required
           minLength={6}
-          disabled={isLoading || loading}
         />
       </div>
       <div className="space-y-2">
@@ -181,11 +175,10 @@ export function SignUpForm() {
           onChange={handleInputChange}
           required
           minLength={6}
-          disabled={isLoading || loading}
         />
       </div>
-      <Button type="submit" className="w-full" disabled={isLoading || loading}>
-        {(isLoading || loading) ? "Creating account..." : "Create Account"}
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Creating account..." : "Create Account"}
       </Button>
 
       <SocialSignIn />

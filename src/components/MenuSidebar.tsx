@@ -17,7 +17,7 @@ import { MobileMenuProvider } from "@/context/MobileMenuContext";
 
 export function MenuSidebar() {
   const navigate = useNavigate();
-  const { session, loading, user } = useAuthSession('optional');
+  const { session, isError, isLoading: authLoading } = useAuthSession();
   const { data: profile, isLoading: profileLoading } = useUserProfile(session);
   const { data: notifications = [], isLoading: notificationsLoading } = useNotifications(session);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -29,10 +29,10 @@ export function MenuSidebar() {
 
   // Mark UI as initialized after initial render to prevent flashing
   useEffect(() => {
-    if (!loading && !profileLoading) {
+    if (!authLoading && !profileLoading) {
       setIsInitialized(true);
     }
-  }, [loading, profileLoading]);
+  }, [authLoading, profileLoading]);
 
   // Handler for marking a notification as read
   const handleMarkAsRead = async (notificationId: string) => {
@@ -64,6 +64,50 @@ export function MenuSidebar() {
             <span className="text-xl font-semibold text-foreground">PicoCareer</span>
           </Link>
           <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>
+        </div>
+      </header>
+    );
+  }
+
+  // If there's an auth error, show sign in button
+  if (isError) {
+    return (
+      <header className="fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-50">
+        <div className="container h-full mx-auto flex items-center justify-between px-4">
+          <Link to="/" className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/f2122040-63e7-4f46-8b7c-d7c748d45e28.png" 
+              alt="PicoCareer Logo" 
+              className="h-10"
+            />
+            <span className="text-xl font-semibold text-foreground">PicoCareer</span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="default" 
+              onClick={() => navigate("/auth")}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Sign in
+            </Button>
+            <Sheet 
+              open={isMobileMenuOpen} 
+              onOpenChange={setIsMobileMenuOpen}
+            >
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <MobileMenuProvider closeMobileMenu={closeMobileMenu} isOpen={isMobileMenuOpen}>
+                  <div className="flex flex-col gap-6 pt-6">
+                    <MainNavigation />
+                  </div>
+                </MobileMenuProvider>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
     );
@@ -122,9 +166,7 @@ export function MenuSidebar() {
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <MobileMenuProvider closeMobileMenu={closeMobileMenu} isOpen={false}>
-              <MainNavigation />
-            </MobileMenuProvider>
+            <MainNavigation />
             {session?.user && (
               <NotificationPanel
                 notifications={notifications}
