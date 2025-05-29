@@ -74,7 +74,7 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const isLoading = isMentorsLoading || isMajorsLoading || isCareersLoading;
 
   return (
-    <div className="relative w-full search-container mb-24">
+    <div className="relative w-full search-container mb-32 isolate">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
@@ -86,17 +86,17 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       </div>
       
       {isFocused && (
-        <div className="absolute top-full mt-1 w-full z-50 border border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg rounded-lg overflow-hidden">
+        <div className="absolute top-full mt-1 w-full z-[9999] border border-border/50 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 shadow-2xl rounded-lg overflow-hidden">
           <div className="relative">
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-2 hover:bg-red-100 text-red-600 hover:text-red-700"
+              className="absolute right-2 top-2 hover:bg-red-100 text-red-600 hover:text-red-700 z-10"
               onClick={handleCloseSearch}
             >
               <X className="h-4 w-4" />
             </Button>
-            <div className="p-4">
+            <div className="p-4 max-h-[70vh] overflow-y-auto">
               {isLoading ? (
                 <div className="text-center py-4 text-muted-foreground">
                   Searching...

@@ -64,37 +64,37 @@ export function useEmailCampaignFormState(
           query = supabase
             .from('blogs')
             .select('id, title, summary')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'careers':
           query = supabase
             .from('careers')
             .select('id, title, description')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'majors':
           query = supabase
             .from('majors')
             .select('id, title, description')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'scholarships':
           query = supabase
             .from('scholarships')
             .select('id, title, description')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'opportunities':
           query = supabase
             .from('opportunities')
             .select('id, title, description')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'schools':
           query = supabase
             .from('schools')
             .select('id, name as title, description')
-            .eq('status', 'Approved');
+            .eq('status', 'Active');
           break;
         case 'mentors':
           query = supabase

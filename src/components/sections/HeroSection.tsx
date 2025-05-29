@@ -11,7 +11,7 @@ export const HeroSection = () => {
   const isLoggedIn = !!session?.user;
 
   return (
-    <div className="relative isolate overflow-hidden">
+    <div className="relative isolate overflow-visible">
       {/* Hero Section - Title and Description */}
       <section className="text-center mb-12 backdrop-filter backdrop-blur-md p-6 rounded-lg">
         <div className="space-y-4">
@@ -24,8 +24,8 @@ export const HeroSection = () => {
         </div>
       </section>
 
-      {/* Header */}
-      <header className="flex justify-between items-center mb-8 relative bg-white/30 backdrop-filter backdrop-blur-lg rounded-xl p-6">
+      {/* Header with Search - Increased spacing */}
+      <header className="flex justify-between items-center mb-16 relative bg-white/30 backdrop-filter backdrop-blur-lg rounded-xl p-6">
         <div className="w-full SearchBar">
           <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
         </div>
@@ -89,7 +89,6 @@ export const HeroSection = () => {
           </div>
         </div>
       </section>
-      {/* Removed duplicate <Slides /> section here */}
     </div>
   );
 };
