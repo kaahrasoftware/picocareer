@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -88,14 +87,16 @@ export function usePartnershipApplication() {
         description: finalData.description || '',
         partnership_goals: finalData.partnership_goals || '',
         preferred_partnership_type: finalData.preferred_partnership_type || null,
+        // Use dedicated columns for partnership requirements
+        budget_range: finalData.budget_range || null,
+        timeline_expectations: finalData.timeline_expectations || null,
+        current_technology: finalData.current_technology || null,
+        success_metrics: finalData.success_metrics || null,
+        previous_partnerships: finalData.previous_partnerships || null,
+        pilot_program_interest: finalData.pilot_program_interest || null,
+        // Keep additional_info for any extra notes, but add reference
         additional_info: [
           finalData.additional_info || '',
-          `Budget Range: ${finalData.budget_range || 'Not specified'}`,
-          `Timeline: ${finalData.timeline_expectations || 'Not specified'}`,
-          `Technology: ${finalData.current_technology || 'Not specified'}`,
-          `Success Metrics: ${finalData.success_metrics || 'Not specified'}`,
-          `Previous Partnerships: ${finalData.previous_partnerships || 'Not specified'}`,
-          `Pilot Interest: ${finalData.pilot_program_interest || 'Not specified'}`,
           `Reference: ${reference}`
         ].filter(Boolean).join('\n\n'),
         status: 'pending'
