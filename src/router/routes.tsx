@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -39,6 +40,7 @@ import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
 import Partnerships from "../pages/Partnerships";
+import Careers from "../pages/Careers";
 
 export const router = createBrowserRouter([
   {
@@ -189,6 +191,10 @@ export const router = createBrowserRouter([
       {
         path: "partnerships",
         element: <Partnerships />,
+      },
+      {
+        path: "careers",
+        element: <Careers />,
       },
       {
         path: "admin/email-campaigns",
