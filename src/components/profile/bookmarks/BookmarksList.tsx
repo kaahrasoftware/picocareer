@@ -1,81 +1,58 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { StandardPagination } from "@/components/common/StandardPagination";
-import { EmptyState } from "@/components/scholarships/EmptyState";
-import { BookmarkedEntity, BookmarkType } from "./types";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Eye } from "lucide-react";
 
-interface BookmarksListProps<T extends BookmarkedEntity> {
-  bookmarks: T[];
-  isLoading: boolean;
-  emptyStateProps: {
-    icon: React.ReactNode;
-    linkPath: string;
-    type: string;
-  };
-  totalPages: number;
-  currentPage: number;
-  setPage: (page: number) => void;
-  onViewDetails: (item: T) => void;
-  renderCard: (item: T, handleView: (item: T) => void) => React.ReactNode;
-  bookmarkType: BookmarkType;
+export interface BookmarkedEntity {
+  id: string;
+  [key: string]: any;
 }
 
-export function BookmarksList<T extends BookmarkedEntity>({
-  bookmarks,
-  isLoading,
-  emptyStateProps,
-  totalPages,
-  currentPage,
-  setPage,
-  onViewDetails,
-  renderCard,
-  bookmarkType
+export interface BookmarksListProps<T extends BookmarkedEntity> {
+  items: T[];
+  isLoading: boolean;
+  emptyMessage: string;
+  renderItem: (item: T, handleView: (item: T) => void) => React.ReactNode;
+}
+
+export function BookmarksList<T extends BookmarkedEntity>({ 
+  items, 
+  isLoading, 
+  emptyMessage, 
+  renderItem 
 }: BookmarksListProps<T>) {
+  const handleView = (item: T) => {
+    console.log('Viewing item:', item);
+    // Add navigation logic here if needed
+  };
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-4">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
-  if (bookmarks.length === 0) {
+  if (items.length === 0) {
     return (
-      <Card className="text-center p-8 border-dashed bg-muted/30">
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-primary/10 p-3 rounded-full">
-            {emptyStateProps.icon}
-          </div>
-          <h3 className="font-semibold text-xl mt-2">No bookmarked {emptyStateProps.type}</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-            You haven't bookmarked any {emptyStateProps.type} yet. When you find {emptyStateProps.type} you 
-            like, click the bookmark icon to save them here.
-          </p>
-          <Button asChild>
-            <Link to={bookmarkType === "major" ? "/program" : emptyStateProps.linkPath}>Browse {emptyStateProps.type}</Link>
-          </Button>
-        </div>
-      </Card>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">{emptyMessage}</p>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bookmarks.map((item) => renderCard(item, onViewDetails))}
-      </div>
-      
-      <StandardPagination 
-        currentPage={currentPage} 
-        totalPages={totalPages} 
-        onPageChange={setPage} 
-      />
-    </>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map(item => renderItem(item, handleView))}
+    </div>
   );
 }

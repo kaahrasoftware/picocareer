@@ -11,6 +11,7 @@ import { WalletTab } from "./WalletTab";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useSearchParams } from "react-router-dom";
+import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabsProps {
   profileId?: string;
@@ -26,6 +27,14 @@ export function ProfileTabs({ profileId }: ProfileTabsProps) {
   const isOwnProfile = !profileId || profileId === session?.user?.id;
   const isMentor = profile?.user_type === 'mentor';
   const isAdmin = profile?.user_type === 'admin';
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
@@ -52,12 +61,12 @@ export function ProfileTabs({ profileId }: ProfileTabsProps) {
       </TabsList>
 
       <TabsContent value="profile" className="mt-6">
-        <ProfileTab />
+        <ProfileTab profile={profile} />
       </TabsContent>
 
       {isOwnProfile && (
         <TabsContent value="calendar" className="mt-6">
-          <CalendarTab />
+          <CalendarTab profile={profile} />
         </TabsContent>
       )}
 
@@ -81,7 +90,7 @@ export function ProfileTabs({ profileId }: ProfileTabsProps) {
 
       {isOwnProfile && isAdmin && (
         <TabsContent value="wallet" className="mt-6">
-          <WalletTab />
+          <WalletTab profile={profile} />
         </TabsContent>
       )}
 

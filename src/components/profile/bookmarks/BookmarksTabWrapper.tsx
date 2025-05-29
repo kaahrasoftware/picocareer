@@ -5,41 +5,17 @@ import { CareerBookmarks } from "./CareerBookmarks";
 import { MajorBookmarks } from "./MajorBookmarks";
 import { MentorBookmarks } from "./MentorBookmarks";
 import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface BookmarksTabWrapperProps {
   profileId: string;
 }
 
-interface Bookmark {
-  content_id: string;
-  content_type: string;
-}
-
 export function BookmarksTabWrapper({ profileId }: BookmarksTabWrapperProps) {
   const [activeTab, setActiveTab] = useState("careers");
 
-  const { data: bookmarks = [], isLoading } = useQuery({
-    queryKey: ['bookmarks', profileId],
-    queryFn: async () => {
-      if (!profileId) return [];
-      
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('content_id, content_type')
-        .eq('user_id', profileId);
-      
-      if (error) throw error;
-      return data as Bookmark[];
-    },
-    enabled: !!profileId,
-  });
-
-  const careerBookmarks = bookmarks.filter(b => b.content_type === 'career');
-  const majorBookmarks = bookmarks.filter(b => b.content_type === 'major');
-  const mentorBookmarks = bookmarks.filter(b => b.content_type === 'mentor');
-  const scholarshipBookmarks = bookmarks.filter(b => b.content_type === 'scholarship');
+  // Since we don't have a bookmarks table, we'll show empty state for now
+  const bookmarkIds: string[] = [];
+  const isLoading = false;
 
   return (
     <div className="space-y-6">
@@ -53,43 +29,43 @@ export function BookmarksTabWrapper({ profileId }: BookmarksTabWrapperProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="careers">
-            Careers ({careerBookmarks.length})
+            Careers (0)
           </TabsTrigger>
           <TabsTrigger value="majors">
-            Majors ({majorBookmarks.length})
+            Majors (0)
           </TabsTrigger>
           <TabsTrigger value="mentors">
-            Mentors ({mentorBookmarks.length})
+            Mentors (0)
           </TabsTrigger>
           <TabsTrigger value="scholarships">
-            Scholarships ({scholarshipBookmarks.length})
+            Scholarships (0)
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="careers" className="mt-6">
           <CareerBookmarks 
-            bookmarkIds={careerBookmarks.map(b => b.content_id)}
+            bookmarkIds={bookmarkIds}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="majors" className="mt-6">
           <MajorBookmarks 
-            bookmarkIds={majorBookmarks.map(b => b.content_id)}
+            bookmarkIds={bookmarkIds}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="mentors" className="mt-6">
           <MentorBookmarks 
-            bookmarkIds={mentorBookmarks.map(b => b.content_id)}
+            bookmarkIds={bookmarkIds}
             isLoading={isLoading}
           />
         </TabsContent>
 
         <TabsContent value="scholarships" className="mt-6">
           <ScholarshipBookmarks 
-            bookmarkIds={scholarshipBookmarks.map(b => b.content_id)}
+            bookmarkIds={bookmarkIds}
             isLoading={isLoading}
           />
         </TabsContent>
