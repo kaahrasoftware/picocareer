@@ -42,7 +42,7 @@ export function MajorDialogHeader({
       </div>
       
       <div className="flex flex-wrap items-center gap-2 mt-3">        
-        {major.degree_levels && major.degree_levels.length > 0 && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 ">
+        {major.degree_levels && major.degree_levels.length > 0 && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
             {major.degree_levels[0]}
           </Badge>}
 
