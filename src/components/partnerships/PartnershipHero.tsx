@@ -15,7 +15,7 @@ export function PartnershipHero() {
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10" />
       
       {/* Glass morphism overlay */}
-      <div className="absolute inset-0 backdrop-blur-3xl bg-white/5" />
+      <div className="absolute inset-0 backdrop-blur-3xl bg-sky-900" />
       
       {/* Animated background elements */}
       <div className="absolute top-20 left-20 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
