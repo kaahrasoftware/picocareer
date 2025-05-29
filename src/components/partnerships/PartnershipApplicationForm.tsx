@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -24,8 +23,7 @@ export function PartnershipApplicationForm({ onCancel }: PartnershipApplicationF
     formData, 
     updateFormData, 
     submitApplication, 
-    isSubmitting, 
-    applicationReference,
+    isSubmitting,
     loadSavedData 
   } = usePartnershipApplication();
   const { toast } = useToast();
@@ -155,7 +153,6 @@ export function PartnershipApplicationForm({ onCancel }: PartnershipApplicationF
       <SuccessDialog
         isOpen={showSuccessDialog}
         onClose={handleSuccessDialogClose}
-        applicationReference={applicationReference || ""}
       />
     </>
   );

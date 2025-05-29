@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +38,6 @@ export interface PartnershipFormData {
 export function usePartnershipApplication() {
   const [formData, setFormData] = useState<PartnershipFormData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [applicationReference, setApplicationReference] = useState<string | null>(null);
   const { toast } = useToast();
 
   const updateFormData = (newData: Partial<PartnershipFormData>) => {
@@ -74,23 +72,14 @@ export function usePartnershipApplication() {
     localStorage.removeItem('partnership-form-data');
   };
 
-  const generateApplicationReference = () => {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return `PCP-${timestamp}-${random}`.toUpperCase();
-  };
-
   const submitApplication = async (finalData: PartnershipFormData): Promise<void> => {
     setIsSubmitting(true);
     
     try {
-      const reference = generateApplicationReference();
-      
       // Debug logging - check what data we're preparing to submit
       console.log('Submitting partnership application:', {
         step: 'submitApplication',
-        finalData,
-        reference
+        finalData
       });
       
       const submissionData = {
@@ -105,18 +94,13 @@ export function usePartnershipApplication() {
         description: finalData.description || '',
         partnership_goals: finalData.partnership_goals || '',
         preferred_partnership_type: finalData.preferred_partnership_type || null,
-        // Partnership Requirements - ensure these match the database column names exactly
         budget_range: finalData.budget_range || null,
         timeline_expectations: finalData.timeline_expectations || null,
         current_technology: finalData.current_technology || null,
         success_metrics: finalData.success_metrics || null,
         previous_partnerships: finalData.previous_partnerships || null,
         pilot_program_interest: finalData.pilot_program_interest || null,
-        // Additional info with reference
-        additional_info: [
-          finalData.additional_info || '',
-          `Reference: ${reference}`
-        ].filter(Boolean).join('\n\n'),
+        additional_info: finalData.additional_info || '',
         status: 'pending'
       };
 
@@ -146,13 +130,12 @@ export function usePartnershipApplication() {
 
       console.log('Database insert successful:', data);
 
-      setApplicationReference(reference);
       clearSavedData();
       setFormData({});
 
       toast({
         title: "Application Submitted",
-        description: `Your partnership application has been submitted successfully. Reference: ${reference}`,
+        description: "Your partnership application has been submitted successfully.",
       });
 
     } catch (error) {
@@ -173,7 +156,6 @@ export function usePartnershipApplication() {
     updateFormData,
     submitApplication,
     isSubmitting,
-    applicationReference,
     loadSavedData,
     clearSavedData
   };
