@@ -12,7 +12,7 @@ import OpportunityDetails from "@/pages/OpportunityDetails";
 import Blog from "@/pages/Blog";
 import EmailConfirmation from "@/pages/EmailConfirmation";
 import PasswordReset from "@/pages/PasswordReset";
-import MajorDetails from "@/components/MajorDetails";
+import { MajorDetails } from "@/components/MajorDetails";
 import Partnerships from "@/pages/Partnerships";
 
 const router = createBrowserRouter([
