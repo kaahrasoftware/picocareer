@@ -1,17 +1,15 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Sparkles } from "lucide-react";
-
 export function PartnershipHero() {
   const scrollToForm = () => {
     const formSection = document.getElementById('application-form');
     if (formSection) {
-      formSection.scrollIntoView({ behavior: 'smooth' });
+      formSection.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
-
-  return (
-    <section className="relative overflow-hidden py-24 px-6">
+  return <section className="relative overflow-hidden py-24 px-6">
       {/* Modern gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" />
       <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10" />
@@ -39,26 +37,15 @@ export function PartnershipHero() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button 
-            size="lg" 
-            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-105 border-0"
-            onClick={scrollToForm}
-          >
+          <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-105 border-0" onClick={scrollToForm}>
             Start Partnership Application
           </Button>
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 px-8 py-4 text-lg backdrop-blur-sm transition-all duration-300"
-          >
-            Learn More
-          </Button>
+          
         </div>
         
         <div className="mt-16 animate-bounce">
           <ArrowDown className="h-8 w-8 mx-auto text-emerald-400" />
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
