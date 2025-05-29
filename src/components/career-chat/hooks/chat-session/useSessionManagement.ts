@@ -36,16 +36,12 @@ export function useSessionManagement(
         .insert(endMessage);
       
       // Update session status and metadata
-      const updatedMetadata = sessionMetadata ? 
-        {
-          ...sessionMetadata,
-          completedAt: new Date().toISOString(),
-          isComplete: true
-        } : 
-        {
-          completedAt: new Date().toISOString(),
-          isComplete: true
-        };
+      const currentMetadata = sessionMetadata || {};
+      const updatedMetadata = {
+        ...currentMetadata,
+        completedAt: new Date().toISOString(),
+        isComplete: true
+      };
       
       await supabase
         .from('career_chat_sessions')
@@ -79,7 +75,8 @@ export function useSessionManagement(
           created_at, 
           session_metadata,
           progress_data,
-          total_messages
+          total_messages,
+          last_active_at
         `)
         .eq('profile_id', userId)
         .order('created_at', { ascending: false })
@@ -87,20 +84,21 @@ export function useSessionManagement(
       
       if (error) throw error;
       
-      // Convert data to proper type
+      // Convert data to proper type with proper handling of missing fields
       const typedSessions: CareerChatSession[] = (data || []).map(session => {
         // Ensure progress_data has the correct structure
-        const progressData = typeof session.progress_data === 'object' ? 
+        const progressData = typeof session.progress_data === 'object' && session.progress_data !== null ? 
           session.progress_data as any : 
           { education: 0, skills: 0, workstyle: 0, goals: 0, overall: 0 };
           
         return {
           id: session.id,
-          status: session.status,
-          created_at: session.created_at,
-          session_metadata: session.session_metadata as unknown as ChatSessionMetadata,
+          status: session.status || 'active',
+          created_at: session.created_at || new Date().toISOString(),
+          session_metadata: (session.session_metadata as ChatSessionMetadata) || {},
           progress_data: progressData,
-          total_messages: session.total_messages
+          total_messages: session.total_messages || 0,
+          last_active_at: session.last_active_at || session.created_at || new Date().toISOString()
         };
       });
       
@@ -152,7 +150,11 @@ export function useSessionManagement(
         // Update UI state
         setSessionId(targetSessionId);
         setMessages(typedMessages);
-        setSessionMetadata(session.session_metadata as unknown as ChatSessionMetadata);
+        // Safe metadata handling
+        const safeMetadata = session.session_metadata && typeof session.session_metadata === 'object' 
+          ? session.session_metadata as ChatSessionMetadata
+          : {};
+        setSessionMetadata(safeMetadata);
       }
       
     } catch (error) {
@@ -192,8 +194,10 @@ export function useSessionManagement(
       if (!session) return;
       
       const currentMetadata = session.session_metadata || {};
+      // Ensure safe metadata handling
+      const safeCurrentMetadata = typeof currentMetadata === 'object' && currentMetadata !== null ? currentMetadata : {};
       const updatedMetadata = {
-        ...currentMetadata,
+        ...safeCurrentMetadata,
         title
       };
       
@@ -220,9 +224,12 @@ export function useSessionManagement(
     if (!sessionId) return;
     
     try {
-      const updatedMetadata = sessionMetadata ? 
-        { ...sessionMetadata, ...metadata } : 
-        metadata;
+      const currentMetadata = sessionMetadata || {};
+      // Ensure both objects are valid before spreading
+      const safeCurrentMetadata = typeof currentMetadata === 'object' && currentMetadata !== null ? currentMetadata : {};
+      const safeMetadata = typeof metadata === 'object' && metadata !== null ? metadata : {};
+      
+      const updatedMetadata = { ...safeCurrentMetadata, ...safeMetadata };
       
       await supabase
         .from('career_chat_sessions')

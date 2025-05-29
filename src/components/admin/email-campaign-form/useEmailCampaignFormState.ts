@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -190,9 +191,9 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       console.log("Form submission data:", data);
       
       // Ensure we have a primary content_id from the first content_ids item
-      const primaryContentId = data.content_ids && data.content_ids.length > 0 
-        ? data.content_ids[0] 
-        : null;
+      const primaryContentId = data.content_ids && data.content_ids.length > 0 ? 
+        data.content_ids[0] : 
+        null;
         
       if (!primaryContentId) {
         toast.error('At least one content item must be selected');
@@ -207,7 +208,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       
       // Create a properly structured recipient_filter
       const recipientFilter = formData.recipientType === 'selected'
-        ? { profile_ids: formData.recipientIds } // Changed from recipient_ids to profile_ids
+        ? { profile_ids: formData.recipientIds }
         : formData.recipientFilter;
       
       const campaignData = {
@@ -215,15 +216,15 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
         subject: data.subject,
         body: data.body || '',
         content_type: data.content_type || 'blogs',
-        content_id: primaryContentId, // Required field - set from first content ID
+        content_id: primaryContentId,
         content_ids: data.content_ids || [],
         recipient_type: formData.recipientType,
         recipient_filter: recipientFilter,
         scheduled_for: data.scheduled_for,
         frequency: data.frequency || 'weekly',
-        status: 'planned', // Use 'planned' instead of 'scheduled'
-        sent_count: 0, // Explicitly set to 0
-        failed_count: 0, // Explicitly set to 0
+        status: 'planned',
+        sent_count: 0,
+        failed_count: 0,
         recipients_count: recipientsCount
       };
 
@@ -261,8 +262,8 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       }
 
       toast.success('Email campaign saved successfully!');
-      // Cast the unknown value to string for typesafety
-      const campaignId = savedData?.[0]?.id as string | undefined;
+      // Safe type casting for campaign ID with proper null checking
+      const campaignId = savedData && savedData[0] && savedData[0].id ? String(savedData[0].id) : undefined;
       onSuccess?.(campaignId);
     } catch (error) {
       console.error('Unexpected error saving email campaign:', error);
@@ -320,7 +321,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       recipientIds: [...prev.recipientIds, recipient.id],
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: [...(prev.recipientIds || []), recipient.id] // Changed from recipient_ids to profile_ids
+        profile_ids: [...(prev.recipientIds || []), recipient.id]
       }
     }));
   };
@@ -331,7 +332,7 @@ export const useEmailCampaignFormState = ({ campaign, onSuccess, specificRecipie
       recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
       recipientFilter: {
         ...prev.recipientFilter,
-        profile_ids: prev.recipientIds.filter((id) => id !== recipientId) // Changed from recipient_ids to profile_ids
+        profile_ids: prev.recipientIds.filter((id) => id !== recipientId)
       }
     }));
   };

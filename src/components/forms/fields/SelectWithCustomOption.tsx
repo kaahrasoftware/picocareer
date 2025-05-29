@@ -50,6 +50,14 @@ export function SelectWithCustomOption({
     }
   }, [options]);
 
+  // Get the correct field name for each table
+  const getFieldName = (table: string) => {
+    if (table === 'schools' || table === 'companies') {
+      return 'name';
+    }
+    return 'title';
+  };
+
   // Fetch options for the given table with search
   const { data: searchResults, isLoading } = useQuery({
     queryKey: [tableName, 'search', searchQuery],
@@ -63,31 +71,39 @@ export function SelectWithCustomOption({
       try {
         // Ensure query is safe
         const safeQuery = String(searchQuery).toLowerCase();
+        const fieldName = getFieldName(tableName);
         
-        let query = supabase
+        // Simple query that should work for all tables
+        const { data, error } = await supabase
           .from(tableName)
-          .select('id, name, title')
-          .limit(50); // Limit to 50 results for performance
-
-        // Add search filter
-        if (tableName === 'majors' || tableName === 'careers') {
-          query = query.ilike('title', `%${safeQuery}%`);
-        } else {
-          query = query.ilike('name', `%${safeQuery}%`);
-        }
-
-        // Add ordering
-        query = query.order(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name');
-
-        const { data, error } = await query;
+          .select(`id, ${fieldName}`)
+          .ilike(fieldName, `%${safeQuery}%`)
+          .order(fieldName)
+          .limit(50);
         
         if (error) {
           console.error(`Error fetching ${tableName}:`, error);
-          throw error;
+          return [];
         }
 
         console.log(`Fetched ${data?.length || 0} ${tableName}`);
-        return data || [];
+        
+        // Ensure data is valid before returning and handle different field names
+        return (data || []).filter((item: any) => {
+          if (!item || typeof item !== 'object') return false;
+          if (!('id' in item) || !item.id) return false;
+          const fieldValue = item[fieldName as keyof typeof item];
+          return fieldValue !== null && fieldValue !== undefined;
+        }).map((item: any) => {
+          if (!item || typeof item !== 'object') {
+            return { id: '', [fieldName === 'name' ? 'name' : 'title']: '' };
+          }
+          const fieldValue = item[fieldName as keyof typeof item];
+          return {
+            id: item.id || '',
+            [fieldName === 'name' ? 'name' : 'title']: fieldValue || ''
+          };
+        });
       } catch (error) {
         console.error(`Error in search query:`, error);
         return [];
@@ -104,7 +120,7 @@ export function SelectWithCustomOption({
       setLocalOptions(prevOptions => {
         const combined = [...prevOptions];
         searchResults.forEach(option => {
-          if (!combined.some(existing => existing.id === option.id)) {
+          if (option && option.id && !combined.some(existing => existing.id === option.id)) {
             combined.push(option);
           }
         });
@@ -149,26 +165,52 @@ export function SelectWithCustomOption({
     }
 
     try {
+      const fieldName = getFieldName(tableName);
+      
       // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName)
-        .select(`id, ${tableName === 'majors' || tableName === 'careers' ? 'title' : 'name'}`)
-        .eq(tableName === 'majors' || tableName === 'careers' ? 'title' : 'name', customValue)
+        .select(`id, ${fieldName}`)
+        .eq(fieldName, customValue)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
-      if (existingData) {
+      if (existingData && existingData.id) {
         onValueChange(existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
       }
 
-      // Create new entry
-      const insertData = tableName === 'majors' || tableName === 'careers' 
-        ? { title: customValue, description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`, status: 'Pending' as Status }
-        : { name: customValue, status: 'Pending' as Status };
+      // Create new entry with proper field mapping based on table type
+      let insertData: any;
+      
+      if (tableName === 'majors') {
+        insertData = { 
+          title: customValue, 
+          description: `Custom major: ${customValue}`, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'careers') {
+        insertData = { 
+          title: customValue, 
+          description: `Custom career: ${customValue}`, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'schools') {
+        insertData = { 
+          name: customValue, 
+          status: 'Pending' as Status 
+        };
+      } else if (tableName === 'companies') {
+        insertData = { 
+          name: customValue, 
+          status: 'Pending' as Status 
+        };
+      } else {
+        throw new Error(`Unsupported table: ${tableName}`);
+      }
 
       const { data, error } = await supabase
         .from(tableName)
@@ -180,7 +222,7 @@ export function SelectWithCustomOption({
 
       toast({
         title: "Success",
-        description: `Successfully added new ${tableName === 'majors' ? 'major' : tableName === 'careers' ? 'position' : tableName.slice(0, -1)}.`,
+        description: `Successfully added new ${tableName.slice(0, -1)}.`,
       });
 
       onValueChange(data.id);

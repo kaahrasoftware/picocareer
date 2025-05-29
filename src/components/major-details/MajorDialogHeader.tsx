@@ -69,16 +69,23 @@ export function MajorDialogHeader({
       </div>
       
       <div className="flex flex-wrap items-center gap-2 mt-3">
-        {major.field && (
+        {major.category && Array.isArray(major.category) && major.category.length > 0 && (
           <Badge 
             variant="outline" 
             className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
           >
-            {major.field}
+            {major.category[0]}
           </Badge>
         )}
         
-        {major.degree_levels && major.degree_levels.length > 0}
+        {major.degree_levels && major.degree_levels.length > 0 && (
+          <Badge 
+            variant="outline" 
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/60"
+          >
+            {major.degree_levels[0]}
+          </Badge>
+        )}
 
         {major.potential_salary && (
           <Badge 

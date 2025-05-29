@@ -27,14 +27,14 @@ export function BrandingSection({ control, register, hubId, defaultValues }: Bra
   const handleSave = async () => {
     try {
       console.log('Saving branding settings...');
-      const { logo_url, banner_url, brand_colors, name, type } = getValues();
+      const { logo_url, banner_url, brand_colors, name, description } = getValues();
       
       const hubData = {
         logo_url,
         banner_url,
         brand_colors,
         name: name || defaultValues.name,
-        type: type || defaultValues.type,
+        description: description || defaultValues.description,
         updated_at: new Date().toISOString()
       };
 

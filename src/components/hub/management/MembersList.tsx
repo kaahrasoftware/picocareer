@@ -32,9 +32,13 @@ export function MembersList({ hubId, members }: MembersListProps) {
 
   const handleRoleChange = async (memberId: string, newRole: string) => {
     try {
+      // Validate role before updating
+      const validRoles = ['admin', 'moderator', 'member', 'faculty', 'student'] as const;
+      const role = validRoles.includes(newRole as any) ? newRole as typeof validRoles[number] : 'member';
+      
       const { error } = await supabase
         .from('hub_members')
-        .update({ role: newRole })
+        .update({ role: role })
         .eq('id', memberId);
 
       if (error) throw error;

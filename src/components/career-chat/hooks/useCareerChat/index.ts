@@ -6,7 +6,27 @@ import { useProgressTracker } from './useProgressTracker';
 import { useSessionManager } from './useSessionManager';
 import { useApiConfig } from './useApiConfig';
 import { CareerChatMessage } from '@/types/database/analytics';
-import { ChatSessionMetadata, QuestionCounts } from './types'; // Import the type from local types file
+
+// Define ChatSessionMetadata interface locally
+interface ChatSessionMetadata {
+  title?: string;
+  lastCategory?: string;
+  isComplete?: boolean;
+  overallProgress?: number;
+  startedAt?: string;
+  completedAt?: string;
+  questionCounts?: QuestionCounts;
+  careerInterests?: string[];
+  [key: string]: any;
+}
+
+interface QuestionCounts {
+  education: number;
+  skills: number;
+  workstyle: number;
+  goals: number;
+  [key: string]: number;
+}
 
 export function useCareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -61,12 +81,20 @@ export function useCareerChat() {
   };
   
   const advanceQuestion = () => {
-    setQuestionProgress(prev => prev + 10);
+    setQuestionProgress(prev => Math.min(prev + 10, 100));
   };
   
   const createQuestionMessage = (sessionId: string): CareerChatMessage => {
     // Fix: Ensure message_type is the correct type
     const messageType: "system" | "user" | "bot" | "recommendation" | "session_end" = "bot";
+    
+    // Create proper questionCounts object with safe numeric values
+    const questionCounts: QuestionCounts = { 
+      education: 0, 
+      skills: 0, 
+      workstyle: 0, 
+      goals: 0 
+    };
     
     return {
       id: `question-${Date.now()}`,
@@ -75,11 +103,10 @@ export function useCareerChat() {
       content: "What are your career goals?",
       metadata: {
         category: currentCategory,
-        // Fix: Initialize questionCounts as a proper object with key-value pairs
-        questionCounts: { education: 0, skills: 0, workstyle: 0, goals: 0 } as QuestionCounts
+        questionCounts: questionCounts
       },
       created_at: new Date().toISOString()
-    } as CareerChatMessage; // Cast to ensure type compatibility
+    } as CareerChatMessage;
   };
 
   const {

@@ -1,11 +1,20 @@
+
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useChatSession } from './chat-session'; 
 import { useCareerAnalysis } from './useCareerAnalysis';
 import { useStructuredQuestions } from './useStructuredQuestions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CareerChatMessage } from '@/types/database/analytics';
+import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
 import { v4 as uuidv4 } from 'uuid';
+
+interface QuestionCounts {
+  education: number;
+  skills: number;
+  workstyle: number;
+  goals: number;
+  [key: string]: number;
+}
 
 export function useCareerChat() {
   const { 
@@ -198,11 +207,16 @@ export function useCareerChat() {
         setCurrentCategory(newCategory);
         setQuestionProgress(newProgress);
         
-        // Update session metadata
+        // Update session metadata with proper categoryProgress type
+        const categoryProgressObj: { [category: string]: number } = {};
+        if (typeof categoryProgress === 'object' && categoryProgress !== null) {
+          Object.assign(categoryProgressObj, categoryProgress);
+        }
+        
         updateSessionMetadata({
           lastCategory: newCategory,
           overallProgress: newProgress,
-          categoryProgress: categoryProgress
+          categoryProgress: categoryProgressObj
         });
         
         // Send the next question, unless we're at the end
@@ -271,10 +285,10 @@ export function useCareerChat() {
       setTimeout(async () => {
         if (sessionId) {
           // Welcome message
-          const welcomeMessage = {
+          const welcomeMessage: CareerChatMessage = {
             id: uuidv4(),
             session_id: sessionId,
-            message_type: 'system',
+            message_type: 'system' as const,
             content: "Hi there! I'm your Career Assistant. I'll ask you a series of questions about your education, skills, work preferences, and goals to help suggest career paths that might be a good fit for you.",
             metadata: {
               hasOptions: true,
@@ -321,7 +335,7 @@ export function useCareerChat() {
   const updateCategoryProgress = (category: string, increment: number = 1) => {
     if (!sessionMetadata) return;
     
-    const currentCounts = sessionMetadata.questionCounts || {
+    const currentCounts: QuestionCounts = sessionMetadata.questionCounts || {
       education: 0,
       skills: 0,
       workstyle: 0,

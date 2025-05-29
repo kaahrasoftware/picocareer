@@ -1,9 +1,8 @@
 
 import { UseFormRegister } from "react-hook-form";
 import { FormFields } from "../types/form-types";
-import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
+import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ProfessionalSectionProps {
   register: UseFormRegister<FormFields>;
@@ -22,40 +21,22 @@ export function ProfessionalSection({
   yearsOfExperience,
   companies,
 }: ProfessionalSectionProps) {
+  const companyOptions = companies.map(company => ({
+    value: company.id,
+    label: company.name
+  }));
+
   return (
     <div className="bg-muted rounded-lg p-4">
       <h4 className="font-semibold mb-4">Professional Experience</h4>
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium">Position</label>
-          <EnhancedComboBox
+          <Input
             value={position || ""}
-            onValueChange={(value) => handleFieldChange("position", value)}
-            placeholder="Select position"
-            tableName="careers"
-            selectField="title"
-            searchField="title"
-            allowCustomValue={true}
-            onCustomValueSubmit={async (value) => {
-              try {
-                const { data, error } = await supabase
-                  .from('careers')
-                  .insert({ 
-                    title: value,
-                    description: `Custom position: ${value}`,
-                    status: 'Pending'
-                  })
-                  .select('id')
-                  .single();
-                
-                if (error) throw error;
-                if (data) {
-                  handleFieldChange('position', data.id);
-                }
-              } catch (error) {
-                console.error('Error adding custom position:', error);
-              }
-            }}
+            onChange={(e) => handleFieldChange("position", e.target.value)}
+            placeholder="Enter your position"
+            className="mt-1"
           />
           <input
             type="hidden"
@@ -65,33 +46,13 @@ export function ProfessionalSection({
 
         <div>
           <label className="text-sm font-medium">Company</label>
-          <EnhancedComboBox
+          <SearchableSelect
+            options={companyOptions}
             value={companyId || ""}
             onValueChange={(value) => handleFieldChange("company_id", value)}
-            placeholder="Select company"
-            tableName="companies"
-            selectField="name"
-            searchField="name"
-            allowCustomValue={true}
-            onCustomValueSubmit={async (value) => {
-              try {
-                const { data, error } = await supabase
-                  .from('companies')
-                  .insert({ 
-                    name: value,
-                    status: 'Pending'
-                  })
-                  .select('id')
-                  .single();
-                
-                if (error) throw error;
-                if (data) {
-                  handleFieldChange('company_id', data.id);
-                }
-              } catch (error) {
-                console.error('Error adding custom company:', error);
-              }
-            }}
+            placeholder="Select Company"
+            searchPlaceholder="Search companies..."
+            emptyMessage="No companies found."
           />
           <input
             type="hidden"

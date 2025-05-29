@@ -167,7 +167,7 @@ export function MentorRegistrationForm({
               control={form.control}
               name="password"
               label="Password"
-              type="password"
+              type="text"
               description="Create a secure password with at least 8 characters, including one lowercase letter, one uppercase letter, and one number."
               required={true}
             />

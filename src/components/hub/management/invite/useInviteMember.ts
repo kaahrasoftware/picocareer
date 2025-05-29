@@ -49,13 +49,17 @@ export function useInviteMember(hubId: string) {
             continue;
           }
 
-          if (data && data.success) {
-            successCount++;
-          } else if (data) {
-            toast({
-              title: "Info",
-              description: data.message || `Could not add ${email}.`,
-            });
+          // Type-safe data handling
+          if (data && typeof data === 'object' && 'success' in data) {
+            const resultData = data as { success: boolean; message?: string };
+            if (resultData.success) {
+              successCount++;
+            } else {
+              toast({
+                title: "Info",
+                description: resultData.message || `Could not add ${email}.`,
+              });
+            }
           }
         } catch (error) {
           console.error('Error processing invitation for', email, ':', error);

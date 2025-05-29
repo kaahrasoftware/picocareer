@@ -2795,66 +2795,6 @@ export type Database = {
           },
         ]
       }
-      partnerships: {
-        Row: {
-          additional_info: string | null
-          admin_notes: string | null
-          contact_email: string
-          contact_name: string
-          contact_phone: string | null
-          created_at: string
-          description: string
-          entity_name: string
-          entity_type: string
-          geographic_location: string | null
-          id: string
-          partnership_goals: string
-          preferred_partnership_type: string[] | null
-          status: string
-          student_count: number | null
-          updated_at: string
-          website: string | null
-        }
-        Insert: {
-          additional_info?: string | null
-          admin_notes?: string | null
-          contact_email: string
-          contact_name: string
-          contact_phone?: string | null
-          created_at?: string
-          description: string
-          entity_name: string
-          entity_type: string
-          geographic_location?: string | null
-          id?: string
-          partnership_goals: string
-          preferred_partnership_type?: string[] | null
-          status?: string
-          student_count?: number | null
-          updated_at?: string
-          website?: string | null
-        }
-        Update: {
-          additional_info?: string | null
-          admin_notes?: string | null
-          contact_email?: string
-          contact_name?: string
-          contact_phone?: string | null
-          created_at?: string
-          description?: string
-          entity_name?: string
-          entity_type?: string
-          geographic_location?: string | null
-          id?: string
-          partnership_goals?: string
-          preferred_partnership_type?: string[] | null
-          status?: string
-          student_count?: number | null
-          updated_at?: string
-          website?: string | null
-        }
-        Relationships: []
-      }
       personality_answer_weights: {
         Row: {
           answer_value: string

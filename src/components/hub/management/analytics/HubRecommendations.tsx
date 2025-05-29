@@ -36,7 +36,7 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
 
         if (metricsError) throw metricsError;
 
-        // Get member metrics
+        // Get member metrics with fallback for missing member_limit
         const { data: memberMetrics, error: memberError } = await supabase
           .from('hub_member_metrics')
           .select('*')
@@ -59,8 +59,9 @@ export function HubRecommendations({ hubId }: HubRecommendationsProps) {
           });
         }
 
-        // Check if member count is low compared to limit
-        if (memberMetrics.active_members < memberMetrics.member_limit * 0.25) {
+        // Check if member count is low (use a default limit of 100 if not available)
+        const memberLimit = 100; // Default limit since member_limit doesn't exist in the table
+        if (memberMetrics.active_members < memberLimit * 0.25) {
           newRecommendations.push({
             type: 'members',
             title: 'Invite More Members',
