@@ -24,7 +24,7 @@ export function PartnershipHero() {
       <div className="relative max-w-6xl mx-auto text-center text-white">
         <div className="flex items-center justify-center gap-2 mb-6">
           <Sparkles className="h-6 w-6 text-amber-500" />
-          <span className="text-emerald-400 font-medium tracking-wide">Transform Education Together</span>
+          <span className="font-medium tracking-wide text-amber-500">Transform Education Together</span>
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
