@@ -10,7 +10,6 @@ import Mentor from "@/pages/Mentor";
 import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import Blog from "@/pages/Blog";
-import BlogDetails from "@/pages/BlogDetails";
 import EmailVerification from "@/pages/EmailVerification";
 import PasswordReset from "@/pages/PasswordReset";
 import MajorDetails from "@/components/MajorDetails";
@@ -56,10 +55,6 @@ const router = createBrowserRouter([
       {
         path: "/blog",
         element: <Blog />,
-      },
-      {
-        path: "/blog/:id",
-        element: <BlogDetails />,
       },
       {
         path: "/email-verification",
