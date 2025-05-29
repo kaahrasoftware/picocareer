@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -58,10 +59,6 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
-        path: "career/:id",
-        element: <Career />,
-      },
-      {
         path: "career-chat",
         element: <CareerChat />,
       },
@@ -70,15 +67,7 @@ export const router = createBrowserRouter([
         element: <Mentor />,
       },
       {
-        path: "mentor/:id",
-        element: <Mentor />,
-      },
-      {
         path: "blog",
-        element: <Blog />,
-      },
-      {
-        path: "blog/:id",
         element: <Blog />,
       },
       {
@@ -87,10 +76,6 @@ export const router = createBrowserRouter([
       },
       {
         path: "program",
-        element: <Program />,
-      },
-      {
-        path: "program/:id",
         element: <Program />,
       },
       {
@@ -108,14 +93,6 @@ export const router = createBrowserRouter([
       {
         path: "event",
         element: <Event />,
-      },
-      {
-        path: "event/:id",
-        element: <Event />,
-      },
-      {
-        path: "feedback/:id",
-        element: <Profile initialTab="calendar" />,
       },
       {
         path: "career/upload",
@@ -143,10 +120,6 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <Profile />,
-      },
-      {
-        path: "profile/:id",
         element: <Profile />,
       },
       {
