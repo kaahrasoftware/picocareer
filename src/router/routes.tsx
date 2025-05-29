@@ -10,7 +10,7 @@ import Mentor from "@/pages/Mentor";
 import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import Blog from "@/pages/Blog";
-import EmailVerification from "@/pages/EmailVerification";
+import EmailConfirmation from "@/pages/EmailConfirmation";
 import PasswordReset from "@/pages/PasswordReset";
 import MajorDetails from "@/components/MajorDetails";
 import Partnerships from "@/pages/Partnerships";
@@ -57,8 +57,8 @@ const router = createBrowserRouter([
         element: <Blog />,
       },
       {
-        path: "/email-verification",
-        element: <EmailVerification />,
+        path: "/email-confirmation",
+        element: <EmailConfirmation />,
       },
       {
         path: "/password-reset",
