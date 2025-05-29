@@ -20,7 +20,6 @@ interface ModernMegaMenuProps {
 
 export function ModernMegaMenu({ sections, trigger }: ModernMegaMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -42,19 +41,31 @@ export function ModernMegaMenu({ sections, trigger }: ModernMegaMenuProps) {
   );
 
   const handleMouseEnter = () => {
+    // Clear any existing timeout when entering the menu area
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    setIsHovered(true);
     setIsOpen(true);
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
+    // Set a timeout to close the menu, but don't change hover state immediately
     timeoutRef.current = setTimeout(() => {
-      if (!isHovered) {
-        setIsOpen(false);
-      }
+      setIsOpen(false);
+    }, 150);
+  };
+
+  const handleContentMouseEnter = () => {
+    // Clear timeout when entering the dropdown content
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleContentMouseLeave = () => {
+    // Set timeout to close when leaving the dropdown content
+    timeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
     }, 150);
   };
 
@@ -99,15 +110,15 @@ export function ModernMegaMenu({ sections, trigger }: ModernMegaMenuProps) {
       <div
         ref={menuRef}
         className={cn(
-          "absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 transition-all duration-200",
+          "absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 transition-all duration-200",
           "bg-background/95 backdrop-blur-xl border border-border/60 rounded-xl shadow-2xl shadow-black/10",
           "min-w-[600px] p-6",
           isOpen 
             ? "opacity-100 visible translate-y-0" 
             : "opacity-0 invisible translate-y-2 pointer-events-none"
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handleContentMouseEnter}
+        onMouseLeave={handleContentMouseLeave}
       >
         <div className="grid grid-cols-2 gap-8">
           {sections.map((section) => (
