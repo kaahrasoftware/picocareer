@@ -10,7 +10,6 @@ import { executeDemoAction } from '@/components/guide/utils/demoActions';
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
 
-// Create a component to wrap RouterProvider and provide Guide context
 export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [isGuideActive, setIsGuideActive] = useState(false);
   const [currentPage, setCurrentPage] = useState<string | null>(null);
@@ -19,7 +18,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [seenGuides, setSeenGuides] = useLocalStorage<string[]>('picocareer-seen-guides', []);
   const navigate = useNavigate();
   
-  // Get auth state safely without requiring router context
+  // Get auth state safely
   const { isAuthenticated } = useAuthSession('optional');
 
   // Execute demo actions for the current step
@@ -41,7 +40,6 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     
     if (filteredGuide.length === 0) return;
     
-    // We'll let the router handle navigation via links instead of programmatic navigation
     setCurrentGuide(filteredGuide);
     setCurrentPage(targetPath);
     setCurrentStep(0);
