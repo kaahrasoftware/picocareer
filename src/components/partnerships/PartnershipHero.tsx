@@ -37,7 +37,7 @@ export function PartnershipHero() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button size="lg" onClick={scrollToForm} className="bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-500 hover:to-amber-400 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-amber-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/40 hover:scale-105 border-0">
+          <Button size="lg" onClick={scrollToForm} className="bg-gradient-to-r from-amber-700 to-amber-500 hover:from-amber-700 hover:to-amber-500 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-amber-700/25 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-700/40 hover:scale-105 border-0">
             Start Partnership Application
           </Button>
           
