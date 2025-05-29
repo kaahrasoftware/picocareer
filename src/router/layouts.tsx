@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { MainNavigation } from '@/components/navigation/MainNavigation';
 import { Footer } from '@/components/Footer';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { GuideButton } from '@/components/guide/GuideButton';
 
 export function MainLayout() {
   return (
@@ -13,6 +14,7 @@ export function MainLayout() {
       </main>
       <Footer />
       <ScrollToTop />
+      <GuideButton floating />
     </div>
   );
 }
