@@ -56,7 +56,7 @@ Thank you for your interest in partnering with PicoCareer!
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col">
         <div className="relative overflow-hidden">
           {showConfetti && (
             <div className="absolute inset-0 pointer-events-none z-10">
@@ -67,7 +67,7 @@ Thank you for your interest in partnering with PicoCareer!
             </div>
           )}
           
-          <DialogHeader className="text-center space-y-4 p-6 pb-4">
+          <DialogHeader className="text-center space-y-4 p-6 pb-4 flex-shrink-0">
             <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-emerald-600" />
             </div>
@@ -79,7 +79,7 @@ Thank you for your interest in partnering with PicoCareer!
             </p>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(90vh-200px)] px-6">
+          <ScrollArea className="h-[350px] md:h-[400px] px-6">
             <div className="space-y-4 pb-4">
               <Card className="bg-emerald-50 border-emerald-200">
                 <CardContent className="p-4">
@@ -107,6 +107,8 @@ Thank you for your interest in partnering with PicoCareer!
                           <li>• Initial review (1-2 business days)</li>
                           <li>• Team evaluation (3-5 business days)</li>
                           <li>• Partnership proposal call</li>
+                          <li>• Contract negotiation if approved</li>
+                          <li>• Implementation planning phase</li>
                         </ul>
                       </div>
                     </div>
@@ -123,6 +125,7 @@ Thank you for your interest in partnering with PicoCareer!
                           <p>info@picocareer.com</p>
                           <p>+1 (919) 443-5301</p>
                           <p>Response within 24 hours</p>
+                          <p>Monday-Friday, 9 AM - 6 PM EST</p>
                         </div>
                       </div>
                     </div>
@@ -141,10 +144,22 @@ Thank you for your interest in partnering with PicoCareer!
                   </p>
                 </CardContent>
               </Card>
+
+              <Card className="bg-gray-50 border-gray-200">
+                <CardContent className="p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Important Notes</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Keep your reference number safe for future correspondence</li>
+                    <li>• Check your email for confirmation and updates</li>
+                    <li>• Our team may request additional documentation</li>
+                    <li>• Partnership agreements typically take 2-4 weeks to finalize</li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </ScrollArea>
 
-          <div className="p-6 pt-4 border-t bg-white">
+          <div className="p-6 pt-4 border-t bg-white flex-shrink-0">
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 onClick={downloadSummary}
