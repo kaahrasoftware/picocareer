@@ -1,14 +1,17 @@
 
+import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { GraduationCap, UserSearch } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { cn } from "@/lib/utils";
 
 export const HeroSection = () => {
   const { session } = useAuthSession();
   const isLoggedIn = !!session?.user;
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
 
   return (
     <div className="relative isolate overflow-visible">
@@ -27,12 +30,21 @@ export const HeroSection = () => {
       {/* Header with Search - Increased spacing */}
       <header className="flex justify-between items-center mb-16 relative bg-white/30 backdrop-filter backdrop-blur-lg rounded-xl p-6">
         <div className="w-full SearchBar">
-          <SearchBar placeholder="find mentor, academic programs, careers, universities, scholarships..." />
+          <SearchBar 
+            placeholder="find mentor, academic programs, careers, universities, scholarships..." 
+            isSearchDialogOpen={isSearchDialogOpen}
+            onSearchDialogChange={setIsSearchDialogOpen}
+          />
         </div>
       </header>
       
-      {/* Mentee CTA Section */}
-      <section className="mb-12 py-12 px-8 rounded-xl relative overflow-hidden mentee-cta">
+      {/* Mentee CTA Section - Hidden when search dialog is open */}
+      <section className={cn(
+        "mb-12 py-12 px-8 rounded-xl relative overflow-hidden mentee-cta transition-all duration-300 ease-in-out",
+        isSearchDialogOpen 
+          ? "opacity-0 pointer-events-none translate-y-4" 
+          : "opacity-100 pointer-events-auto translate-y-0"
+      )}>
         {/* Using the same gradient from CallToActionSection */}
         <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark to-picocareer-primary opacity-90"></div>
         <div className="absolute inset-0 backdrop-blur-sm bg-black/20"></div>

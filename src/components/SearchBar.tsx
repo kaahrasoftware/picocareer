@@ -12,11 +12,17 @@ import { Button } from "./ui/button";
 interface SearchBarProps {
   className?: string;
   placeholder?: string;
+  isSearchDialogOpen?: boolean;
+  onSearchDialogChange?: (open: boolean) => void;
 }
 
-export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
+export const SearchBar = ({ 
+  className = "", 
+  placeholder,
+  isSearchDialogOpen = false,
+  onSearchDialogChange
+}: SearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const { searchMentors, isLoading: isMentorsLoading } = useSearchMentors();
   const { searchMajors, isLoading: isMajorsLoading } = useSearchMajors();
@@ -51,15 +57,19 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
       console.error("Search error:", error);
       setSearchResults([]);
     }
-  }, 800); // Increased delay to 800ms for better user experience
+  }, 800);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     performSearch(value);
   };
 
+  const handleFocus = () => {
+    onSearchDialogChange?.(true);
+  };
+
   const handleCloseSearch = () => {
-    setIsFocused(false);
+    onSearchDialogChange?.(false);
     setSearchQuery("");
     setSearchResults([]);
   };
@@ -74,19 +84,19 @@ export const SearchBar = ({ className = "", placeholder }: SearchBarProps) => {
   const isLoading = isMentorsLoading || isMajorsLoading || isCareersLoading;
 
   return (
-    <div className="relative w-full search-container mb-32 isolate">
+    <div className="relative w-full search-container mb-16 isolate">
       <div className="relative flex items-center w-full max-w-3xl mx-auto">
         <SearchInput
           value={searchQuery}
           onChange={handleSearchChange}
-          onFocus={() => setIsFocused(true)}
+          onFocus={handleFocus}
           className={className}
           placeholder={placeholder || "Search mentors, majors and careers..."}
         />
       </div>
       
-      {isFocused && (
-        <div className="absolute top-full mt-1 w-full z-[9999] border border-border/50 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 shadow-2xl rounded-lg overflow-hidden">
+      {isSearchDialogOpen && (
+        <div className="absolute top-full mt-1 w-full z-[99999] border border-border/50 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 shadow-2xl rounded-lg overflow-hidden">
           <div className="relative">
             <Button
               variant="ghost"

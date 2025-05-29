@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { EmailCampaignFormData } from './emailCampaign.schema';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,7 +26,7 @@ interface UseEmailCampaignFormStateReturn {
 }
 
 export function useEmailCampaignFormState(
-  form: UseFormReturn<EmailCampaignFormData>
+  form: UseFormReturn<any>
 ): UseEmailCampaignFormStateReturn {
   const [selectedFrequency, setSelectedFrequency] = useState<string>('immediate');
   const [selectedRecipientType, setSelectedRecipientType] = useState<string>('all');
@@ -63,38 +62,32 @@ export function useEmailCampaignFormState(
         case 'blogs':
           query = supabase
             .from('blogs')
-            .select('id, title, summary')
-            .eq('status', 'Active');
+            .select('id, title, summary');
           break;
         case 'careers':
           query = supabase
             .from('careers')
-            .select('id, title, description')
-            .eq('status', 'Active');
+            .select('id, title, description');
           break;
         case 'majors':
           query = supabase
             .from('majors')
-            .select('id, title, description')
-            .eq('status', 'Active');
+            .select('id, title, description');
           break;
         case 'scholarships':
           query = supabase
             .from('scholarships')
-            .select('id, title, description')
-            .eq('status', 'Active');
+            .select('id, title, description');
           break;
         case 'opportunities':
           query = supabase
             .from('opportunities')
-            .select('id, title, description')
-            .eq('status', 'Active');
+            .select('id, title, description');
           break;
         case 'schools':
           query = supabase
             .from('schools')
-            .select('id, name as title, description')
-            .eq('status', 'Active');
+            .select('id, name as title, description');
           break;
         case 'mentors':
           query = supabase
