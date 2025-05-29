@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Sparkles } from "lucide-react";
 
 export function PartnershipHero() {
   const scrollToForm = () => {
@@ -11,20 +11,37 @@ export function PartnershipHero() {
   };
 
   return (
-    <section className="relative overflow-hidden py-20 px-6">
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-90" />
+    <section className="relative overflow-hidden py-24 px-6">
+      {/* Modern gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900" />
+      <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10" />
+      
+      {/* Glass morphism overlay */}
+      <div className="absolute inset-0 backdrop-blur-3xl bg-white/5" />
+      
+      {/* Animated background elements */}
+      <div className="absolute top-20 left-20 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      
       <div className="relative max-w-6xl mx-auto text-center text-white">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Sparkles className="h-6 w-6 text-emerald-400" />
+          <span className="text-emerald-400 font-medium tracking-wide">Transform Education Together</span>
+        </div>
+        
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-          Partner with <span className="text-yellow-300">PicoCareer</span>
+          Partner with <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">PicoCareer</span>
         </h1>
-        <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
+        
+        <p className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed text-gray-200">
           Join our mission to transform career education and empower students worldwide. 
           Together, we can create pathways to meaningful careers and brighter futures.
         </p>
+        
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Button 
             size="lg" 
-            className="bg-yellow-400 hover:bg-yellow-500 text-purple-900 font-semibold px-8 py-3"
+            className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-105 border-0"
             onClick={scrollToForm}
           >
             Start Partnership Application
@@ -32,13 +49,14 @@ export function PartnershipHero() {
           <Button 
             variant="outline" 
             size="lg" 
-            className="border-white text-white hover:bg-white hover:text-purple-600 px-8 py-3"
+            className="border-2 border-white/30 text-white hover:bg-white/10 hover:border-white/50 px-8 py-4 text-lg backdrop-blur-sm transition-all duration-300"
           >
             Learn More
           </Button>
         </div>
-        <div className="mt-12 animate-bounce">
-          <ArrowDown className="h-8 w-8 mx-auto text-yellow-300" />
+        
+        <div className="mt-16 animate-bounce">
+          <ArrowDown className="h-8 w-8 mx-auto text-emerald-400" />
         </div>
       </div>
     </section>

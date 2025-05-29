@@ -7,10 +7,10 @@ import { ApplicationFormSection } from "@/components/partnerships/ApplicationFor
 
 export default function Partnerships() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen">
       <PartnershipHero />
-      <PartnershipTypes />
       <BenefitsOverview />
+      <PartnershipTypes />
       <ProcessSteps />
       <ApplicationFormSection />
     </div>
