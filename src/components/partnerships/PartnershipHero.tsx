@@ -37,14 +37,14 @@ export function PartnershipHero() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-105 border-0" onClick={scrollToForm}>
+          <Button size="lg" onClick={scrollToForm} className="bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-500 hover:to-amber-400 text-white font-semibold px-8 py-4 text-lg shadow-xl shadow-amber-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/40 hover:scale-105 border-0">
             Start Partnership Application
           </Button>
           
         </div>
         
         <div className="mt-16 animate-bounce">
-          <ArrowDown className="h-8 w-8 mx-auto text-emerald-400" />
+          <ArrowDown className="h-8 w-8 mx-auto text-amber-500" />
         </div>
       </div>
     </section>;
