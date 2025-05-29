@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay, eachDayOfInterval } from 'date-fns';
+import { ResourceAnalyticsTest } from './ResourceAnalyticsTest';
 
 interface ModernResourceAnalyticsProps {
   className?: string;
@@ -571,6 +573,13 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           Refresh Data
         </Button>
       </div>
+
+      {/* Add the test component in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-6">
+          <ResourceAnalyticsTest />
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

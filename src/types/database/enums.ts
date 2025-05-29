@@ -131,7 +131,11 @@ export enum OpportunityType {
   SCHOLARSHIP = "scholarship",
   FELLOWSHIP = "fellowship",
   RESEARCH = "research",
-  VOLUNTEER = "volunteer"
+  VOLUNTEER = "volunteer",
+  GRANT = "grant",
+  COMPETITION = "competition",
+  EVENT = "event",
+  OTHER = "other"
 }
 
 export enum OpportunityStatus {
