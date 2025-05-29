@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -537,17 +536,6 @@ export function ResourcePreviewModal({ resource, isOpen, onClose }: ResourcePrev
               <Button variant="outline" onClick={handleOpenExternal}>
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open External
-              </Button>
-            )}
-            
-            {resource.is_downloadable && resource.file_url && (
-              <Button onClick={handleDownload} disabled={downloading}>
-                {downloading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                {downloading ? 'Downloading...' : 'Download'}
               </Button>
             )}
           </div>
