@@ -56,8 +56,8 @@ Thank you for your interest in partnering with PicoCareer!
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col">
-        <div className="relative overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+        <div className="relative">
           {showConfetti && (
             <div className="absolute inset-0 pointer-events-none z-10">
               <div className="animate-bounce">🎉</div>
@@ -67,20 +67,22 @@ Thank you for your interest in partnering with PicoCareer!
             </div>
           )}
           
-          <DialogHeader className="text-center space-y-4 p-6 pb-4 flex-shrink-0">
-            <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-emerald-600" />
-            </div>
-            <DialogTitle className="text-2xl font-bold text-gray-900">
-              Application Submitted Successfully!
-            </DialogTitle>
-            <p className="text-gray-600">
-              Thank you for your interest in partnering with PicoCareer. We're excited about the possibility of working together!
-            </p>
-          </DialogHeader>
+          <ScrollArea className="h-[80vh] w-full">
+            <div className="p-6 space-y-6">
+              {/* Header Section - now scrollable */}
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-emerald-600" />
+                </div>
+                <DialogTitle className="text-2xl font-bold text-gray-900">
+                  Application Submitted Successfully!
+                </DialogTitle>
+                <p className="text-gray-600">
+                  Thank you for your interest in partnering with PicoCareer. We're excited about the possibility of working together!
+                </p>
+              </div>
 
-          <ScrollArea className="h-[350px] md:h-[400px] px-6">
-            <div className="space-y-4 pb-4">
+              {/* Content Cards */}
               <Card className="bg-emerald-50 border-emerald-200">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -156,33 +158,34 @@ Thank you for your interest in partnering with PicoCareer!
                   </ul>
                 </CardContent>
               </Card>
+
+              {/* Footer Buttons - now at bottom of scrollable content */}
+              <div className="border-t pt-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={downloadSummary}
+                    variant="outline"
+                    className="flex-1 flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Summary
+                  </Button>
+                  <Button
+                    onClick={onClose}
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
+                  >
+                    Close
+                  </Button>
+                </div>
+
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-gray-500">
+                    Keep your reference number safe for future correspondence
+                  </p>
+                </div>
+              </div>
             </div>
           </ScrollArea>
-
-          <div className="p-6 pt-4 border-t bg-white flex-shrink-0">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                onClick={downloadSummary}
-                variant="outline"
-                className="flex-1 flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download Summary
-              </Button>
-              <Button
-                onClick={onClose}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700"
-              >
-                Close
-              </Button>
-            </div>
-
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-500">
-                Keep your reference number safe for future correspondence
-              </p>
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
