@@ -68,16 +68,7 @@ export function MajorDialogHeader({
         </div>
       </div>
       
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        {major.category && Array.isArray(major.category) && major.category.length > 0 && (
-          <Badge 
-            variant="outline" 
-            className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800/60"
-          >
-            {major.category[0]}
-          </Badge>
-        )}
-        
+      <div className="flex flex-wrap items-center gap-2 mt-3">        
         {major.degree_levels && major.degree_levels.length > 0 && (
           <Badge 
             variant="outline" 

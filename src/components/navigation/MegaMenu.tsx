@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -27,10 +26,19 @@ interface MegaMenuProps {
 }
 
 export function MegaMenu({ sections, trigger }: MegaMenuProps) {
-  const location = useLocation();
   const isMobile = useIsMobile();
   
+  // Safely handle router context
+  let location;
+  try {
+    location = useLocation();
+  } catch (error) {
+    // Fallback when router context is not available
+    location = { pathname: "/" };
+  }
+  
   const isActive = (href: string) => {
+    if (!location) return false;
     if (href === "/" && location.pathname !== "/") return false;
     return location.pathname.startsWith(href);
   };
