@@ -98,7 +98,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
           />
           <EditableField
             label="Languages"
-            value={(profile as any).languages?.join(", ")}
+            value={profile.languages?.join(", ")}
             fieldName="languages"
             profileId={profile.id}
             placeholder="Add languages (comma-separated)"
@@ -195,11 +195,11 @@ export function ProfileTab({ profile }: ProfileTabProps) {
             linkedinUrl={profile.linkedin_url}
             githubUrl={profile.github_url}
             websiteUrl={profile.website_url}
-            xUrl={(profile as any).X_url}
-            facebookUrl={(profile as any).facebook_url}
-            tiktokUrl={(profile as any).tiktok_url}
-            youtubeUrl={(profile as any).youtube_url}
-            instagramUrl={(profile as any).instagram_url}
+            xUrl={profile.X_url}
+            facebookUrl={profile.facebook_url}
+            tiktokUrl={profile.tiktok_url}
+            youtubeUrl={profile.youtube_url}
+            instagramUrl={profile.instagram_url}
             profileId={profile.id}
             isEditing={isEditing}
           />

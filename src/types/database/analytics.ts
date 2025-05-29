@@ -1,86 +1,51 @@
 
-export interface AnalyticsSummary {
-  totalMembers: number;
-  activeMembers: number;
-  totalResources: number;
-  totalAnnouncements: number;
-  storageUsed: number;
-  storageLimit: number;
-  memberLimit: number;
-  resourceCount: number;
-  announcementCount: number;
-}
-
-export interface ResourceEngagement {
-  resource_id: string;
-  title: string;
-  view_count: number;
-  download_count: number;
-  share_count: number;
-}
-
-export interface AnnouncementEngagement {
-  announcement_id: string;
-  title: string;
-  view_count: number;
-  reaction_count: number;
-}
-
-export interface MemberGrowth {
-  month: string;
-  new_members: number;
-  year: number;
-  date: string;
-}
-
-export interface HubStorageMetrics {
-  total_storage_bytes: number;
-  file_count: number;
-  resources_count: number;
-  announcements_count: number;
-  banner_count: number;
-  logo_count: number;
-  last_calculated_at: string;
-}
-
+// Define chat session related types
 export interface CareerChatMessage {
   id: string;
   session_id: string;
-  message_type: 'system' | 'user' | 'bot' | 'recommendation' | 'session_end';
+  message_type: "system" | "user" | "bot" | "recommendation" | "session_end";
   content: string;
-  metadata?: any;
-  created_at: string;
-  delivery_metadata?: any;
+  metadata?: {
+    hasOptions?: boolean;
+    suggestions?: string[];
+    category?: string;
+    [key: string]: any;
+  };
+  delivery_metadata?: {
+    tokens?: number;
+    latency?: number;
+    [key: string]: any;
+  };
   message_index?: number;
   status?: string;
+  created_at?: string;
 }
 
 export interface CareerChatSession {
   id: string;
+  profile_id?: string;
   status?: string;
   created_at?: string;
-  session_metadata?: ChatSessionMetadata;
-  progress_data: {
-    [key: string]: number;
+  progress_data?: {
     education: number;
     skills: number;
     workstyle: number;
     goals: number;
     overall: number;
+    [key: string]: number;
   };
   total_messages?: number;
   last_active_at?: string;
+  session_metadata?: ChatSessionMetadata;
+  updated_at?: string;
   is_suspended?: boolean;
-  profile_id?: string;
+  last_message_at?: string;
 }
 
 export interface ChatSessionMetadata {
-  title?: string;
-  lastCategory?: string;
-  isComplete?: boolean;
-  overallProgress?: number;
   startedAt?: string;
   completedAt?: string;
+  isComplete?: boolean;
   questionCounts?: {
     education: number;
     skills: number;
@@ -88,9 +53,9 @@ export interface ChatSessionMetadata {
     goals: number;
     [key: string]: number;
   };
+  overallProgress?: number;
   categoryProgress?: {
     [category: string]: number;
   };
-  careerInterests?: string[];
   [key: string]: any;
 }

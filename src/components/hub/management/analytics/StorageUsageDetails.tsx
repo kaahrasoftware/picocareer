@@ -13,10 +13,7 @@ export function StorageUsageDetails({ storageMetrics }: StorageUsageDetailsProps
       <CardHeader>
         <CardTitle>Storage Usage Details</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Last calculated: {storageMetrics.last_calculated_at ? 
-            format(new Date(storageMetrics.last_calculated_at), 'PPpp') : 
-            'Never'
-          }
+          Last calculated: {format(new Date(storageMetrics.last_calculated_at), 'PPpp')}
         </p>
       </CardHeader>
       <CardContent>

@@ -29,35 +29,76 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
         throw new Error("Please sign in to respond to this invitation");
       }
       
-      // If accepting, create hub member record directly without complex updates
-      if (accept) {
-        // Validate and cast role to proper enum type
-        const validRoles = ['admin', 'moderator', 'member', 'faculty', 'student'] as const;
-        const role = validRoles.includes(invitation.role as any) ? invitation.role as typeof validRoles[number] : 'member';
+      const timestamp = new Date().toISOString();
+      
+      // First update the invitation status
+      const { error: updateError } = await supabase
+        .from('hub_member_invites')
+        .update({
+          status: accept ? 'accepted' : 'rejected',
+          accepted_at: accept ? timestamp : null,
+          rejected_at: accept ? null : timestamp,
+        })
+        .eq('id', invitation.id);
         
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+        throw updateError;
+      }
+      
+      // If accepting, create hub member record and manually update metrics
+      if (accept) {
+        // Step 1: Create the hub member record directly
         const { error: memberError } = await supabase
           .from('hub_members')
           .insert({
             hub_id: invitation.hub_id,
             profile_id: user.id,
-            role: role,
-            status: 'Approved',
+            role: invitation.role,
+            status: 'Approved'
           });
           
         if (memberError) {
-          console.error("Error creating member record:", memberError);
-          throw memberError;
+          console.error("Direct member insert failed, trying RPC function:", memberError);
+          
+          // Fallback to RPC function if direct insert fails
+          const { error: rpcError } = await supabase.rpc('create_hub_member', { 
+            hub_id: invitation.hub_id,
+            member_profile_id: user.id,
+            member_role: invitation.role,
+            member_status: 'Approved'
+          });
+            
+          if (rpcError) {
+            console.error("Error creating member record with RPC:", rpcError);
+            throw rpcError;
+          }
         }
         
-        // Simple metrics update - just increment if record exists
+        // Step 2: Manually update metrics as a separate operation
+        // This is done to avoid relying on the trigger that might cause deadlocks
         try {
-          const { data: metricsData } = await supabase
+          const { data: metricsData, error: metricsCheckError } = await supabase
             .from('hub_member_metrics')
             .select('*')
             .eq('hub_id', invitation.hub_id)
             .single();
             
-          if (metricsData) {
+          if (metricsCheckError && metricsCheckError.code !== 'PGRST116') {
+            console.error("Error checking hub metrics:", metricsCheckError);
+          }
+          
+          if (!metricsData) {
+            // Create new metrics record if it doesn't exist
+            await supabase
+              .from('hub_member_metrics')
+              .insert({
+                hub_id: invitation.hub_id,
+                total_members: 1,
+                active_members: 1
+              });
+          } else {
+            // Update existing metrics
             await supabase
               .from('hub_member_metrics')
               .update({
@@ -66,33 +107,31 @@ export function NotificationBasedInviteList({ invitations }: NotificationBasedIn
                 updated_at: new Date().toISOString()
               })
               .eq('hub_id', invitation.hub_id);
-          } else {
-            // Create new metrics record
-            await supabase
-              .from('hub_member_metrics')
-              .insert({
-                hub_id: invitation.hub_id,
-                total_members: 1,
-                active_members: 1
-              });
           }
         } catch (metricsError) {
-          console.error("Error updating metrics:", metricsError);
-          // Don't fail the whole operation for metrics errors
+          // Just log metrics errors but don't fail the whole process
+          console.error("Error updating hub metrics:", metricsError);
+        }
+        
+        // Step 3: Update hub member count (best effort)
+        try {
+          await supabase
+            .from('hubs')
+            .update({
+              current_member_count: supabase.rpc('get_active_member_count', { hub_id: invitation.hub_id })
+            })
+            .eq('id', invitation.hub_id);
+        } catch (hubUpdateError) {
+          console.error("Error updating hub member count:", hubUpdateError);
         }
       }
       
-      // Log the audit event if function exists
-      try {
-        await supabase.rpc('log_hub_audit_event', {
-          _hub_id: invitation.hub_id,
-          _action: accept ? 'member_added' : 'member_invitation_cancelled',
-          _details: { role: invitation.role }
-        });
-      } catch (auditError) {
-        console.error("Error logging audit event:", auditError);
-        // Don't fail for audit errors
-      }
+      // Log the audit event
+      await supabase.rpc('log_hub_audit_event', {
+        _hub_id: invitation.hub_id,
+        _action: accept ? 'member_added' : 'member_invitation_cancelled',
+        _details: { role: invitation.role }
+      });
       
       // Show success message
       toast({

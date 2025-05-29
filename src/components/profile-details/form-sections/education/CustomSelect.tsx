@@ -1,152 +1,238 @@
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState, useRef } from "react";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
+import { useDebouncedCallback } from "@/hooks/useDebounce";
 
-interface Option {
-  id: string;
-  name: string;
-  title?: string;
-}
+type TableName = 'majors' | 'schools' | 'companies' | 'careers';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
+type TitleField = 'title' | 'name';
 
 interface CustomSelectProps {
   value: string;
-  onValueChange: (value: string) => void;
+  options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
-  searchPlaceholder: string;
-  addNewLabel: string;
-  tableName: string;
-  options: Option[];
-  isLoading?: boolean;
+  handleSelectChange: (name: string, value: string) => void;
+  tableName: TableName;
+  fieldName: FieldName;
+  titleField: TitleField;
 }
 
-export function CustomSelect({
-  value,
-  onValueChange,
-  placeholder,
-  searchPlaceholder,
-  addNewLabel,
+type InsertData = {
+  majors: Database['public']['Tables']['majors']['Insert'];
+  schools: Database['public']['Tables']['schools']['Insert'];
+  companies: Database['public']['Tables']['companies']['Insert'];
+  careers: Database['public']['Tables']['careers']['Insert'];
+}
+
+interface TableRecord {
+  id: string;
+  [key: string]: any;
+}
+
+export function CustomSelect({ 
+  value, 
+  options, 
+  placeholder, 
+  handleSelectChange,
   tableName,
-  options = [],
-  isLoading = false
+  fieldName,
+  titleField,
 }: CustomSelectProps) {
-  const [open, setOpen] = useState(false);
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newItemName, setNewItemName] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customValue, setCustomValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState(options);
+  const { toast } = useToast();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedOption = options.find((option) => option.name === value);
-
-  const handleAddNew = async () => {
-    if (!newItemName.trim()) return;
+  // Handle search input changes with debouncing
+  const handleSearchChange = useDebouncedCallback((query: string) => {
+    setSearchQuery(query);
     
+    if (!query) {
+      setFilteredOptions(options);
+      return;
+    }
+    
+    const filtered = options.filter(option => {
+      const searchValue = (option[titleField] || '').toLowerCase();
+      return searchValue.includes(query.toLowerCase());
+    });
+    
+    setFilteredOptions(filtered);
+  }, 300);
+
+  // Focus the search input when content opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      // Use a short timeout to ensure the select content is rendered
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    } else {
+      setSearchQuery("");
+      setFilteredOptions(options);
+    }
+  };
+
+  const handleCustomSubmit = async () => {
     try {
-      // For now, just add it to the local list
-      // In a real implementation, this would add to the database
-      console.log(`Adding new ${tableName}:`, newItemName);
+      // First, check if the entry already exists
+      const { data: existingData, error: existingError } = await supabase
+        .from(tableName)
+        .select(`id, ${titleField}`)
+        .eq(titleField, customValue)
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('Error checking existing entry:', existingError);
+        toast({
+          title: "Error",
+          description: "Failed to check for existing entry. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (existingData && 'id' in existingData) {
+        const record = existingData as TableRecord;
+        // If it exists, use the existing entry
+        handleSelectChange(fieldName, record.id);
+        setShowCustomInput(false);
+        setCustomValue("");
+        return;
+      }
+
+      // If it doesn't exist, create a new entry
+      let insertData: InsertData[TableName];
       
-      onValueChange(newItemName);
-      setNewItemName("");
-      setShowAddDialog(false);
-      setOpen(false);
+      if (tableName === 'majors') {
+        insertData = {
+          title: customValue,
+          description: `Custom major: ${customValue}`
+        } as InsertData['majors'];
+      } else {
+        insertData = {
+          name: customValue
+        } as InsertData['schools'] | InsertData['companies'];
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert(insertData)
+        .select(`id, ${titleField}`)
+        .single();
+
+      if (error) {
+        console.error(`Failed to add new ${tableName}:`, error);
+        toast({
+          title: "Error",
+          description: `Failed to add new ${tableName}. Please try again.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data && 'id' in data) {
+        const record = data as TableRecord;
+        handleSelectChange(fieldName, record.id);
+        setShowCustomInput(false);
+        setCustomValue("");
+        
+        // Add new item to filtered options
+        setFilteredOptions(prev => [...prev, data]);
+      }
     } catch (error) {
-      console.error(`Error adding new ${tableName}:`, error);
+      console.error(`Failed to add new ${tableName}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to add new ${tableName}. Please try again.`,
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-          >
-            {selectedOption ? selectedOption.name : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
-          <Command>
-            <CommandInput placeholder={searchPlaceholder} />
-            <CommandList>
-              <CommandEmpty>
-                <div className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground mb-2">No results found.</p>
-                  <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        {addNewLabel}
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                </div>
-              </CommandEmpty>
-              <CommandGroup>
-                {options.map((option) => (
-                  <CommandItem
-                    key={option.id}
-                    value={option.name}
-                    onSelect={(currentValue) => {
-                      onValueChange(currentValue === value ? "" : currentValue);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === option.name ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    {option.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{addNewLabel}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder={`Enter ${tableName.slice(0, -1)} name`}
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddNew}>
-                Add
-              </Button>
+    <div>
+      <label className="text-sm font-medium">{placeholder}</label>
+      {!showCustomInput ? (
+        <Select 
+          value={value} 
+          onValueChange={(value) => {
+            if (value === "other") {
+              setShowCustomInput(true);
+            } else {
+              handleSelectChange(fieldName, value);
+            }
+          }}
+          onOpenChange={handleOpenChange}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder={`Select your ${placeholder.toLowerCase()}`} />
+          </SelectTrigger>
+          <SelectContent>
+            <div className="p-2">
+              <Input
+                ref={searchInputRef}
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  handleSearchChange(e.target.value);
+                }}
+                className="mb-2"
+                onKeyDown={(e) => {
+                  // Prevent the select from closing on Enter key
+                  if (e.key === 'Enter') {
+                    e.stopPropagation();
+                  }
+                }}
+              />
             </div>
+            {filteredOptions.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option[titleField]}
+              </SelectItem>
+            ))}
+            <SelectItem value="other">Other (Add New)</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <div className="space-y-2">
+          <Input
+            value={customValue}
+            onChange={(e) => setCustomValue(e.target.value)}
+            placeholder={`Enter ${placeholder.toLowerCase()}`}
+            className="mt-1"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCustomSubmit}
+              className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCustomInput(false)}
+              className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+            >
+              Cancel
+            </button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      )}
+    </div>
   );
 }

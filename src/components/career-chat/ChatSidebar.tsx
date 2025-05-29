@@ -58,14 +58,6 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
     if (onClose) onClose();
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
-    await deleteSession(sessionId);
-  };
-
-  const handleUpdateSessionTitle = async (sessionId: string, title: string) => {
-    await updateSessionTitle(sessionId, title);
-  };
-
   // Count active sessions
   const activeSessions = pastSessions.filter(s => s.status === 'active');
   const completedSessions = pastSessions.filter(s => s.status === 'completed');
@@ -168,9 +160,9 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
                       <SessionItem
                         key={session.id}
                         session={session}
-                        onResume={handleResumeSession}
-                        onDelete={handleDeleteSession}
-                        onRename={handleUpdateSessionTitle}
+                        onResumeSession={handleResumeSession}
+                        onDeleteSession={deleteSession}
+                        onUpdateSessionTitle={updateSessionTitle}
                       />
                     ))
                   ) : (
@@ -198,9 +190,9 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
                       <SessionItem
                         key={session.id}
                         session={session}
-                        onResume={handleResumeSession}
-                        onDelete={handleDeleteSession}
-                        onRename={handleUpdateSessionTitle}
+                        onResumeSession={handleResumeSession}
+                        onDeleteSession={deleteSession}
+                        onUpdateSessionTitle={updateSessionTitle}
                       />
                     ))
                   ) : (
@@ -228,9 +220,9 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
                       <SessionItem
                         key={session.id}
                         session={session}
-                        onResume={handleResumeSession}
-                        onDelete={handleDeleteSession}
-                        onRename={handleUpdateSessionTitle}
+                        onResumeSession={handleResumeSession}
+                        onDeleteSession={deleteSession}
+                        onUpdateSessionTitle={updateSessionTitle}
                       />
                     ))
                   ) : (

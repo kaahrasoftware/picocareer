@@ -11,8 +11,7 @@ interface SessionMetadataProps {
 export function SessionMetadata({ session }: SessionMetadataProps) {
   const getLastActive = () => {
     try {
-      // Use created_at as fallback since last_active_at might not exist
-      const lastActiveTime = new Date(session.created_at);
+      const lastActiveTime = new Date(session.last_active_at || session.created_at);
       return formatDistanceToNow(lastActiveTime, { addSuffix: true });
     } catch (error) {
       return 'Unknown time';

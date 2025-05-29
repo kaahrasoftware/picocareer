@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
 
 export function SignInForm() {
-  const { signIn, loading } = useAuth();
+  const { signIn, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -23,25 +23,28 @@ export function SignInForm() {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
     if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (loading) {
-      console.log('Sign in already in progress');
+    if (isLoading) {
+      // Prevent multiple submission attempts
+      console.log('Sign in already in progress, ignoring additional submit');
       return;
     }
-    
-    setError(null);
     
     try {
       console.log('Submitting sign in form');
       await signIn(formData.email, formData.password);
+      // Navigation is now handled in the useAuth hook
     } catch (err) {
-      console.error("Sign in error:", err);
+      // Error handling is already done in the useAuth hook
+      console.error("Authentication error caught in SignInForm:", err);
       
+      // Set specific UI errors if needed beyond what's in the hook
       if (err instanceof AuthError && err.message.includes("rate limit")) {
         setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
       }
@@ -68,7 +71,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={loading}
+              disabled={isLoading}
               value={formData.email}
               onChange={handleChange}
               required
@@ -86,7 +89,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="current-password"
               autoCorrect="off"
-              disabled={loading}
+              disabled={isLoading}
               value={formData.password}
               onChange={handleChange}
               required
@@ -95,12 +98,12 @@ export function SignInForm() {
           <Button
             type="submit"
             className="w-full"
-            disabled={loading}
+            disabled={isLoading}
           >
-            {loading && (
+            {isLoading && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}
-            {loading ? "Signing In..." : "Sign In"}
+            {isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </div>
       </form>

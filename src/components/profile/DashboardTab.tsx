@@ -5,21 +5,19 @@ import {
   Users, 
   BookOpen,
   GraduationCap,
-  Settings,
-  Bug
+  Settings
 } from "lucide-react";
 import { OverviewTab } from "./dashboard/tabs/OverviewTab";
 import { UsersTab } from "./dashboard/tabs/UsersTab";
 import { AppSettingsTab } from "./dashboard/tabs/AppSettingsTab";
 import { AcademicResourcesTab } from "./dashboard/tabs/AcademicResourcesTab";
 import { ContentResourcesTab } from "./dashboard/tabs/ContentResourcesTab";
-import { BrowserCompatibilityTest } from "../debug/BrowserCompatibilityTest";
 
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-6 gap-4">
+        <TabsList className="grid grid-cols-5 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Overview
@@ -39,10 +37,6 @@ export function DashboardTab() {
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
             App Settings
-          </TabsTrigger>
-          <TabsTrigger value="debug" className="gap-2">
-            <Bug className="h-4 w-4" />
-            Debug
           </TabsTrigger>
         </TabsList>
 
@@ -64,13 +58,6 @@ export function DashboardTab() {
 
         <TabsContent value="settings">
           <AppSettingsTab />
-        </TabsContent>
-
-        <TabsContent value="debug">
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Debug Tools</h2>
-            <BrowserCompatibilityTest />
-          </div>
         </TabsContent>
       </Tabs>
     </div>

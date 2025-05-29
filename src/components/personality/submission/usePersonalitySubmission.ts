@@ -30,15 +30,27 @@ export function usePersonalitySubmission() {
         return;
       }
 
-      // Since personality_test_responses table doesn't exist, use placeholder implementation
-      console.log('Personality test responses not implemented - using mock submission');
-      console.log('Would submit responses:', data);
+      const responses = Object.entries(data).map(([questionId, answer]) => ({
+        profile_id: session.user.id,
+        question_id: questionId,
+        answer: String(answer)
+      }));
 
-      // Mock analysis call
-      console.log('Would analyze personality with data:', {
-        responses: data,
-        profileId: session.user.id
-      });
+      const { error: responseError } = await supabase
+        .from('personality_test_responses')
+        .insert(responses);
+
+      if (responseError) throw responseError;
+
+      const { data: analysis, error: analysisError } = await supabase.functions
+        .invoke('analyze-personality', {
+          body: {
+            responses: data,
+            profileId: session.user.id
+          }
+        });
+
+      if (analysisError) throw analysisError;
 
       toast({
         title: "Test Completed",

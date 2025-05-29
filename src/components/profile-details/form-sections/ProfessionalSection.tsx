@@ -1,6 +1,7 @@
 
-import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { EnhancedComboBox } from "@/components/common/EnhancedComboBox";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Company {
   id: string;
@@ -24,34 +25,72 @@ export function ProfessionalSection({
   handleSelectChange,
   companies,
 }: ProfessionalSectionProps) {
-  const companyOptions = companies.map(company => ({
-    value: company.id,
-    label: company.name
-  }));
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Professional Experience</h3>
 
       <div>
         <label className="text-sm font-medium">Position</label>
-        <Input
+        <EnhancedComboBox
           value={position}
-          onChange={(e) => handleSelectChange("position", e.target.value)}
-          placeholder="Enter your position"
-          className="mt-1"
+          onValueChange={(value) => handleSelectChange("position", value)}
+          placeholder="Select Position"
+          tableName="careers"
+          selectField="title"
+          searchField="title"
+          allowCustomValue={true}
+          onCustomValueSubmit={async (value) => {
+            try {
+              const { data, error } = await supabase
+                .from('careers')
+                .insert({ 
+                  title: value,
+                  description: `Custom position: ${value}`,
+                  status: 'Pending'
+                })
+                .select('id')
+                .single();
+              
+              if (error) throw error;
+              if (data) {
+                handleSelectChange('position', data.id);
+              }
+            } catch (error) {
+              console.error('Error adding custom position:', error);
+            }
+          }}
         />
       </div>
 
       <div>
         <label className="text-sm font-medium">Company</label>
-        <SearchableSelect
-          options={companyOptions}
+        <EnhancedComboBox
           value={companyId}
           onValueChange={(value) => handleSelectChange("company_id", value)}
           placeholder="Select Company"
-          searchPlaceholder="Search companies..."
-          emptyMessage="No companies found."
+          tableName="companies"
+          selectField="name"
+          searchField="name"
+          allowCustomValue={true}
+          onCustomValueSubmit={async (value) => {
+            try {
+              const { data, error } = await supabase
+                .from('companies')
+                .insert({ 
+                  name: value,
+                  status: 'Pending'
+                })
+                .select('id')
+                .single();
+              
+              if (error) throw error;
+              if (data) {
+                handleSelectChange('company_id', data.id);
+              }
+            } catch (error) {
+              console.error('Error adding custom company:', error);
+            }
+          }}
         />
       </div>
 

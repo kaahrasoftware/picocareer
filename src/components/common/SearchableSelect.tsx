@@ -1,110 +1,98 @@
 
-import React, { useState, useMemo } from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-
-interface Option {
-  value: string;
-  label: string;
-}
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SearchableSelectProps {
-  options: Option[];
-  value?: string;
-  onValueChange: (value: string) => void;
+  table: string;
+  valueField?: string;
+  labelField?: string;
   placeholder?: string;
-  searchPlaceholder?: string;
-  emptyMessage?: string;
-  className?: string;
+  value?: string;
+  onChange: (value: string) => void;
 }
 
 export function SearchableSelect({
-  options,
+  table,
+  valueField = 'id',
+  labelField = 'name',
+  placeholder = 'Search...',
   value,
-  onValueChange,
-  placeholder = "Select option...",
-  searchPlaceholder = "Search options...",
-  emptyMessage = "No option found.",
-  className,
+  onChange
 }: SearchableSelectProps) {
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-
-  // Filter options based on search
-  const filteredOptions = useMemo(() => {
-    if (!searchValue) return options;
-    return options.filter(option =>
-      option.label.toLowerCase().includes(searchValue.toLowerCase())
-    );
-  }, [options, searchValue]);
-
-  // Find selected option
-  const selectedOption = options.find(option => option.value === value);
-
-  const handleSelect = (currentValue: string) => {
-    // Find the actual option that matches this value
-    const item = options.find(option => option.value === currentValue);
-    if (!item) return;
+  const [options, setOptions] = useState<{ id: string; [key: string]: any }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  useEffect(() => {
+    const fetchOptions = async () => {
+      setIsLoading(true);
+      try {
+        // Convert string table name to a type-safe approach
+        const tableNames = ['profiles', 'companies', 'schools', 'majors'] as const;
+        type TableName = typeof tableNames[number];
+        
+        // Check if the provided table name is valid
+        const isValidTable = tableNames.includes(table as TableName);
+        
+        if (!isValidTable) {
+          console.error(`Invalid table name: ${table}`);
+          setOptions([]);
+          return;
+        }
+        
+        // Type-safe query
+        const { data, error } = await supabase
+          .from(table as TableName)
+          .select(`id, ${valueField}, ${labelField}`)
+          .limit(50);
+          
+        if (error) throw error;
+        
+        // Ensure all items have an id property and are the correct type
+        const validData = (data || []).filter(item => typeof item?.id === 'string') as { id: string; [key: string]: any }[];
+        setOptions(validData);
+      } catch (error) {
+        console.error('Error fetching options:', error);
+        setOptions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    const newValue = item.value === value ? '' : item.value;
-    onValueChange(newValue);
-    setOpen(false);
-    setSearchValue('');
-  };
-
+    fetchOptions();
+  }, [table, valueField, labelField]);
+  
+  // Filter options based on search query
+  const filteredOptions = searchQuery 
+    ? options.filter(option => 
+        String(option[labelField] || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : options;
+  
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between", className)}
-        >
-          {selectedOption ? selectedOption.label : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
-          <CommandEmpty>{emptyMessage}</CommandEmpty>
-          <CommandGroup>
-            {filteredOptions.map((item) => (
-              <CommandItem
-                key={item.value}
-                value={item.value}
-                onSelect={handleSelect}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === item.value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {item.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="relative">
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2 mb-2"
+        disabled={isLoading}
+      />
+      
+      <select 
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-md border border-input bg-background px-3 py-2"
+        disabled={isLoading}
+      >
+        <option value="">{isLoading ? 'Loading...' : 'Select an option'}</option>
+        {filteredOptions.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option[labelField] || 'Unnamed'}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

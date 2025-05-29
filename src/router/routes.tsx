@@ -1,4 +1,3 @@
-
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -39,11 +38,6 @@ import Opportunities from "@/pages/Opportunities";
 import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
-import ProfileEdit from "../pages/ProfileEdit";
-import ScholarshipDetails from "@/pages/ScholarshipDetails";
-import EmailPreferences from "../pages/EmailPreferences";
-import Partnerships from "../pages/Partnerships";
-import PartnershipApplication from "../pages/PartnershipApplication";
 
 export const router = createBrowserRouter([
   {
@@ -64,6 +58,10 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
+        path: "career/:id",
+        element: <Career />,
+      },
+      {
         path: "career-chat",
         element: <CareerChat />,
       },
@@ -72,7 +70,15 @@ export const router = createBrowserRouter([
         element: <Mentor />,
       },
       {
+        path: "mentor/:id",
+        element: <Mentor />,
+      },
+      {
         path: "blog",
+        element: <Blog />,
+      },
+      {
+        path: "blog/:id",
         element: <Blog />,
       },
       {
@@ -81,6 +87,10 @@ export const router = createBrowserRouter([
       },
       {
         path: "program",
+        element: <Program />,
+      },
+      {
+        path: "program/:id",
         element: <Program />,
       },
       {
@@ -100,12 +110,12 @@ export const router = createBrowserRouter([
         element: <Event />,
       },
       {
-        path: "school",
-        element: <School />,
+        path: "event/:id",
+        element: <Event />,
       },
       {
-        path: "school/:id",
-        element: <SchoolDetail />,
+        path: "feedback/:id",
+        element: <Profile initialTab="calendar" />,
       },
       {
         path: "career/upload",
@@ -120,6 +130,14 @@ export const router = createBrowserRouter([
         element: <BlogUpload />,
       },
       {
+        path: "school",
+        element: <School />,
+      },
+      {
+        path: "school/:id",
+        element: <SchoolDetail />,
+      },
+      {
         path: "major/upload",
         element: <MajorUpload />,
       },
@@ -128,16 +146,8 @@ export const router = createBrowserRouter([
         element: <Profile />,
       },
       {
-        path: "profile/edit",
-        element: <ProfileEdit />,
-      },
-      {
         path: "profile/:id",
         element: <Profile />,
-      },
-      {
-        path: "email-preferences",
-        element: <EmailPreferences />,
       },
       {
         path: "personality-test",
@@ -188,10 +198,6 @@ export const router = createBrowserRouter([
         element: <Scholarships />
       },
       {
-        path: "/scholarships/:id",
-        element: <ScholarshipDetails />
-      },
-      {
         path: "/scholarships/add",
         element: <ScholarshipAdd />
       },
@@ -206,14 +212,6 @@ export const router = createBrowserRouter([
       {
         path: "/opportunities/create",
         element: <CreateOpportunity />,
-      },
-      {
-        path: "/partnerships",
-        element: <Partnerships />,
-      },
-      {
-        path: "/partnerships/apply",
-        element: <PartnershipApplication />,
       },
       {
         path: "admin/email-campaigns",

@@ -51,10 +51,10 @@ export function HubAnalytics({ hubId }: HubAnalyticsProps) {
 
         <TabsContent value="growth">
           <MemberGrowthChart 
-            data={memberGrowth}
-            timePeriod="month"
-            onTimePeriodChange={() => {}}
-            formatDate={(date) => formatDate(date, timePeriod)}
+            memberGrowth={memberGrowth}
+            timePeriod={timePeriod}
+            onTimePeriodChange={setTimePeriod}
+            formatDate={formatDate}
           />
         </TabsContent>
 

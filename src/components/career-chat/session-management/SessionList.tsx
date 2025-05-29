@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, MessageSquare } from 'lucide-react';
 import { SessionItem } from './SessionItem';
-import { CareerChatSession } from '@/types/database/analytics';
+import { ChatSession } from './types';
 
 interface SessionListProps {
-  sessions: CareerChatSession[];
+  sessions: ChatSession[];
   isFetchingPastSessions: boolean;
   onResumeSession: (sessionId: string) => Promise<void>;
   onDeleteSession: (sessionId: string) => Promise<void>;
@@ -47,9 +46,9 @@ export function SessionList({
           <SessionItem 
             key={session.id} 
             session={session} 
-            onResume={onResumeSession}
-            onDelete={onDeleteSession}
-            onRename={onUpdateSessionTitle}
+            onResumeSession={onResumeSession}
+            onDeleteSession={onDeleteSession}
+            onUpdateSessionTitle={onUpdateSessionTitle}
           />
         ))}
       </div>

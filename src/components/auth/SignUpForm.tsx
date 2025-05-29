@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -40,9 +39,9 @@ export function SignUpForm() {
     }
 
     setIsLoading(true);
-    console.log('Starting sign up process for:', formData.email);
 
     try {
+      // First, check if email already exists using maybeSingle() instead of single()
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -50,6 +49,7 @@ export function SignUpForm() {
         .maybeSingle();
 
       if (profileError) {
+        setIsLoading(false);
         console.error('Error checking existing profile:', profileError);
         toast({
           title: "Error",
@@ -60,6 +60,7 @@ export function SignUpForm() {
       }
 
       if (existingProfile) {
+        setIsLoading(false);
         toast({
           title: "Account already exists",
           description: "Please sign in instead.",
@@ -68,6 +69,7 @@ export function SignUpForm() {
         return;
       }
 
+      // Proceed with signup
       const { error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -80,7 +82,7 @@ export function SignUpForm() {
       });
 
       if (signUpError) {
-        console.error('Sign up error:', signUpError);
+        setIsLoading(false);
         if (signUpError.message.includes("Password")) {
           toast({
             title: "Invalid password",

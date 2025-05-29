@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FormField as FormFieldBase } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -161,8 +160,9 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
+                  options={careers || []}
                   placeholder={placeholder || "Select position"}
-                  table="careers"
+                  tableName="careers"
                 />
               );
             } else if (name === "company_id") {
@@ -170,8 +170,9 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
+                  options={companies || []}
                   placeholder={placeholder || "Select company"}
-                  table="companies"
+                  tableName="companies"
                 />
               );
             } else if (name === "school_id") {
@@ -179,8 +180,9 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
+                  options={schools || []}
                   placeholder={placeholder || "Select your school"}
-                  table="schools"
+                  tableName="schools"
                 />
               );
             } else if (name === "academic_major_id") {
@@ -188,8 +190,9 @@ export function FormField({
                 <SelectWithCustomOption
                   value={field.value || ""}
                   onValueChange={field.onChange}
+                  options={majors || []}
                   placeholder={placeholder || "Select major"}
-                  table="majors"
+                  tableName="majors"
                 />
               );
             } else {

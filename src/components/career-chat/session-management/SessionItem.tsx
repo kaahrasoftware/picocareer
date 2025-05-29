@@ -1,139 +1,197 @@
-
-import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { MessageSquare, Settings, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { formatDistanceToNow } from 'date-fns';
+import { Trash2, Edit2, MessageSquare, Calendar, Clock, CheckCircle2 } from 'lucide-react';
+import { SessionMetadata } from './SessionMetadata';
 import { CareerChatSession } from '@/types/database/analytics';
+import { Badge } from '@/components/ui/badge';
 
 interface SessionItemProps {
   session: CareerChatSession;
-  onResume: (sessionId: string) => void;
-  onDelete: (sessionId: string) => void;
-  onRename: (sessionId: string, newTitle: string) => void;
+  onResumeSession: (sessionId: string) => Promise<void>;
+  onDeleteSession: (sessionId: string) => Promise<void>;
+  onUpdateSessionTitle: (sessionId: string, title: string) => Promise<void>;
 }
 
-export function SessionItem({ session, onResume, onDelete, onRename }: SessionItemProps) {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editTitle, setEditTitle] = React.useState(session.session_metadata?.title || `Session ${session.id.slice(0, 8)}`);
+export function SessionItem({ 
+  session, 
+  onResumeSession, 
+  onDeleteSession, 
+  onUpdateSessionTitle 
+}: SessionItemProps) {
+  const [sessionToEdit, setSessionToEdit] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSaveTitle = () => {
-    if (editTitle.trim()) {
-      onRename(session.id, editTitle.trim());
-      setIsEditing(false);
+  const getDefaultTitle = (session: CareerChatSession) => {
+    if (session.session_metadata?.title) {
+      return session.session_metadata.title;
     }
+    
+    const date = new Date(session.created_at);
+    return `Conversation on ${date.toLocaleDateString()}`;
   };
 
-  const getLastActiveTime = () => {
+  const getSessionProgress = (session: CareerChatSession) => {
+    if (session.session_metadata?.isComplete) {
+      return 100;
+    }
+    
+    if (session.session_metadata?.overallProgress) {
+      return session.session_metadata.overallProgress;
+    }
+    
+    if (session.progress_data) {
+      const total = Object.values(session.progress_data).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
+      return Math.min(Math.round((total / 24) * 100), 100);
+    }
+    
+    if (session.total_messages) {
+      return Math.min(Math.round((session.total_messages / 20) * 100), 100);
+    }
+    
+    return 0;
+  };
+
+  const handleResumeSession = async (sessionId: string) => {
+    setIsProcessing(true);
     try {
-      const lastActiveTime = new Date(session.last_active_at || session.created_at || new Date());
-      return formatDistanceToNow(lastActiveTime, { addSuffix: true });
-    } catch (error) {
-      return 'Unknown time';
+      await onResumeSession(sessionId);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  // Safe progress calculation
-  const getOverallProgress = () => {
-    if (!session.progress_data || typeof session.progress_data !== 'object') {
-      return 0;
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!confirm('Are you sure you want to delete this conversation? This cannot be undone.')) {
+      return;
     }
     
-    const progressData = session.progress_data;
-    const categories = ['education', 'skills', 'workstyle', 'goals'];
-    let totalProgress = 0;
-    let validCategories = 0;
-    
-    categories.forEach(category => {
-      const value = progressData[category];
-      if (typeof value === 'number' && !isNaN(value)) {
-        totalProgress += value;
-        validCategories++;
-      }
-    });
-    
-    return validCategories > 0 ? Math.round(totalProgress / validCategories) : 0;
+    setIsProcessing(true);
+    try {
+      await onDeleteSession(sessionId);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const messageCount = typeof session.total_messages === 'number' ? session.total_messages : 0;
+  const handleUpdateTitle = async (sessionId: string) => {
+    if (!newTitle.trim()) {
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      await onUpdateSessionTitle(sessionId, newTitle.trim());
+      setSessionToEdit(null);
+      setNewTitle('');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const isEditing = sessionToEdit === session.id;
+  const progress = getSessionProgress(session);
+  const isComplete = progress === 100 || session.session_metadata?.isComplete;
+  const isActive = session.status === 'active';
 
   return (
-    <div className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-      <div className="flex items-center justify-between mb-2">
-        {isEditing ? (
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleSaveTitle}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSaveTitle();
-              if (e.key === 'Escape') {
-                setIsEditing(false);
-                setEditTitle(session.session_metadata?.title || `Session ${session.id.slice(0, 8)}`);
-              }
-            }}
-            className="text-sm font-medium bg-transparent border-b border-border focus:outline-none focus:border-primary"
+    <div className={`border rounded-lg p-4 hover:bg-accent/40 transition-colors ${isActive ? 'border-primary/30 bg-primary/5' : ''}`}>
+      {isEditing ? (
+        <div className="flex items-center gap-2 mb-2">
+          <Input
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            placeholder="Enter new title"
             autoFocus
+            className="flex-1"
           />
+          <Button 
+            size="sm" 
+            onClick={() => handleUpdateTitle(session.id)}
+            disabled={isProcessing || !newTitle.trim()}
+          >
+            Save
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => {
+              setSessionToEdit(null);
+              setNewTitle('');
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      ) : (
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium">{getDefaultTitle(session)}</h3>
+            {isComplete ? (
+              <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-300">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Complete
+              </Badge>
+            ) : isActive ? (
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-700 border-blue-300">
+                <Clock className="h-3 w-3 mr-1" />
+                Active
+              </Badge>
+            ) : null}
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7"
+              onClick={() => {
+                setSessionToEdit(session.id);
+                setNewTitle(session.session_metadata?.title || '');
+              }}
+              title="Rename"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+              onClick={() => handleDeleteSession(session.id)}
+              disabled={isProcessing}
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      <SessionMetadata session={session} />
+      
+      {progress > 0 && (
+        <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
+          <div 
+            className={`h-1.5 rounded-full ${isComplete ? 'bg-green-500' : 'bg-primary'}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+      
+      <Button 
+        size="sm" 
+        onClick={() => handleResumeSession(session.id)}
+        disabled={isProcessing}
+        className="w-full"
+        variant={isActive ? "default" : "outline"}
+      >
+        {isActive ? (
+          <>Continue Conversation</>
         ) : (
-          <h3 
-            className="text-sm font-medium cursor-pointer hover:text-primary"
-            onClick={() => setIsEditing(true)}
-          >
-            {session.session_metadata?.title || `Session ${session.id.slice(0, 8)}`}
-          </h3>
+          <>Resume Conversation</>
         )}
-        
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-6 w-6 p-0"
-          >
-            <Settings className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDelete(session.id)}
-            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-        <div className="flex items-center gap-1">
-          <MessageSquare className="h-3 w-3" />
-          <span>{messageCount} message{messageCount === 1 ? '' : 's'}</span>
-        </div>
-        <span>Updated {getLastActiveTime()}</span>
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="text-xs text-muted-foreground mb-1">
-            Progress: {getOverallProgress()}%
-          </div>
-          <div className="w-full bg-secondary rounded-full h-1.5">
-            <div 
-              className="bg-primary h-1.5 rounded-full transition-all duration-300" 
-              style={{ width: `${getOverallProgress()}%` }}
-            />
-          </div>
-        </div>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onResume(session.id)}
-          className="ml-3 h-7 text-xs"
-        >
-          Resume
-        </Button>
-      </div>
+      </Button>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,12 +21,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
   const [localProfile, setLocalProfile] = useState(profile);
   const isMentee = profile.user_type === 'mentee';
   
-  const { data: allSchoolsData } = useAllSchools();
-  const { data: allMajorsData } = useAllMajors();
-  
-  // Ensure data is properly typed as arrays
-  const allSchools = Array.isArray(allSchoolsData) ? allSchoolsData : [];
-  const allMajors = Array.isArray(allMajorsData) ? allMajorsData : [];
+  const { data: allSchools } = useAllSchools();
+  const { data: allMajors } = useAllMajors();
   
   const { data: companies = [] } = useQuery({
     queryKey: ['companies'],
@@ -153,8 +148,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
           <EducationSection
             register={register}
             handleFieldChange={handleFieldChange}
-            schools={allSchools}
-            majors={allMajors}
+            schools={allSchools || []}
+            majors={allMajors || []}
             schoolId={localProfile.school_id}
             academicMajorId={localProfile.academic_major_id}
             highestDegree={localProfile.highest_degree as Degree}

@@ -25,11 +25,7 @@ export function GuideDialog({
 }: GuideDialogProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [arrowPosition, setArrowPosition] = useState({ top: 0, left: 0, rotation: 0 });
-  const [guideArrowPosition, setGuideArrowPosition] = useState({ 
-    top: 0, 
-    left: 0, 
-    direction: 'right' as 'right' | 'left' | 'top' | 'bottom'
-  });
+  const [guideArrowPosition, setGuideArrowPosition] = useState({ top: 0, left: 0, direction: 'right' as const });
   const dialogRef = useRef<HTMLDivElement>(null);
   const highlightedElementRef = useRef<Element | null>(null);
   
@@ -70,32 +66,24 @@ export function GuideDialog({
         return;
       }
 
-      // Type assertion for HTMLElement
-      const htmlElement = targetElement as HTMLElement;
-
       // Highlight the target element with appropriate color
-      htmlElement.classList.add('guide-highlight');
+      targetElement.classList.add('guide-highlight');
       if (step.highlightColor === 'bright') {
-        htmlElement.classList.add('guide-highlight-bright');
+        targetElement.classList.add('guide-highlight-bright');
       }
       
       // Scroll the element into view if needed
-      if (!isElementInViewport(htmlElement)) {
-        htmlElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!isElementInViewport(targetElement)) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       
-      // Calculate positions using the fixed function
+      // Calculate positions
       const { dialogPosition, arrowPosition: connectorPosition, guideArrowPosition: directionalArrowPosition } = 
-        calculateDialogPosition(htmlElement, dialogRef.current, step.position || 'bottom');
+        calculateDialogPosition(targetElement, dialogRef.current, step.position || 'bottom');
       
       setPosition(dialogPosition);
       setArrowPosition(connectorPosition);
-      // Fix: Ensure direction type is compatible
-      setGuideArrowPosition({
-        top: directionalArrowPosition.top,
-        left: directionalArrowPosition.left,
-        direction: directionalArrowPosition.direction as 'right' | 'left' | 'top' | 'bottom'
-      });
+      setGuideArrowPosition(directionalArrowPosition);
       
       // Create the directional arrow
       const arrow = document.createElement('div');

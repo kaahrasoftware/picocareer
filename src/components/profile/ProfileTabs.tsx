@@ -1,104 +1,127 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileTab } from "./ProfileTab";
-import { CalendarTab } from "./CalendarTab";
-import { MentorTab } from "./MentorTab";
-import { BookmarksTabWrapper } from "./bookmarks/BookmarksTabWrapper";
-import { DashboardTab } from "./DashboardTab";
-import { SettingsTab } from "./SettingsTab";
-import { WalletTab } from "./WalletTab";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileTab } from "@/components/profile/ProfileTab";
+import { CalendarTab } from "@/components/profile/CalendarTab";
+import { MentorTab } from "@/components/profile/MentorTab";
+import { BookmarksTab } from "@/components/profile/BookmarksTab";
+import { SettingsTab } from "@/components/profile/SettingsTab";
+import { WalletTab } from "@/components/profile/WalletTab";
+import { 
+  User, 
+  Calendar, 
+  GraduationCap, 
+  Bookmark, 
+  Settings,
+  Wallet 
+} from "lucide-react";
 import type { Profile } from "@/types/database/profiles";
+import { useMobileMenu } from "@/context/MobileMenuContext";
 
 interface ProfileTabsProps {
-  profileId?: string;
+  profile: Profile | null;
+  isMentor: boolean;
+  onTabChange: (value: string) => void;
 }
 
-export function ProfileTabs({ profileId }: ProfileTabsProps) {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const [searchParams] = useSearchParams();
-  const defaultTab = searchParams.get('tab') || 'profile';
-
-  // Determine if this is the current user's profile
-  const isOwnProfile = !profileId || profileId === session?.user?.id;
-  const isMentor = profile?.user_type === 'mentor';
+export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
   const isAdmin = profile?.user_type === 'admin';
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const defaultTab = tabFromUrl || 'profile';
+  const { closeMobileMenu } = useMobileMenu();
 
   if (!profile) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return null;
   }
 
+  const handleTabChange = (value: string) => {
+    onTabChange(value);
+    closeMobileMenu();
+  };
+
+  // Calculate number of tabs to display for grid
+  const numTabs = [
+    true, // Profile tab always shown
+    true, // Calendar tab
+    isMentor, // Mentor tab
+    true, // Bookmarks tab
+    isAdmin, // Wallet tab (only for admin)
+    true, // Settings tab
+  ].filter(Boolean).length;
+
   return (
-    <Tabs defaultValue={defaultTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        {isOwnProfile && (
-          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+    <Tabs 
+      defaultValue={defaultTab}
+      className="col-span-5"
+      onValueChange={handleTabChange}
+    >
+      <TabsList className="grid w-full" style={{ 
+        gridTemplateColumns: `repeat(${numTabs}, minmax(0, 1fr))`
+      }}>
+        <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1">
+          <User className="h-4 w-4" />
+          <span className="hidden sm:inline">Profile</span>
+        </TabsTrigger>
+        
+        <TabsTrigger value="calendar" className="flex flex-col sm:flex-row items-center gap-1">
+          <Calendar className="h-4 w-4" />
+          <span className="hidden sm:inline">Calendar</span>
+        </TabsTrigger>
+        
+        {isMentor && (
+          <TabsTrigger value="mentor" className="flex flex-col sm:flex-row items-center gap-1">
+            <GraduationCap className="h-4 w-4" />
+            <span className="hidden sm:inline">Mentor</span>
+          </TabsTrigger>
         )}
-        {isOwnProfile && isMentor && (
-          <TabsTrigger value="mentor">Mentor</TabsTrigger>
+        
+        <TabsTrigger value="bookmarks" className="flex flex-col sm:flex-row items-center gap-1">
+          <Bookmark className="h-4 w-4" />
+          <span className="hidden sm:inline">Bookmarks</span>
+        </TabsTrigger>
+
+        {isAdmin && (
+          <TabsTrigger value="wallet" className="flex flex-col sm:flex-row items-center gap-1">
+            <Wallet className="h-4 w-4" />
+            <span className="hidden sm:inline">Wallet</span>
+          </TabsTrigger>
         )}
-        {isOwnProfile && (
-          <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
-        )}
-        {isOwnProfile && isAdmin && (
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-        )}
-        {isOwnProfile && isAdmin && (
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
-        )}
-        {isOwnProfile && (
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        )}
+        
+        <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1">
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Settings</span>
+        </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="profile" className="mt-6">
+      <TabsContent value="profile">
         <ProfileTab profile={profile} />
       </TabsContent>
 
-      {isOwnProfile && (
-        <TabsContent value="calendar" className="mt-6">
-          <CalendarTab profile={profile} />
+      <TabsContent value="calendar">
+        <CalendarTab profile={profile} />
+      </TabsContent>
+
+      {isMentor && profile && (
+        <TabsContent value="mentor">
+          <MentorTab profile={profile} />
         </TabsContent>
       )}
 
-      {isOwnProfile && isMentor && (
-        <TabsContent value="mentor" className="mt-6">
-          <MentorTab />
-        </TabsContent>
-      )}
+      <TabsContent value="bookmarks">
+        <BookmarksTab />
+      </TabsContent>
 
-      {isOwnProfile && (
-        <TabsContent value="bookmarks" className="mt-6">
-          <BookmarksTabWrapper profileId={session?.user?.id || ''} />
-        </TabsContent>
-      )}
-
-      {isOwnProfile && isAdmin && (
-        <TabsContent value="dashboard" className="mt-6">
-          <DashboardTab />
-        </TabsContent>
-      )}
-
-      {isOwnProfile && isAdmin && (
-        <TabsContent value="wallet" className="mt-6">
+      {isAdmin && (
+        <TabsContent value="wallet">
           <WalletTab profile={profile} />
         </TabsContent>
       )}
 
-      {isOwnProfile && (
-        <TabsContent value="settings" className="mt-6">
-          <SettingsTab />
-        </TabsContent>
-      )}
+      <TabsContent value="settings">
+        <SettingsTab />
+      </TabsContent>
     </Tabs>
   );
 }

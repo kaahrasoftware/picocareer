@@ -4,48 +4,72 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BasicInputField } from "@/components/forms/fields/BasicInputField";
+import { supabase } from "@/integrations/supabase/client";
+import { InstitutionDepartment } from "@/types/database/institutions";
 
 interface DepartmentFormProps {
   institutionId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  existingDepartment?: InstitutionDepartment;
 }
 
 interface FormFields {
   name: string;
-  description: string;
+  description?: string;
+  parent_department_id?: string;
 }
 
 export function DepartmentForm({ 
   institutionId, 
   onSuccess,
-  onCancel
+  onCancel,
+  existingDepartment 
 }: DepartmentFormProps) {
   const { toast } = useToast();
 
   const form = useForm<FormFields>({
     defaultValues: {
-      name: "",
-      description: ""
+      name: existingDepartment?.name || "",
+      description: existingDepartment?.description || "",
+      parent_department_id: existingDepartment?.parent_department_id || ""
     }
   });
 
   const onSubmit = async (data: FormFields) => {
     try {
-      // Since institution_departments table doesn't exist, show placeholder behavior
-      console.log('Would create department:', data);
-      
+      if (existingDepartment) {
+        const { error } = await supabase
+          .from('institution_departments')
+          .update({
+            ...data,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingDepartment.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('institution_departments')
+          .insert({
+            ...data,
+            institution_id: institutionId
+          });
+
+        if (error) throw error;
+      }
+
       toast({
-        title: "Feature Coming Soon",
-        description: "Institution departments will be available in a future update.",
+        title: "Success",
+        description: `Department ${existingDepartment ? 'updated' : 'created'} successfully.`
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error in department form:', error);
+      console.error('Error saving department:', error);
       toast({
         title: "Error",
-        description: "This feature is not yet implemented.",
+        description: "Failed to save department. Please try again.",
         variant: "destructive"
       });
     }
@@ -56,7 +80,7 @@ export function DepartmentForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <BasicInputField
           field={form.register("name")}
-          label="Department Name"
+          label="Name"
           placeholder="Enter department name"
           required
         />
@@ -65,7 +89,6 @@ export function DepartmentForm({
           field={form.register("description")}
           label="Description"
           placeholder="Enter department description"
-          required
         />
 
         <div className="flex justify-end gap-4">

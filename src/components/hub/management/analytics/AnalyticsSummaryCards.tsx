@@ -15,8 +15,8 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
     return Math.min(Math.round((value / max) * 100), 100);
   };
 
-  // Calculate percentages with fallback values
-  const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit || 100);
+  // Calculate percentages
+  const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit);
   const storagePercentage = calculatePercentage(summary.storageUsed, summary.storageLimit);
 
   return (
@@ -32,7 +32,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
               <p className="text-sm font-medium">Members</p>
               <div className="flex items-baseline gap-2">
                 <h4 className="text-2xl font-bold">{summary.activeMembers}</h4>
-                <span className="text-xs text-muted-foreground">/ {summary.memberLimit || 100}</span>
+                <span className="text-xs text-muted-foreground">/ {summary.memberLimit}</span>
               </div>
               <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">
                 <div 
@@ -55,7 +55,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
             </div>
             <div>
               <p className="text-sm font-medium">Resources</p>
-              <h4 className="text-2xl font-bold">{summary.resourceCount || summary.totalResources}</h4>
+              <h4 className="text-2xl font-bold">{summary.resourceCount}</h4>
               <p className="mt-1 text-xs text-muted-foreground">Shared content items</p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
             </div>
             <div>
               <p className="text-sm font-medium">Announcements</p>
-              <h4 className="text-2xl font-bold">{summary.announcementCount || summary.totalAnnouncements}</h4>
+              <h4 className="text-2xl font-bold">{summary.announcementCount}</h4>
               <p className="mt-1 text-xs text-muted-foreground">Posted notifications</p>
             </div>
           </div>
