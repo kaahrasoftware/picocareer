@@ -1,161 +1,138 @@
 
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Settings, User, DollarSign, Calendar, Bookmark } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Calendar, User, Bookmark, GraduationCap, Settings, Wallet } from "lucide-react";
-import { useMobileMenu } from "@/context/MobileMenuContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { cn } from "@/lib/utils";
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { session, signOut } = useAuthSession();
-  const queryClient = useQueryClient();
   const { data: profile, isLoading } = useUserProfile(session);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const { closeMobileMenu } = useMobileMenu();
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    closeMobileMenu(); // Close mobile menu when navigating
-  };
 
   const handleSignOut = async () => {
-    if (isSigningOut) return;
-    
+    setIsSigningOut(true);
     try {
-      setIsSigningOut(true);
-      console.log('User menu: signing out');
-      
-      // Clear all cached data on signout immediately for better UX
-      queryClient.clear();
-      
       await signOut();
-      
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
-      
-      // Close mobile menu before navigating
-      closeMobileMenu();
-      
-      // Navigate after signing out
-      navigate("/auth");
-      
-    } catch (error: any) {
-      console.error('Error in UserMenu sign out:', error);
+      navigate("/");
+    } catch (error) {
+      console.error("Sign out error:", error);
       toast({
-        title: "Error signing out",
-        description: error.message || "An error occurred while signing out",
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
         variant: "destructive",
       });
-      
-      // If there was an error, force a hard reload as fallback
-      if (error.message?.includes('network') || error.message?.includes('timeout')) {
-        window.location.href = "/auth";
-      }
     } finally {
       setIsSigningOut(false);
     }
   };
 
-  if (isLoading) {
-    return <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>;
+  if (isLoading || !profile) {
+    return (
+      <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+    );
   }
-
-  if (!profile) return null;
-
-  const isMentor = profile.user_type === 'mentor';
-  const isAdmin = profile.user_type === 'admin';
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="outline-none" data-testid="user-menu-button">
-          <ProfileAvatar
-            avatarUrl={profile.avatar_url}
-            imageAlt={profile.full_name || profile.email}
-            size="sm"
-            userId={profile.id}
-            editable={false}
-          />
-        </button>
+      <DropdownMenuTrigger className="relative">
+        <div className="relative">
+          <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
+            <AvatarImage 
+              src={profile.avatar_url || ''} 
+              alt={profile.full_name || 'User Avatar'} 
+            />
+            <AvatarFallback>
+              {profile.first_name?.[0]}{profile.last_name?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          {profile.user_type === 'mentor' && (
+            <Badge 
+              variant="secondary" 
+              className="absolute -top-1 -right-1 h-3 w-3 p-0 bg-blue-500 text-white text-xs"
+            />
+          )}
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="truncate max-w-[95%]">
-            {profile.full_name || profile.email}
+        <div className="flex items-center gap-2 p-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage 
+              src={profile.avatar_url || ''} 
+              alt={profile.full_name || 'User Avatar'} 
+            />
+            <AvatarFallback>
+              {profile.first_name?.[0]}{profile.last_name?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {profile.full_name || `${profile.first_name} ${profile.last_name}`}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {profile.email}
+            </p>
           </div>
-          <div className="text-xs text-gray-500 truncate max-w-[95%]">
-            {profile.email}
-          </div>
-        </DropdownMenuLabel>
+        </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={() => handleNavigate("/profile")} 
-          className="flex items-center gap-2"
-        >
-          <User className="h-4 w-4" />
-          Profile
+        <DropdownMenuItem asChild>
+          <Link to="/profile" className="flex items-center">
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => handleNavigate("/profile?tab=calendar")} 
-          className="flex items-center gap-2"
-        >
-          <Calendar className="h-4 w-4" />
-          Calendar
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=bookmarks" className="flex items-center">
+            <Bookmark className="mr-2 h-4 w-4" />
+            <span>Bookmarks</span>
+          </Link>
         </DropdownMenuItem>
-        {isMentor && (
-          <DropdownMenuItem 
-            onClick={() => handleNavigate("/profile?tab=mentor")} 
-            className="flex items-center gap-2"
-          >
-            <GraduationCap className="h-4 w-4" />
-            Mentor
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem 
-          onClick={() => handleNavigate("/profile?tab=bookmarks")} 
-          className="flex items-center gap-2"
-        >
-          <Bookmark className="h-4 w-4" />
-          Bookmarks
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=calendar" className="flex items-center">
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>Calendar</span>
+          </Link>
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem 
-            onClick={() => handleNavigate("/profile?tab=wallet")} 
-            className="flex items-center gap-2"
-          >
-            <Wallet className="h-4 w-4" />
-            Wallet
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem 
-          onClick={() => handleNavigate("/profile?tab=settings")} 
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          Settings
+        <DropdownMenuItem asChild>
+          <Link to="/token-shop" className="flex items-center">
+            <DollarSign className="mr-2 h-4 w-4" />
+            <span>Tokens</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/profile?tab=settings" className="flex items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           onClick={handleSignOut}
           disabled={isSigningOut}
-          className={isSigningOut ? "opacity-50 cursor-not-allowed" : ""}
+          className={cn(
+            "cursor-pointer",
+            isSigningOut && "opacity-50 cursor-not-allowed"
+          )}
         >
-          {isSigningOut ? "Signing out..." : "Sign out"}
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
