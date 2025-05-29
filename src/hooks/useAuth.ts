@@ -15,47 +15,44 @@ export function useAuth() {
   const navigate = useNavigate();
 
   const signIn = async (email: string, password: string) => {
-    if (isLoading) return; // Prevent multiple concurrent sign-in attempts
+    if (isLoading) return;
     
     setIsLoading(true);
-    console.log('Attempting sign in for:', email);
+    console.log('Starting sign in process for:', email);
 
     try {
-      // Use direct auth operation for better reliability
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase().trim(),
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
 
-      // First ensure the session is properly stored
       if (data.session) {
-        await supabase.auth.setSession(data.session);
+        console.log('Sign in successful');
         
-        // Then invalidate queries to refresh data
-        queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['profile'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         
-        console.log('Sign in successful, navigating to home');
-        
-        // Show success toast after a small delay to ensure UI has updated
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
         
-        // Navigate to home after successful login
+        // Navigate to home
         navigate('/');
       }
 
       return data;
     } catch (error) {
-      console.error('Sign in error details:', error);
+      console.error('Sign in error:', error);
       
       if (error instanceof AuthError) {
-        // Handle specific auth errors
         if (error.message.includes("Invalid login credentials")) {
           toast({
             title: "Login failed",
@@ -75,16 +72,14 @@ export function useAuth() {
             variant: "destructive",
           });
         }
-        throw error;
       } else {
-        console.error('Sign in error:', error);
         toast({
           title: "Login error",
           description: "An unexpected error occurred. Please try again.",
           variant: "destructive",
         });
-        throw new Error("An unexpected error occurred.");
       }
+      throw error;
     } finally {
       setIsLoading(false);
     }

@@ -23,7 +23,6 @@ export function SignInForm() {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError(null);
   };
 
@@ -31,20 +30,18 @@ export function SignInForm() {
     e.preventDefault();
     
     if (isLoading) {
-      // Prevent multiple submission attempts
-      console.log('Sign in already in progress, ignoring additional submit');
+      console.log('Sign in already in progress');
       return;
     }
+    
+    setError(null);
     
     try {
       console.log('Submitting sign in form');
       await signIn(formData.email, formData.password);
-      // Navigation is now handled in the useAuth hook
     } catch (err) {
-      // Error handling is already done in the useAuth hook
-      console.error("Authentication error caught in SignInForm:", err);
+      console.error("Sign in error:", err);
       
-      // Set specific UI errors if needed beyond what's in the hook
       if (err instanceof AuthError && err.message.includes("rate limit")) {
         setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
       }
