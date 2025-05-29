@@ -38,7 +38,7 @@ interface NotificationPanelProps {
 
 export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
-  const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
+  const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications || []);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
   const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
@@ -50,7 +50,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
 
   // Update local notifications when props change
   useEffect(() => {
-    setLocalNotifications(notifications);
+    setLocalNotifications(notifications || []);
   }, [notifications]);
 
   const toggleExpand = (id: string) => {
@@ -62,7 +62,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   const toggleReadStatus = async (notification: Notification) => {
     try {
       // Update local state immediately for responsive UI
-      setLocalNotifications(prev => prev.map(n => 
+      setLocalNotifications(prev => (prev || []).map(n => 
         n.id === notification.id ? { ...n, read: !n.read } : n
       ));
       
@@ -80,7 +80,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
       console.error('Error toggling notification status:', error);
       
       // Revert local state if mutation failed
-      setLocalNotifications(prev => prev.map(n => 
+      setLocalNotifications(prev => (prev || []).map(n => 
         n.id === notification.id ? { ...n, read: notification.read } : n
       ));
       
@@ -101,7 +101,8 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   const markAllAsRead = async () => {
     try {
       // Only proceed if there are unread notifications
-      const hasUnreadNotifications = localNotifications.some(n => !n.read);
+      const safeLocalNotifications = localNotifications || [];
+      const hasUnreadNotifications = safeLocalNotifications.some(n => !n.read);
       if (!hasUnreadNotifications) {
         toast({
           title: "No unread notifications",
@@ -114,7 +115,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
       setIsMarkingAllRead(true);
       
       // Update local state immediately for responsive UI
-      setLocalNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setLocalNotifications(prev => (prev || []).map(n => ({ ...n, read: true })));
       
       // Persist changes to database
       await markNotificationRead.mutate({ 
@@ -125,7 +126,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
       console.error('Error marking all notifications as read:', error);
       
       // Revert local state if mutation failed
-      setLocalNotifications(notifications);
+      setLocalNotifications(notifications || []);
       
       toast({
         title: "Error updating notifications",
@@ -138,7 +139,8 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
   };
 
   // Apply search and filters to notifications
-  const filteredNotifications = localNotifications.filter(notification => {
+  const safeLocalNotifications = localNotifications || [];
+  const filteredNotifications = safeLocalNotifications.filter(notification => {
     // For HTML content, we need to check against the plaintext version for search
     const plainTextMessage = notification.message.replace(/<[^>]*>?/gm, '');
     
@@ -184,9 +186,9 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     return acc;
   }, {} as Record<NotificationCategory, Notification[]>);
 
-  const mentorshipUnreadCount = categorizedNotifications.mentorship?.filter(n => !n.read).length || 0;
-  const generalUnreadCount = categorizedNotifications.general?.filter(n => !n.read).length || 0;
-  const hubUnreadCount = categorizedNotifications.hub?.filter(n => !n.read).length || 0;
+  const mentorshipUnreadCount = (categorizedNotifications.mentorship || []).filter(n => !n.read).length;
+  const generalUnreadCount = (categorizedNotifications.general || []).filter(n => !n.read).length;
+  const hubUnreadCount = (categorizedNotifications.hub || []).filter(n => !n.read).length;
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -225,7 +227,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                   variant="destructive" 
                   className="ml-2"
                 >
-                  {localNotifications.filter(n => !n.read).length}
+                  {safeLocalNotifications.filter(n => !n.read).length}
                 </Badge>
               )}
             </SheetTitle>
@@ -307,11 +309,11 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
             <div className="flex flex-col items-center justify-center py-8 text-gray-400 bg-gray-50 rounded-md mt-4">
               <Bell className="h-12 w-12 mb-2 opacity-20" />
               <p className="text-center">
-                {localNotifications.length === 0 
+                {safeLocalNotifications.length === 0 
                   ? "No notifications yet" 
                   : "No matching notifications"}
               </p>
-              {localNotifications.length > 0 && hasActiveFilters && (
+              {safeLocalNotifications.length > 0 && hasActiveFilters && (
                 <Button 
                   variant="link" 
                   size="sm" 
@@ -365,7 +367,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
               
               <ScrollArea className="h-[calc(100vh-20rem)]">
                 <TabsContent value="mentorship" className="mt-0 space-y-4">
-                  {categorizedNotifications.mentorship?.map((notification) => (
+                  {(categorizedNotifications.mentorship || []).map((notification) => (
                     <NotificationItem
                       key={notification.id}
                       notification={notification}
@@ -382,7 +384,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                 </TabsContent>
                 
                 <TabsContent value="hub" className="mt-0 space-y-4">
-                  {categorizedNotifications.hub?.map((notification) => (
+                  {(categorizedNotifications.hub || []).map((notification) => (
                     <NotificationItem
                       key={notification.id}
                       notification={notification}
@@ -399,7 +401,7 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
                 </TabsContent>
                 
                 <TabsContent value="general" className="mt-0 space-y-4">
-                  {categorizedNotifications.general?.map((notification) => (
+                  {(categorizedNotifications.general || []).map((notification) => (
                     <NotificationItem
                       key={notification.id}
                       notification={notification}
