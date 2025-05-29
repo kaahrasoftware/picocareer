@@ -1,7 +1,7 @@
 
 import { createBrowserRouter } from "react-router-dom";
 import { MainLayout } from "./layouts";
-import Home from "@/pages/Home";
+import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Profile from "@/pages/Profile";
 import Career from "@/pages/Career";
@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: <Index />,
       },
       {
         path: "/auth",
