@@ -41,17 +41,12 @@ import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
 import ProfileEdit from "../pages/ProfileEdit";
 import BlogDetails from "../pages/BlogDetails";
-import Events from "../pages/Events";
 import EventDetails from "../pages/EventDetails";
-import Careers from "../pages/Careers";
 import CareerDetails from "../pages/CareerDetails";
 import Mentors from "../pages/Mentors";
 import MentorDetails from "../pages/MentorDetails";
-import Companies from "../pages/Companies";
 import CompanyDetails from "../pages/CompanyDetails";
-import Schools from "../pages/Schools";
 import SchoolDetails from "../pages/SchoolDetails";
-import Majors from "../pages/Majors";
 import MajorDetails from "../pages/MajorDetails";
 import ScholarshipDetails from "../pages/ScholarshipDetails";
 import EmailPreferences from "../pages/EmailPreferences";
@@ -79,10 +74,6 @@ export const router = createBrowserRouter([
       {
         path: "career/:id",
         element: <Career />,
-      },
-      {
-        path: "careers",
-        element: <Careers />,
       },
       {
         path: "careers/:id",
@@ -149,32 +140,24 @@ export const router = createBrowserRouter([
         element: <Event />,
       },
       {
-        path: "events",
-        element: <Events />,
-      },
-      {
         path: "events/:id",
         element: <EventDetails />,
-      },
-      {
-        path: "companies",
-        element: <Companies />,
       },
       {
         path: "companies/:id",
         element: <CompanyDetails />,
       },
       {
-        path: "schools",
-        element: <Schools />,
+        path: "school",
+        element: <School />,
+      },
+      {
+        path: "school/:id",
+        element: <SchoolDetail />,
       },
       {
         path: "schools/:id",
         element: <SchoolDetails />,
-      },
-      {
-        path: "majors",
-        element: <Majors />,
       },
       {
         path: "majors/:id",
@@ -195,14 +178,6 @@ export const router = createBrowserRouter([
       {
         path: "blog/upload",
         element: <BlogUpload />,
-      },
-      {
-        path: "school",
-        element: <School />,
-      },
-      {
-        path: "school/:id",
-        element: <SchoolDetail />,
       },
       {
         path: "major/upload",
