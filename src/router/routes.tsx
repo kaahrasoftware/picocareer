@@ -40,15 +40,7 @@ import OpportunityDetails from "@/pages/OpportunityDetails";
 import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
 import ProfileEdit from "../pages/ProfileEdit";
-import BlogDetails from "../pages/BlogDetails";
-import EventDetails from "../pages/EventDetails";
-import CareerDetails from "../pages/CareerDetails";
-import Mentors from "../pages/Mentors";
-import MentorDetails from "../pages/MentorDetails";
-import CompanyDetails from "../pages/CompanyDetails";
-import SchoolDetails from "../pages/SchoolDetails";
-import MajorDetails from "../pages/MajorDetails";
-import ScholarshipDetails from "../pages/ScholarshipDetails";
+import ScholarshipDetails from "@/pages/ScholarshipDetails";
 import EmailPreferences from "../pages/EmailPreferences";
 import Partnerships from "../pages/Partnerships";
 import PartnershipApplication from "../pages/PartnershipApplication";
@@ -72,14 +64,6 @@ export const router = createBrowserRouter([
         element: <Career />,
       },
       {
-        path: "career/:id",
-        element: <Career />,
-      },
-      {
-        path: "careers/:id",
-        element: <CareerDetails />,
-      },
-      {
         path: "career-chat",
         element: <CareerChat />,
       },
@@ -88,24 +72,8 @@ export const router = createBrowserRouter([
         element: <Mentor />,
       },
       {
-        path: "mentor/:id",
-        element: <Mentor />,
-      },
-      {
-        path: "mentors",
-        element: <Mentors />,
-      },
-      {
-        path: "mentors/:id",
-        element: <MentorDetails />,
-      },
-      {
         path: "blog",
         element: <Blog />,
-      },
-      {
-        path: "blog/:id",
-        element: <BlogDetails />,
       },
       {
         path: "contact",
@@ -113,10 +81,6 @@ export const router = createBrowserRouter([
       },
       {
         path: "program",
-        element: <Program />,
-      },
-      {
-        path: "program/:id",
         element: <Program />,
       },
       {
@@ -136,36 +100,12 @@ export const router = createBrowserRouter([
         element: <Event />,
       },
       {
-        path: "event/:id",
-        element: <Event />,
-      },
-      {
-        path: "events/:id",
-        element: <EventDetails />,
-      },
-      {
-        path: "companies/:id",
-        element: <CompanyDetails />,
-      },
-      {
         path: "school",
         element: <School />,
       },
       {
         path: "school/:id",
         element: <SchoolDetail />,
-      },
-      {
-        path: "schools/:id",
-        element: <SchoolDetails />,
-      },
-      {
-        path: "majors/:id",
-        element: <MajorDetails />,
-      },
-      {
-        path: "feedback/:id",
-        element: <Profile initialTab="calendar" />,
       },
       {
         path: "career/upload",
