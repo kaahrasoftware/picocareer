@@ -28,7 +28,7 @@ export function PartnershipHero() {
         </div>
         
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-          Partner with <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">PicoCareer</span>
+          Partner with <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-amber-500">PicoCareer</span>
         </h1>
         
         <p className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed text-gray-200">
