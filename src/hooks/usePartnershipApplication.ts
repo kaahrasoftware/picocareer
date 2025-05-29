@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +21,7 @@ export interface PartnershipFormData {
   partnership_goals?: string;
   preferred_partnership_type?: string[];
   
-  // Step 4: Partnership Requirements (NEW)
+  // Step 4: Partnership Requirements
   budget_range?: string;
   timeline_expectations?: string;
   current_technology?: string;
@@ -42,9 +43,18 @@ export function usePartnershipApplication() {
   const { toast } = useToast();
 
   const updateFormData = (newData: Partial<PartnershipFormData>) => {
-    setFormData(prev => ({ ...prev, ...newData }));
+    const updatedData = { ...formData, ...newData };
+    setFormData(updatedData);
+    
+    // Debug logging
+    console.log('Form data updated:', {
+      step: 'updateFormData',
+      newData,
+      fullData: updatedData
+    });
+    
     // Auto-save to localStorage
-    localStorage.setItem('partnership-form-data', JSON.stringify({ ...formData, ...newData }));
+    localStorage.setItem('partnership-form-data', JSON.stringify(updatedData));
   };
 
   const loadSavedData = () => {
@@ -53,6 +63,7 @@ export function usePartnershipApplication() {
       try {
         const parsedData = JSON.parse(saved);
         setFormData(parsedData);
+        console.log('Loaded saved form data:', parsedData);
       } catch (error) {
         console.error('Error loading saved form data:', error);
       }
@@ -75,6 +86,13 @@ export function usePartnershipApplication() {
     try {
       const reference = generateApplicationReference();
       
+      // Debug logging - check what data we're preparing to submit
+      console.log('Submitting partnership application:', {
+        step: 'submitApplication',
+        finalData,
+        reference
+      });
+      
       const submissionData = {
         entity_type: finalData.entity_type || '',
         entity_name: finalData.entity_name || '',
@@ -87,14 +105,14 @@ export function usePartnershipApplication() {
         description: finalData.description || '',
         partnership_goals: finalData.partnership_goals || '',
         preferred_partnership_type: finalData.preferred_partnership_type || null,
-        // Use dedicated columns for partnership requirements
+        // Partnership Requirements - ensure these match the database column names exactly
         budget_range: finalData.budget_range || null,
         timeline_expectations: finalData.timeline_expectations || null,
         current_technology: finalData.current_technology || null,
         success_metrics: finalData.success_metrics || null,
         previous_partnerships: finalData.previous_partnerships || null,
         pilot_program_interest: finalData.pilot_program_interest || null,
-        // Keep additional_info for any extra notes, but add reference
+        // Additional info with reference
         additional_info: [
           finalData.additional_info || '',
           `Reference: ${reference}`
@@ -102,17 +120,40 @@ export function usePartnershipApplication() {
         status: 'pending'
       };
 
-      const { error } = await supabase
+      // Debug logging - check the exact data being sent to database
+      console.log('Database submission data:', {
+        step: 'databaseInsert',
+        submissionData,
+        partnershipRequirementsFields: {
+          budget_range: submissionData.budget_range,
+          timeline_expectations: submissionData.timeline_expectations,
+          current_technology: submissionData.current_technology,
+          success_metrics: submissionData.success_metrics,
+          previous_partnerships: submissionData.previous_partnerships,
+          pilot_program_interest: submissionData.pilot_program_interest
+        }
+      });
+
+      const { data, error } = await supabase
         .from('partnerships')
-        .insert([submissionData]);
+        .insert([submissionData])
+        .select();
 
       if (error) {
+        console.error('Database insert error:', error);
         throw error;
       }
+
+      console.log('Database insert successful:', data);
 
       setApplicationReference(reference);
       clearSavedData();
       setFormData({});
+
+      toast({
+        title: "Application Submitted",
+        description: `Your partnership application has been submitted successfully. Reference: ${reference}`,
+      });
 
     } catch (error) {
       console.error('Error submitting partnership application:', error);
