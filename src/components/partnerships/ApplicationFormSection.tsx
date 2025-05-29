@@ -44,7 +44,7 @@ export function ApplicationFormSection() {
                 </div>
               </div>
               
-              <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold px-12 py-4 text-lg shadow-xl shadow-emerald-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/40 hover:scale-105 border-0" onClick={() => setShowForm(true)}>
+              <Button size="lg" onClick={() => setShowForm(true)} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold px-12 py-4 text-lg shadow-xl shadow-amber-500/25 transition-all duration-300 hover:shadow-2xl hover:shadow-amber-500/40 hover:scale-105 border-0">
                 Start Partnership Application
               </Button>
               
