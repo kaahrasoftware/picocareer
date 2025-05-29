@@ -65,10 +65,11 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
   const { data: analytics, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['modern-resource-analytics'],
     queryFn: async (): Promise<AnalyticsData> => {
-      console.log('Fetching modern resource analytics...');
+      console.log('🔍 Starting modern resource analytics fetch...');
       
       try {
         // Get all resources with engagement data
+        console.log('📊 Fetching event resources...');
         const { data: resources, error: resourcesError } = await supabase
           .from('event_resources')
           .select(`
@@ -85,9 +86,15 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           `)
           .order('view_count', { ascending: false });
 
-        if (resourcesError) throw resourcesError;
+        if (resourcesError) {
+          console.error('❌ Error fetching resources:', resourcesError);
+          throw resourcesError;
+        }
+
+        console.log(`📈 Found ${resources?.length || 0} resources:`, resources);
 
         if (!resources || resources.length === 0) {
+          console.log('⚠️ No resources found, returning empty analytics');
           return {
             totalViews: 0,
             totalDownloads: 0,
@@ -107,14 +114,26 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           };
         }
 
+        // Debug: Log each resource's view and download counts
+        resources.forEach((resource, index) => {
+          console.log(`📋 Resource ${index + 1}: "${resource.title}" - Views: ${resource.view_count || 0}, Downloads: ${resource.download_count || 0}`);
+        });
+
         // Get interactions for the last 30 days
         const thirtyDaysAgo = subDays(new Date(), 30);
+        console.log('🔄 Fetching interactions since:', thirtyDaysAgo.toISOString());
+        
         const { data: interactions, error: interactionsError } = await supabase
           .from('event_resource_interactions')
           .select('interaction_type, created_at, resource_id, profile_id')
           .gte('created_at', thirtyDaysAgo.toISOString());
 
-        if (interactionsError) throw interactionsError;
+        if (interactionsError) {
+          console.error('❌ Error fetching interactions:', interactionsError);
+          throw interactionsError;
+        }
+
+        console.log(`🎯 Found ${interactions?.length || 0} interactions:`, interactions);
 
         // Get interactions for the previous 30 days for trend calculation
         const sixtyDaysAgo = subDays(new Date(), 60);
@@ -124,16 +143,35 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           .gte('created_at', sixtyDaysAgo.toISOString())
           .lt('created_at', thirtyDaysAgo.toISOString());
 
-        if (previousInteractionsError) throw previousInteractionsError;
+        if (previousInteractionsError) {
+          console.error('❌ Error fetching previous interactions:', previousInteractionsError);
+          throw previousInteractionsError;
+        }
 
-        // Calculate basic metrics
-        const totalViews = resources.reduce((sum, r) => sum + (r.view_count || 0), 0);
-        const totalDownloads = resources.reduce((sum, r) => sum + (r.download_count || 0), 0);
+        // Calculate basic metrics with detailed logging
+        console.log('🧮 Calculating basic metrics...');
+        
+        const totalViews = resources.reduce((sum, r) => {
+          const views = r.view_count || 0;
+          console.log(`   Adding ${views} views from "${r.title}"`);
+          return sum + views;
+        }, 0);
+        
+        const totalDownloads = resources.reduce((sum, r) => {
+          const downloads = r.download_count || 0;
+          console.log(`   Adding ${downloads} downloads from "${r.title}"`);
+          return sum + downloads;
+        }, 0);
+        
+        console.log(`📊 Total calculated views: ${totalViews}`);
+        console.log(`📊 Total calculated downloads: ${totalDownloads}`);
+        
         const totalUniqueViewers = resources.reduce((sum, r) => sum + (r.unique_viewers || 0), 0);
         const totalUniqueDownloaders = resources.reduce((sum, r) => sum + (r.unique_downloaders || 0), 0);
         
         // Calculate engagement rate (downloads per 100 views)
         const engagementRate = totalViews > 0 ? Math.round((totalDownloads / totalViews) * 100) : 0;
+        console.log(`📈 Engagement rate: ${engagementRate}% (${totalDownloads}/${totalViews})`);
         
         // Calculate conversion rate (unique downloaders / unique viewers)
         const conversionRate = totalUniqueViewers > 0 ? Math.round((totalUniqueDownloaders / totalUniqueViewers) * 100) : 0;
@@ -145,6 +183,8 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           (r.last_downloaded_at && new Date(r.last_downloaded_at) > sevenDaysAgo)
         ).length;
 
+        console.log(`🎯 Active resources: ${activeResources}/${resources.length}`);
+
         // Calculate resource health score (composite metric)
         const avgViewsPerResource = totalViews / resources.length;
         const avgDownloadsPerResource = totalDownloads / resources.length;
@@ -154,6 +194,8 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           (Math.min(avgDownloadsPerResource, 50) * 0.3) +
           (activeResourcesRatio * 100 * 0.4)
         );
+
+        console.log(`💚 Resource health score: ${resourceHealthScore}`);
 
         // Calculate hourly activity
         const hourlyActivity = Array.from({ length: 24 }, (_, hour) => {
@@ -253,7 +295,6 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         };
 
         // Calculate average session time based on interaction patterns
-        // For users with multiple interactions, calculate time between first and last interaction
         const userSessions = new Map<string, { start: Date; end: Date }>();
         interactions?.forEach(interaction => {
           if (!interaction.profile_id) return;
@@ -296,7 +337,7 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         const totalUsers = userActivityDays.size;
         const userRetentionRate = totalUsers > 0 ? Math.round((returningUsers / totalUsers) * 100) : 0;
 
-        return {
+        const finalResult = {
           totalViews,
           totalDownloads,
           engagementRate,
@@ -313,8 +354,11 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
           hourlyActivity,
           topResources
         };
+
+        console.log('✅ Final analytics result:', finalResult);
+        return finalResult;
       } catch (error) {
-        console.error('Error fetching modern resource analytics:', error);
+        console.error('💥 Error fetching modern resource analytics:', error);
         throw error;
       }
     },
@@ -323,9 +367,14 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
   });
 
   const analyticsCards = useMemo(() => {
-    if (!analytics) return [];
+    console.log('🎨 Generating analytics cards with data:', analytics);
+    
+    if (!analytics) {
+      console.log('⚠️ No analytics data available for cards');
+      return [];
+    }
 
-    return [
+    const cards = [
       {
         title: "Total Views",
         value: analytics.totalViews,
@@ -463,6 +512,9 @@ export function ModernResourceAnalytics({ className }: ModernResourceAnalyticsPr
         }
       }
     ];
+
+    console.log('🎯 Generated analytics cards:', cards);
+    return cards;
   }, [analytics]);
 
   if (isLoading) {
