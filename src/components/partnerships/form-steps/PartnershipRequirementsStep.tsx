@@ -39,7 +39,6 @@ export function PartnershipRequirementsStep({ data, onNext }: PartnershipRequire
   });
 
   const onSubmit = (formData: PartnershipRequirementsData) => {
-    // Debug logging to ensure data is correct
     console.log('Partnership Requirements Step - Form submission:', {
       step: 'PartnershipRequirementsStep',
       formData,
