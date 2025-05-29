@@ -5,12 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export function SignInForm() {
-  const { signIn, isLoading } = useAuth();
+  const { loading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -29,22 +34,48 @@ export function SignInForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (isLoading) {
+    if (isLoading || loading) {
       console.log('Sign in already in progress');
       return;
     }
     
     setError(null);
+    setIsLoading(true);
     
     try {
-      console.log('Submitting sign in form');
-      await signIn(formData.email, formData.password);
-    } catch (err) {
-      console.error("Sign in error:", err);
-      
-      if (err instanceof AuthError && err.message.includes("rate limit")) {
-        setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
+      console.log('Starting sign in process for:', formData.email);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email.toLowerCase().trim(),
+        password: formData.password,
+      });
+
+      if (error) {
+        console.error('Sign in error:', error);
+        
+        if (error.message.includes("Invalid login credentials")) {
+          setError("The email or password you entered is incorrect.");
+        } else if (error.message.includes("rate limit")) {
+          setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
+        } else {
+          setError(error.message);
+        }
+        return;
       }
+
+      if (data.session) {
+        console.log('Sign in successful, redirecting to home');
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        navigate('/');
+      }
+    } catch (err) {
+      console.error("Unexpected sign in error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,7 +99,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isLoading || loading}
               value={formData.email}
               onChange={handleChange}
               required
@@ -86,7 +117,7 @@ export function SignInForm() {
               autoCapitalize="none"
               autoComplete="current-password"
               autoCorrect="off"
-              disabled={isLoading}
+              disabled={isLoading || loading}
               value={formData.password}
               onChange={handleChange}
               required
@@ -95,12 +126,12 @@ export function SignInForm() {
           <Button
             type="submit"
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || loading}
           >
-            {isLoading && (
+            {(isLoading || loading) && (
               <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent" />
             )}
-            {isLoading ? "Signing In..." : "Sign In"}
+            {(isLoading || loading) ? "Signing In..." : "Sign In"}
           </Button>
         </div>
       </form>

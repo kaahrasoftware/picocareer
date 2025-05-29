@@ -64,7 +64,8 @@ export default function Auth() {
   // Redirect authenticated users away from auth page after loading completes
   useEffect(() => {
     if (!loading && session?.user) {
-      navigate('/');
+      console.log('User is authenticated, redirecting to home');
+      navigate('/', { replace: true });
     }
   }, [session, loading, navigate]);
 

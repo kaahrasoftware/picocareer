@@ -1,80 +1,18 @@
 
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { Footer } from "@/components/Footer";
-import { GoToTopButton } from "@/components/ui/go-to-top-button";
-import { ScrollToTop } from "@/components/ScrollToTop";
-import { Outlet, useLocation } from "react-router-dom";
-import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { GuideProvider } from "@/context/GuideContext";
-import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
-import { GuideButton } from "@/components/guide/GuideButton";
-import { usePageLoading } from "@/hooks/usePageLoading";
-import { LoadingBar } from "@/components/ui/loading-bar";
-import { useEffect, useState } from "react";
-import { MobileMenuProvider } from "@/context/MobileMenuContext";
+import { Outlet } from 'react-router-dom';
+import { MainNavigation } from '@/components/navigation/MainNavigation';
+import { Footer } from '@/components/Footer';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
-interface LayoutProps {
-  children?: React.ReactNode;
-}
-
-export function MainLayout({ children }: LayoutProps) {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const isMentor = profile?.user_type === "mentor";
-  const { isLoading, progress } = usePageLoading();
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Empty function as a fallback for when we're not in mobile mode
-  const noopCloseMobileMenu = () => {};
-
+export function MainLayout() {
   return (
-    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
-      <GuideProvider>
-        <div className="min-h-screen flex flex-col">
-          <ScrollToTop />
-          <LoadingBar isLoading={isLoading} progress={progress} />
-          <MenuSidebar />
-          <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
-            {children || <Outlet />}
-          </main>
-          <Footer />
-          <GoToTopButton />
-          {session && isMentor && <FloatingActionButton />}
-          <WelcomeDialog />
-          <GuideButton floating={true} />
-        </div>
-      </GuideProvider>
-    </MobileMenuProvider>
-  );
-}
-
-export function AuthLayout({ children }: LayoutProps) {
-  const { isLoading, progress } = usePageLoading();
-  const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Empty function as a fallback for when we're not in mobile mode
-  const noopCloseMobileMenu = () => {};
-
-  return (
-    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
-      <div className="min-h-screen flex flex-col">
-        <ScrollToTop />
-        <LoadingBar isLoading={isLoading} progress={progress} />
-        <MenuSidebar />
-        <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
-          {children || <Outlet />}
-        </main>
-      </div>
-    </MobileMenuProvider>
+    <div className="min-h-screen flex flex-col">
+      <MainNavigation />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+      <ScrollToTop />
+    </div>
   );
 }
