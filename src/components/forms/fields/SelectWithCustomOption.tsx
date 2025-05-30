@@ -1,173 +1,145 @@
 
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
-interface SelectOption {
-  id: string;
-  title?: string;
-  name?: string;
-}
-
-interface SelectWithCustomOptionProps<T extends Record<string, any>> {
-  selectedValue?: string;
+export interface SelectWithCustomOptionProps<T> {
+  selectedValue: string;
   onValueChange: (value: string) => void;
-  options: SelectOption[];
-  placeholder?: string;
+  options: Array<{ id: string; title?: string; name?: string }>;
+  placeholder: string;
   tableName: string;
-  className?: string;
 }
 
 export function SelectWithCustomOption<T extends Record<string, any>>({
   selectedValue,
   onValueChange,
   options,
-  placeholder = "Select option...",
-  tableName,
-  className,
+  placeholder,
+  tableName
 }: SelectWithCustomOptionProps<T>) {
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-  const [localOptions, setLocalOptions] = useState<SelectOption[]>(options);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customValue, setCustomValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [allOptions, setAllOptions] = useState(options);
+  const { toast } = useToast();
 
   useEffect(() => {
-    setLocalOptions(options);
+    setAllOptions(options);
   }, [options]);
 
-  const filteredOptions = localOptions.filter(option => {
-    const displayName = option.title || option.name || '';
-    return displayName.toLowerCase().includes(searchValue.toLowerCase());
-  });
+  const handleAddCustomOption = async () => {
+    if (!customValue.trim()) return;
 
-  const selectedOption = localOptions.find(option => option.id === selectedValue);
-  const displayName = selectedOption?.title || selectedOption?.name || '';
-
-  const handleCreateNew = async () => {
-    if (!searchValue.trim()) return;
-
-    setIsCreating(true);
+    setIsLoading(true);
     try {
-      // Determine the field to insert based on existing options structure
-      const insertField = options.some(opt => opt.title) ? 'title' : 'name';
-      const insertData = { [insertField]: searchValue.trim() };
+      let insertData: any = {};
+      
+      // Determine the correct field name based on existing options
+      if (options.length > 0) {
+        const firstOption = options[0];
+        if ('title' in firstOption) {
+          insertData.title = customValue.trim();
+        } else if ('name' in firstOption) {
+          insertData.name = customValue.trim();
+        }
+      } else {
+        // Default to title
+        insertData.title = customValue.trim();
+      }
 
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .insert(insertData)
-        .select('id, title, name')
+        .select()
         .single();
 
-      if (error) {
-        console.error('Error creating new option:', error);
-        toast.error('Failed to create new option');
-        return;
-      }
+      if (error) throw error;
 
-      if (data) {
-        const newOption: SelectOption = {
-          id: data.id,
-          title: data.title,
-          name: data.name,
+      if (data && typeof data === 'object' && 'id' in data) {
+        const newOption = {
+          id: data.id as string,
+          title: ('title' in data ? data.title : undefined) as string | undefined,
+          name: ('name' in data ? data.name : undefined) as string | undefined
         };
+
+        setAllOptions(prev => [...prev, newOption]);
+        onValueChange(data.id as string);
+        setCustomValue('');
+        setIsDialogOpen(false);
         
-        setLocalOptions(prev => [...prev, newOption]);
-        onValueChange(data.id);
-        setSearchValue('');
-        setOpen(false);
-        toast.success('New option created successfully');
+        toast({
+          title: "Success",
+          description: "New option added successfully",
+        });
       }
     } catch (error) {
-      console.error('Error creating new option:', error);
-      toast.error('Failed to create new option');
+      console.error('Error adding custom option:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add new option",
+        variant: "destructive",
+      });
     } finally {
-      setIsCreating(false);
+      setIsLoading(false);
     }
   };
 
-  const canCreateNew = searchValue.trim() && 
-    !filteredOptions.some(option => {
-      const optionName = option.title || option.name || '';
-      return optionName.toLowerCase() === searchValue.toLowerCase();
-    });
+  const getDisplayValue = (option: { id: string; title?: string; name?: string }) => {
+    return option.title || option.name || option.id;
+  };
+
+  const selectedOption = allOptions.find(option => option.id === selectedValue);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between", className)}
-        >
-          {displayName || placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput
-            placeholder="Search options..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
-          <CommandEmpty>
-            {canCreateNew ? (
-              <div className="p-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={handleCreateNew}
-                  disabled={isCreating}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isCreating ? 'Creating...' : `Create "${searchValue}"`}
-                </Button>
-              </div>
-            ) : (
-              'No options found.'
-            )}
-          </CommandEmpty>
-          <CommandGroup>
-            {filteredOptions.map((option) => {
-              const optionDisplayName = option.title || option.name || '';
-              return (
-                <CommandItem
-                  key={option.id}
-                  onSelect={() => {
-                    onValueChange(option.id === selectedValue ? '' : option.id);
-                    setOpen(false);
-                    setSearchValue('');
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedValue === option.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {optionDisplayName}
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="flex gap-2">
+      <Select value={selectedValue} onValueChange={onValueChange}>
+        <SelectTrigger className="flex-1">
+          <SelectValue placeholder={placeholder}>
+            {selectedOption ? getDisplayValue(selectedOption) : placeholder}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {allOptions.map((option) => (
+            <SelectItem key={option.id} value={option.id}>
+              {getDisplayValue(option)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="icon">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Option</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={customValue}
+              onChange={(e) => setCustomValue(e.target.value)}
+              placeholder="Enter new option"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddCustomOption} disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

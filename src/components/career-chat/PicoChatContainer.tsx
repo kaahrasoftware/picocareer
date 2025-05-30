@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useCareerChat } from './hooks/useCareerChat';
 import { useConfigCheck } from './hooks/useConfigCheck';
 import { downloadPdfResults } from './utils/pdfGenerator';
-import { ChatInterface } from './components/ChatInterface';
+import { ModernChatInterface } from './redesigned/ModernChatInterface';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
 import { toast } from 'sonner';
@@ -29,8 +30,7 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
     setInputMessage,
     sendMessage,
     isSessionComplete,
-    handleStartNewChat,
-    handleBeginAssessment
+    handleStartNewChat
   } = useCareerChat();
   
   const { configChecked, hasConfigError, isLoading: isConfigLoading } = useConfigCheck();
@@ -84,23 +84,6 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
       });
   };
 
-  const handleInitiateChat = () => {
-    if (!isAuthenticated) {
-      toast.error("Authentication Required", {
-        description: "Please sign in to start a career assessment."
-      });
-      return;
-    }
-    
-    handleStartNewChat();
-  };
-
-  const handleViewPastSessions = () => {
-    if (onOpenSidebar) {
-      onOpenSidebar();
-    }
-  };
-
   const handleDownloadResults = () => {
     if (messages.length === 0) {
       toast.error("No Results", {
@@ -145,21 +128,18 @@ export function PicoChatContainer({ isSidebarOpen, onOpenSidebar }: PicoChatCont
             <PanelLeftOpen size={16} />
           </Button>
         )}
-        <ChatInterface 
+        <ModernChatInterface 
           messages={messages}
           inputMessage={inputMessage}
           isTyping={localIsTyping}
           isAnalyzing={isAnalyzing}
           currentCategory={currentCategory}
           questionProgress={questionProgress}
-          isSessionEnded={isSessionComplete}
+          isSessionComplete={isSessionComplete}
           messagesEndRef={messagesEndRef}
           onSuggestionClick={handleSuggestionClick}
-          onBeginAssessment={handleBeginAssessment}
           onSendMessage={handleSendMessage}
           onStartNewChat={handleStartNewChat}
-          onViewPastSessions={handleViewPastSessions}
-          onEndCurrentSession={endCurrentSession}
           onDownloadResults={handleDownloadResults}
           setInputMessage={setInputMessage}
         />
