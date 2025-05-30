@@ -109,7 +109,7 @@ export function useEnhancedSessionInitialization(
       if (chatSession) {
         const sessionId = chatSession.id;
         
-        // Add welcome message
+        // Add welcome message only
         const welcomeMessage: CareerChatMessage = {
           id: uuidv4(),
           session_id: sessionId,
@@ -141,6 +141,8 @@ export function useEnhancedSessionInitialization(
 
   const sendFirstQuestion = async (sessionId: string) => {
     try {
+      console.log('Sending first question for session:', sessionId);
+      
       const aiResponse = await callCareerChatAI({
         sessionId,
         messages: [],
@@ -148,6 +150,8 @@ export function useEnhancedSessionInitialization(
         currentCategory: 'education',
         questionCount: 0
       });
+
+      console.log('AI response received:', aiResponse);
 
       const questionMessage: CareerChatMessage = {
         id: uuidv4(),
@@ -161,6 +165,7 @@ export function useEnhancedSessionInitialization(
         created_at: new Date().toISOString()
       };
 
+      console.log('Adding question message:', questionMessage);
       await addMessage(questionMessage);
     } catch (error) {
       console.error('Error sending first question:', error);
