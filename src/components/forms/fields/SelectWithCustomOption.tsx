@@ -54,7 +54,7 @@ export function SelectWithCustomOption<T extends Record<string, any>>({
       }
 
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .insert(insertData)
         .select()
         .single();

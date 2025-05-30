@@ -1,13 +1,13 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { emailCampaignSchema } from "./emailCampaign.schema";
+import { EmailCampaignSchema } from "./emailCampaign.schema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useEmailCampaignFormState() {
   const form = useForm({
-    resolver: zodResolver(emailCampaignSchema),
+    resolver: zodResolver(EmailCampaignSchema),
     defaultValues: {
       content_type: "",
       recipient_type: "all",

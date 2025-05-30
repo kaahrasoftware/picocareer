@@ -11,7 +11,10 @@ export const EmailCampaignSchema = z.object({
   recipient_type: z.string().default('all'),
   recipient_filter: z.record(z.any()).nullable().optional(),
   scheduled_for: z.string().optional(),
-  frequency: z.enum(['daily', 'weekly', 'monthly']).default('weekly')
+  frequency: z.enum(['once', 'daily', 'weekly', 'monthly']).default('once')
 });
 
 export type EmailCampaignType = z.infer<typeof EmailCampaignSchema>;
+
+// Export with both names for compatibility
+export const emailCampaignSchema = EmailCampaignSchema;
