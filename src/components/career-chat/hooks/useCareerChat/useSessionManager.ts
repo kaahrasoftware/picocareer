@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from 'react';
 import { useChatSession } from '../chat-session';
-import { ChatSessionMetadata } from './types'; // Import from local types
+import { ChatSessionMetadata } from './types';
 
 export function useSessionManager(
   setIsSessionComplete: Dispatch<SetStateAction<boolean>>,
@@ -20,10 +20,10 @@ export function useSessionManager(
     deleteSession: deleteExistingSession,
     updateSessionTitle: updateTitle,
     updateSessionMetadata: updateMetadata,
-    addMessage // Ensure this is coming from useChatSession
+    addMessage,
+    sendFirstQuestion
   } = useChatSession();
 
-  // Wrap the session functions to handle UI state updates
   const endCurrentSession = async () => {
     await endSession();
   };
@@ -33,15 +33,12 @@ export function useSessionManager(
     
     // Reset UI state
     setIsSessionComplete(false);
-    setCurrentCategory('education'); // Starting category
+    setCurrentCategory('education');
     setQuestionProgress(0);
   };
 
   const resumeSession = async (sessionId: string) => {
     await resumeExistingSession(sessionId);
-    
-    // Session metadata will be loaded by the session hook
-    // Progress tracker will update from metadata via useEffect
   };
 
   const deleteSession = async (sessionId: string) => {
@@ -53,7 +50,6 @@ export function useSessionManager(
   };
 
   const updateSessionMetadata = async (metadata: Partial<ChatSessionMetadata>) => {
-    // Fix: Ensure metadata is an object before spreading
     if (metadata && typeof metadata === 'object') {
       await updateMetadata(metadata);
     } else {
@@ -73,6 +69,7 @@ export function useSessionManager(
     deleteSession,
     updateSessionTitle,
     updateSessionMetadata,
-    addMessage // Include addMessage in the return object
+    addMessage,
+    sendFirstQuestion
   };
 }

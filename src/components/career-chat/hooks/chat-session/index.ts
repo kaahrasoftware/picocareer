@@ -4,7 +4,7 @@ import { useAuthSession } from '@/hooks/useAuthSession';
 import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
 import { useMessageOperations } from './useMessageOperations';
 import { useSessionManagement } from './useSessionManagement';
-import { useSessionInitialization } from './useSessionCreation';
+import { useEnhancedSessionInitialization } from './useEnhancedSessionInitialization';
 import { useRealtimeMessages } from './useRealtimeMessages';
 import { UseChatSessionReturn } from './types';
 
@@ -19,11 +19,9 @@ export function useChatSession(): UseChatSessionReturn {
 
   const userId = session?.user?.id;
   
-  // Operation to add messages to the current session
   const { addMessage } = useMessageOperations(sessionId, messages, setMessages);
   
-  // Initialize the chat session
-  const { initializeChat } = useSessionInitialization(
+  const { initializeChat, sendFirstQuestion } = useEnhancedSessionInitialization(
     userId, 
     setSessionId, 
     setMessages, 
@@ -32,7 +30,6 @@ export function useChatSession(): UseChatSessionReturn {
     setSessionMetadata
   );
   
-  // Session management operations
   const { 
     endCurrentSession,
     startNewSession,
@@ -53,17 +50,14 @@ export function useChatSession(): UseChatSessionReturn {
     setSessionMetadata
   );
   
-  // Wrap fetchPastSessions to handle loading state
   const fetchPastSessions = async () => {
     setIsFetchingPastSessions(true);
     await fetchPastSessionsImpl();
     setIsFetchingPastSessions(false);
   };
   
-  // Set up realtime updates for new messages
   useRealtimeMessages(sessionId, messages, setMessages);
   
-  // Initialize chat on session change
   useEffect(() => {
     initializeChat();
   }, [session]);
@@ -82,6 +76,7 @@ export function useChatSession(): UseChatSessionReturn {
     deleteSession,
     updateSessionTitle,
     updateSessionMetadata,
-    sessionMetadata
+    sessionMetadata,
+    sendFirstQuestion
   };
 }

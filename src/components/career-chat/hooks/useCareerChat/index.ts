@@ -1,37 +1,15 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMessageState } from './useMessageState';
-import { useMessageSender } from './useMessageSender';
 import { useProgressTracker } from './useProgressTracker';
 import { useSessionManager } from './useSessionManager';
 import { useApiConfig } from './useApiConfig';
+import { useEnhancedMessageSender } from './useEnhancedMessageSender';
 import { CareerChatMessage } from '@/types/database/analytics';
-
-// Define ChatSessionMetadata interface locally
-interface ChatSessionMetadata {
-  title?: string;
-  lastCategory?: string;
-  isComplete?: boolean;
-  overallProgress?: number;
-  startedAt?: string;
-  completedAt?: string;
-  questionCounts?: QuestionCounts;
-  careerInterests?: string[];
-  [key: string]: any;
-}
-
-interface QuestionCounts {
-  education: number;
-  skills: number;
-  workstyle: number;
-  goals: number;
-  [key: string]: number;
-}
 
 export function useCareerChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Split the hook into several smaller, focused hooks
   const { 
     checkApiConfig, 
     hasConfigError 
@@ -67,53 +45,15 @@ export function useCareerChat() {
     sessionId,
     sessionMetadata,
     updateSessionMetadata,
-    addMessage
+    addMessage,
+    sendFirstQuestion
   } = useSessionManager(setIsSessionComplete, setCurrentCategory, setQuestionProgress);
-
-  // Helper functions that need to be passed to the useMessageSender
-  const getCurrentCategory = () => currentCategory || 'education';
-  const getProgress = () => questionProgress || 0;
-  
-  // Mock implementation for these functions as examples - replace with actual implementations
-  const analyzeResponses = async (messages: CareerChatMessage[]) => {
-    console.log("Analyzing responses", messages);
-    return Promise.resolve();
-  };
-  
-  const advanceQuestion = () => {
-    setQuestionProgress(prev => Math.min(prev + 10, 100));
-  };
-  
-  const createQuestionMessage = (sessionId: string): CareerChatMessage => {
-    // Fix: Ensure message_type is the correct type
-    const messageType: "system" | "user" | "bot" | "recommendation" | "session_end" = "bot";
-    
-    // Create proper questionCounts object with safe numeric values
-    const questionCounts: QuestionCounts = { 
-      education: 0, 
-      skills: 0, 
-      workstyle: 0, 
-      goals: 0 
-    };
-    
-    return {
-      id: `question-${Date.now()}`,
-      session_id: sessionId,
-      message_type: messageType,
-      content: "What are your career goals?",
-      metadata: {
-        category: currentCategory,
-        questionCounts: questionCounts
-      },
-      created_at: new Date().toISOString()
-    } as CareerChatMessage;
-  };
 
   const {
     isAnalyzing,
     sendMessage,
     handleStartNewChat
-  } = useMessageSender({
+  } = useEnhancedMessageSender({
     sessionId,
     messages,
     isSessionComplete,
@@ -126,17 +66,29 @@ export function useCareerChat() {
     setIsSessionComplete,
     setCurrentCategory,
     setQuestionProgress,
-    endCurrentSession,
-    getCurrentCategory,
-    getProgress,
-    isAnalyzing: false,
-    analyzeResponses,
-    advanceQuestion,
-    createQuestionMessage
+    endCurrentSession
   });
 
+  // Enhanced begin assessment handler
+  const handleBeginAssessment = useCallback(async () => {
+    if (!sessionId || isTyping) return;
+    
+    try {
+      setIsTyping(true);
+      await sendFirstQuestion(sessionId);
+    } catch (error) {
+      console.error('Error beginning assessment:', error);
+    } finally {
+      setIsTyping(false);
+    }
+  }, [sessionId, isTyping, sendFirstQuestion, setIsTyping]);
+
   // Check API configuration
-  checkApiConfig(sessionId);
+  useEffect(() => {
+    if (sessionId) {
+      checkApiConfig(sessionId);
+    }
+  }, [sessionId, checkApiConfig]);
 
   return {
     // Message state
@@ -170,6 +122,7 @@ export function useCareerChat() {
     setInputMessage,
     sendMessage,
     addMessage,
-    handleStartNewChat
+    handleStartNewChat,
+    handleBeginAssessment
   };
 }
