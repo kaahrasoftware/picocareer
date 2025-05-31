@@ -2,7 +2,7 @@
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
-import { Terms } from "@/pages/Terms";
+import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Blog from "@/pages/Blog";
 import Auth from "@/pages/Auth";
