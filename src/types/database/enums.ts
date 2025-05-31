@@ -1,155 +1,43 @@
 
-// Database enums for type safety
-export enum Categories {
-  TECHNOLOGY = "Technology",
-  DIGITAL_TOOLS = "Digital Tools",
-  EXTRACURRICULAR_ACTIVITIES = "Extracurricular Activities",
-  SUCCESS_STORIES = "Success Stories",
-  VOLUNTEERISM = "Volunteerism",
-  COMMUNITY_SERVICE = "Community Service",
-  ENTREPRENEURSHIP = "Entrepreneurship",
-  CAREER_GUIDANCE = "Career Guidance",
-  ACADEMIC_EXCELLENCE = "Academic Excellence",
-  LEADERSHIP = "Leadership",
-  NETWORKING = "Networking",
-  PROFESSIONAL_DEVELOPMENT = "Professional Development",
-  RESEARCH = "Research",
-  INTERNSHIPS = "Internships",
-  SCHOLARSHIPS = "Scholarships",
-  MENTORSHIP = "Mentorship",
-  STUDY_ABROAD = "Study Abroad",
-  GRADUATE_SCHOOL = "Graduate School",
-  CAREER_TRANSITIONS = "Career Transitions",
-  WORK_LIFE_BALANCE = "Work-Life Balance",
-  FINANCIAL_LITERACY = "Financial Literacy",
-  PERSONAL_BRANDING = "Personal Branding",
-  INTERVIEW_SKILLS = "Interview Skills",
-  RESUME_WRITING = "Resume Writing"
-}
+export type OpportunityType = 
+  | "job"
+  | "internship" 
+  | "scholarship"
+  | "fellowship"
+  | "grant"
+  | "competition"
+  | "event"
+  | "volunteer"
+  | "other";
 
-export enum Degree {
-  HIGH_SCHOOL = "High School",
-  ASSOCIATES = "Associate's",
-  BACHELORS = "Bachelor's",
-  MASTERS = "Master's",
-  DOCTORATE = "Doctorate",
-  PROFESSIONAL = "Professional",
-  CERTIFICATE = "Certificate"
-}
+export type Status = "Approved" | "Pending" | "Rejected";
 
-export enum FeedbackType {
-  SESSION = "session",
-  PLATFORM = "platform",
-  MENTOR = "mentor",
-  GENERAL = "general"
-}
+export type HubMemberRole = "admin" | "member" | "moderator";
 
-export enum InteractionType {
-  VIEW = "view",
-  DOWNLOAD = "download",
-  SHARE = "share",
-  BOOKMARK = "bookmark"
-}
+export type ChatRoomType = "public" | "private";
 
-export enum Language {
-  ENGLISH = "English",
-  SPANISH = "Spanish",
-  FRENCH = "French",
-  GERMAN = "German",
-  CHINESE = "Chinese",
-  JAPANESE = "Japanese",
-  KOREAN = "Korean",
-  ARABIC = "Arabic",
-  HINDI = "Hindi",
-  PORTUGUESE = "Portuguese",
-  RUSSIAN = "Russian",
-  ITALIAN = "Italian"
-}
+export type ReactionType = "like" | "love" | "laugh" | "wow" | "sad" | "angry";
 
-export enum MeetingPlatform {
-  GOOGLE_MEET = "Google Meet",
-  WHATSAPP = "WhatsApp",
-  TELEGRAM = "Telegram",
-  PHONE_CALL = "Phone Call"
-}
+export type AnnouncementCategory = "general" | "urgent" | "event" | "update";
 
-export enum NotificationType {
-  SESSION_REMINDER = "session_reminder",
-  SESSION_UPDATE = "session_update",
-  CAREER_UPDATE = "career_update",
-  HUB_MEMBERSHIP = "hub_membership",
-  GENERAL = "general"
-}
+export type AuditAction = "create" | "update" | "delete" | "invite" | "remove";
 
-export enum OnboardingStatus {
-  NOT_STARTED = "not_started",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed"
-}
+export type ResourceType = "document" | "image" | "video" | "link";
 
-export enum SchoolType {
-  PUBLIC = "Public",
-  PRIVATE = "Private",
-  COMMUNITY_COLLEGE = "Community College",
-  UNIVERSITY = "University",
-  TECHNICAL = "Technical",
-  ONLINE = "Online"
-}
+export type ResourceAccessLevel = "public" | "members" | "admin";
 
-export enum SessionType {
-  CAREER_GUIDANCE = "Career Guidance",
-  MOCK_INTERVIEW = "Mock Interview",
-  RESUME_REVIEW = "Resume Review",
-  NETWORKING = "Networking",
-  CUSTOM = "Custom"
-}
+export type DocumentType = "pdf" | "doc" | "presentation" | "spreadsheet";
 
-export enum SettingType {
-  NOTIFICATION = "notification",
-  PRIVACY = "privacy",
-  SESSION_SETTINGS = "session_settings",
-  TIMEZONE = "timezone"
-}
+export type HubType = "company" | "school" | "organization";
 
-export enum Status {
-  PENDING = "Pending",
-  APPROVED = "Approved",
-  REJECTED = "Rejected",
-  PUBLISHED = "Published"
-}
+export type WebinarPlatform = "Google Meet" | "Zoom" | "Microsoft Teams";
 
-export enum UserType {
-  ADMIN = "admin",
-  MENTOR = "mentor",
-  MENTEE = "mentee",
-  EDITOR = "editor"
-}
+export type EventType = "workshop" | "webinar" | "conference" | "networking";
 
-export enum OpportunityType {
-  INTERNSHIP = "internship",
-  JOB = "job",
-  SCHOLARSHIP = "scholarship",
-  FELLOWSHIP = "fellowship",
-  RESEARCH = "research",
-  VOLUNTEER = "volunteer",
-  GRANT = "grant",
-  COMPETITION = "competition",
-  EVENT = "event",
-  OTHER = "other"
-}
+export type MeetingPlatform = "Google Meet" | "Zoom" | "Microsoft Teams" | "Phone Call" | "WhatsApp" | "Telegram";
 
-export enum OpportunityStatus {
-  DRAFT = "draft",
-  PUBLISHED = "published",
-  ARCHIVED = "archived",
-  EXPIRED = "expired"
-}
+export type SessionType = "career_guidance" | "mock_interview" | "resume_review" | "portfolio_review" | "networking" | "skill_development" | "other";
 
-export enum ApplicationStatus {
-  DRAFT = "draft",
-  SUBMITTED = "submitted",
-  UNDER_REVIEW = "under_review",
-  ACCEPTED = "accepted",
-  REJECTED = "rejected",
-  WITHDRAWN = "withdrawn"
-}
+export type Country = "United States" | "Canada" | "United Kingdom" | "Other";
+
+export type WhereDidYouHearAboutUs = "Social Media" | "Friend" | "Website" | "Other";

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FormField as FormFieldBase } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -158,7 +159,7 @@ export function FormField({
             if (name === "position") {
               return (
                 <SelectWithCustomOption
-                  value={field.value || ""}
+                  selectedValue={field.value || ""}
                   onValueChange={field.onChange}
                   options={careers || []}
                   placeholder={placeholder || "Select position"}
@@ -168,7 +169,7 @@ export function FormField({
             } else if (name === "company_id") {
               return (
                 <SelectWithCustomOption
-                  value={field.value || ""}
+                  selectedValue={field.value || ""}
                   onValueChange={field.onChange}
                   options={companies || []}
                   placeholder={placeholder || "Select company"}
@@ -178,7 +179,7 @@ export function FormField({
             } else if (name === "school_id") {
               return (
                 <SelectWithCustomOption
-                  value={field.value || ""}
+                  selectedValue={field.value || ""}
                   onValueChange={field.onChange}
                   options={schools || []}
                   placeholder={placeholder || "Select your school"}
@@ -188,7 +189,7 @@ export function FormField({
             } else if (name === "academic_major_id") {
               return (
                 <SelectWithCustomOption
-                  value={field.value || ""}
+                  selectedValue={field.value || ""}
                   onValueChange={field.onChange}
                   options={majors || []}
                   placeholder={placeholder || "Select major"}

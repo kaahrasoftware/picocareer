@@ -13,15 +13,15 @@ interface OpportunityBasicInfoProps {
 
 export function OpportunityBasicInfo({ form, description, setDescription }: OpportunityBasicInfoProps) {
   const opportunityTypes: { value: OpportunityType; label: string }[] = [
-    { value: "job", label: "Job" },
-    { value: "internship", label: "Internship" },
-    { value: "scholarship", label: "Scholarship" },
-    { value: "fellowship", label: "Fellowship" },
-    { value: "grant", label: "Grant" },
-    { value: "competition", label: "Competition" },
-    { value: "event", label: "Event" },
-    { value: "volunteer", label: "Volunteer Opportunity" },
-    { value: "other", label: "Other" },
+    { value: "job" as OpportunityType, label: "Job" },
+    { value: "internship" as OpportunityType, label: "Internship" },
+    { value: "scholarship" as OpportunityType, label: "Scholarship" },
+    { value: "fellowship" as OpportunityType, label: "Fellowship" },
+    { value: "grant" as OpportunityType, label: "Grant" },
+    { value: "competition" as OpportunityType, label: "Competition" },
+    { value: "event" as OpportunityType, label: "Event" },
+    { value: "volunteer" as OpportunityType, label: "Volunteer Opportunity" },
+    { value: "other" as OpportunityType, label: "Other" },
   ];
 
   return (
