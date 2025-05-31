@@ -9,7 +9,7 @@ import Auth from "@/pages/Auth";
 import { Profile } from "@/pages/Profile";
 import { ProfileEdit } from "@/pages/ProfileEdit";
 import { Dashboard } from "@/pages/Dashboard";
-import { CareerChat } from "@/pages/CareerChat";
+import CareerChat from "@/pages/CareerChat";
 import { Opportunities } from "@/pages/Opportunities";
 import ApiDemoPage from "@/pages/ApiDemoPage";
 import { Pricing } from "@/pages/Pricing";
