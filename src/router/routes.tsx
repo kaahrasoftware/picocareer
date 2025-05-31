@@ -1,4 +1,5 @@
 
+
 import Index from "@/pages/Index";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -10,7 +11,7 @@ import { Profile } from "@/pages/Profile";
 import { ProfileEdit } from "@/pages/ProfileEdit";
 import Dashboard from "@/pages/Dashboard";
 import CareerChat from "@/pages/CareerChat";
-import { Opportunities } from "@/pages/Opportunities";
+import Opportunities from "@/pages/Opportunities";
 import ApiDemoPage from "@/pages/ApiDemoPage";
 import { Pricing } from "@/pages/Pricing";
 import { BlogArticle } from "@/pages/BlogArticle";
@@ -99,3 +100,4 @@ export const router = {
     },
   ],
 };
+
