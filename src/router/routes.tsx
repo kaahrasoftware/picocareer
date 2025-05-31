@@ -5,7 +5,7 @@ import { Contact } from "@/pages/Contact";
 import { Terms } from "@/pages/Terms";
 import { Privacy } from "@/pages/Privacy";
 import { Blog } from "@/pages/Blog";
-import { Auth } from "@/pages/Auth";
+import Auth from "@/pages/Auth";
 import { Profile } from "@/pages/Profile";
 import { Dashboard } from "@/pages/Dashboard";
 import { CareerChat } from "@/pages/CareerChat";
