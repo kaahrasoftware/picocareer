@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -42,15 +41,15 @@ export function OpportunityHeader({
 
   const opportunityTypes: { type: OpportunityType | "all"; label: string }[] = [
     { type: "all", label: "All Types" },
-    { type: "job" as OpportunityType, label: "Jobs" },
-    { type: "internship" as OpportunityType, label: "Internships" },
-    { type: "scholarship" as OpportunityType, label: "Scholarships" },
-    { type: "fellowship" as OpportunityType, label: "Fellowships" },
-    { type: "grant" as OpportunityType, label: "Grants" },
-    { type: "competition" as OpportunityType, label: "Competitions" },
-    { type: "volunteer" as OpportunityType, label: "Volunteer" },
-    { type: "event" as OpportunityType, label: "Events" },
-    { type: "other" as OpportunityType, label: "Other" },
+    { type: "job", label: "Jobs" },
+    { type: "internship", label: "Internships" },
+    { type: "scholarship", label: "Scholarships" },
+    { type: "fellowship", label: "Fellowships" },
+    { type: "grant", label: "Grants" },
+    { type: "competition", label: "Competitions" },
+    { type: "volunteer", label: "Volunteer" },
+    { type: "event", label: "Events" },
+    { type: "other", label: "Other" },
   ];
 
   return (
