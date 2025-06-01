@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { Toaster } from "./components/ui/toaster";
 import { AppRoutes } from "./router/AppRoutes";
+import { GuideProvider } from "./context/GuideContext";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -17,7 +18,9 @@ function App() {
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
             <BrowserRouter>
-              <AppRoutes />
+              <GuideProvider>
+                <AppRoutes />
+              </GuideProvider>
             </BrowserRouter>
             <Toaster />
           </TooltipProvider>
