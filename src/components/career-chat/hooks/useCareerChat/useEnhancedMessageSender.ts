@@ -220,9 +220,13 @@ export function useEnhancedMessageSender({
           
           await processAIResponse(aiResponse);
           
-          // Update question counts and progress
+          // Update question counts and progress - ensure all required fields exist
+          const currentQuestionCounts = sessionMetadata?.questionCounts || {};
           const updatedQuestionCounts = {
-            ...(sessionMetadata?.questionCounts || {}),
+            education: currentQuestionCounts.education || 0,
+            skills: currentQuestionCounts.skills || 0,
+            workstyle: currentQuestionCounts.workstyle || 0,
+            goals: currentQuestionCounts.goals || 0,
             [currentCategory]: questionCount + 1
           };
           

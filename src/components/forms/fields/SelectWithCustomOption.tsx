@@ -61,11 +61,11 @@ export function SelectWithCustomOption<T extends Record<string, any>>({
 
       if (error) throw error;
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         const newOption = {
           id: data.id as string,
-          title: data.title as string | undefined,
-          name: data.name as string | undefined
+          title: (data as any).title as string | undefined,
+          name: (data as any).name as string | undefined
         };
 
         setAllOptions(prev => [...prev, newOption]);

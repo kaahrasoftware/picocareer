@@ -17,6 +17,7 @@ export interface UseChatSessionReturn {
   updateSessionTitle: (targetSessionId: string, title: string) => Promise<void>;
   updateSessionMetadata: (metadata: Partial<ChatSessionMetadata>) => Promise<void>;
   sessionMetadata: ChatSessionMetadata | null;
+  sendFirstQuestion: (sessionId: string) => Promise<void>;
 }
 
 // Export the types from the centralized location for convenience
