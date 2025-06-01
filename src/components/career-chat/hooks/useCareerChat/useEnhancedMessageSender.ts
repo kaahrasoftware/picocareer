@@ -5,6 +5,13 @@ import { toast } from 'sonner';
 import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
 import { callCareerChatAI, generateCareerRecommendations, AIResponseData } from '../../services/aiChatService';
 
+interface QuestionCounts {
+  education: number;
+  skills: number;
+  workstyle: number;
+  goals: number;
+}
+
 interface UseEnhancedMessageSenderProps {
   sessionId: string | null;
   messages: CareerChatMessage[];
@@ -44,7 +51,7 @@ export function useEnhancedMessageSender({
   const totalQuestions = categories.length * questionsPerCategory;
 
   const getCurrentCategory = () => {
-    const questionCounts = sessionMetadata?.questionCounts || {
+    const questionCounts = sessionMetadata?.questionCounts as QuestionCounts || {
       education: 0,
       skills: 0,
       workstyle: 0,
@@ -53,7 +60,7 @@ export function useEnhancedMessageSender({
 
     // Find the category with the least questions answered
     for (const category of categories) {
-      if ((questionCounts[category] || 0) < questionsPerCategory) {
+      if ((questionCounts[category as keyof QuestionCounts] || 0) < questionsPerCategory) {
         return category;
       }
     }
@@ -62,17 +69,17 @@ export function useEnhancedMessageSender({
   };
 
   const getQuestionCount = (category: string) => {
-    const questionCounts = sessionMetadata?.questionCounts || {
+    const questionCounts = sessionMetadata?.questionCounts as QuestionCounts || {
       education: 0,
       skills: 0,
       workstyle: 0,
       goals: 0
     };
-    return questionCounts[category] || 0;
+    return questionCounts[category as keyof QuestionCounts] || 0;
   };
 
   const calculateProgress = () => {
-    const questionCounts = sessionMetadata?.questionCounts || {
+    const questionCounts = sessionMetadata?.questionCounts as QuestionCounts || {
       education: 0,
       skills: 0,
       workstyle: 0,
@@ -84,7 +91,7 @@ export function useEnhancedMessageSender({
   };
 
   const shouldGenerateRecommendations = () => {
-    const questionCounts = sessionMetadata?.questionCounts || {
+    const questionCounts = sessionMetadata?.questionCounts as QuestionCounts || {
       education: 0,
       skills: 0,
       workstyle: 0,
@@ -92,7 +99,7 @@ export function useEnhancedMessageSender({
     };
 
     // Generate recommendations when we have at least 4 questions in each category
-    return categories.every(category => (questionCounts[category] || 0) >= 4);
+    return categories.every(category => (questionCounts[category as keyof QuestionCounts] || 0) >= 4);
   };
 
   const processAIResponse = async (aiResponse: AIResponseData) => {
@@ -221,13 +228,19 @@ export function useEnhancedMessageSender({
           await processAIResponse(aiResponse);
           
           // Update question counts and progress - ensure all required fields exist
-          const currentQuestionCounts = sessionMetadata?.questionCounts || {};
-          const updatedQuestionCounts = {
+          const currentQuestionCounts = sessionMetadata?.questionCounts as QuestionCounts || {
+            education: 0,
+            skills: 0,
+            workstyle: 0,
+            goals: 0
+          };
+          
+          const updatedQuestionCounts: QuestionCounts = {
             education: currentQuestionCounts.education || 0,
             skills: currentQuestionCounts.skills || 0,
             workstyle: currentQuestionCounts.workstyle || 0,
             goals: currentQuestionCounts.goals || 0,
-            [currentCategory]: questionCount + 1
+            [currentCategory as keyof QuestionCounts]: questionCount + 1
           };
           
           const newProgress = calculateProgress();

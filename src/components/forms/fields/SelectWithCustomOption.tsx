@@ -14,10 +14,12 @@ export interface SelectWithCustomOptionProps<T> {
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
   tableName: string;
+  value?: string; // Add optional value prop for compatibility
 }
 
 export function SelectWithCustomOption<T extends Record<string, any>>({
   selectedValue,
+  value, // Accept value prop but use selectedValue as primary
   onValueChange,
   options,
   placeholder,
@@ -28,6 +30,9 @@ export function SelectWithCustomOption<T extends Record<string, any>>({
   const [isLoading, setIsLoading] = useState(false);
   const [allOptions, setAllOptions] = useState(options);
   const { toast } = useToast();
+
+  // Use value prop if provided, otherwise use selectedValue
+  const currentValue = value || selectedValue;
 
   useEffect(() => {
     setAllOptions(options);
@@ -61,7 +66,7 @@ export function SelectWithCustomOption<T extends Record<string, any>>({
 
       if (error) throw error;
 
-      if (data && typeof data === 'object' && 'id' in data) {
+      if (data && typeof data === 'object' && 'id' in data && data.id) {
         const newOption = {
           id: data.id as string,
           title: (data as any).title as string | undefined,
@@ -94,11 +99,11 @@ export function SelectWithCustomOption<T extends Record<string, any>>({
     return option.title || option.name || option.id;
   };
 
-  const selectedOption = allOptions.find(option => option.id === selectedValue);
+  const selectedOption = allOptions.find(option => option.id === currentValue);
 
   return (
     <div className="flex gap-2">
-      <Select value={selectedValue} onValueChange={onValueChange}>
+      <Select value={currentValue} onValueChange={onValueChange}>
         <SelectTrigger className="flex-1">
           <SelectValue placeholder={placeholder}>
             {selectedOption ? getDisplayValue(selectedOption) : placeholder}
