@@ -221,11 +221,8 @@ export function useEnhancedMessageSender({
           await processAIResponse(aiResponse);
           
           // Update question counts and progress
-          const updatedQuestionCounts: {[key: string]: number; education: number; skills: number; workstyle: number; goals: number} = {
-            education: (sessionMetadata?.questionCounts?.education || 0),
-            skills: (sessionMetadata?.questionCounts?.skills || 0),
-            workstyle: (sessionMetadata?.questionCounts?.workstyle || 0),
-            goals: (sessionMetadata?.questionCounts?.goals || 0),
+          const updatedQuestionCounts = {
+            ...(sessionMetadata?.questionCounts || {}),
             [currentCategory]: questionCount + 1
           };
           

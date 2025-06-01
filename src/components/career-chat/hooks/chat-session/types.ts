@@ -1,20 +1,23 @@
 
-import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analytics';
+import { CareerChatMessage, CareerChatSession, ChatSessionMetadata } from "@/types/database/analytics";
+import { MessageType, MessageStatus, MessageDeliveryMetadata, QuestionCounts } from "@/components/career-chat/session-management/types";
 
 export interface UseChatSessionReturn {
   messages: CareerChatMessage[];
   sessionId: string | null;
   isLoading: boolean;
-  addMessage: (message: CareerChatMessage) => Promise<CareerChatMessage | null>;
-  pastSessions: any[];
+  addMessage: (message: CareerChatMessage) => Promise<any>;
+  pastSessions: CareerChatSession[];
   isFetchingPastSessions: boolean;
   fetchPastSessions: () => Promise<void>;
   endCurrentSession: () => Promise<void>;
   startNewSession: () => Promise<void>;
-  resumeSession: (sessionId: string) => Promise<void>;
-  deleteSession: (sessionId: string) => Promise<void>;
-  updateSessionTitle: (sessionId: string, title: string) => Promise<void>;
+  resumeSession: (targetSessionId: string) => Promise<void>;
+  deleteSession: (targetSessionId: string) => Promise<void>;
+  updateSessionTitle: (targetSessionId: string, title: string) => Promise<void>;
   updateSessionMetadata: (metadata: Partial<ChatSessionMetadata>) => Promise<void>;
   sessionMetadata: ChatSessionMetadata | null;
-  sendFirstQuestion: (sessionId: string) => Promise<void>;
 }
+
+// Export the types from the centralized location for convenience
+export type { MessageType, MessageStatus, MessageDeliveryMetadata, QuestionCounts };
