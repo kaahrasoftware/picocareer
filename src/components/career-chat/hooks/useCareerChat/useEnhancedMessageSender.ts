@@ -6,6 +6,7 @@ import { CareerChatMessage, ChatSessionMetadata } from '@/types/database/analyti
 import { callCareerChatAI, generateCareerRecommendations, AIResponseData } from '../../services/aiChatService';
 
 interface QuestionCounts {
+  [key: string]: number;
   education: number;
   skills: number;
   workstyle: number;
@@ -236,10 +237,7 @@ export function useEnhancedMessageSender({
           };
           
           const updatedQuestionCounts: QuestionCounts = {
-            education: currentQuestionCounts.education || 0,
-            skills: currentQuestionCounts.skills || 0,
-            workstyle: currentQuestionCounts.workstyle || 0,
-            goals: currentQuestionCounts.goals || 0,
+            ...currentQuestionCounts,
             [currentCategory as keyof QuestionCounts]: questionCount + 1
           };
           

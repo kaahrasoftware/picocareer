@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { ChatSidebar } from './ChatSidebar';
 import { ModernChatInterface } from './redesigned/ModernChatInterface';
-import { useCareerChatSimple } from './hooks/useCareerChatSimple';
+import { useCareerChatUnified } from './hooks/useCareerChatUnified';
 
 interface CareerChatInterfaceProps {
   onBackToWelcome: () => void;
@@ -27,7 +27,7 @@ export function CareerChatInterface({ onBackToWelcome }: CareerChatInterfaceProp
     handleStartNewChat,
     handleSuggestionClick,
     handleDownloadResults
-  } = useCareerChatSimple();
+  } = useCareerChatUnified();
 
   return (
     <div className="h-screen flex bg-white">

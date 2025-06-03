@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Plus, History, X, MessagesSquare, CheckCircle2, Clock } from 'lucide-react';
-import { useCareerChat } from './hooks/useCareerChat';
+import { useCareerChatUnified } from './hooks/useCareerChatUnified';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { ProfileAvatar } from '@/components/ui/profile-avatar';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -26,7 +26,7 @@ export function ChatSidebar({ onClose }: ChatSidebarProps) {
     deleteSession,
     updateSessionTitle,
     handleStartNewChat
-  } = useCareerChat();
+  } = useCareerChatUnified();
   
   const { session } = useAuthSession();
   const { data: profile, isLoading: isProfileLoading } = useUserProfile(session);
