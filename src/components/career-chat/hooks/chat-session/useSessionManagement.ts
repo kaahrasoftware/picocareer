@@ -67,6 +67,19 @@ export function useSessionManagement(
   
   const fetchPastSessions = async () => {
     try {
+      console.log('Fetching past sessions for authenticated user...');
+      
+      // Get current auth state for debugging
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current authenticated user:', user?.id);
+      
+      if (!user) {
+        console.warn('No authenticated user found');
+        setPastSessions([]);
+        return;
+      }
+
+      // Rely on RLS policy to filter sessions - remove redundant .eq('profile_id', userId)
       const { data, error } = await supabase
         .from('career_chat_sessions')
         .select(`
@@ -78,11 +91,16 @@ export function useSessionManagement(
           total_messages,
           last_active_at
         `)
-        .eq('profile_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching sessions:', error);
+        throw error;
+      }
+      
+      console.log('Raw sessions data from database:', data);
+      console.log('Number of sessions returned:', data?.length || 0);
       
       // Convert data to proper type with proper handling of missing fields
       const typedSessions: CareerChatSession[] = (data || []).map(session => {
@@ -102,9 +120,12 @@ export function useSessionManagement(
         };
       });
       
+      console.log('Processed sessions for display:', typedSessions);
       setPastSessions(typedSessions);
     } catch (error) {
       console.error("Error fetching past sessions:", error);
+      // Set empty array on error to prevent UI issues
+      setPastSessions([]);
     }
   };
   
@@ -112,8 +133,10 @@ export function useSessionManagement(
     if (!targetSessionId) return;
     
     try {
-      // Get session data
-      const { data: session } = await supabase
+      console.log('Resuming session:', targetSessionId);
+      
+      // Get session data - RLS will ensure user can only access their own sessions
+      const { data: session, error: sessionError } = await supabase
         .from('career_chat_sessions')
         .select(`
           id, 
@@ -125,17 +148,27 @@ export function useSessionManagement(
         .eq('id', targetSessionId)
         .single();
       
-      if (!session) {
-        console.error("Session not found");
+      if (sessionError) {
+        console.error("Error fetching session:", sessionError);
         return;
       }
       
-      // Get session messages
-      const { data: messages } = await supabase
+      if (!session) {
+        console.error("Session not found or access denied");
+        return;
+      }
+      
+      // Get session messages - RLS will ensure user can only access their own messages
+      const { data: messages, error: messagesError } = await supabase
         .from('career_chat_messages')
         .select('*')
         .eq('session_id', targetSessionId)
         .order('message_index', { ascending: true });
+      
+      if (messagesError) {
+        console.error("Error fetching messages:", messagesError);
+        return;
+      }
       
       if (messages) {
         // Convert message_type to the proper type
@@ -155,6 +188,8 @@ export function useSessionManagement(
           ? session.session_metadata as ChatSessionMetadata
           : {};
         setSessionMetadata(safeMetadata);
+        
+        console.log('Successfully resumed session with', typedMessages.length, 'messages');
       }
       
     } catch (error) {
@@ -164,17 +199,33 @@ export function useSessionManagement(
   
   const deleteSession = async (targetSessionId: string) => {
     try {
+      console.log('Deleting session:', targetSessionId);
+      
       // Delete messages first (due to foreign key constraint)
-      await supabase
+      // RLS will ensure user can only delete their own messages
+      const { error: messagesError } = await supabase
         .from('career_chat_messages')
         .delete()
         .eq('session_id', targetSessionId);
       
+      if (messagesError) {
+        console.error("Error deleting messages:", messagesError);
+        throw messagesError;
+      }
+      
       // Then delete the session
-      await supabase
+      // RLS will ensure user can only delete their own session
+      const { error: sessionError } = await supabase
         .from('career_chat_sessions')
         .delete()
         .eq('id', targetSessionId);
+      
+      if (sessionError) {
+        console.error("Error deleting session:", sessionError);
+        throw sessionError;
+      }
+      
+      console.log('Successfully deleted session');
       
       // Refresh the past sessions list
       await fetchPastSessions();
@@ -185,11 +236,17 @@ export function useSessionManagement(
   
   const updateSessionTitle = async (targetSessionId: string, title: string) => {
     try {
-      const { data: session } = await supabase
+      // RLS will ensure user can only access their own session
+      const { data: session, error: fetchError } = await supabase
         .from('career_chat_sessions')
         .select('session_metadata')
         .eq('id', targetSessionId)
         .single();
+      
+      if (fetchError) {
+        console.error("Error fetching session for title update:", fetchError);
+        return;
+      }
       
       if (!session) return;
       
@@ -201,12 +258,18 @@ export function useSessionManagement(
         title
       };
       
-      await supabase
+      // RLS will ensure user can only update their own session
+      const { error: updateError } = await supabase
         .from('career_chat_sessions')
         .update({
           session_metadata: updatedMetadata
         })
         .eq('id', targetSessionId);
+      
+      if (updateError) {
+        console.error("Error updating session title:", updateError);
+        return;
+      }
       
       // If the current session's title was updated, update local state
       if (targetSessionId === sessionId) {
@@ -231,12 +294,18 @@ export function useSessionManagement(
       
       const updatedMetadata = { ...safeCurrentMetadata, ...safeMetadata };
       
-      await supabase
+      // RLS will ensure user can only update their own session
+      const { error } = await supabase
         .from('career_chat_sessions')
         .update({
           session_metadata: updatedMetadata
         })
         .eq('id', sessionId);
+      
+      if (error) {
+        console.error("Error updating session metadata:", error);
+        return;
+      }
       
       setSessionMetadata(updatedMetadata as ChatSessionMetadata);
     } catch (error) {
