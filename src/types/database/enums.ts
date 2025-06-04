@@ -139,10 +139,10 @@ export enum OpportunityType {
 }
 
 export enum OpportunityStatus {
-  DRAFT = "draft",
-  PUBLISHED = "published",
-  ARCHIVED = "archived",
-  EXPIRED = "expired"
+  PENDING = "Pending",
+  ACTIVE = "Active",
+  REJECTED = "Rejected",
+  CLOSED = "Closed"
 }
 
 export enum ApplicationStatus {

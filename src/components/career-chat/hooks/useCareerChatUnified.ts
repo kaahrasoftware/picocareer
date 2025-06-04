@@ -15,6 +15,7 @@ export function useCareerChatUnified() {
   // Use the existing chat session hook for session management
   const {
     messages,
+    setMessages,
     sessionId,
     isLoading,
     addMessage,

@@ -8,11 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SelectWithCustomOption } from './fields/SelectWithCustomOption';
 import { Control, FieldPath, FieldValues } from 'react-hook-form';
 
-interface FormFieldProps<T extends FieldValues> {
+export interface FormFieldProps<T extends FieldValues> {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
-  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom';
+  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local';
   placeholder?: string;
   options?: Array<{ id: string; title?: string; name?: string; label?: string; value?: string }>;
   tableName?: string;
@@ -96,6 +96,15 @@ export function FormField<T extends FieldValues>({
             options={normalizedOptions}
             placeholder={placeholder || `Select ${label.toLowerCase()}`}
             tableName={tableName}
+          />
+        );
+
+      case 'datetime-local':
+        return (
+          <Input 
+            type="datetime-local" 
+            placeholder={placeholder} 
+            {...field} 
           />
         );
       

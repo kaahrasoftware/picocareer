@@ -1,150 +1,163 @@
 
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
-export interface SelectWithCustomOptionProps<T> {
-  selectedValue: string;
-  onValueChange: (value: string) => void;
-  options: Array<{ id: string; title?: string; name?: string }>;
-  placeholder: string;
-  tableName: string;
-  value?: string; // Add optional value prop for compatibility
+interface Option {
+  id: string;
+  title?: string;
+  name?: string;
 }
 
-export function SelectWithCustomOption<T extends Record<string, any>>({
+interface SelectWithCustomOptionProps {
+  selectedValue: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  options: Option[];
+  placeholder: string;
+  tableName: string;
+}
+
+export function SelectWithCustomOption({
   selectedValue,
-  value, // Accept value prop but use selectedValue as primary
+  value,
   onValueChange,
-  options,
+  options: initialOptions,
   placeholder,
   tableName
-}: SelectWithCustomOptionProps<T>) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+}: SelectWithCustomOptionProps) {
+  const [options, setOptions] = useState<Option[]>(initialOptions);
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [allOptions, setAllOptions] = useState(options);
-  const { toast } = useToast();
-
-  // Use value prop if provided, otherwise use selectedValue
-  const currentValue = value || selectedValue;
 
   useEffect(() => {
-    setAllOptions(options);
-  }, [options]);
+    setOptions(initialOptions);
+  }, [initialOptions]);
 
-  const handleAddCustomOption = async () => {
+  const handleAddCustom = async () => {
     if (!customValue.trim()) return;
 
     setIsLoading(true);
     try {
-      let insertData: any = {};
+      console.log(`Adding new ${tableName} entry:`, customValue);
       
-      // Determine the correct field name based on existing options
-      if (options.length > 0) {
-        const firstOption = options[0];
-        if ('title' in firstOption) {
-          insertData.title = customValue.trim();
-        } else if ('name' in firstOption) {
-          insertData.name = customValue.trim();
-        }
-      } else {
-        // Default to title
-        insertData.title = customValue.trim();
-      }
-
+      // Add new entry to the database
       const { data, error } = await supabase
-        .from(tableName as any)
-        .insert(insertData)
+        .from(tableName)
+        .insert({ 
+          title: customValue,
+          name: customValue
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error(`Error adding ${tableName}:`, error);
+        toast.error(`Failed to add new ${tableName}`);
+        return;
+      }
 
-      if (data && typeof data === 'object' && 'id' in data && data.id) {
-        const newOption = {
-          id: data.id as string,
-          title: (data as any).title as string | undefined,
-          name: (data as any).name as string | undefined
+      if (data) {
+        console.log(`Successfully added ${tableName}:`, data);
+        
+        // Create normalized option object
+        const newOption: Option = {
+          id: data.id,
+          title: data.title || data.name,
+          name: data.name || data.title
         };
 
-        setAllOptions(prev => [...prev, newOption]);
-        onValueChange(data.id as string);
-        setCustomValue('');
-        setIsDialogOpen(false);
+        // Update options list
+        setOptions(prev => [...prev, newOption]);
         
-        toast({
-          title: "Success",
-          description: "New option added successfully",
-        });
+        // Select the newly added option
+        onValueChange(data.id);
+        
+        // Reset form
+        setCustomValue('');
+        setShowCustomInput(false);
+        
+        toast.success(`New ${tableName} added successfully`);
       }
     } catch (error) {
-      console.error('Error adding custom option:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add new option",
-        variant: "destructive",
-      });
+      console.error(`Error adding ${tableName}:`, error);
+      toast.error(`Failed to add new ${tableName}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getDisplayValue = (option: { id: string; title?: string; name?: string }) => {
-    return option.title || option.name || option.id;
+  const handleCancel = () => {
+    setCustomValue('');
+    setShowCustomInput(false);
   };
 
-  const selectedOption = allOptions.find(option => option.id === currentValue);
+  if (showCustomInput) {
+    return (
+      <div className="space-y-2">
+        <Input
+          value={customValue}
+          onChange={(e) => setCustomValue(e.target.value)}
+          placeholder={`Enter new ${tableName}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAddCustom();
+            } else if (e.key === 'Escape') {
+              handleCancel();
+            }
+          }}
+        />
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleAddCustom} 
+            disabled={!customValue.trim() || isLoading}
+            size="sm"
+          >
+            {isLoading ? 'Adding...' : 'Add'}
+          </Button>
+          <Button 
+            onClick={handleCancel} 
+            variant="outline" 
+            size="sm"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex gap-2">
-      <Select value={currentValue} onValueChange={onValueChange}>
-        <SelectTrigger className="flex-1">
-          <SelectValue placeholder={placeholder}>
-            {selectedOption ? getDisplayValue(selectedOption) : placeholder}
-          </SelectValue>
+    <div className="space-y-2">
+      <Select onValueChange={onValueChange} value={value || selectedValue}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {allOptions.map((option) => (
+          {options.map((option) => (
             <SelectItem key={option.id} value={option.id}>
-              {getDisplayValue(option)}
+              {option.title || option.name}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
       
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="icon">
-            <Plus className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Option</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              value={customValue}
-              onChange={(e) => setCustomValue(e.target.value)}
-              placeholder="Enter new option"
-            />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddCustomOption} disabled={isLoading}>
-                {isLoading ? "Adding..." : "Add"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setShowCustomInput(true)}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add New {tableName}
+      </Button>
     </div>
   );
 }
