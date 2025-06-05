@@ -22,13 +22,7 @@ export function useAdminCareersQuery(options: AdminCareersQueryOptions) {
       let query = supabase
         .from('careers')
         .select(`
-          *,
-          profiles (
-            id,
-            full_name,
-            avatar_url,
-            email
-          )
+          *
         `, { count: 'exact' });
 
       // Apply filters
@@ -64,6 +58,25 @@ export function useAdminCareersQuery(options: AdminCareersQueryOptions) {
 
       if (error) throw error;
 
+      // Get profiles for the careers separately to avoid relationship conflicts
+      const careerIds = careers?.map(career => career.id) || [];
+      let profilesData: any[] = [];
+      
+      if (careerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, email')
+          .in('id', careers?.map(career => career.author_id).filter(Boolean) || []);
+        
+        profilesData = profiles || [];
+      }
+
+      // Merge profiles data with careers
+      const careersWithProfiles = careers?.map(career => ({
+        ...career,
+        profiles: profilesData.find(profile => profile.id === career.author_id) || null
+      })) || [];
+
       // Get summary statistics
       const { data: statsData } = await supabase
         .from('careers')
@@ -87,7 +100,7 @@ export function useAdminCareersQuery(options: AdminCareersQueryOptions) {
       }, {} as Record<string, number>) || {};
 
       return {
-        careers: careers || [],
+        careers: careersWithProfiles,
         totalCount,
         totalPages,
         approvedCount,

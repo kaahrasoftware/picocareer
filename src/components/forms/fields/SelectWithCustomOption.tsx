@@ -46,13 +46,26 @@ export function SelectWithCustomOption({
     try {
       console.log(`Adding new ${tableName} entry:`, customValue);
       
+      // Create the data object based on table name
+      let insertData: any = {};
+      
+      if (tableName === 'majors' || tableName === 'careers') {
+        insertData = {
+          title: customValue,
+          description: `Custom ${tableName === 'majors' ? 'major' : 'career'}: ${customValue}`,
+          status: 'Pending'
+        };
+      } else {
+        insertData = {
+          name: customValue,
+          status: 'Pending'
+        };
+      }
+      
       // Add new entry to the database
       const { data, error } = await supabase
-        .from(tableName)
-        .insert({ 
-          title: customValue,
-          name: customValue
-        })
+        .from(tableName as any)
+        .insert(insertData)
         .select()
         .single();
 

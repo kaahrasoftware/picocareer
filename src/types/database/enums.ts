@@ -127,7 +127,7 @@ export enum UserType {
 
 export enum OpportunityType {
   INTERNSHIP = "internship",
-  JOB = "job",
+  JOB = "job", 
   SCHOLARSHIP = "scholarship",
   FELLOWSHIP = "fellowship",
   RESEARCH = "research",

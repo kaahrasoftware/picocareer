@@ -15,7 +15,6 @@ export function useCareerChatUnified() {
   // Use the existing chat session hook for session management
   const {
     messages,
-    setMessages,
     sessionId,
     isLoading,
     addMessage,
@@ -116,7 +115,6 @@ export function useCareerChatUnified() {
   };
 
   const handleStartNewChat = async () => {
-    setMessages([]);
     setIsSessionComplete(false);
     setQuestionProgress(0);
     setCurrentCategory('education');

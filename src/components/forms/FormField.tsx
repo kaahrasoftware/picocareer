@@ -6,9 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SelectWithCustomOption } from './fields/SelectWithCustomOption';
-import { Control, FieldPath, FieldValues } from 'react-hook-form';
+import { Control, FieldPath, FieldValues, UseFormWatch } from 'react-hook-form';
 
-export interface FormFieldProps<T extends FieldValues> {
+export interface FormFieldProps<T extends FieldValues = FieldValues> {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
@@ -18,9 +18,12 @@ export interface FormFieldProps<T extends FieldValues> {
   tableName?: string;
   description?: string;
   required?: boolean;
+  bucket?: string;
+  dependsOn?: string;
+  watch?: UseFormWatch<T>;
 }
 
-export function FormField<T extends FieldValues>({
+export function FormField<T extends FieldValues = FieldValues>({
   control,
   name,
   label,
@@ -29,7 +32,10 @@ export function FormField<T extends FieldValues>({
   options = [],
   tableName,
   description,
-  required = false
+  required = false,
+  bucket,
+  dependsOn,
+  watch
 }: FormFieldProps<T>) {
   const renderField = (field: any) => {
     switch (type) {
