@@ -9,10 +9,10 @@ import { SelectWithCustomOption } from './fields/SelectWithCustomOption';
 import { Control, FieldPath, FieldValues, UseFormWatch } from 'react-hook-form';
 
 export interface FormFieldProps<T extends FieldValues = FieldValues> {
-  control: Control<T>;
+  control?: Control<T>;
   name: FieldPath<T>;
   label: string;
-  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local';
+  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local' | 'image' | 'richtext' | 'category' | 'subcategory';
   placeholder?: string;
   options?: Array<{ id: string; title?: string; name?: string; label?: string; value?: string }>;
   tableName?: string;
@@ -21,6 +21,8 @@ export interface FormFieldProps<T extends FieldValues = FieldValues> {
   bucket?: string;
   dependsOn?: string;
   watch?: UseFormWatch<T>;
+  component?: React.ComponentType<any>;
+  defaultValue?: any;
 }
 
 export function FormField<T extends FieldValues = FieldValues>({
@@ -37,6 +39,11 @@ export function FormField<T extends FieldValues = FieldValues>({
   dependsOn,
   watch
 }: FormFieldProps<T>) {
+  // If no control is provided, this is likely a field configuration object
+  if (!control) {
+    return null;
+  }
+
   const renderField = (field: any) => {
     switch (type) {
       case 'textarea':
@@ -109,6 +116,19 @@ export function FormField<T extends FieldValues = FieldValues>({
         return (
           <Input 
             type="datetime-local" 
+            placeholder={placeholder} 
+            {...field} 
+          />
+        );
+
+      case 'image':
+      case 'richtext':
+      case 'category':
+      case 'subcategory':
+        // These types are handled by the parent component
+        return (
+          <Input 
+            type="text" 
             placeholder={placeholder} 
             {...field} 
           />

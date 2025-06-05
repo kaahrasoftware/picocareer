@@ -139,6 +139,9 @@ export function GenericUploadForm({
               required={field.required}
               options={field.options}
               tableName={field.tableName}
+              bucket={field.bucket}
+              dependsOn={field.dependsOn}
+              watch={form.watch}
             />
           );
         })}

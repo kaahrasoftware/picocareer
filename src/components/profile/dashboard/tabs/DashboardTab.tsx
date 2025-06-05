@@ -7,8 +7,7 @@ import {
   GraduationCap,
   Settings,
   Calendar,
-  CalendarClock,
-  Briefcase
+  CalendarClock
 } from "lucide-react";
 import { OverviewTab } from "./OverviewTab";
 import { UsersTab } from "./UsersTab";
@@ -17,13 +16,12 @@ import { AcademicResourcesTab } from "./AcademicResourcesTab";
 import { ContentResourcesTab } from "./ContentResourcesTab";
 import { EventManagementTab } from "./events/EventManagementTab";
 import { SessionManagementTab } from "./sessions/SessionManagementTab";
-import { CareersManagementTab } from "./careers/CareersManagementTab";
 
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
-      <Tabs defaultValue="careers" className="space-y-4">
-        <TabsList className="grid grid-cols-8 gap-4">
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="grid grid-cols-7 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             <span>Overview</span>
@@ -31,10 +29,6 @@ export function DashboardTab() {
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
             <span>Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="careers" className="gap-2">
-            <Briefcase className="h-4 w-4" />
-            <span>Careers</span>
           </TabsTrigger>
           <TabsTrigger value="events" className="gap-2">
             <Calendar className="h-4 w-4" />
@@ -64,10 +58,6 @@ export function DashboardTab() {
         
         <TabsContent value="users">
           <UsersTab />
-        </TabsContent>
-
-        <TabsContent value="careers">
-          <CareersManagementTab />
         </TabsContent>
 
         <TabsContent value="events">
