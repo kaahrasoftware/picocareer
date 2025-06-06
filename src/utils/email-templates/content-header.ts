@@ -1,66 +1,59 @@
 
-/**
- * Generates a content-specific header for email templates
- */
-export function generateContentHeader(
-  contentType: string, 
-  totalAmount: string | undefined, 
-  recipientName: string,
-  styles: { primary: string; secondary: string; accent: string }
-): string {
-  let greeting = recipientName ? `Hello ${recipientName},` : 'Hello,';
-  let headerText = '';
-  let subheaderText = '';
+import { renderScholarshipHeader } from "./scholarship-renderer";
+import type { ContentItem } from "@/types/database/email";
 
-  switch (contentType) {
-    case 'scholarships':
-      headerText = 'Scholarship Opportunities';
-      subheaderText = totalAmount 
-        ? `Discover scholarships worth up to ${totalAmount} that match your profile!` 
-        : 'Discover these scholarship opportunities that match your profile!';
-      break;
-    case 'opportunities':
-      headerText = 'Career Opportunities';
-      subheaderText = 'Explore these exclusive opportunities selected just for you.';
-      break;
-    case 'careers':
-      headerText = 'Career Pathways';
-      subheaderText = 'Discover these career paths that align with your skills and interests.';
-      break;
-    case 'majors':
-      headerText = 'Academic Programs';
-      subheaderText = 'Explore these academic majors that could be perfect for your career goals.';
-      break;
-    case 'schools':
-      headerText = 'Educational Institutions';
-      subheaderText = 'Check out these schools that match your educational preferences.';
-      break;
-    case 'mentors':
-      headerText = 'Meet Your Mentors';
-      subheaderText = 'Connect with these exceptional mentors selected based on your interests.';
-      break;
-    case 'blogs':
-      headerText = 'Latest Insights';
-      subheaderText = 'Read the latest articles and insights from our platform.';
-      break;
-    case 'events':
-      headerText = 'Upcoming Events';
-      subheaderText = 'Don\'t miss these upcoming events that match your interests.';
-      break;
-    default:
-      headerText = 'Personalized Content';
-      subheaderText = 'Check out this content selected just for you.';
+export function generateContentHeader(
+  contentType: string,
+  totalAmount?: string,
+  recipientName?: string,
+  styles?: { primary: string; secondary: string; accent: string },
+  contentItems?: ContentItem[]
+): string {
+  const defaultStyles = {
+    primary: "#4f46e5",
+    secondary: "#3730a3",
+    accent: "#4f46e5"
+  };
+  
+  const headerStyles = styles || defaultStyles;
+
+  // Use special scholarship header for scholarships
+  if (contentType === 'scholarships' && contentItems) {
+    return renderScholarshipHeader(contentItems, recipientName || '', headerStyles);
   }
 
+  // Default header for other content types
+  const contentTypeLabels: Record<string, { title: string; icon: string }> = {
+    opportunities: { title: "Career Opportunities", icon: "🚀" },
+    careers: { title: "Career Spotlight", icon: "💼" },
+    majors: { title: "Academic Programs", icon: "📚" },
+    schools: { title: "Educational Institutions", icon: "🏛️" },
+    mentors: { title: "Meet Your Mentors", icon: "👋" },
+    blogs: { title: "Latest Insights", icon: "📖" },
+    events: { title: "Upcoming Events", icon: "🗓️" },
+  };
+
+  const contentInfo = contentTypeLabels[contentType] || { title: "Content Update", icon: "📄" };
+
   return `
-    <div style="padding: 24px; text-align: center;">
-      <h1 style="margin: 0 0 16px 0; color: ${styles.primary}; font-size: 24px; font-weight: 600;">
-        ${headerText}
+    <div style="
+      background: linear-gradient(135deg, ${headerStyles.primary}, ${headerStyles.secondary});
+      color: white;
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 32px;
+    ">
+      <div style="font-size: 48px; margin-bottom: 8px;">
+        ${contentInfo.icon}
+      </div>
+      <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">
+        ${contentInfo.title}
       </h1>
-      
-      <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 16px;">
-        ${greeting} ${subheaderText}
-      </p>
+      ${recipientName ? `
+        <p style="margin: 0; font-size: 16px; opacity: 0.8;">
+          Hello ${recipientName}!
+        </p>
+      ` : ''}
     </div>
   `;
 }

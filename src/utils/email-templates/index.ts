@@ -1,7 +1,7 @@
-
 import { ContentItem, EmailContentTypeSettings } from "@/types/database/email";
 import { formatContentCard } from "./content-cards";
 import { generateHeader } from "./header-templates";
+import { generateContentHeader } from "./content-header";
 
 export function generateEmailContent(
   title: string,
@@ -32,22 +32,24 @@ export function generateEmailContent(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  const header = generateHeader(
-    settings?.content?.header_text || title,
-    layoutSettings.headerStyle || 'centered',
+  // Use the new content header generator that handles scholarships specially
+  const header = generateContentHeader(
+    contentType,
+    undefined, // totalAmount - calculated inside for scholarships
+    recipientName,
     styles,
-    settings?.logo_url
+    contentItems
   );
 
   // Ensure contentItems is an array before attempting to map over it
   const safeContentItems = Array.isArray(contentItems) ? contentItems : [];
 
-  // Fix: Passing parameters in the correct order
+  // Generate content cards with updated parameters
   const contentCardsHtml = safeContentItems.length > 0
     ? safeContentItems.map(item => formatContentCard(
         item, 
         contentType, 
-        siteUrl,  // Pass siteUrl before styles
+        siteUrl,
         styles, 
         layoutSettings
       )).join('')
@@ -72,10 +74,6 @@ export function generateEmailContent(
           ${header}
           
           <div style="padding: 0 24px;">
-            <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-              ${recipientName ? `Hello ${recipientName},` : 'Hello,'}
-            </p>
-            
             <p style="color: #374151; font-size: 16px; line-height: 1.5;">
               ${introText}
             </p>
