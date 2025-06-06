@@ -9,7 +9,7 @@ import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampa
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Mail, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -85,68 +85,124 @@ export default function AdminEmailCampaigns() {
   }
 
   return (
-    <div className="container py-8">
-      {authError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Authentication Error</AlertTitle>
-          <AlertDescription className="flex justify-between items-center">
-            <span>{authError}</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSessionRefresh}
-              disabled={isRefreshing}
-              className="whitespace-nowrap"
-            >
-              {isRefreshing ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Refreshing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh Session
-                </>
-              )}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="container py-8">
+        {authError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertDescription className="flex justify-between items-center">
+              <span>{authError}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSessionRefresh}
+                disabled={isRefreshing}
+                className="whitespace-nowrap"
+              >
+                {isRefreshing ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Refresh Session
+                  </>
+                )}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="template-settings">Template Settings</TabsTrigger>
-        </TabsList>
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Mail className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+            Email Campaign Management
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Create, manage, and track your email campaigns with powerful analytics and customizable templates
+          </p>
+        </div>
 
-        <TabsContent value="campaigns">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-            <div className="md:col-span-3">
-              <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 rounded-lg p-8 shadow-md">
-                <h1 className="text-2xl font-bold mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Email Campaign Planner
-                </h1>
-                <EmailCampaignForm
-                  adminId={profile.id}
-                  onCampaignCreated={handleCampaignCreated}
-                />
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <div className="flex justify-center">
+            <TabsList className="bg-white shadow-sm border border-gray-200">
+              <TabsTrigger value="campaigns" className="flex items-center gap-2 px-6 py-3">
+                <Mail className="h-4 w-4" />
+                Campaigns
+              </TabsTrigger>
+              <TabsTrigger value="template-settings" className="flex items-center gap-2 px-6 py-3">
+                <Settings className="h-4 w-4" />
+                Template Settings
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="campaigns">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              {/* Campaign Creation Form */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-8 py-6 border-b border-gray-100">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Create New Campaign
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      Design and schedule your email campaign
+                    </p>
+                  </div>
+                  <div className="p-8">
+                    <EmailCampaignForm
+                      adminId={profile.id}
+                      onCampaignCreated={handleCampaignCreated}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Campaign List */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-secondary/5 to-accent/5 px-6 py-4 border-b border-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Recent Campaigns
+                    </h3>
+                  </div>
+                  <div className="p-6">
+                    <CampaignList 
+                      adminId={profile.id} 
+                      key={campaignListKey} 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="md:col-span-2">
-              <CampaignList 
-                adminId={profile.id} 
-                key={campaignListKey} 
-              />
-            </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="template-settings">
-          <TemplateSettingsTab adminId={profile.id} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="template-settings">
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-8 py-6 border-b border-gray-100">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Email Template Settings
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    Customize your email templates with branding and styling options
+                  </p>
+                </div>
+                <div className="p-8">
+                  <TemplateSettingsTab adminId={profile.id} />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

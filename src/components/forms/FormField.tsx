@@ -12,7 +12,7 @@ export interface FormFieldProps<T extends FieldValues = FieldValues> {
   control?: Control<T>;
   name: FieldPath<T>;
   label: string;
-  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local' | 'image' | 'richtext' | 'category' | 'subcategory';
+  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local' | 'image' | 'richtext' | 'category' | 'subcategory' | 'array' | 'degree' | 'number';
   placeholder?: string;
   options?: Array<{ id: string; title?: string; name?: string; label?: string; value?: string }>;
   tableName?: string;
@@ -121,10 +121,21 @@ export function FormField<T extends FieldValues = FieldValues>({
           />
         );
 
+      case 'number':
+        return (
+          <Input 
+            type="number" 
+            placeholder={placeholder} 
+            {...field} 
+          />
+        );
+
       case 'image':
       case 'richtext':
       case 'category':
       case 'subcategory':
+      case 'array':
+      case 'degree':
         // These types are handled by the parent component
         return (
           <Input 

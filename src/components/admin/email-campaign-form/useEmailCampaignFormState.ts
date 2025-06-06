@@ -5,7 +5,12 @@ import { EmailCampaignSchema } from "./emailCampaign.schema";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useEmailCampaignFormState() {
+interface UseEmailCampaignFormStateOptions {
+  onSuccess?: (campaignId: string) => void;
+  specificRecipientType?: string;
+}
+
+export function useEmailCampaignFormState(options: UseEmailCampaignFormStateOptions = {}) {
   const form = useForm({
     resolver: zodResolver(EmailCampaignSchema),
     defaultValues: {

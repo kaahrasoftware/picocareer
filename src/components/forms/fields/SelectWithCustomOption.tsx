@@ -78,7 +78,7 @@ export function SelectWithCustomOption({
       if (data) {
         console.log(`Successfully added ${tableName}:`, data);
         
-        // Create normalized option object
+        // Create normalized option object with proper type checking
         const newOption: Option = {
           id: data.id,
           title: data.title || data.name,
