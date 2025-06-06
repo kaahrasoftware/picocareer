@@ -31,8 +31,7 @@ export function useEmailCampaignFormState(options: UseEmailCampaignFormStateOpti
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
-        .limit(100);
+        .select('id, full_name, email');
       
       if (error) throw error;
       return data || [];

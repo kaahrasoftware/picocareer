@@ -104,7 +104,7 @@ export function CustomSelect({
         return;
       }
 
-      if (existingData && 'id' in existingData) {
+      if (existingData && typeof existingData === 'object' && 'id' in existingData) {
         const record = existingData as TableRecord;
         // If it exists, use the existing entry
         handleSelectChange(fieldName, record.id);
@@ -143,14 +143,14 @@ export function CustomSelect({
         return;
       }
 
-      if (data && 'id' in data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         const record = data as TableRecord;
         handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         
         // Add new item to filtered options
-        setFilteredOptions(prev => [...prev, data]);
+        setFilteredOptions(prev => [...prev, data as any]);
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
