@@ -20,32 +20,55 @@ export default function AdminEmailCampaigns() {
   const [campaignListKey, setCampaignListKey] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sessionValid, setSessionValid] = useState(true);
 
-  // Check session on load
+  // Check session on load and periodically
   useEffect(() => {
     checkSession();
-  }, []);
-
-  // Periodically check session to ensure we catch expirations
-  useEffect(() => {
+    
     const interval = setInterval(() => {
       checkSession();
-    }, 5 * 60 * 1000); // Check every 5 minutes
+    }, 2 * 60 * 1000); // Check every 2 minutes
     
     return () => clearInterval(interval);
   }, []);
 
   const checkSession = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session check error:", error);
+        setAuthError("Session error. Please refresh to continue.");
+        setSessionValid(false);
+        return;
+      }
+      
       if (!data.session) {
         setAuthError("Your session has expired. Please refresh the session to continue.");
-      } else {
-        setAuthError(null);
+        setSessionValid(false);
+        return;
       }
+      
+      // Check if session is close to expiring (within 10 minutes)
+      if (data.session.expires_at) {
+        const expiryTime = new Date(data.session.expires_at * 1000);
+        const now = new Date();
+        const timeUntilExpiry = expiryTime.getTime() - now.getTime();
+        
+        if (timeUntilExpiry < 10 * 60 * 1000 && timeUntilExpiry > 0) {
+          setAuthError("Your session will expire soon. Please refresh to continue working.");
+          setSessionValid(false);
+          return;
+        }
+      }
+      
+      setAuthError(null);
+      setSessionValid(true);
     } catch (error) {
       console.error("Error checking session:", error);
       setAuthError("Error checking your session status. Please refresh the page.");
+      setSessionValid(false);
     }
   };
 
@@ -55,7 +78,10 @@ export default function AdminEmailCampaigns() {
       const result = await refreshSession();
       if (result) {
         setAuthError(null);
+        setSessionValid(true);
         toast.success("Session refreshed successfully");
+        // Recheck session after refresh
+        setTimeout(checkSession, 1000);
       } else {
         toast.error("Failed to refresh session. Please try logging in again.");
       }
@@ -90,7 +116,7 @@ export default function AdminEmailCampaigns() {
         {authError && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertTitle>Authentication Warning</AlertTitle>
             <AlertDescription className="flex justify-between items-center">
               <span>{authError}</span>
               <Button 
@@ -155,6 +181,11 @@ export default function AdminEmailCampaigns() {
                     <p className="text-gray-600 mt-1">
                       Design and schedule your email campaign
                     </p>
+                    {!sessionValid && (
+                      <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded">
+                        ⚠️ Session issue detected. Please refresh your session before creating campaigns.
+                      </div>
+                    )}
                   </div>
                   <div className="p-8">
                     <EmailCampaignForm

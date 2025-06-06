@@ -75,12 +75,12 @@ export function SelectWithCustomOption({
         return;
       }
 
-      if (data && typeof data === 'object' && 'id' in data) {
+      if (data && typeof data === 'object' && data !== null && 'id' in data) {
         console.log(`Successfully added ${tableName}:`, data);
         
         // Create normalized option object
         const newOption: Option = {
-          id: data.id as string,
+          id: String(data.id),
           title: (data as any).title || (data as any).name,
           name: (data as any).name || (data as any).title
         };
@@ -89,7 +89,7 @@ export function SelectWithCustomOption({
         setOptions(prev => [...prev, newOption]);
         
         // Select the newly added option
-        onValueChange(data.id as string);
+        onValueChange(String(data.id));
         
         // Reset form
         setCustomValue('');

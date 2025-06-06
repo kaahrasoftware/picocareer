@@ -27,13 +27,6 @@ interface CustomSelectProps {
   titleField: TitleField;
 }
 
-type InsertData = {
-  majors: Database['public']['Tables']['majors']['Insert'];
-  schools: Database['public']['Tables']['schools']['Insert'];
-  companies: Database['public']['Tables']['companies']['Insert'];
-  careers: Database['public']['Tables']['careers']['Insert'];
-}
-
 interface TableRecord {
   id: string;
   [key: string]: any;
@@ -104,7 +97,7 @@ export function CustomSelect({
         return;
       }
 
-      if (existingData && typeof existingData === 'object' && 'id' in existingData) {
+      if (existingData && typeof existingData === 'object' && existingData !== null && 'id' in existingData) {
         const record = existingData as TableRecord;
         // If it exists, use the existing entry
         handleSelectChange(fieldName, record.id);
@@ -114,17 +107,17 @@ export function CustomSelect({
       }
 
       // If it doesn't exist, create a new entry
-      let insertData: InsertData[TableName];
+      let insertData: any;
       
       if (tableName === 'majors') {
         insertData = {
           title: customValue,
           description: `Custom major: ${customValue}`
-        } as InsertData['majors'];
+        };
       } else {
         insertData = {
           name: customValue
-        } as InsertData['schools'] | InsertData['companies'];
+        };
       }
 
       const { data, error } = await supabase
@@ -143,14 +136,14 @@ export function CustomSelect({
         return;
       }
 
-      if (data && typeof data === 'object' && 'id' in data) {
+      if (data && typeof data === 'object' && data !== null && 'id' in data) {
         const record = data as TableRecord;
         handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
         setCustomValue("");
         
         // Add new item to filtered options
-        setFilteredOptions(prev => [...prev, data as any]);
+        setFilteredOptions(prev => [...prev, record]);
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);

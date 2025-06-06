@@ -18,12 +18,70 @@ export const useEmailCampaignFormSubmit = ({
 }: UseEmailCampaignFormSubmitProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const validateSession = async (): Promise<boolean> => {
+    try {
+      console.log('Validating session before campaign submission...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session validation error:', sessionError);
+        
+        if (sessionError.message.includes('session_expired') || sessionError.message.includes('Refresh Token Not Found')) {
+          toast.error('Your session has expired. Please log in again to create campaigns.');
+          return false;
+        }
+        
+        toast.error(`Session error: ${sessionError.message}`);
+        return false;
+      }
+      
+      if (!sessionData.session) {
+        console.error('No active session found');
+        toast.error('You must be logged in to create campaigns. Please log in again.');
+        return false;
+      }
+      
+      // Check if session is close to expiring (within 5 minutes)
+      if (sessionData.session.expires_at) {
+        const expiryTime = new Date(sessionData.session.expires_at * 1000);
+        const now = new Date();
+        const timeUntilExpiry = expiryTime.getTime() - now.getTime();
+        
+        if (timeUntilExpiry < 5 * 60 * 1000) {
+          console.log('Session is close to expiring, attempting refresh...');
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshData.session) {
+            toast.error('Your session has expired. Please log in again.');
+            return false;
+          }
+          
+          console.log('Session refreshed successfully');
+        }
+      }
+      
+      console.log('Session validation successful:', sessionData.session.user?.id);
+      return true;
+    } catch (error) {
+      console.error('Exception during session validation:', error);
+      toast.error('Error validating your session. Please try logging in again.');
+      return false;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!adminId) {
       toast.error('Admin ID is required');
       return;
     }
 
+    // Validate session first
+    const sessionValid = await validateSession();
+    if (!sessionValid) {
+      return;
+    }
+
+    // Validate form data
     if (!formState.subject) {
       toast.error('Subject is required');
       return;
@@ -88,34 +146,6 @@ export const useEmailCampaignFormSubmit = ({
         }
       }
       
-      // First, ensure the session is refreshed before submitting
-      console.log('Refreshing auth session before campaign creation...');
-      const { data: sessionData, error: sessionError } = await supabase.auth.refreshSession();
-      
-      if (sessionError) {
-        console.error('Error refreshing session:', sessionError);
-        toast.error(`Session error: ${sessionError.message}`);
-        
-        // If session refresh fails, try getting the current session
-        const { data: currentSession } = await supabase.auth.getSession();
-        if (!currentSession.session) {
-          toast.error('Your session has expired. Please log in again.');
-          throw new Error('Authentication error: Session expired');
-        }
-      }
-      
-      // Additional check to ensure we have an authenticated session
-      if (!sessionData?.session) {
-        const { data: currentSession } = await supabase.auth.getSession();
-        if (!currentSession.session) {
-          toast.error('Not authenticated. Please log in again.');
-          throw new Error('Not authenticated');
-        }
-        console.log('Using current session:', currentSession.session.user?.id);
-      } else {
-        console.log('Session refreshed successfully:', sessionData.session.user?.id);
-      }
-      
       const campaignData = {
         admin_id: adminId,
         subject: formState.subject,
@@ -141,11 +171,17 @@ export const useEmailCampaignFormSubmit = ({
 
       if (error) {
         console.error('Error creating campaign:', error);
-        toast.error(`Failed to create campaign: ${error.message}`);
+        
+        // Handle specific authentication errors
+        if (error.message.includes('JWT') || error.message.includes('session') || error.message.includes('expired')) {
+          toast.error('Your session has expired. Please refresh the page and log in again.');
+        } else {
+          toast.error(`Failed to create campaign: ${error.message}`);
+        }
         throw error;
       }
 
-      // Removed the success toast from here as it's now in AdminEmailCampaigns
+      console.log('Campaign created successfully:', data);
       
       if (data && data[0] && onSuccess) {
         onSuccess(data[0].id);
@@ -153,7 +189,11 @@ export const useEmailCampaignFormSubmit = ({
     } catch (error) {
       console.error('Error creating campaign:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast.error(`Failed to create campaign: ${errorMessage}`);
+      
+      // Don't show duplicate error messages
+      if (!errorMessage.includes('session') && !errorMessage.includes('JWT')) {
+        toast.error(`Failed to create campaign: ${errorMessage}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
