@@ -101,7 +101,7 @@ export function CustomSelect({
         return;
       }
 
-      if (existingData) {
+      if (existingData && typeof existingData === 'object' && 'id' in existingData) {
         // If it exists, use the existing entry
         handleSelectChange(fieldName, String(existingData.id));
         setShowCustomInput(false);
@@ -139,7 +139,7 @@ export function CustomSelect({
         return;
       }
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         handleSelectChange(fieldName, String(data.id));
         setShowCustomInput(false);
         setCustomValue("");

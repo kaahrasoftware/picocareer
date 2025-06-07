@@ -1,11 +1,14 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { CampaignCard } from "./CampaignCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, RefreshCw, Mail, Sparkles, TrendingUp, Users, Clock } from "lucide-react";
+import { CampaignFilters } from "./campaign-filters/CampaignFilters";
+import { CampaignPagination } from "./campaign-filters/CampaignPagination";
+import { useAdvancedCampaignFilters } from "@/hooks/useAdvancedCampaignFilters";
 import type { Campaign } from "@/types/database/email";
 
 interface CampaignListProps {
@@ -13,73 +16,21 @@ interface CampaignListProps {
 }
 
 export function CampaignList({ adminId }: CampaignListProps) {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
-  const loadCampaigns = async () => {
-    setLoadingCampaigns(true);
-    try {
-      console.log('Loading campaigns for admin ID:', adminId);
-      
-      const { data, error } = await supabase
-        .from('email_campaigns')
-        .select(`
-          id, 
-          subject, 
-          content_type, 
-          content_id, 
-          content_ids,
-          frequency, 
-          scheduled_for,
-          status,
-          sent_at,
-          recipient_type,
-          sent_count,
-          failed_count,
-          recipients_count,
-          created_at,
-          last_error,
-          last_checked_at,
-          admin_id,
-          updated_at
-        `)
-        .eq('admin_id', adminId)
-        .order('scheduled_for', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      
-      console.log('Campaigns loaded:', data?.length || 0);
-      
-      const typedCampaigns: Campaign[] = (data || []).map(item => ({
-        ...item,
-        name: item.subject || "Unnamed Campaign",
-        subject: item.subject || "Unnamed Campaign",
-        status: (item.status as Campaign['status']) || "draft",
-        sent_count: item.sent_count || 0,
-        recipients_count: item.recipients_count || 0,
-        failed_count: item.failed_count || 0,
-        frequency: item.frequency as Campaign['frequency'] || "once"
-      }));
-      
-      setCampaigns(typedCampaigns);
-    } catch (err: any) {
-      console.error('Error loading campaigns:', err);
-      toast.error('Could not load campaigns. Please try again.');
-    } finally {
-      setLoadingCampaigns(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (adminId) {
-      loadCampaigns();
-    }
-  }, [adminId]);
+  const {
+    campaigns,
+    totalCount,
+    filteredCount,
+    loading: campaignsLoading,
+    filters,
+    pagination,
+    setFilters,
+    setPagination,
+    refreshCampaigns
+  } = useAdvancedCampaignFilters(adminId);
 
   const handleSendCampaign = async (campaignId: string) => {
     if (!campaignId) return;
@@ -103,7 +54,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
       }
 
       toast.success(`Campaign sent successfully to ${data.sent} recipients`);
-      loadCampaigns();
+      refreshCampaigns();
     } catch (err: any) {
       toast.error(`Error sending campaign: ${err?.message || "Unknown error"}`);
       console.error("Send campaign error (caught in handler):", err);
@@ -131,7 +82,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
         ? `Processed ${data.campaigns_processed} campaigns`
         : (data.message || "No campaigns due for sending"));
         
-      loadCampaigns();
+      refreshCampaigns();
     } catch (err: any) {
       toast.error(`Error checking scheduled campaigns: ${err?.message || "Unknown error"}`);
       console.error("Check scheduled campaigns error:", err);
@@ -140,18 +91,15 @@ export function CampaignList({ adminId }: CampaignListProps) {
     }
   };
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    loadCampaigns();
-  };
-
   // Calculate stats from campaigns
   const stats = {
-    totalCampaigns: campaigns.length,
+    totalCampaigns: totalCount,
     totalSent: campaigns.reduce((sum, c) => sum + c.sent_count, 0),
     totalRecipients: campaigns.reduce((sum, c) => sum + c.recipients_count, 0),
     activeCampaigns: campaigns.filter(c => c.status === 'sending' || c.status === 'pending').length
   };
+
+  const totalPages = Math.ceil(filteredCount / pagination.pageSize);
 
   return (
     <div className="space-y-6">
@@ -206,10 +154,20 @@ export function CampaignList({ adminId }: CampaignListProps) {
         </Card>
       </div>
 
+      {/* Campaign Filters */}
+      <CampaignFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        isCollapsed={isFiltersCollapsed}
+        onToggleCollapse={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        totalCount={totalCount}
+        filteredCount={filteredCount}
+      />
+
       {/* Action Buttons */}
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          {campaigns.length} campaigns • Last updated: {new Date().toLocaleTimeString()}
+          {filteredCount} campaigns • Last updated: {new Date().toLocaleTimeString()}
         </div>
         
         <div className="flex gap-2">
@@ -235,11 +193,11 @@ export function CampaignList({ adminId }: CampaignListProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleRefresh}
-            disabled={loadingCampaigns || refreshing}
+            onClick={refreshCampaigns}
+            disabled={campaignsLoading}
             className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
           >
-            {loadingCampaigns || refreshing ? (
+            {campaignsLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading...
@@ -255,7 +213,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
       </div>
       
       {/* Campaign Cards Grid */}
-      {loadingCampaigns ? (
+      {campaignsLoading ? (
         <div className="grid gap-6 lg:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i} className="animate-pulse overflow-hidden">
@@ -289,27 +247,43 @@ export function CampaignList({ adminId }: CampaignListProps) {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Campaigns Yet
+                  No Campaigns Found
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Create your first email campaign to start engaging with your audience.
-                  Use the form on the left to get started.
+                  {totalCount === 0 
+                    ? "Create your first email campaign to start engaging with your audience."
+                    : "No campaigns match your current filters. Try adjusting your search criteria."
+                  }
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {campaigns.map(campaign => (
-            <CampaignCard
-              key={campaign.id}
-              campaign={campaign}
-              sendingCampaign={sendingCampaign}
-              onSend={handleSendCampaign}
+        <>
+          <div className="grid gap-6 lg:grid-cols-2">
+            {campaigns.map(campaign => (
+              <CampaignCard
+                key={campaign.id}
+                campaign={campaign}
+                sendingCampaign={sendingCampaign}
+                onSend={handleSendCampaign}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <CampaignPagination
+              currentPage={pagination.currentPage}
+              totalPages={totalPages}
+              totalCount={filteredCount}
+              pageSize={pagination.pageSize}
+              onPageChange={(page) => setPagination({ ...pagination, currentPage: page })}
+              onPageSizeChange={(size) => setPagination({ ...pagination, pageSize: size, currentPage: 1 })}
             />
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );
