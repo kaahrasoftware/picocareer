@@ -84,8 +84,8 @@ export function SelectWithCustomOption({
         // Create normalized option object with proper type checking
         const newOption: Option = {
           id: String(data.id),
-          title: (data as any).title || (data as any).name || customValue,
-          name: (data as any).name || (data as any).title || customValue
+          title: 'title' in data ? data.title : ('name' in data ? data.name : customValue),
+          name: 'name' in data ? data.name : ('title' in data ? data.title : customValue)
         };
 
         // Update options list

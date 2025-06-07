@@ -103,7 +103,7 @@ export function CustomSelect({
 
       if (existingData) {
         // If it exists, use the existing entry
-        handleSelectChange(fieldName, existingData.id);
+        handleSelectChange(fieldName, String(existingData.id));
         setShowCustomInput(false);
         setCustomValue("");
         return;
@@ -140,15 +140,15 @@ export function CustomSelect({
       }
 
       if (data) {
-        handleSelectChange(fieldName, data.id);
+        handleSelectChange(fieldName, String(data.id));
         setShowCustomInput(false);
         setCustomValue("");
         
         // Add new item to filtered options with proper type checking
         const newRecord: TableRecord = {
-          id: data.id,
-          title: (data as any).title,
-          name: (data as any).name
+          id: String(data.id),
+          title: 'title' in data ? data.title : undefined,
+          name: 'name' in data ? data.name : undefined
         };
         setFilteredOptions(prev => [...prev, newRecord]);
       }
