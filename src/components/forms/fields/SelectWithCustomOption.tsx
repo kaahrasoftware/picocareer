@@ -48,6 +48,7 @@ export function SelectWithCustomOption({
       
       // Create the data object based on table name
       let insertData: any = {};
+      let selectFields = 'id';
       
       if (tableName === 'majors' || tableName === 'careers') {
         insertData = {
@@ -55,18 +56,20 @@ export function SelectWithCustomOption({
           description: `Custom ${tableName === 'majors' ? 'major' : 'career'}: ${customValue}`,
           status: 'Pending'
         };
+        selectFields = 'id, title';
       } else {
         insertData = {
           name: customValue,
           status: 'Pending'
         };
+        selectFields = 'id, name';
       }
       
       // Add new entry to the database
       const { data, error } = await supabase
         .from(tableName as any)
         .insert(insertData)
-        .select()
+        .select(selectFields)
         .single();
 
       if (error) {

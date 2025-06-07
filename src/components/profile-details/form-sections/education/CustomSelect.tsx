@@ -81,10 +81,18 @@ export function CustomSelect({
 
   const handleCustomSubmit = async () => {
     try {
+      // Define select fields based on table
+      let selectFields = '';
+      if (tableName === 'majors' || tableName === 'careers') {
+        selectFields = `id, ${titleField}`;
+      } else {
+        selectFields = `id, ${titleField}`;
+      }
+
       // First, check if the entry already exists
       const { data: existingData, error: existingError } = await supabase
         .from(tableName)
-        .select(`id, ${titleField}`)
+        .select(selectFields)
         .eq(titleField, customValue)
         .maybeSingle();
 
@@ -123,7 +131,7 @@ export function CustomSelect({
       const { data, error } = await supabase
         .from(tableName)
         .insert(insertData)
-        .select(`id, ${titleField}`)
+        .select(selectFields)
         .single();
 
       if (error) {

@@ -43,8 +43,9 @@ export function generateEmailContent(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  // Generate engaging intro text for scholarships
+  // Generate engaging intro text
   let introText = templateSettings.content?.intro_text || body;
+  
   if (contentType === 'scholarships') {
     const totalAmount = contentItems.reduce((sum, item) => sum + (item.amount || 0), 0);
     const formattedTotal = new Intl.NumberFormat('en-US', {
@@ -55,6 +56,8 @@ export function generateEmailContent(
     }).format(totalAmount);
     
     introText = `Here are some scholarships that our PicoCareer team thinks you might be interested in! We've found ${contentItems.length} scholarship${contentItems.length > 1 ? 's' : ''} worth <strong style="color: ${colors.accent};">${formattedTotal}</strong> highlighted for this week. Check them out and take the next step toward your educational goals!`;
+  } else if (contentType === 'opportunities') {
+    introText = `Here are some of the highlighted opportunities of the week we think you might be interested in! We've curated ${contentItems.length} exciting opportunit${contentItems.length > 1 ? 'ies' : 'y'} that could be perfect for your career journey. Check them out and take the next step toward your professional goals!`;
   }
 
   // Format content cards based on template settings
@@ -174,7 +177,7 @@ function generateHeader(
 }
 
 /**
- * Formats a content item into an HTML card for email templates - RESTRUCTURED FOR SCHOLARSHIPS
+ * Formats a content item into an HTML card for email templates
  */
 function formatContentCard(
   item: ContentItem,
@@ -205,8 +208,9 @@ function formatContentCard(
   const description = item.description || '';
   const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || '';
 
-  // SPECIAL HANDLING FOR SCHOLARSHIPS - New Structure: Title → Description → Amount → CTA
+  // SPECIAL HANDLING FOR SCHOLARSHIPS - Keep existing scholarship structure
   if (contentType === 'scholarships') {
+    // ... keep existing code (scholarship template)
     const amount = item.amount || 0;
     const formattedAmount = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -318,7 +322,119 @@ function formatContentCard(
     `;
   }
 
-  // DEFAULT HANDLING FOR OTHER CONTENT TYPES
+  // SPECIAL HANDLING FOR OPPORTUNITIES - New Enhanced Design
+  if (contentType === 'opportunities') {
+    const opportunityUrl = `${siteUrl}/opportunities?dialog=${item.id}`;
+    const deadline = item.deadline;
+    const formattedDeadline = deadline 
+      ? new Date(deadline).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      : null;
+
+    // Clean description - remove HTML tags and limit length
+    const cleanDescription = description
+      .replace(/<[^>]*>/g, '')
+      .substring(0, 180);
+
+    return `
+      <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid ${colors.accent};
+        position: relative;
+      ">
+        <!-- Header with Title -->
+        <h2 style="
+          margin: 0 0 16px 0;
+          font-size: 22px;
+          font-weight: 700;
+          color: ${colors.primary};
+          line-height: 1.3;
+        ">
+          ${title}
+        </h2>
+
+        <!-- Description -->
+        ${cleanDescription ? `
+          <p style="
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+          ">
+            ${cleanDescription}${description.length > 180 ? '...' : ''}
+          </p>
+        ` : ''}
+
+        <!-- Key Details Card -->
+        <div style="
+          background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+          border-radius: 8px;
+          padding: 16px;
+          margin: 20px 0;
+          border-left: 3px solid ${colors.accent};
+        ">
+          <div style="display: grid; gap: 8px;">
+            ${item.provider_name ? `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 600; color: ${colors.primary}; font-size: 14px;">🏢 Provider:</span>
+                <span style="color: #374151; font-size: 14px;">${item.provider_name}</span>
+              </div>
+            ` : ''}
+            ${item.location ? `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 600; color: ${colors.primary}; font-size: 14px;">📍 Location:</span>
+                <span style="color: #374151; font-size: 14px;">${item.location}${item.remote ? ' (Remote Available)' : ''}</span>
+              </div>
+            ` : ''}
+            ${item.compensation ? `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 600; color: ${colors.primary}; font-size: 14px;">💰 Compensation:</span>
+                <span style="color: #374151; font-size: 14px;">${item.compensation}</span>
+              </div>
+            ` : ''}
+            ${formattedDeadline ? `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 600; color: #dc2626; font-size: 14px;">⏰ Deadline:</span>
+                <span style="color: #dc2626; font-size: 14px; font-weight: 600;">${formattedDeadline}</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin-top: 24px;">
+          <a 
+            href="${opportunityUrl}" 
+            style="
+              display: inline-block;
+              background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});
+              color: white;
+              padding: 14px 32px;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 700;
+              font-size: 16px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              transition: all 0.3s ease;
+            "
+          >
+            🚀 Apply Now
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  // DEFAULT HANDLING FOR OTHER CONTENT TYPES - Keep existing code
   const formattedDate = item.created_at 
     ? new Date(item.created_at).toLocaleDateString('en-US', { 
         year: 'numeric', 
