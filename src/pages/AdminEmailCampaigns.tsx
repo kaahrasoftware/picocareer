@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -7,6 +6,7 @@ import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { useEmailCampaignAnalytics } from "@/hooks/useEmailCampaignAnalytics";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw, Mail, Settings, TrendingUp, Users, Send } from "lucide-react";
@@ -22,6 +22,9 @@ export default function AdminEmailCampaigns() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [sessionValid, setSessionValid] = useState(true);
+
+  // Get real analytics data
+  const analytics = useEmailCampaignAnalytics(profile?.id || '');
 
   // Check session on load and periodically
   useEffect(() => {
@@ -163,7 +166,7 @@ export default function AdminEmailCampaigns() {
             </p>
           </div>
 
-          {/* Quick Stats Cards */}
+          {/* Real Analytics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
               <CardContent className="p-4 text-center">
@@ -173,7 +176,9 @@ export default function AdminEmailCampaigns() {
                   </div>
                 </div>
                 <p className="text-sm text-blue-600 font-medium">Success Rate</p>
-                <p className="text-xl font-bold text-blue-800">95.2%</p>
+                <p className="text-xl font-bold text-blue-800">
+                  {analytics.isLoading ? "..." : `${analytics.successRate}%`}
+                </p>
               </CardContent>
             </Card>
             
@@ -185,7 +190,9 @@ export default function AdminEmailCampaigns() {
                   </div>
                 </div>
                 <p className="text-sm text-green-600 font-medium">Campaigns Sent</p>
-                <p className="text-xl font-bold text-green-800">1,247</p>
+                <p className="text-xl font-bold text-green-800">
+                  {analytics.isLoading ? "..." : analytics.campaignsSent.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             
@@ -197,7 +204,9 @@ export default function AdminEmailCampaigns() {
                   </div>
                 </div>
                 <p className="text-sm text-purple-600 font-medium">Total Reach</p>
-                <p className="text-xl font-bold text-purple-800">24,891</p>
+                <p className="text-xl font-bold text-purple-800">
+                  {analytics.isLoading ? "..." : analytics.totalReach.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
           </div>

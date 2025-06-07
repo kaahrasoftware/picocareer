@@ -78,14 +78,16 @@ export function SelectWithCustomOption({
         return;
       }
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         console.log(`Successfully added ${tableName}:`, data);
         
         // Create normalized option object with proper type checking
         const newOption: Option = {
           id: String(data.id),
-          title: 'title' in data ? data.title : ('name' in data ? data.name : customValue),
-          name: 'name' in data ? data.name : ('title' in data ? data.title : customValue)
+          title: tableName === 'majors' || tableName === 'careers' ? 
+            (data as any).title || customValue : undefined,
+          name: tableName !== 'majors' && tableName !== 'careers' ? 
+            (data as any).name || customValue : undefined
         };
 
         // Update options list
