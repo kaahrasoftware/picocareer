@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { CampaignCard } from "./CampaignCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Mail, Sparkles } from "lucide-react";
 import type { Campaign } from "@/types/database/email";
 
 interface CampaignListProps {
@@ -15,7 +15,7 @@ interface CampaignListProps {
 export function CampaignList({ adminId }: CampaignListProps) {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true); // Start with loading to show initial state
+  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -54,10 +54,8 @@ export function CampaignList({ adminId }: CampaignListProps) {
       
       console.log('Campaigns loaded:', data?.length || 0);
       
-      // Ensure we have all required fields for the Campaign type
       const typedCampaigns: Campaign[] = (data || []).map(item => ({
         ...item,
-        // Use subject as name since name field doesn't exist in database
         name: item.subject || "Unnamed Campaign",
         subject: item.subject || "Unnamed Campaign",
         status: (item.status as Campaign['status']) || "draft",
@@ -81,7 +79,6 @@ export function CampaignList({ adminId }: CampaignListProps) {
     if (adminId) {
       loadCampaigns();
     }
-    // eslint-disable-next-line
   }, [adminId]);
 
   const handleSendCampaign = async (campaignId: string) => {
@@ -149,32 +146,49 @@ export function CampaignList({ adminId }: CampaignListProps) {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          Recent Campaigns
-        </h2>
+    <div className="space-y-6">
+      {/* Modern Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg">
+            <Mail className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Campaign Dashboard
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {campaigns.length} campaigns • Track performance and manage sends
+            </p>
+          </div>
+        </div>
+        
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleCheckScheduledCampaigns}
             disabled={loading}
-            className="border-primary/20 hover:border-primary/40 transition-colors"
+            className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Checking...
               </>
-            ) : "Check Scheduled"}
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Check Scheduled
+              </>
+            )}
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={loadingCampaigns || refreshing}
-            className="border-primary/20 hover:border-primary/40 transition-colors"
+            className="border-primary/20 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
           >
             {loadingCampaigns || refreshing ? (
               <>
@@ -191,26 +205,53 @@ export function CampaignList({ adminId }: CampaignListProps) {
         </div>
       </div>
       
+      {/* Campaign Cards */}
       {loadingCampaigns ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <div className="flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-            <p className="mt-2 text-muted-foreground">Loading campaigns...</p>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:gap-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="animate-pulse overflow-hidden">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 flex-1">
+                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="flex gap-2">
+                        <div className="h-5 bg-gray-200 rounded w-20"></div>
+                        <div className="h-5 bg-gray-200 rounded w-24"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {Array.from({ length: 4 }).map((_, j) => (
+                      <div key={j} className="h-16 bg-gray-200 rounded"></div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : campaigns.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <div className="space-y-2">
-              <p>No campaigns found.</p>
-              <p className="text-sm">Create a new campaign to get started.</p>
+        <Card className="border-dashed border-2 border-gray-200">
+          <CardContent className="py-12 text-center">
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto flex items-center justify-center">
+                <Mail className="h-8 w-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No Campaigns Yet
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Create your first email campaign to start engaging with your audience.
+                  Use the form on the left to get started.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="grid gap-6 md:gap-8">
           {campaigns.map(campaign => (
             <CampaignCard
               key={campaign.id}

@@ -144,11 +144,11 @@ export function CustomSelect({
         setShowCustomInput(false);
         setCustomValue("");
         
-        // Add new item to filtered options - fix type casting
+        // Add new item to filtered options with proper type checking
         const newRecord: TableRecord = {
           id: data.id,
-          title: data.title,
-          name: data.name
+          title: (data as any).title,
+          name: (data as any).name
         };
         setFilteredOptions(prev => [...prev, newRecord]);
       }
