@@ -44,6 +44,20 @@ export function generateEmailContent(
     metadataDisplay: ['category', 'date', 'author']
   };
 
+  // Generate engaging intro text for scholarships
+  let introText = templateSettings.content?.intro_text || body;
+  if (contentType === 'scholarships') {
+    const totalAmount = contentItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const formattedTotal = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(totalAmount);
+    
+    introText = `Here are some scholarships that our PicoCareer team thinks you might be interested in! We've found ${contentItems.length} scholarship${contentItems.length > 1 ? 's' : ''} worth ${formattedTotal} that match your profile. Check them out and take the next step toward your educational goals!`;
+  }
+
   // Format content cards based on template settings
   const contentCardsHtml = contentItems.length > 0
     ? contentItems.map(item => formatContentCard(
@@ -81,7 +95,7 @@ export function generateEmailContent(
             </p>
             
             <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-              ${templateSettings.content?.intro_text || body}
+              ${introText}
             </p>
           </div>
 
@@ -91,7 +105,7 @@ export function generateEmailContent(
 
           <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
             <p style="margin: 0 0 16px 0; color: #4b5563;">
-              ${templateSettings.content?.cta_text || "Check out more content on our website"}
+              ${templateSettings.content?.cta_text || "Visit our website to discover more opportunities"}
             </p>
             <a 
               href="${siteUrl}" 
@@ -99,13 +113,13 @@ export function generateEmailContent(
                      padding: 12px 24px; text-decoration: none; border-radius: 6px; 
                      font-weight: 500;"
             >
-              Visit Website
+              Visit PicoCareer
             </a>
           </div>
 
           <div style="padding: 24px; text-align: center; color: #6b7280; font-size: 14px;">
             <p style="margin: 0 0 8px 0;">
-              ${templateSettings.content?.footer_text || `© ${new Date().getFullYear()} All rights reserved.`}
+              ${templateSettings.content?.footer_text || `© ${new Date().getFullYear()} PicoCareer. All rights reserved.`}
             </p>
             <a 
               href="${siteUrl}/unsubscribe?campaign=${campaignId}" 
@@ -161,7 +175,7 @@ function generateHeader(
 }
 
 /**
- * Formats a content item into an HTML card for email templates
+ * Formats a content item into an HTML card for email templates - RESTRUCTURED FOR SCHOLARSHIPS
  */
 function formatContentCard(
   item: ContentItem,
@@ -187,7 +201,125 @@ function formatContentCard(
     metadataDisplay: ['category', 'date', 'author']
   };
 
-  // Get the formatted date if available
+  // Get display properties based on content type
+  const title = item.title || `Untitled ${contentType}`;
+  const description = item.description || '';
+  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || '';
+
+  // SPECIAL HANDLING FOR SCHOLARSHIPS - New Structure: Title → Description → Amount → CTA
+  if (contentType === 'scholarships') {
+    const amount = item.amount || 0;
+    const formattedAmount = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+
+    const scholarshipUrl = `${siteUrl}/scholarships?dialog=${item.id}`;
+    const deadline = item.deadline;
+    const formattedDeadline = deadline 
+      ? new Date(deadline).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        })
+      : null;
+
+    // Clean description - remove HTML tags and limit length
+    const cleanDescription = description
+      .replace(/<[^>]*>/g, '')
+      .substring(0, 200);
+
+    return `
+      <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid ${colors.accent};
+      ">
+        <!-- 1. TITLE FIRST - Clear and prominent -->
+        <h2 style="
+          margin: 0 0 16px 0;
+          font-size: 22px;
+          font-weight: 700;
+          color: ${colors.primary};
+          line-height: 1.3;
+        ">
+          ${title}
+        </h2>
+
+        <!-- 2. DESCRIPTION SECOND - Engaging content -->
+        ${cleanDescription ? `
+          <p style="
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+          ">
+            ${cleanDescription}${description.length > 200 ? '...' : ''}
+          </p>
+        ` : ''}
+
+        <!-- 3. AMOUNT THIRD - Prominently displayed -->
+        <div style="
+          background: linear-gradient(135deg, ${colors.accent}, ${colors.primary});
+          color: white;
+          padding: 16px 20px;
+          border-radius: 8px;
+          text-align: center;
+          margin: 20px 0;
+        ">
+          <div style="font-size: 14px; font-weight: 500; opacity: 0.9; margin-bottom: 4px;">
+            Scholarship Amount
+          </div>
+          <div style="font-size: 32px; font-weight: 800;">
+            ${formattedAmount}
+          </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div style="margin: 16px 0;">
+          ${item.provider_name ? `
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">
+              <strong>Provider:</strong> ${item.provider_name}
+            </p>
+          ` : ''}
+          ${formattedDeadline ? `
+            <p style="margin: 0; font-size: 14px; color: #dc2626; font-weight: 600;">
+              <strong>⏰ Deadline:</strong> ${formattedDeadline}
+            </p>
+          ` : ''}
+        </div>
+
+        <!-- 4. CTA FOURTH - Clear call to action -->
+        <div style="text-align: center; margin-top: 24px;">
+          <a 
+            href="${scholarshipUrl}" 
+            style="
+              display: inline-block;
+              background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary});
+              color: white;
+              padding: 14px 32px;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 700;
+              font-size: 16px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            "
+          >
+            🎓 Apply Now
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  // DEFAULT HANDLING FOR OTHER CONTENT TYPES
   const formattedDate = item.created_at 
     ? new Date(item.created_at).toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -202,19 +334,12 @@ function formatContentCard(
         })
       : '';
 
-  // Get display properties based on content type
-  const title = item.title || `Untitled ${contentType}`;
-  const description = item.description || '';
-  const imageUrl = item.cover_image_url || item.image_url || item.avatar_url || '';
   const author = item.author_name || '';
   const category = contentType;
 
-  // Determine the content link - with special handling for scholarships to use the dialog URL
+  // Determine the content link
   let contentLink = `${siteUrl}`;
   switch (contentType) {
-    case 'scholarships':
-      contentLink += `/scholarships?dialog=${item.id}`; // Updated link format for scholarships to open dialog
-      break;
     case 'blogs':
       contentLink += `/blog/${item.id}`;
       break;
@@ -260,15 +385,6 @@ function formatContentCard(
     
     // Add custom metadata based on content type
     switch (contentType) {
-      case 'scholarships':
-        // Always display amount for scholarships prominently
-        const amountText = item.formatted_amount || (item.amount ? `$${item.amount.toLocaleString()}` : 'Amount varies');
-        metadataItems.push(`<span style="font-weight: bold; color: ${colors.primary};">Amount: ${amountText}</span>`);
-        
-        if (item.provider_name && settings.metadataDisplay?.includes('provider')) {
-          metadataItems.push(`<span>Provider: ${item.provider_name}</span>`);
-        }
-        break;
       case 'opportunities':
         if (item.provider_name && settings.metadataDisplay?.includes('provider')) {
           metadataItems.push(`<span>Provider: ${item.provider_name}</span>`);
@@ -296,21 +412,9 @@ function formatContentCard(
     }
   }
 
-  // Special scholarship amount highlight
-  let scholarshipAmountHighlight = '';
-  if (contentType === 'scholarships' && item.amount) {
-    scholarshipAmountHighlight = `
-      <div style="position: absolute; top: 10px; right: 10px; background-color: ${colors.accent}; color: white; 
-                  padding: 5px 10px; border-radius: 20px; font-weight: bold; font-size: 14px;">
-        $${item.amount.toLocaleString()}
-      </div>
-    `;
-  }
-
   // Build and return the HTML for the content card
   return `
     <div style="margin-bottom: 32px; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); position: relative;">
-      ${scholarshipAmountHighlight}
       
       ${settings.contentBlocks?.includes('image') && imageUrl && settings.imagePosition === 'top' ? `
         <div style="width: 100%; height: 200px; overflow: hidden; background-color: #f3f4f6;">
@@ -349,20 +453,13 @@ function formatContentCard(
           </p>
         ` : ''}
         
-        ${contentType === 'scholarships' && settings.contentBlocks?.includes('metadata') ? `
-          <div style="margin: 10px 0; padding: 10px; background-color: #f9fafb; border-radius: 4px;">
-            ${item.deadline ? `<p style="margin: 0; font-size: 14px;"><strong>Deadline:</strong> ${new Date(item.deadline).toLocaleDateString()}</p>` : ''}
-            ${item.provider_name ? `<p style="margin: 5px 0 0 0; font-size: 14px;"><strong>Provider:</strong> ${item.provider_name}</p>` : ''}
-          </div>
-        ` : ''}
-        
         ${settings.contentBlocks?.includes('cta') ? `
           <a 
             href="${contentLink}" 
             style="display: inline-block; padding: 8px 16px; background-color: ${colors.accent}; color: white; 
                   text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: 500;"
           >
-            ${contentType === 'scholarships' ? 'Apply Now' : 'Read More'}
+            Read More
           </a>
         ` : ''}
       </div>

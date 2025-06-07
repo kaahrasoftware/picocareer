@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
 
@@ -97,7 +96,7 @@ export function CustomSelect({
         return;
       }
 
-      if (existingData && typeof existingData === 'object' && existingData !== null && 'id' in existingData) {
+      if (existingData) {
         const record = existingData as TableRecord;
         // If it exists, use the existing entry
         handleSelectChange(fieldName, record.id);
@@ -136,7 +135,7 @@ export function CustomSelect({
         return;
       }
 
-      if (data && typeof data === 'object' && data !== null && 'id' in data) {
+      if (data) {
         const record = data as TableRecord;
         handleSelectChange(fieldName, record.id);
         setShowCustomInput(false);
