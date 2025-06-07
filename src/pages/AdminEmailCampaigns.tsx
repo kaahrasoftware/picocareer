@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -9,7 +10,7 @@ import { TemplateSettingsTab } from "@/components/admin/email-templates/Template
 import { useEmailCampaignAnalytics } from "@/hooks/useEmailCampaignAnalytics";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Mail, Settings, TrendingUp, Users, Send } from "lucide-react";
+import { AlertCircle, RefreshCw, Mail, Settings, TrendingUp, Users, Send, Plus, BarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function AdminEmailCampaigns() {
   const { session, refreshSession } = useAuthSession();
   const { data: profile, isLoading: profileLoading } = useUserProfile(session);
-  const [activeTab, setActiveTab] = useState("campaigns");
+  const [activeTab, setActiveTab] = useState("create-campaign");
   const [campaignListKey, setCampaignListKey] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -99,13 +100,12 @@ export default function AdminEmailCampaigns() {
 
   const handleCampaignCreated = (campaignId: string) => {
     toast.success("Campaign created successfully!", {
-      description: "The page will refresh to show your new campaign."
+      description: "Switching to dashboard to view your new campaign."
     });
     
-    // Use setTimeout to allow the toast to be visible before refreshing
-    setTimeout(() => {
-      window.location.reload();
-    }, 2000);
+    // Switch to dashboard tab to show the new campaign
+    setActiveTab("dashboard");
+    setCampaignListKey(prev => prev + 1);
   };
 
   if (profileLoading) return <div className="container py-8">Loading...</div>;
@@ -217,11 +217,18 @@ export default function AdminEmailCampaigns() {
           <div className="flex justify-center">
             <TabsList className="bg-white/60 backdrop-blur-sm shadow-lg border border-gray-200/50 p-1">
               <TabsTrigger 
-                value="campaigns" 
+                value="create-campaign" 
                 className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
-                <Mail className="h-4 w-4" />
-                Campaign Manager
+                <Plus className="h-4 w-4" />
+                Create Campaign
+              </TabsTrigger>
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                <BarChart className="h-4 w-4" />
+                Campaign Dashboard
               </TabsTrigger>
               <TabsTrigger 
                 value="template-settings" 
@@ -233,70 +240,65 @@ export default function AdminEmailCampaigns() {
             </TabsList>
           </div>
 
-          <TabsContent value="campaigns">
-            {/* New Layout: 2 columns for form, 3 columns for campaigns */}
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-              {/* Compact Campaign Creation Form */}
-              <div className="xl:col-span-2">
-                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden sticky top-6">
-                  <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 px-6 py-5 border-b border-gray-100/50">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Mail className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">
-                          Create Campaign
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          Design and schedule your next campaign
-                        </p>
-                      </div>
+          <TabsContent value="create-campaign">
+            <div className="max-w-4xl mx-auto">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 px-6 py-5 border-b border-gray-100/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Plus className="h-5 w-5 text-primary" />
                     </div>
-                    {!sessionValid && (
-                      <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
-                        ⚠️ Session issue detected. Please refresh your session before creating campaigns.
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <EmailCampaignForm
-                      adminId={profile.id}
-                      onCampaignCreated={handleCampaignCreated}
-                    />
-                  </div>
-                </Card>
-              </div>
-
-              {/* Expanded Campaign List */}
-              <div className="xl:col-span-3">
-                <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
-                  <div className="bg-gradient-to-r from-secondary/10 via-accent/10 to-primary/10 px-6 py-5 border-b border-gray-100/50">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-secondary/10 rounded-lg">
-                          <TrendingUp className="h-5 w-5 text-secondary" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900">
-                            Campaign Dashboard
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Monitor performance and manage campaigns
-                          </p>
-                        </div>
-                      </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">
+                        Create New Campaign
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Design and schedule your next email campaign
+                      </p>
                     </div>
                   </div>
-                  <div className="p-6">
-                    <CampaignList 
-                      adminId={profile.id} 
-                      key={campaignListKey} 
-                    />
-                  </div>
-                </Card>
-              </div>
+                  {!sessionValid && (
+                    <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+                      ⚠️ Session issue detected. Please refresh your session before creating campaigns.
+                    </div>
+                  )}
+                </div>
+                <div className="p-8">
+                  <EmailCampaignForm
+                    adminId={profile.id}
+                    onCampaignCreated={handleCampaignCreated}
+                  />
+                </div>
+              </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="dashboard">
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-secondary/10 via-accent/10 to-primary/10 px-6 py-5 border-b border-gray-100/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-secondary/10 rounded-lg">
+                      <BarChart className="h-5 w-5 text-secondary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Campaign Dashboard
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Monitor performance and manage your email campaigns
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <CampaignList 
+                  adminId={profile.id} 
+                  key={campaignListKey} 
+                />
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="template-settings">
