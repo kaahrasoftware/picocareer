@@ -322,9 +322,9 @@ function formatContentCard(
     `;
   }
 
-  // SPECIAL HANDLING FOR OPPORTUNITIES - New Enhanced Design
+  // SPECIAL HANDLING FOR OPPORTUNITIES - Updated with new CTA text and URL
   if (contentType === 'opportunities') {
-    const opportunityUrl = `${siteUrl}/opportunities?dialog=${item.id}`;
+    const opportunityUrl = `${siteUrl}/opportunities/${item.id}`;
     const deadline = item.deadline;
     const formattedDeadline = deadline 
       ? new Date(deadline).toLocaleDateString('en-US', {
@@ -408,7 +408,7 @@ function formatContentCard(
           </div>
         </div>
 
-        <!-- CTA Button -->
+        <!-- CTA Button - Updated text and URL -->
         <div style="text-align: center; margin-top: 24px;">
           <a 
             href="${opportunityUrl}" 
@@ -424,10 +424,9 @@ function formatContentCard(
               box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
               text-transform: uppercase;
               letter-spacing: 0.5px;
-              transition: all 0.3s ease;
             "
           >
-            🚀 Apply Now
+            👀 Check Out
           </a>
         </div>
       </div>

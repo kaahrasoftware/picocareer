@@ -82,12 +82,7 @@ export function CustomSelect({
   const handleCustomSubmit = async () => {
     try {
       // Define select fields based on table
-      let selectFields = '';
-      if (tableName === 'majors' || tableName === 'careers') {
-        selectFields = `id, ${titleField}`;
-      } else {
-        selectFields = `id, ${titleField}`;
-      }
+      let selectFields = `id, ${titleField}`;
 
       // First, check if the entry already exists
       const { data: existingData, error: existingError } = await supabase
@@ -149,8 +144,13 @@ export function CustomSelect({
         setShowCustomInput(false);
         setCustomValue("");
         
-        // Add new item to filtered options
-        setFilteredOptions(prev => [...prev, data as TableRecord]);
+        // Add new item to filtered options - fix type casting
+        const newRecord: TableRecord = {
+          id: data.id,
+          title: data.title,
+          name: data.name
+        };
+        setFilteredOptions(prev => [...prev, newRecord]);
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);

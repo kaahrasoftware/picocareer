@@ -81,11 +81,11 @@ export function SelectWithCustomOption({
       if (data) {
         console.log(`Successfully added ${tableName}:`, data);
         
-        // Create normalized option object
+        // Create normalized option object - fix type issues
         const newOption: Option = {
           id: String(data.id),
-          title: data.title || data.name,
-          name: data.name || data.title
+          title: data.title || data.name || customValue,
+          name: data.name || data.title || customValue
         };
 
         // Update options list
