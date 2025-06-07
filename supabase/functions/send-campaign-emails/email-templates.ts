@@ -1,4 +1,3 @@
-
 import { ContentItem, EmailTemplateSettings } from "./types.ts";
 import { replaceTemplateVariables } from "./template-renderer.ts";
 
@@ -55,7 +54,7 @@ export function generateEmailContent(
       maximumFractionDigits: 0
     }).format(totalAmount);
     
-    introText = `Here are some scholarships that our PicoCareer team thinks you might be interested in! We've found ${contentItems.length} scholarship${contentItems.length > 1 ? 's' : ''} worth ${formattedTotal} that match your profile. Check them out and take the next step toward your educational goals!`;
+    introText = `Here are some scholarships that our PicoCareer team thinks you might be interested in! We've found ${contentItems.length} scholarship${contentItems.length > 1 ? 's' : ''} worth <strong style="color: ${colors.accent};">${formattedTotal}</strong> highlighted for this week. Check them out and take the next step toward your educational goals!`;
   }
 
   // Format content cards based on template settings

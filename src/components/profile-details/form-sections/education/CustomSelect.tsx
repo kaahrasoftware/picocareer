@@ -28,6 +28,8 @@ interface CustomSelectProps {
 
 interface TableRecord {
   id: string;
+  title?: string;
+  name?: string;
   [key: string]: any;
 }
 
@@ -97,9 +99,8 @@ export function CustomSelect({
       }
 
       if (existingData) {
-        const record = existingData as TableRecord;
         // If it exists, use the existing entry
-        handleSelectChange(fieldName, record.id);
+        handleSelectChange(fieldName, existingData.id);
         setShowCustomInput(false);
         setCustomValue("");
         return;
@@ -136,13 +137,12 @@ export function CustomSelect({
       }
 
       if (data) {
-        const record = data as TableRecord;
-        handleSelectChange(fieldName, record.id);
+        handleSelectChange(fieldName, data.id);
         setShowCustomInput(false);
         setCustomValue("");
         
         // Add new item to filtered options
-        setFilteredOptions(prev => [...prev, record]);
+        setFilteredOptions(prev => [...prev, data as TableRecord]);
       }
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
