@@ -134,7 +134,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
   const totalCount = mentorBookmarksQuery.data?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const renderMentorCard = (mentor: MentorProfile, handleView: (mentor: MentorProfile) => void) => (
+  const renderMentorCard = (mentor: MentorProfile, handleView: (item: MentorProfile) => void) => (
     <Card key={mentor.id} className="hover:shadow transition-all">
       <CardHeader className="flex flex-row items-center gap-3 pb-2">
         <ProfileAvatar avatarUrl={mentor.avatar_url} imageAlt={mentor.full_name || "Mentor"} size="md" />

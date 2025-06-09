@@ -78,7 +78,7 @@ export function SelectWithCustomOption({
         return;
       }
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         console.log(`Successfully added ${tableName}:`, data);
         
         // Create normalized option object with proper type checking

@@ -9,19 +9,36 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
 import { format } from "date-fns";
-import { BlogWithAuthor } from "@/types/blog/types";
 
 interface ProfileContentTabProps {
   profileId: string;
 }
 
+interface BlogData {
+  id: string;
+  title: string;
+  summary: string;
+  created_at: string;
+  cover_image_url?: string;
+  categories?: string[];
+}
+
+interface ResourceData {
+  id: string;
+  title: string;
+  description: string;
+  created_at: string;
+  content_type: string;
+  file_url?: string;
+}
+
 export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
-  const [selectedBlog, setSelectedBlog] = useState<BlogWithAuthor | null>(null);
-  const [selectedResource, setSelectedResource] = useState<any | null>(null);
+  const [selectedBlog, setSelectedBlog] = useState<any | null>(null);
+  const [selectedResource, setSelectedResource] = useState<ResourceData | null>(null);
   
   const { data: blogs, isLoading: isLoadingBlogs } = useQuery({
     queryKey: ['profile-blogs', profileId],
-    queryFn: async () => {
+    queryFn: async (): Promise<BlogData[]> => {
       const { data, error } = await supabase
         .from('blogs')
         .select('*')
@@ -36,11 +53,11 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
 
   const { data: resources, isLoading: isLoadingResources } = useQuery({
     queryKey: ['profile-resources', profileId],
-    queryFn: async () => {
+    queryFn: async (): Promise<ResourceData[]> => {
       const { data, error } = await supabase
         .from('hub_resources')
         .select('*')
-        .eq('uploaded_by', profileId)
+        .eq('created_by', profileId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -49,11 +66,11 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
     enabled: !!profileId,
   });
 
-  const handleOpenBlog = (blog: BlogWithAuthor) => {
+  const handleOpenBlog = (blog: BlogData) => {
     setSelectedBlog(blog);
   };
 
-  const handleOpenResource = (resource: any) => {
+  const handleOpenResource = (resource: ResourceData) => {
     setSelectedResource(resource);
   };
 
@@ -84,7 +101,7 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                   <Card 
                     key={blog.id} 
                     className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
-                    onClick={() => handleOpenBlog(blog as BlogWithAuthor)}
+                    onClick={() => handleOpenBlog(blog)}
                   >
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/3 h-48">
@@ -138,9 +155,9 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
                   >
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/3 h-48 bg-muted flex items-center justify-center">
-                        {resource.thumbnail_url ? (
+                        {resource.file_url ? (
                           <img 
-                            src={resource.thumbnail_url} 
+                            src={resource.file_url} 
                             alt={resource.title}
                             className="w-full h-full object-cover"
                           />
@@ -182,15 +199,6 @@ export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
           onClose={() => setSelectedBlog(null)}
         />
       )}
-
-      {/* Resource dialog - we'd need to implement this component */}
-      {/* {selectedResource && (
-        <ResourceViewDialog
-          resource={selectedResource}
-          isOpen={!!selectedResource}
-          onClose={() => setSelectedResource(null)}
-        />
-      )} */}
     </ScrollArea>
   );
 }

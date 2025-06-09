@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -32,17 +33,22 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
 
     setIsSubmitting(true);
     try {
+      const startDateTime = new Date(selectedDate);
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      startDateTime.setHours(hours, minutes, 0, 0);
+      
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setHours(endDateTime.getHours() + 1);
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: userId,
-          date_available: format(selectedDate, 'yyyy-MM-dd'),
-          start_time: selectedTime,
-          end_time: format(
-            new Date(selectedDate.setHours(parseInt(selectedTime.split(':')[0]) + 1)),
-            'HH:mm'
-          ),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          start_date_time: startDateTime.toISOString(),
+          end_date_time: endDateTime.toISOString(),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          is_available: true,
+          recurring: false
         });
 
       if (error) throw error;

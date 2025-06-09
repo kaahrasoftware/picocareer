@@ -12,6 +12,31 @@ interface ScholarshipBookmarksProps {
   activePage: string;
 }
 
+interface ScholarshipData {
+  id: string;
+  title: string;
+  description: string;
+  provider_name: string;
+  amount: number | null;
+  deadline: string;
+  status: string;
+  application_url: string | null;
+  category: string[];
+  tags: string[];
+  featured: boolean;
+  eligibility_criteria: any;
+  academic_requirements: any;
+  application_open_date: string | null;
+  application_process: string | null;
+  contact_email: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  created_at: string;
+  updated_at: string;
+  award_date?: string;
+  [key: string]: any;
+}
+
 export function ScholarshipBookmarks({ activePage }: ScholarshipBookmarksProps) {
   const { user } = useAuthState();
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,13 +93,21 @@ export function ScholarshipBookmarks({ activePage }: ScholarshipBookmarksProps) 
       }
 
       // Transform the data to ensure eligibility_criteria is properly structured
-      const transformedData = scholarships.map(scholarship => {
+      const transformedData: ScholarshipProfile[] = scholarships.map((scholarship: ScholarshipData) => {
         return {
           ...scholarship,
+          amount: scholarship.amount || 0,
           // Ensure eligibility_criteria is properly structured
-          eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' ? JSON.parse(scholarship.eligibility_criteria) : scholarship.eligibility_criteria || {}
+          eligibility_criteria: typeof scholarship.eligibility_criteria === 'string' 
+            ? JSON.parse(scholarship.eligibility_criteria) 
+            : scholarship.eligibility_criteria || {},
+          // Handle academic_requirements which could be Json type
+          academic_requirements: typeof scholarship.academic_requirements === 'string'
+            ? JSON.parse(scholarship.academic_requirements)
+            : scholarship.academic_requirements || {}
         };
       });
+      
       return {
         data: transformedData,
         count: count || 0

@@ -69,9 +69,14 @@ export function BookmarksTabWrapper() {
           console.log('Bookmark change detected:', payload);
           
           // Extract the content type and id from the payload
-          const contentType = payload.new?.content_type || payload.old?.content_type;
-          const contentId = payload.new?.content_id || payload.old?.content_id;
+          const payloadData = payload.new || payload.old;
+          if (!payloadData || typeof payloadData !== 'object') return;
+          
+          const contentType = 'content_type' in payloadData ? payloadData.content_type : undefined;
+          const contentId = 'content_id' in payloadData ? payloadData.content_id : undefined;
           const isDelete = payload.eventType === 'DELETE';
+          
+          if (!contentType || !contentId) return;
           
           // Pass the update details to our processing function
           const bookmarkUpdate: RealtimeBookmarkUpdate = {

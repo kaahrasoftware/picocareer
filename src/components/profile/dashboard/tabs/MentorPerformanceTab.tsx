@@ -284,6 +284,14 @@ export function MentorPerformanceTab() {
     setEndDate(end);
   };
 
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value as "all" | "month" | "quarter" | "year");
+  };
+
+  const handleSortMetricChange = (value: string) => {
+    setSortMetric(value as "sessions" | "rating" | "hours");
+  };
+
   if (error) {
     return (
       <Alert variant="destructive">
@@ -485,8 +493,8 @@ export function MentorPerformanceTab() {
             isLoading={isLoading}
             timeRange={timeRange}
             sortMetric={sortMetric}
-            onTimeRangeChange={setTimeRange}
-            onSortMetricChange={setSortMetric}
+            onTimeRangeChange={handleTimeRangeChange}
+            onSortMetricChange={handleSortMetricChange}
             onDateRangeChange={handleDateRangeChange}
           />
         </TabsContent>
