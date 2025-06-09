@@ -92,7 +92,7 @@ export function MainNavigation() {
         },
         { 
           title: "Work with Us", 
-          href: "/careers", // Placeholder - will be created later
+          href: "/careers",
           description: "Join our team"
         }
       ]
@@ -124,6 +124,17 @@ export function MainNavigation() {
           onClick={handleNavigation}
         >
           Mentorship
+        </Link>
+        
+        <Link 
+          to="/mentees" 
+          className={cn(
+            "px-4 py-2 rounded-md transition-colors",
+            isActive("/mentees") && "bg-primary/20 text-primary"
+          )}
+          onClick={handleNavigation}
+        >
+          Mentees
         </Link>
         
         <Link 
@@ -185,6 +196,19 @@ export function MainNavigation() {
             onClick={handleNavigation}
           >
             Mentorship
+          </Link>
+        </li>
+        
+        <li>
+          <Link 
+            to="/mentees" 
+            className={cn(
+              "px-4 py-2 rounded-md transition-colors",
+              isActive("/mentees") && "bg-primary/20 text-primary"
+            )}
+            onClick={handleNavigation}
+          >
+            Mentees
           </Link>
         </li>
         

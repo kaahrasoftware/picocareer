@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -40,6 +41,7 @@ import CreateOpportunity from "@/pages/CreateOpportunity";
 import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
 import Partnerships from "../pages/Partnerships";
 import Careers from "../pages/Careers";
+import Mentees from "../pages/Mentees";
 
 export const router = createBrowserRouter([
   {
@@ -66,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: "mentor",
         element: <Mentor />,
+      },
+      {
+        path: "mentees",
+        element: <Mentees />,
       },
       {
         path: "blog",

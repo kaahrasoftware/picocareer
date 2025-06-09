@@ -56,10 +56,13 @@ export function MentorTab({ profile }: MentorTabProps) {
     return null;
   }
 
-  // Ensure sessionTypes have all required properties
+  // Ensure sessionTypes have all required properties with defaults
   const enrichedSessionTypes = (sessionTypes || []).map(sessionType => ({
     ...sessionType,
-    custom_type_name: sessionType.custom_type_name || sessionType.type || 'Default Session'
+    custom_type_name: sessionType.custom_type_name || sessionType.type || 'Default Session',
+    description: sessionType.description || '',
+    phone_number: sessionType.phone_number || '',
+    telegram_username: sessionType.telegram_username || ''
   }));
 
   return (
