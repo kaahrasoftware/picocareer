@@ -1,91 +1,84 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ResponsiveBar } from "@nivo/bar";
-import { ResponsiveLine } from "@nivo/line";
-import { ResponsivePie } from "@nivo/pie";
-import { useMentorPerformanceStats } from "@/hooks/useMentorPerformanceStats";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 
 const mockBarData = [
   {
     "sessionType": "Career Advice",
     "menteeCount": 45,
-    "menteeCountColor": "hsl(341, 70%, 50%)"
   },
   {
     "sessionType": "Resume Review",
     "menteeCount": 62,
-    "menteeCountColor": "hsl(298, 70%, 50%)"
   },
   {
     "sessionType": "Mock Interview",
     "menteeCount": 23,
-    "menteeCountColor": "hsl(121, 70%, 50%)"
   },
   {
     "sessionType": "Personal Branding",
     "menteeCount": 78,
-    "menteeCountColor": "hsl(241, 70%, 50%)"
   },
   {
     "sessionType": "Networking Tips",
     "menteeCount": 34,
-    "menteeCountColor": "hsl(249, 70%, 50%)"
   }
 ];
 
 const mockLineData = [
-  {
-    "id": "newMentees",
-    "color": "hsl(204, 70%, 50%)",
-    "data": [
-      { "x": "Jan", "y": 23 },
-      { "x": "Feb", "y": 45 },
-      { "x": "Mar", "y": 12 },
-      { "x": "Apr", "y": 56 },
-      { "x": "May", "y": 34 },
-      { "x": "Jun", "y": 67 },
-      { "x": "Jul", "y": 28 },
-      { "x": "Aug", "y": 51 },
-      { "x": "Sep", "y": 39 },
-      { "x": "Oct", "y": 62 },
-      { "x": "Nov", "y": 48 },
-      { "x": "Dec", "y": 71 }
-    ]
-  }
+  { "month": "Jan", "newMentees": 23 },
+  { "month": "Feb", "newMentees": 45 },
+  { "month": "Mar", "newMentees": 12 },
+  { "month": "Apr", "newMentees": 56 },
+  { "month": "May", "newMentees": 34 },
+  { "month": "Jun", "newMentees": 67 },
+  { "month": "Jul", "newMentees": 28 },
+  { "month": "Aug", "newMentees": 51 },
+  { "month": "Sep", "newMentees": 39 },
+  { "month": "Oct", "newMentees": 62 },
+  { "month": "Nov", "newMentees": 48 },
+  { "month": "Dec", "newMentees": 71 }
 ];
 
 const mockPieData = [
   {
-    "id": "positive",
-    "label": "Positive",
+    "name": "Positive",
     "value": 75,
-    "color": "hsl(154, 70%, 50%)"
+    "color": "#10b981"
   },
   {
-    "id": "neutral",
-    "label": "Neutral",
+    "name": "Neutral",
     "value": 15,
-    "color": "hsl(44, 70%, 50%)"
+    "color": "#f59e0b"
   },
   {
-    "id": "negative",
-    "label": "Negative",
+    "name": "Negative",
     "value": 10,
-    "color": "hsl(34, 70%, 50%)"
+    "color": "#ef4444"
   }
 ];
 
-export function MentorPerformanceTab({ profileId }: { profileId: string }) {
+const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+
+interface MentorPerformanceTabProps {
+  profileId: string;
+}
+
+export function MentorPerformanceTab({ profileId }: MentorPerformanceTabProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [timeFilter, setTimeFilter] = useState<"all" | "year" | "month" | "quarter">("month");
   
-  const {
-    data: stats,
-    isLoading,
-    error
-  } = useMentorPerformanceStats(profileId, timeFilter);
+  // Mock stats data since the hook doesn't exist
+  const stats = {
+    totalMentees: 150,
+    totalSessions: 320,
+    averageRating: 4.7
+  };
+  const isLoading = false;
+  const error = null;
 
   const handleTimeFilterChange = (value: string) => {
     setTimeFilter(value as "all" | "year" | "month" | "quarter");
@@ -157,62 +150,15 @@ export function MentorPerformanceTab({ profileId }: { profileId: string }) {
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
-                <ResponsiveBar
-                  data={mockBarData}
-                  keys={["menteeCount"]}
-                  indexBy="sessionType"
-                  margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-                  padding={0.3}
-                  colors={{ scheme: 'category10' }}
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: 'session type',
-                    legendPosition: 'middle',
-                    legendOffset: 32
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: 'mentee count',
-                    legendPosition: 'middle',
-                    legendOffset: -40
-                  }}
-                  labelSkipWidth={12}
-                  labelSkipHeight={12}
-                  labelTextColor={{ from: 'color', modifiers: [ [ 'darker', 1.6 ] ] }}
-                  legends={[
-                    {
-                      dataFrom: 'keys',
-                      anchor: 'bottom-right',
-                      direction: 'column',
-                      justify: false,
-                      translateX: 120,
-                      translateY: 0,
-                      itemsSpacing: 2,
-                      itemWidth: 100,
-                      itemHeight: 20,
-                      itemDirection: 'left-to-right',
-                      itemOpacity: 0.85,
-                      symbolSize: 20,
-                      effects: [
-                        {
-                          on: 'hover',
-                          style: {
-                            itemOpacity: 1
-                          }
-                        }
-                      ]
-                    }
-                  ]}
-                  role="application"
-                  ariaLabel="Session Types Distribution"
-                  barAriaLabel={d => `${d.id}: ${d.formattedValue} mentees`}
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={mockBarData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="sessionType" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="menteeCount" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -224,69 +170,15 @@ export function MentorPerformanceTab({ profileId }: { profileId: string }) {
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
-                <ResponsiveLine
-                  data={mockLineData}
-                  margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-                  xScale={{ type: 'point' }}
-                  yScale={{
-                    type: 'linear',
-                    min: 'auto',
-                    max: 'auto',
-                    stacked: true,
-                    reverse: false
-                  }}
-                  yFormat=" >-.2f"
-                  axisTop={null}
-                  axisRight={null}
-                  axisBottom={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: 'month',
-                    legendOffset: 36,
-                    legendPosition: 'middle'
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: 'mentees',
-                    legendOffset: -40,
-                    legendPosition: 'middle'
-                  }}
-                  pointSize={10}
-                  pointColor={{ theme: 'background' }}
-                  pointBorderWidth={2}
-                  pointBorderColor={{ from: 'serieColor' }}
-                  pointLabelYOffset={-12}
-                  useMesh={true}
-                  legends={[
-                    {
-                      anchor: 'bottom-right',
-                      direction: 'column',
-                      justify: false,
-                      translateX: 100,
-                      translateY: 0,
-                      itemsSpacing: 0,
-                      itemDirection: 'left-to-right',
-                      itemWidth: 80,
-                      itemHeight: 20,
-                      itemOpacity: 0.75,
-                      symbolSize: 12,
-                      symbolShape: 'circle',
-                      symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                      effects: [
-                        {
-                          on: 'hover',
-                          style: {
-                            itemBackground: 'rgba(0, 0, 0, .03)',
-                            itemOpacity: 1
-                          }
-                        }
-                      ]
-                    }
-                  ]}
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={mockLineData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="newMentees" stroke="#8884d8" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
@@ -300,98 +192,25 @@ export function MentorPerformanceTab({ profileId }: { profileId: string }) {
             </CardHeader>
             <CardContent>
               <div className="h-[400px]">
-                <ResponsivePie
-                  data={mockPieData}
-                  margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-                  innerRadius={0.5}
-                  padAngle={0.7}
-                  cornerRadius={3}
-                  activeOuterRadiusOffset={8}
-                  colors={{ scheme: 'category10' }}
-                  borderWidth={1}
-                  borderColor={{
-                    from: 'color',
-                    modifiers: [
-                      [
-                        'darker',
-                        0.2
-                      ]
-                    ]
-                  }}
-                  arcLinkLabelsSkipAngle={10}
-                  arcLinkLabelsTextColor="#333333"
-                  arcLinkLabelsThickness={2}
-                  arcLinkLabelsColor={{ from: 'color' }}
-                  arcLabelsSkipAngle={10}
-                  arcLabelsTextColor={{
-                    from: 'color',
-                    modifiers: [
-                      [
-                        'darker',
-                        2
-                      ]
-                    ]
-                  }}
-                  defs={[
-                    {
-                      id: 'dots',
-                      type: 'patternDots',
-                      background: 'inherit',
-                      color: 'rgba(255, 255, 255, 0.3)',
-                      size: 4,
-                      padding: 1,
-                      stagger: true
-                    },
-                    {
-                      id: 'lines',
-                      type: 'patternLines',
-                      background: 'inherit',
-                      color: 'rgba(255, 255, 255, 0.3)',
-                      rotation: -45,
-                      lineWidth: 6,
-                      spacing: 10
-                    }
-                  ]}
-                  fill={[
-                    {
-                      match: {
-                        id: 'ruby'
-                      },
-                      id: 'dots'
-                    },
-                    {
-                      match: {
-                        id: 'c'
-                      },
-                      id: 'lines'
-                    }
-                  ]}
-                  legends={[
-                    {
-                      anchor: 'bottom',
-                      direction: 'row',
-                      justify: false,
-                      translateX: 0,
-                      translateY: 56,
-                      itemsSpacing: 0,
-                      itemWidth: 100,
-                      itemHeight: 18,
-                      itemTextColor: '#999',
-                      itemDirection: 'left-to-right',
-                      itemOpacity: 1,
-                      symbolSize: 18,
-                      symbolShape: 'circle',
-                      effects: [
-                        {
-                          on: 'hover',
-                          style: {
-                            itemTextColor: '#000'
-                          }
-                        }
-                      ]
-                    }
-                  ]}
-                />
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={mockPieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {mockPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
