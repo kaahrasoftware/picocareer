@@ -4,9 +4,10 @@ import { Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useEssayPrompts, useMenteeEssayResponses } from "@/hooks/useMenteeData";
+import { useEssayPrompts, useMenteeEssayResponses, useMenteeDataMutations } from "@/hooks/useMenteeData";
+import { MenteeEssayForm } from "../forms/MenteeEssayForm";
 import type { Profile } from "@/types/database/profiles";
-import type { EssayPromptCategory } from "@/types/mentee-profile";
+import type { EssayPromptCategory, MenteeEssayResponse } from "@/types/mentee-profile";
 
 interface MenteeEssaysTabProps {
   profile: Profile;
@@ -23,8 +24,42 @@ const CATEGORY_COLORS: Record<EssayPromptCategory, string> = {
 };
 
 export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [editingEssay, setEditingEssay] = useState<MenteeEssayResponse | null>(null);
+  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
+  
   const { data: essayResponses = [], isLoading: responsesLoading } = useMenteeEssayResponses(profile.id);
   const { data: prompts = [], isLoading: promptsLoading } = useEssayPrompts();
+  const { deleteEssayResponse } = useMenteeDataMutations();
+
+  const handleEdit = (essay: MenteeEssayResponse) => {
+    setEditingEssay(essay);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (essayId: string) => {
+    if (window.confirm('Are you sure you want to delete this essay response?')) {
+      deleteEssayResponse.mutate(essayId);
+    }
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingEssay(null);
+    setSelectedPromptId(null);
+  };
+
+  const handleStartWriting = (promptId: string) => {
+    setEditingEssay(null);
+    setSelectedPromptId(promptId);
+    setShowForm(true);
+  };
+
+  const handleAddEssay = () => {
+    setEditingEssay(null);
+    setSelectedPromptId(null);
+    setShowForm(true);
+  };
 
   if (responsesLoading || promptsLoading) {
     return <div>Loading essays...</div>;
@@ -35,7 +70,7 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Essay Responses</h3>
         {isEditing && (
-          <Button className="flex items-center gap-2">
+          <Button onClick={handleAddEssay} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Write Essay
           </Button>
@@ -68,7 +103,11 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
                         {prompt.prompt_text}
                       </p>
                     </div>
-                    <Button size="sm" disabled={hasResponse}>
+                    <Button 
+                      size="sm" 
+                      disabled={hasResponse}
+                      onClick={() => handleStartWriting(prompt.id)}
+                    >
                       {hasResponse ? 'Completed' : 'Start Writing'}
                     </Button>
                   </div>
@@ -108,10 +147,18 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
                 </div>
                 {isEditing && (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(response)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="destructive">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(response.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -153,6 +200,14 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
             </Card>
           ))}
         </div>
+      )}
+
+      {showForm && (
+        <MenteeEssayForm
+          menteeId={profile.id}
+          essay={editingEssay}
+          onClose={handleFormClose}
+        />
       )}
     </div>
   );

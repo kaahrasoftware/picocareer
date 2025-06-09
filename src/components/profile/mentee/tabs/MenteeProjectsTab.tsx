@@ -4,9 +4,10 @@ import { Plus, Edit, Trash2, ExternalLink, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMenteeProjects } from "@/hooks/useMenteeData";
+import { useMenteeProjects, useMenteeDataMutations } from "@/hooks/useMenteeData";
+import { MenteeProjectForm } from "../forms/MenteeProjectForm";
 import type { Profile } from "@/types/database/profiles";
-import type { ProjectStatus } from "@/types/mentee-profile";
+import type { ProjectStatus, MenteeProject } from "@/types/mentee-profile";
 
 interface MenteeProjectsTabProps {
   profile: Profile;
@@ -21,7 +22,32 @@ const STATUS_COLORS: Record<ProjectStatus, string> = {
 };
 
 export function MenteeProjectsTab({ profile, isEditing }: MenteeProjectsTabProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [editingProject, setEditingProject] = useState<MenteeProject | null>(null);
+  
   const { data: projects = [], isLoading } = useMenteeProjects(profile.id);
+  const { deleteProject } = useMenteeDataMutations();
+
+  const handleEdit = (project: MenteeProject) => {
+    setEditingProject(project);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (projectId: string) => {
+    if (window.confirm('Are you sure you want to delete this project?')) {
+      deleteProject.mutate(projectId);
+    }
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingProject(null);
+  };
+
+  const handleAddProject = () => {
+    setEditingProject(null);
+    setShowForm(true);
+  };
 
   if (isLoading) {
     return <div>Loading projects...</div>;
@@ -32,7 +58,7 @@ export function MenteeProjectsTab({ profile, isEditing }: MenteeProjectsTabProps
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Projects</h3>
         {isEditing && (
-          <Button className="flex items-center gap-2">
+          <Button onClick={handleAddProject} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Add Project
           </Button>
@@ -63,10 +89,18 @@ export function MenteeProjectsTab({ profile, isEditing }: MenteeProjectsTabProps
                 </div>
                 {isEditing && (
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(project)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button size="sm" variant="destructive">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDelete(project.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -154,6 +188,14 @@ export function MenteeProjectsTab({ profile, isEditing }: MenteeProjectsTabProps
             </Card>
           ))}
         </div>
+      )}
+
+      {showForm && (
+        <MenteeProjectForm
+          menteeId={profile.id}
+          project={editingProject}
+          onClose={handleFormClose}
+        />
       )}
     </div>
   );

@@ -126,6 +126,7 @@ export function useMenteeDataMutations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Course mutations
   const addCourse = useMutation({
     mutationFn: async (course: Omit<MenteeCourse, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
@@ -185,9 +186,202 @@ export function useMenteeDataMutations() {
     },
   });
 
+  // Project mutations
+  const addProject = useMutation({
+    mutationFn: async (project: Omit<MenteeProject, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('mentee_projects')
+        .insert([project])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-projects', data.mentee_id] });
+      toast({ title: "Project added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add project", variant: "destructive" });
+    },
+  });
+
+  const updateProject = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<MenteeProject> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('mentee_projects')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-projects', data.mentee_id] });
+      toast({ title: "Project updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update project", variant: "destructive" });
+    },
+  });
+
+  const deleteProject = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('mentee_projects')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-projects'] });
+      toast({ title: "Project deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete project", variant: "destructive" });
+    },
+  });
+
+  // Interest mutations
+  const addInterest = useMutation({
+    mutationFn: async (interest: Omit<MenteeInterest, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('mentee_interests')
+        .insert([interest])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-interests', data.mentee_id] });
+      toast({ title: "Interest added successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add interest", variant: "destructive" });
+    },
+  });
+
+  const updateInterest = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<MenteeInterest> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('mentee_interests')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-interests', data.mentee_id] });
+      toast({ title: "Interest updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update interest", variant: "destructive" });
+    },
+  });
+
+  const deleteInterest = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('mentee_interests')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-interests'] });
+      toast({ title: "Interest deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete interest", variant: "destructive" });
+    },
+  });
+
+  // Essay mutations
+  const addEssayResponse = useMutation({
+    mutationFn: async (essay: Omit<MenteeEssayResponse, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('mentee_essay_responses')
+        .insert([essay])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-essay-responses', data.mentee_id] });
+      toast({ title: "Essay response saved successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to save essay response", variant: "destructive" });
+    },
+  });
+
+  const updateEssayResponse = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<MenteeEssayResponse> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('mentee_essay_responses')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-essay-responses', data.mentee_id] });
+      toast({ title: "Essay response updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update essay response", variant: "destructive" });
+    },
+  });
+
+  const deleteEssayResponse = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('mentee_essay_responses')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mentee-essay-responses'] });
+      toast({ title: "Essay response deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete essay response", variant: "destructive" });
+    },
+  });
+
   return {
+    // Course mutations
     addCourse,
     updateCourse,
     deleteCourse,
+    // Project mutations
+    addProject,
+    updateProject,
+    deleteProject,
+    // Interest mutations
+    addInterest,
+    updateInterest,
+    deleteInterest,
+    // Essay mutations
+    addEssayResponse,
+    updateEssayResponse,
+    deleteEssayResponse,
   };
 }

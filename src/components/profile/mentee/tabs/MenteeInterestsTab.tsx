@@ -4,9 +4,10 @@ import { Plus, Edit, Trash2, Target, Book, Trophy, Heart, Building, Zap } from "
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useMenteeInterests } from "@/hooks/useMenteeData";
+import { useMenteeInterests, useMenteeDataMutations } from "@/hooks/useMenteeData";
+import { MenteeInterestForm } from "../forms/MenteeInterestForm";
 import type { Profile } from "@/types/database/profiles";
-import type { InterestCategory } from "@/types/mentee-profile";
+import type { InterestCategory, MenteeInterest } from "@/types/mentee-profile";
 
 interface MenteeInterestsTabProps {
   profile: Profile;
@@ -23,7 +24,32 @@ const CATEGORY_INFO: Record<InterestCategory, { color: string; icon: any; label:
 };
 
 export function MenteeInterestsTab({ profile, isEditing }: MenteeInterestsTabProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [editingInterest, setEditingInterest] = useState<MenteeInterest | null>(null);
+  
   const { data: interests = [], isLoading } = useMenteeInterests(profile.id);
+  const { deleteInterest } = useMenteeDataMutations();
+
+  const handleEdit = (interest: MenteeInterest) => {
+    setEditingInterest(interest);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (interestId: string) => {
+    if (window.confirm('Are you sure you want to delete this interest?')) {
+      deleteInterest.mutate(interestId);
+    }
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingInterest(null);
+  };
+
+  const handleAddInterest = () => {
+    setEditingInterest(null);
+    setShowForm(true);
+  };
 
   if (isLoading) {
     return <div>Loading interests...</div>;
@@ -43,7 +69,7 @@ export function MenteeInterestsTab({ profile, isEditing }: MenteeInterestsTabPro
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Interests & Goals</h3>
         {isEditing && (
-          <Button className="flex items-center gap-2">
+          <Button onClick={handleAddInterest} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             Add Interest
           </Button>
@@ -95,10 +121,18 @@ export function MenteeInterestsTab({ profile, isEditing }: MenteeInterestsTabPro
                         </div>
                         {isEditing && (
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEdit(interest)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="destructive">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(interest.id)}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -111,6 +145,14 @@ export function MenteeInterestsTab({ profile, isEditing }: MenteeInterestsTabPro
             );
           })}
         </div>
+      )}
+
+      {showForm && (
+        <MenteeInterestForm
+          menteeId={profile.id}
+          interest={editingInterest}
+          onClose={handleFormClose}
+        />
       )}
     </div>
   );
