@@ -2,10 +2,7 @@
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatisticsSection } from "@/components/sections/StatisticsSection";
 import { MentorTabsSection } from "@/components/sections/mentor/MentorTabsSection";
-import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
-import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
-import { FeaturedSchoolsSection } from "@/components/sections/FeaturedSchoolsSection";
-import { TopRatedMentorsSection } from "@/components/sections/TopRatedMentorsSection";
+import { FeaturedContentTabsSection } from "@/components/sections/FeaturedContentTabsSection";
 import { ResourcesHighlightSection } from "@/components/sections/ResourcesHighlightSection";
 import { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -42,14 +39,7 @@ const Index = () => {
             </section>
             <ResourcesHighlightSection />
             <MentorTabsSection />
-            <div className="TopRatedMentorsSection">
-              <TopRatedMentorsSection />
-            </div>
-            <div className="FeaturedCareersSection">
-              <FeaturedCareersSection />
-            </div>
-            <FeaturedMajorsSection />
-            <FeaturedSchoolsSection />
+            <FeaturedContentTabsSection />
           </div>
         </div>
       </div>
