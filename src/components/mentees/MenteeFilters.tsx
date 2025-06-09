@@ -85,12 +85,8 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
       
       const allSkills = new Set<string>();
       data?.forEach(profile => {
-        if (profile.skills) {
-          profile.skills.forEach((skill: string) => allSkills.add(skill));
-        }
-        if (profile.fields_of_interest) {
-          profile.fields_of_interest.forEach((interest: string) => allSkills.add(interest));
-        }
+        profile.skills?.forEach((skill: string) => allSkills.add(skill));
+        profile.fields_of_interest?.forEach((interest: string) => allSkills.add(interest));
       });
       
       return Array.from(allSkills).slice(0, 20); // Top 20 skills

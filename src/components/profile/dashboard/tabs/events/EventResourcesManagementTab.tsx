@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Plus, Upload, FileText, Download, Eye, BarChart3 } from 'lucide-react';
 import { EventResourceForm } from '@/components/event/EventResourceForm';
 import { EventResourceMetrics } from './EventResourceMetrics';
 import { ModernResourceAnalytics } from './ModernResourceAnalytics';
-import { useEventResourcesQuery } from '@/hooks/useEventResourcesQuery';
+import { useEventResources } from '@/hooks/useEventResources';
 
 interface EventResourcesManagementTabProps {
   eventId: string;
@@ -17,7 +18,7 @@ export function EventResourcesManagementTab({ eventId }: EventResourcesManagemen
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   
-  const { data: resources = [], isLoading } = useEventResourcesQuery(eventId);
+  const { resources = [], isLoading } = useEventResources(eventId);
 
   const getResourceIcon = (type: string) => {
     switch (type) {
