@@ -91,7 +91,7 @@ export function SelectWithCustomOption({
           // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
           data.forEach(item => {
-            if (item && typeof item === 'object' && 'id' in item && !combinedOptions.some(existing => existing.id === String(item.id))) {
+            if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
               combinedOptions.push({
                 id: String(item.id),
                 title: item.title || undefined,

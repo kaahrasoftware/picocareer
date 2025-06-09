@@ -1,35 +1,34 @@
 
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 import {
-  User,
   GraduationCap,
+  MapPin,
   BookOpen,
-  Code,
+  Trophy,
   FileText,
   Target,
-  MapPin,
-  Calendar,
   Star,
+  Calendar,
   Award,
   TrendingUp,
-  Github,
-  ExternalLink,
+  Code,
   Lightbulb,
-  Trophy
-} from "lucide-react";
+  Users,
+  Heart
+} from 'lucide-react';
 
 interface MenteeProfileDialogProps {
   menteeId: string | null;
@@ -37,17 +36,79 @@ interface MenteeProfileDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface MenteeDetails {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  bio?: string;
+  location?: string;
+  school_id?: string;
+  academic_major_id?: string;
+  skills?: string[];
+  fields_of_interest?: string[];
+  user_type: string;
+  created_at: string;
+  school?: { name: string };
+  academic_major?: { title: string };
+  academic_records?: Array<{
+    id: string;
+    year: number;
+    semester: string;
+    semester_gpa?: number;
+    cumulative_gpa?: number;
+    course_load?: number;
+    honors?: string[];
+    awards?: string[];
+    notes?: string;
+  }>;
+  projects?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    status: string;
+    technologies?: string[];
+    start_date?: string;
+    end_date?: string;
+    demo_url?: string;
+    github_url?: string;
+  }>;
+  interests?: Array<{
+    id: string;
+    interest_name: string;
+    category: string;
+    level?: string;
+  }>;
+  essays?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    essay_type: string;
+    word_count?: number;
+    created_at: string;
+  }>;
+}
+
 export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProfileDialogProps) {
-  // Fetch complete mentee profile data
   const { data: mentee, isLoading } = useQuery({
-    queryKey: ['mentee-profile', menteeId],
-    queryFn: async () => {
+    queryKey: ['mentee-details', menteeId],
+    queryFn: async (): Promise<MenteeDetails | null> => {
       if (!menteeId) return null;
-      
+
+      // Fetch basic profile info
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select(`
-          *,
+          id,
+          full_name,
+          avatar_url,
+          bio,
+          location,
+          school_id,
+          academic_major_id,
+          skills,
+          fields_of_interest,
+          user_type,
+          created_at,
           schools:school_id(name),
           majors:academic_major_id(title)
         `)
@@ -68,14 +129,7 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
         .from('mentee_projects')
         .select('*')
         .eq('mentee_id', menteeId)
-        .order('created_at', { ascending: false });
-
-      // Fetch courses
-      const { data: courses } = await supabase
-        .from('mentee_courses')
-        .select('*')
-        .eq('mentee_id', menteeId)
-        .order('year', { ascending: false });
+        .order('start_date', { ascending: false });
 
       // Fetch interests
       const { data: interests } = await supabase
@@ -83,14 +137,12 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
         .select('*')
         .eq('mentee_id', menteeId);
 
-      // Fetch essay responses
+      // Fetch essays
       const { data: essays } = await supabase
-        .from('mentee_essay_responses')
-        .select(`
-          *,
-          prompt:prompt_id(title, category, word_limit)
-        `)
-        .eq('mentee_id', menteeId);
+        .from('mentee_essays')
+        .select('*')
+        .eq('mentee_id', menteeId)
+        .order('created_at', { ascending: false });
 
       return {
         ...profile,
@@ -98,12 +150,11 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
         academic_major: profile.majors,
         academic_records: academicRecords || [],
         projects: projects || [],
-        courses: courses || [],
         interests: interests || [],
         essays: essays || []
       };
     },
-    enabled: !!menteeId && open
+    enabled: !!menteeId && open,
   });
 
   if (!open || !menteeId) return null;
@@ -111,8 +162,8 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          <div className="flex items-center justify-center p-8">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </DialogContent>
@@ -123,75 +174,65 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
   if (!mentee) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl">
-          <DialogHeader>
-            <DialogTitle>Profile not found</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Mentee not found</p>
+          </div>
         </DialogContent>
       </Dialog>
     );
   }
 
   const latestRecord = mentee.academic_records?.[0];
-  const gpaProgress = latestRecord?.cumulative_gpa ? (latestRecord.cumulative_gpa / 4.0) * 100 : 0;
+  const activeProjects = mentee.projects?.filter(p => p.status === 'in_progress')?.length || 0;
+  const completedProjects = mentee.projects?.filter(p => p.status === 'completed')?.length || 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Student Profile</DialogTitle>
-        </DialogHeader>
-
-        {/* Profile Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6">
-          <div className="flex items-start gap-6">
+          <div className="flex items-start gap-4 mb-4">
             <ProfileAvatar
               avatarUrl={mentee.avatar_url}
               imageAlt={mentee.full_name}
-              size="xl"
+              size="lg"
               editable={false}
             />
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">{mentee.full_name}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                  <span>{mentee.academic_major?.title || 'Undecided'}</span>
+              <DialogTitle className="text-2xl font-bold mb-2">{mentee.full_name}</DialogTitle>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <BookOpen className="h-4 w-4" />
+                  <span>{mentee.academic_major?.title || 'Undeclared'}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-green-600" />
-                  <span>{mentee.school?.name || 'No school listed'}</span>
-                </div>
+                {mentee.school?.name && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>{mentee.school.name}</span>
+                  </div>
+                )}
                 {mentee.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-gray-600" />
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
                     <span>{mentee.location}</span>
                   </div>
                 )}
-                {latestRecord && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-purple-600" />
-                    <span>{latestRecord.year} {latestRecord.semester}</span>
-                  </div>
-                )}
               </div>
-              {mentee.bio && (
-                <p className="mt-3 text-gray-700">{mentee.bio}</p>
-              )}
               {latestRecord?.cumulative_gpa && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Current GPA</span>
-                    <span className="text-lg font-bold text-blue-600">
-                      {latestRecord.cumulative_gpa.toFixed(2)}/4.0
-                    </span>
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="font-medium">GPA: {latestRecord.cumulative_gpa.toFixed(2)}</span>
                   </div>
-                  <Progress value={gpaProgress} className="h-2" />
+                  <Progress value={(latestRecord.cumulative_gpa / 4.0) * 100} className="h-2" />
                 </div>
               )}
             </div>
           </div>
-        </div>
+          {mentee.bio && (
+            <p className="text-muted-foreground mb-4">{mentee.bio}</p>
+          )}
+        </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
@@ -202,312 +243,219 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
             <TabsTrigger value="interests">Interests</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Academic Summary */}
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5" />
-                    Academic Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {latestRecord ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Current GPA:</span>
-                        <span className="font-semibold">{latestRecord.cumulative_gpa?.toFixed(2) || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Semester:</span>
-                        <span>{latestRecord.semester} {latestRecord.year}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Credits:</span>
-                        <span>{latestRecord.credits_earned || 0}/{latestRecord.credits_attempted || 0}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-muted-foreground">No academic records available</p>
-                  )}
+                <CardContent className="p-4 text-center">
+                  <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                  <div className="text-2xl font-bold">{latestRecord?.cumulative_gpa?.toFixed(2) || 'N/A'}</div>
+                  <div className="text-sm text-muted-foreground">Cumulative GPA</div>
                 </CardContent>
               </Card>
-
-              {/* Projects Summary */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Code className="h-5 w-5" />
-                    Projects
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Total Projects:</span>
-                    <span className="font-semibold">{mentee.projects?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Completed:</span>
-                    <span className="text-green-600 font-semibold">
-                      {mentee.projects?.filter(p => p.status === 'completed').length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>In Progress:</span>
-                    <span className="text-blue-600 font-semibold">
-                      {mentee.projects?.filter(p => p.status === 'in_progress').length || 0}
-                    </span>
-                  </div>
+                <CardContent className="p-4 text-center">
+                  <Code className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <div className="text-2xl font-bold">{mentee.projects?.length || 0}</div>
+                  <div className="text-sm text-muted-foreground">Total Projects</div>
                 </CardContent>
               </Card>
-
-              {/* Essays Summary */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Essays
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between">
-                    <span>Total Essays:</span>
-                    <span className="font-semibold">{mentee.essays?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Completed:</span>
-                    <span className="text-green-600 font-semibold">
-                      {mentee.essays?.filter(e => !e.is_draft).length || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Drafts:</span>
-                    <span className="text-yellow-600 font-semibold">
-                      {mentee.essays?.filter(e => e.is_draft).length || 0}
-                    </span>
-                  </div>
+                <CardContent className="p-4 text-center">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <div className="text-2xl font-bold">{mentee.essays?.length || 0}</div>
+                  <div className="text-sm text-muted-foreground">Essays Written</div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Skills and Interests Quick View */}
+            {/* Skills & Interests */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Skills</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {mentee.skills?.map((skill, index) => (
-                      <Badge key={index} variant="secondary">{skill}</Badge>
-                    )) || <p className="text-muted-foreground">No skills listed</p>}
-                  </div>
-                </CardContent>
-              </Card>
+              {mentee.skills && mentee.skills.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Skills
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {mentee.skills.map((skill, index) => (
+                        <Badge key={index} variant="outline">{skill}</Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Fields of Interest</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {mentee.fields_of_interest?.map((field, index) => (
-                      <Badge key={index} variant="outline">{field}</Badge>
-                    )) || <p className="text-muted-foreground">No interests listed</p>}
-                  </div>
-                </CardContent>
-              </Card>
+              {mentee.fields_of_interest && mentee.fields_of_interest.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5" />
+                      Fields of Interest
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {mentee.fields_of_interest.map((interest, index) => (
+                        <Badge key={index} variant="secondary">{interest}</Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="academics" className="space-y-6">
-            {/* Academic Records */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Academic Performance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {mentee.academic_records && mentee.academic_records.length > 0 ? (
-                  <div className="space-y-4">
-                    {mentee.academic_records.map((record, index) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold">{record.semester} {record.year}</h4>
-                            <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-                              <div>Semester GPA: <span className="font-medium">{record.semester_gpa?.toFixed(2) || 'N/A'}</span></div>
-                              <div>Cumulative GPA: <span className="font-medium">{record.cumulative_gpa?.toFixed(2) || 'N/A'}</span></div>
-                              <div>Credits Attempted: <span className="font-medium">{record.credits_attempted || 0}</span></div>
-                              <div>Credits Earned: <span className="font-medium">{record.credits_earned || 0}</span></div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Honors and Awards */}
-                        {(record.honors && record.honors.length > 0) && (
-                          <div className="mt-3">
-                            <h5 className="text-sm font-medium mb-2">Honors</h5>
-                            <div className="flex flex-wrap gap-1">
-                              {record.honors.map((honor, idx) => (
-                                <Badge key={idx} className="bg-yellow-100 text-yellow-800">{honor}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {(record.awards && record.awards.length > 0) && (
-                          <div className="mt-3">
-                            <h5 className="text-sm font-medium mb-2">Awards</h5>
-                            <div className="flex flex-wrap gap-1">
-                              {record.awards.map((award, idx) => (
-                                <Badge key={idx} className="bg-blue-100 text-blue-800">{award}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No academic records available</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Course History */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Course History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {mentee.courses && mentee.courses.length > 0 ? (
-                  <div className="space-y-3">
-                    {mentee.courses.map((course, index) => (
-                      <div key={index} className="border rounded-lg p-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{course.course_name}</h4>
-                            {course.course_code && (
-                              <p className="text-sm text-muted-foreground">{course.course_code}</p>
-                            )}
-                            <div className="flex gap-4 mt-1 text-sm">
-                              {course.semester && <span>{course.semester} {course.year}</span>}
-                              {course.credits && <span>{course.credits} credits</span>}
-                              {course.instructor_name && <span>Prof. {course.instructor_name}</span>}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <Badge variant={course.status === 'completed' ? 'default' : 'secondary'}>
-                              {course.status}
-                            </Badge>
-                            {course.grade && (
-                              <div className="mt-1 font-semibold">{course.grade}</div>
-                            )}
-                          </div>
-                        </div>
-                        {course.description && (
-                          <p className="text-sm text-muted-foreground mt-2">{course.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No courses listed</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="projects" className="space-y-6">
-            {mentee.projects && mentee.projects.length > 0 ? (
-              <div className="grid gap-6">
-                {mentee.projects.map((project, index) => (
-                  <Card key={index}>
+          <TabsContent value="academics" className="space-y-4 mt-6">
+            {mentee.academic_records && mentee.academic_records.length > 0 ? (
+              <div className="space-y-4">
+                {mentee.academic_records.map((record) => (
+                  <Card key={record.id}>
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <Code className="h-5 w-5" />
-                            {project.title}
-                          </CardTitle>
-                          {project.description && (
-                            <p className="text-muted-foreground mt-2">{project.description}</p>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{record.year} - {record.semester}</span>
+                        <div className="flex items-center gap-4">
+                          {record.semester_gpa && (
+                            <Badge variant="outline">
+                              Semester GPA: {record.semester_gpa.toFixed(2)}
+                            </Badge>
+                          )}
+                          {record.cumulative_gpa && (
+                            <Badge variant="secondary">
+                              Cumulative GPA: {record.cumulative_gpa.toFixed(2)}
+                            </Badge>
                           )}
                         </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {record.course_load && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Course Load: {record.course_load} credits
+                        </p>
+                      )}
+                      
+                      {record.honors && record.honors.length > 0 && (
+                        <div className="mb-3">
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            Honors
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {record.honors.map((honor, index) => (
+                              <Badge key={index} variant="outline" className="bg-yellow-50 border-yellow-200">
+                                {honor}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {record.awards && record.awards.length > 0 && (
+                        <div className="mb-3">
+                          <h4 className="font-medium mb-2 flex items-center gap-2">
+                            <Trophy className="h-4 w-4" />
+                            Awards
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {record.awards.map((award, index) => (
+                              <Badge key={index} variant="outline" className="bg-blue-50 border-blue-200">
+                                {award}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {record.notes && (
+                        <div className="mt-3 p-3 bg-muted rounded-lg">
+                          <p className="text-sm">{record.notes}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No academic records available</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="projects" className="space-y-4 mt-6">
+            {mentee.projects && mentee.projects.length > 0 ? (
+              <div className="space-y-4">
+                {mentee.projects.map((project) => (
+                  <Card key={project.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>{project.title}</CardTitle>
                         <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
                           {project.status.replace('_', ' ')}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Project Timeline */}
-                      {(project.start_date || project.end_date) && (
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          {project.start_date && (
-                            <div>Started: {new Date(project.start_date).toLocaleDateString()}</div>
-                          )}
-                          {project.end_date && (
-                            <div>Completed: {new Date(project.end_date).toLocaleDateString()}</div>
-                          )}
-                        </div>
+                    <CardContent>
+                      {project.description && (
+                        <p className="text-muted-foreground mb-3">{project.description}</p>
                       )}
-
-                      {/* Technologies */}
+                      
                       {project.technologies && project.technologies.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-medium mb-2">Technologies</h5>
+                        <div className="mb-3">
+                          <h4 className="font-medium mb-2">Technologies</h4>
                           <div className="flex flex-wrap gap-2">
-                            {project.technologies.map((tech, idx) => (
-                              <Badge key={idx} variant="outline">{tech}</Badge>
+                            {project.technologies.map((tech, index) => (
+                              <Badge key={index} variant="outline">{tech}</Badge>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      {/* Skills Used */}
-                      {project.skills_used && project.skills_used.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-medium mb-2">Skills Used</h5>
-                          <div className="flex flex-wrap gap-2">
-                            {project.skills_used.map((skill, idx) => (
-                              <Badge key={idx} className="bg-blue-50 text-blue-700">{skill}</Badge>
-                            ))}
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        {project.start_date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            Started: {new Date(project.start_date).toLocaleDateString()}
                           </div>
-                        </div>
-                      )}
-
-                      {/* Collaborators */}
-                      {project.collaborators && project.collaborators.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-medium mb-2">Collaborators</h5>
-                          <div className="flex flex-wrap gap-2">
-                            {project.collaborators.map((collaborator, idx) => (
-                              <Badge key={idx} className="bg-green-50 text-green-700">{collaborator}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Project Links */}
-                      <div className="flex gap-3">
-                        {project.github_url && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={project.github_url} target="_blank" rel="noopener noreferrer">
-                              <Github className="h-4 w-4 mr-2" />
-                              GitHub
-                            </a>
-                          </Button>
                         )}
-                        {project.live_demo_url && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={project.live_demo_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 mr-2" />
-                              Live Demo
-                            </a>
-                          </Button>
+                        {project.end_date && (
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            Completed: {new Date(project.end_date).toLocaleDateString()}
+                          </div>
                         )}
                       </div>
+
+                      {(project.demo_url || project.github_url) && (
+                        <div className="mt-3 flex gap-2">
+                          {project.demo_url && (
+                            <a
+                              href={project.demo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              View Demo
+                            </a>
+                          )}
+                          {project.github_url && (
+                            <a
+                              href={project.github_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline"
+                            >
+                              View Code
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -516,51 +464,34 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
               <Card>
                 <CardContent className="p-6 text-center">
                   <Code className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">No projects yet</h3>
-                  <p className="text-muted-foreground">Projects will appear here when added</p>
+                  <p className="text-muted-foreground">No projects available</p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
-          <TabsContent value="essays" className="space-y-6">
+          <TabsContent value="essays" className="space-y-4 mt-6">
             {mentee.essays && mentee.essays.length > 0 ? (
               <div className="space-y-4">
-                {mentee.essays.map((essay, index) => (
-                  <Card key={index}>
+                {mentee.essays.map((essay) => (
+                  <Card key={essay.id}>
                     <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            {essay.prompt?.title || 'Untitled Essay'}
-                          </CardTitle>
-                          <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                            <span>Category: {essay.prompt?.category || 'N/A'}</span>
-                            <span>Words: {essay.word_count}</span>
-                            {essay.prompt?.word_limit && (
-                              <span>Limit: {essay.prompt.word_limit}</span>
-                            )}
-                            <span>Version: {essay.version}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Badge variant={essay.is_draft ? 'secondary' : 'default'}>
-                            {essay.is_draft ? 'Draft' : 'Complete'}
-                          </Badge>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>{essay.title}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{essay.essay_type}</Badge>
+                          {essay.word_count && (
+                            <Badge variant="secondary">{essay.word_count} words</Badge>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {essay.response_text && (
-                        <div className="bg-muted p-4 rounded-lg">
-                          <p className="text-sm whitespace-pre-wrap line-clamp-6">
-                            {essay.response_text}
-                          </p>
-                        </div>
-                      )}
-                      <div className="mt-3 text-xs text-muted-foreground">
-                        Last updated: {new Date(essay.updated_at).toLocaleDateString()}
+                      <div className="prose prose-sm max-w-none">
+                        <p className="whitespace-pre-wrap">{essay.content}</p>
+                      </div>
+                      <div className="mt-3 text-sm text-muted-foreground">
+                        Written on {new Date(essay.created_at).toLocaleDateString()}
                       </div>
                     </CardContent>
                   </Card>
@@ -570,70 +501,54 @@ export function MenteeProfileDialog({ menteeId, open, onOpenChange }: MenteeProf
               <Card>
                 <CardContent className="p-6 text-center">
                   <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">No essays yet</h3>
-                  <p className="text-muted-foreground">Essay responses will appear here when added</p>
+                  <p className="text-muted-foreground">No essays available</p>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
-          <TabsContent value="interests" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Personal Interests */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Lightbulb className="h-5 w-5" />
-                    Personal Interests
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {mentee.interests && mentee.interests.length > 0 ? (
-                    <div className="space-y-3">
-                      {mentee.interests.map((interest, index) => (
-                        <div key={index} className="border rounded-lg p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium">{interest.interest_name}</h4>
-                              <Badge variant="outline" className="mt-1">
-                                {interest.category}
+          <TabsContent value="interests" className="space-y-4 mt-6">
+            {mentee.interests && mentee.interests.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(
+                  mentee.interests.reduce((acc, interest) => {
+                    if (!acc[interest.category]) acc[interest.category] = [];
+                    acc[interest.category].push(interest);
+                    return acc;
+                  }, {} as Record<string, typeof mentee.interests>)
+                ).map(([category, interests]) => (
+                  <Card key={category}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5" />
+                        {category}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {interests.map((interest) => (
+                          <div key={interest.id} className="flex items-center justify-between">
+                            <span>{interest.interest_name}</span>
+                            {interest.level && (
+                              <Badge variant="outline" className="text-xs">
+                                {interest.level}
                               </Badge>
-                            </div>
-                            {interest.proficiency_level && (
-                              <Badge variant="secondary">{interest.proficiency_level}</Badge>
                             )}
                           </div>
-                          {interest.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{interest.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No interests listed</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Fields of Interest */}
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Academic Fields
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {mentee.fields_of_interest?.map((field, index) => (
-                      <Badge key={index} variant="outline" className="bg-purple-50 text-purple-700">
-                        {field}
-                      </Badge>
-                    )) || <p className="text-muted-foreground">No academic fields listed</p>}
-                  </div>
+                <CardContent className="p-6 text-center">
+                  <Lightbulb className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground">No specific interests recorded</p>
                 </CardContent>
               </Card>
-            </div>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
