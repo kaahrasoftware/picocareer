@@ -87,41 +87,8 @@ export const MentorTabsSection = () => {
     }
   ];
 
-  const mentorStats = [
-    { 
-      number: isLoading ? "..." : `${stats?.satisfactionRate}%`, 
-      label: "Student Satisfaction Rate",
-      description: "Students rate their mentoring experience highly",
-      icon: TrendingUp,
-      gradient: "from-emerald-400 to-cyan-400",
-      iconBg: "bg-emerald-100",
-      textColor: "text-emerald-600",
-      context: "Above industry average",
-      trend: "+5% this quarter"
-    },
-    { 
-      number: isLoading ? "..." : `${Math.floor((stats?.totalSessions || 0) / 1000)}K+`, 
-      label: "Successful Mentoring Sessions",
-      description: "Hours of guidance provided to students",
-      icon: Clock,
-      gradient: "from-blue-400 to-purple-400", 
-      iconBg: "bg-blue-100",
-      textColor: "text-blue-600",
-      context: "Over 10,000 hours of mentoring",
-      trend: "+15% monthly growth"
-    },
-    { 
-      number: isLoading ? "..." : `${stats?.mentorCount}+`, 
-      label: "Expert Mentors",
-      description: "Professionals ready to guide your journey",
-      icon: CheckCircle,
-      gradient: "from-purple-400 to-pink-400",
-      iconBg: "bg-purple-100", 
-      textColor: "text-purple-600",
-      context: "From top companies worldwide",
-      trend: "+20 new mentors monthly"
-    }
-  ];
+  // Calculate total mentoring hours (assuming 1 hour average per session)
+  const totalHours = Math.floor((stats?.totalSessions || 0) * 1);
 
   return (
     <section className="py-16 px-4 relative overflow-hidden">
@@ -135,19 +102,96 @@ export const MentorTabsSection = () => {
             Join Our Mentor Community
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Start your mentoring journey, discover the benefits, see our impact, and learn the process.
+            Start your mentoring journey, discover the benefits, and learn the process.
           </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="join" className="text-sm">Join Now</TabsTrigger>
             <TabsTrigger value="benefits" className="text-sm">Benefits</TabsTrigger>
-            <TabsTrigger value="impact" className="text-sm">Impact</TabsTrigger>
             <TabsTrigger value="process" className="text-sm">Process</TabsTrigger>
           </TabsList>
 
           <TabsContent value="join" className="mt-0">
+            {/* Enhanced Stats Cards */}
+            {!isLoading && stats && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group bg-gradient-to-br from-emerald-50 to-cyan-50">
+                  <div className="h-1 bg-gradient-to-r from-emerald-400 to-cyan-400" />
+                  <CardContent className="p-6 relative">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-3 group-hover:scale-110 transition-transform duration-300">
+                      <TrendingUp className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent mb-1">
+                      {stats.satisfactionRate}%
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Student Satisfaction</div>
+                    <div className="text-xs text-emerald-600 mt-1 font-medium">Above Industry Average</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group bg-gradient-to-br from-blue-50 to-purple-50">
+                  <div className="h-1 bg-gradient-to-r from-blue-400 to-purple-400" />
+                  <CardContent className="p-6 relative">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-3 group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
+                      {Math.floor(stats.totalSessions / 1000)}K+
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Sessions Completed</div>
+                    <div className="text-xs text-blue-600 mt-1 font-medium">{totalHours}+ Hours of Guidance</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group bg-gradient-to-br from-purple-50 to-pink-50">
+                  <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
+                  <CardContent className="p-6 relative">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-100 mb-3 group-hover:scale-110 transition-transform duration-300">
+                      <CheckCircle className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                      {stats.mentorCount}+
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Expert Mentors</div>
+                    <div className="text-xs text-purple-600 mt-1 font-medium">From Top Companies</div>
+                  </CardContent>
+                </Card>
+
+                <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden group bg-gradient-to-br from-yellow-50 to-orange-50">
+                  <div className="h-1 bg-gradient-to-r from-yellow-400 to-orange-400" />
+                  <CardContent className="p-6 relative">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mb-3 group-hover:scale-110 transition-transform duration-300">
+                      <Star className="h-6 w-6 text-yellow-600" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-1">
+                      {stats.averageRating}⭐
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Average Rating</div>
+                    <div className="text-xs text-yellow-600 mt-1 font-medium">Highly Rated Experience</div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Loading State for Stats */}
+            {isLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                {[...Array(4)].map((_, index) => (
+                  <Card key={index} className="text-center border-0 shadow-lg">
+                    <CardContent className="p-6">
+                      <Skeleton className="h-12 w-12 rounded-full mx-auto mb-3" />
+                      <Skeleton className="h-8 w-16 mx-auto mb-1" />
+                      <Skeleton className="h-4 w-24 mx-auto mb-1" />
+                      <Skeleton className="h-3 w-20 mx-auto" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Main CTA Card */}
             <Card className="relative overflow-hidden border-0 shadow-xl">
               {/* Animated Background */}
               <div className="absolute inset-0 bg-gradient-to-r from-picocareer-dark via-primary to-picocareer-primary opacity-90" />
@@ -169,38 +213,21 @@ export const MentorTabsSection = () => {
                 <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
                   Ready to Make a Difference?
                 </h3>
-                <p className="text-xl text-white/90 mb-6 leading-relaxed">
-                  Join {isLoading ? "hundreds" : `${stats?.mentorCount}+`} professionals mentoring the next generation.
+                <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl mx-auto">
+                  Join {isLoading ? "hundreds" : `${stats?.mentorCount}+`} professionals mentoring the next generation. 
+                  Start sharing your expertise and help shape future careers.
                 </p>
-                
-                {/* Stats Bar */}
-                {!isLoading && stats && (
-                  <div className="flex flex-wrap justify-center gap-4 mb-6 text-white/80 text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
-                      <span>{stats.satisfactionRate}% satisfaction</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-300 rounded-full animate-pulse delay-200" />
-                      <span>{Math.floor(stats.totalSessions / 1000)}K+ sessions</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-300 rounded-full animate-pulse delay-400" />
-                      <span>{stats.averageRating}⭐ rating</span>
-                    </div>
-                  </div>
-                )}
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
                   <Button
                     asChild
                     size="lg"
                     variant="secondary"
-                    className="bg-white hover:bg-gray-100 text-picocareer-dark font-semibold py-3 px-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
+                    className="bg-white hover:bg-gray-100 text-picocareer-dark font-semibold py-4 px-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
                   >
                     <Link to="/mentor-registration" className="flex items-center justify-center gap-2">
                       <GraduationCap className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                      Start Mentoring
+                      Start Mentoring Today
                     </Link>
                   </Button>
                   
@@ -208,28 +235,32 @@ export const MentorTabsSection = () => {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 font-semibold py-3 px-6 backdrop-blur-sm transition-all duration-300 transform hover:-translate-y-1"
+                    className="border-white/30 text-white hover:bg-white/10 font-semibold py-4 px-8 backdrop-blur-sm transition-all duration-300 transform hover:-translate-y-1"
                   >
                     <Link to="/mentors" className="flex items-center justify-center gap-2">
                       <Users className="h-5 w-5" />
-                      Meet Mentors
+                      Meet Our Mentors
                     </Link>
                   </Button>
                 </div>
 
-                <div className="mt-6 text-center">
-                  <p className="text-white/70 text-sm flex items-center justify-center gap-4 flex-wrap">
-                    <span className="flex items-center gap-1">
-                      <div className="w-1 h-1 bg-green-300 rounded-full" />
+                <div className="text-center">
+                  <p className="text-white/70 text-sm flex items-center justify-center gap-6 flex-wrap">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
                       Free to join
                     </span>
-                    <span className="flex items-center gap-1">
-                      <div className="w-1 h-1 bg-blue-300 rounded-full" />
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-blue-300 rounded-full animate-pulse delay-200" />
                       Flexible commitment
                     </span>
-                    <span className="flex items-center gap-1">
-                      <div className="w-1 h-1 bg-purple-300 rounded-full" />
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-300 rounded-full animate-pulse delay-400" />
                       Meaningful impact
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse delay-600" />
+                      Build your reputation
                     </span>
                   </p>
                 </div>
@@ -261,61 +292,6 @@ export const MentorTabsSection = () => {
                 </Card>
               ))}
             </div>
-          </TabsContent>
-
-          <TabsContent value="impact" className="mt-0">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[...Array(3)].map((_, index) => (
-                  <Card key={index} className="text-center border-0 shadow-lg">
-                    <CardContent className="p-8">
-                      <Skeleton className="h-12 w-16 mx-auto mb-4" />
-                      <Skeleton className="h-6 w-32 mx-auto mb-2" />
-                      <Skeleton className="h-4 w-40 mx-auto mb-2" />
-                      <Skeleton className="h-3 w-24 mx-auto" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {mentorStats.map((stat, index) => (
-                  <Card key={index} className="text-center border-0 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 overflow-hidden group">
-                    <div className={`h-2 bg-gradient-to-r ${stat.gradient}`} />
-                    <CardContent className="p-8 relative">
-                      <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                      
-                      {/* Icon */}
-                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${stat.iconBg} mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300`}>
-                        <stat.icon className={`h-8 w-8 ${stat.textColor}`} />
-                      </div>
-                      
-                      {/* Main Number */}
-                      <div className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent mb-2 group-hover:scale-105 transition-transform duration-300`}>
-                        {stat.number}
-                      </div>
-                      
-                      {/* Label */}
-                      <div className="text-foreground font-semibold text-lg mb-2">{stat.label}</div>
-                      
-                      {/* Description */}
-                      <div className="text-muted-foreground text-sm mb-3 leading-relaxed">{stat.description}</div>
-                      
-                      {/* Context */}
-                      <div className={`text-xs ${stat.textColor} font-medium bg-gradient-to-r ${stat.gradient} bg-opacity-10 px-3 py-1 rounded-full mb-2`}>
-                        {stat.context}
-                      </div>
-                      
-                      {/* Trend */}
-                      <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                        <TrendingUp className="h-3 w-3 text-green-500" />
-                        <span>{stat.trend}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
           </TabsContent>
 
           <TabsContent value="process" className="mt-0">
