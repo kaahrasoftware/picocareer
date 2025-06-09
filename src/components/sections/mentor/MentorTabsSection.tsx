@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +10,15 @@ import { Link } from "react-router-dom";
 export const MentorTabsSection = () => {
   const { data: stats, isLoading } = useMentorStats();
   const [activeTab, setActiveTab] = useState("join");
+
+  // Utility function to format numbers appropriately
+  const formatNumber = (number: number): string => {
+    if (number < 1000) {
+      return number.toString();
+    } else {
+      return (number / 1000).toFixed(1) + "K+";
+    }
+  };
 
   const mentorBenefits = [
     {
@@ -138,7 +146,7 @@ export const MentorTabsSection = () => {
                       <Clock className="h-6 w-6 text-blue-600" />
                     </div>
                     <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
-                      {Math.floor(stats.totalSessions / 1000)}K+
+                      {formatNumber(stats.totalSessions)}
                     </div>
                     <div className="text-sm font-medium text-muted-foreground">Sessions Completed</div>
                     <div className="text-xs text-blue-600 mt-1 font-medium">{totalHours}+ Hours of Guidance</div>
@@ -152,7 +160,7 @@ export const MentorTabsSection = () => {
                       <CheckCircle className="h-6 w-6 text-purple-600" />
                     </div>
                     <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-                      {stats.mentorCount}+
+                      {formatNumber(stats.mentorCount)}
                     </div>
                     <div className="text-sm font-medium text-muted-foreground">Expert Mentors</div>
                     <div className="text-xs text-purple-600 mt-1 font-medium">From Top Companies</div>
@@ -214,7 +222,7 @@ export const MentorTabsSection = () => {
                   Ready to Make a Difference?
                 </h3>
                 <p className="text-xl text-white/90 mb-8 leading-relaxed max-w-2xl mx-auto">
-                  Join {isLoading ? "hundreds" : `${stats?.mentorCount}+`} professionals mentoring the next generation. 
+                  Join {isLoading ? "hundreds" : `${formatNumber(stats?.mentorCount || 0)}`} professionals mentoring the next generation. 
                   Start sharing your expertise and help shape future careers.
                 </p>
 
