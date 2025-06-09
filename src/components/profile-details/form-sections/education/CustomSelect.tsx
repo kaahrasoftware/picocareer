@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -53,7 +52,6 @@ export function CustomSelect({
         return;
       }
 
-      // First check if the value already exists
       const checkField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
       const { data: existingData, error: existingError } = await supabase
         .from(tableName as any)
@@ -65,8 +63,7 @@ export function CustomSelect({
         console.error('Error checking existing data:', existingError);
       }
 
-      if (existingData && existingData.id) {
-        // Use existing entry
+      if (existingData && 'id' in existingData && existingData.id) {
         onValueChange(String(existingData.id));
         setCustomValue('');
         setShowCustomInput(false);
@@ -74,7 +71,6 @@ export function CustomSelect({
         return;
       }
 
-      // Create new entry
       const insertData = tableName === 'majors' || tableName === 'careers' 
         ? { title: customValue.trim(), status: 'Pending' }
         : { name: customValue.trim(), status: 'Pending' };
@@ -90,7 +86,7 @@ export function CustomSelect({
         throw error;
       }
 
-      if (data && data.id) {
+      if (data && 'id' in data && data.id) {
         const newOption: Option = {
           id: String(data.id),
           name: tableName !== 'majors' && tableName !== 'careers' ? (data as any)[checkField] : undefined,

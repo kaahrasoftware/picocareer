@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEventResources } from "@/hooks/useEventResources";
+import { useEventResourceMutations } from "@/hooks/useEventResourceMutations";
 import { EventResource, EventResourceFormData } from "@/types/event-resources";
 import { FileUploadSection } from "./FileUploadSection";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -87,7 +88,7 @@ export function EventResourceForm({
   onSuccess, 
   onCancel 
 }: EventResourceFormProps) {
-  const { addResource, updateResource, isAdding, isUpdating } = useEventResources(eventId);
+  const { addResource, updateResource, isAdding, isUpdating } = useEventResourceMutations(eventId);
   const [resourceSource, setResourceSource] = useState<'upload' | 'external'>(
     initialResource?.external_url ? 'external' : 'upload'
   );
@@ -161,7 +162,6 @@ export function EventResourceForm({
       ...data,
       file_url: resourceSource === 'upload' ? data.file_url : undefined,
       external_url: resourceSource === 'external' ? data.external_url : undefined,
-      // Ensure file_size is included in the submission
       file_size: resourceSource === 'upload' ? data.file_size : undefined,
     };
 

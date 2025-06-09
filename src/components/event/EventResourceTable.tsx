@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EventResource } from '@/types/event-resources';
 import { EventResourceForm } from './EventResourceForm';
-import { useEventResources } from '@/hooks/useEventResources';
+import { useEventResourceMutations } from '@/hooks/useEventResourceMutations';
 import { cn } from '@/lib/utils';
 
 interface EventResourceTableProps {
@@ -63,7 +63,7 @@ const formatFileSize = (bytes?: number) => {
 };
 
 export function EventResourceTable({ eventId, resources }: EventResourceTableProps) {
-  const { deleteResource } = useEventResources(eventId);
+  const { deleteResource } = useEventResourceMutations(eventId);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<EventResource | null>(null);

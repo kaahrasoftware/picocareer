@@ -1,20 +1,13 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useEventResourcesQuery } from './useEventResourcesQuery';
 
 export function useEventResources(eventId: string) {
-  return useQuery({
-    queryKey: ['event-resources', eventId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('event_resources')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('sort_order', { ascending: true });
-
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!eventId
-  });
+  const query = useEventResourcesQuery(eventId);
+  
+  return {
+    resources: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
 }
