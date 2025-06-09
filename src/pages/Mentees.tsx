@@ -6,9 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MenteeCard } from '@/components/mentees/MenteeCard';
+import { EnhancedMenteeCard } from '@/components/mentees/EnhancedMenteeCard';
 import { MenteeFilters } from '@/components/mentees/MenteeFilters';
-import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
+import { MenteeProfileDialog } from '@/components/mentees/MenteeProfileDialog';
 
 interface MenteeProfile {
   id: string;
@@ -273,7 +273,7 @@ export default function Mentees() {
       {/* Mentees Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredMentees.map((mentee) => (
-          <MenteeCard
+          <EnhancedMenteeCard
             key={mentee.id}
             mentee={mentee}
             onViewProfile={() => setSelectedMenteeId(mentee.id)}
@@ -293,13 +293,11 @@ export default function Mentees() {
       )}
 
       {/* Profile Dialog */}
-      {selectedMenteeId && (
-        <ProfileDetailsDialog
-          userId={selectedMenteeId}
-          open={!!selectedMenteeId}
-          onOpenChange={() => setSelectedMenteeId(null)}
-        />
-      )}
+      <MenteeProfileDialog
+        menteeId={selectedMenteeId}
+        open={!!selectedMenteeId}
+        onOpenChange={() => setSelectedMenteeId(null)}
+      />
     </div>
   );
 }
