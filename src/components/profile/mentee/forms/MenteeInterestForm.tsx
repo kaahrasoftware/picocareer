@@ -37,7 +37,7 @@ export function MenteeInterestForm({ menteeId, interest, onClose }: MenteeIntere
       interest_name: interest?.interest_name || "",
       category: interest?.category || "hobby",
       description: interest?.description || "",
-      proficiency_level: interest?.proficiency_level || "",
+      proficiency_level: interest?.proficiency_level || "not_specified",
     },
   });
 
@@ -48,7 +48,7 @@ export function MenteeInterestForm({ menteeId, interest, onClose }: MenteeIntere
         ...data,
         mentee_id: menteeId,
         description: data.description || null,
-        proficiency_level: data.proficiency_level || null,
+        proficiency_level: data.proficiency_level === "not_specified" ? null : data.proficiency_level || null,
       };
 
       if (interest) {
@@ -126,7 +126,7 @@ export function MenteeInterestForm({ menteeId, interest, onClose }: MenteeIntere
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Not specified</SelectItem>
+                      <SelectItem value="not_specified">Not specified</SelectItem>
                       <SelectItem value="beginner">Beginner</SelectItem>
                       <SelectItem value="intermediate">Intermediate</SelectItem>
                       <SelectItem value="advanced">Advanced</SelectItem>

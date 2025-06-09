@@ -138,18 +138,6 @@ export function CalendarContainer({
                   fontWeight: 500
                 }
               }}
-              styles={{
-                day_selected: {
-                  backgroundColor: '#9333ea',
-                  color: 'white',
-                  fontWeight: 'bold'
-                },
-                day_range_end: {
-                  backgroundColor: '#9333ea',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }
-              }}
               disabled={date => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);

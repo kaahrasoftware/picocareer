@@ -46,7 +46,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
           profile_id: userId,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          reference_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           is_available: true,
           recurring: false
         });
@@ -68,7 +68,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
           mode="single"
           selected={selectedDate}
           onSelect={setSelectedDate}
-          className="rounded-md border bg-kahra-darker"
+          className="rounded-md border bg-card"
           disabled={(date) => {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
