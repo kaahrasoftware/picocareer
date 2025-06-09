@@ -87,8 +87,7 @@ export function SelectWithCustomOption({
         } else if (data && Array.isArray(data) && data.length > 0) {
           const combinedOptions = [...options];
           data.forEach(item => {
-            // Add proper null checks for item
-            if (item && typeof item === 'object' && 'id' in item && item.id && 
+            if (item && typeof item === 'object' && item.id && 
                 !combinedOptions.some(existing => existing.id === String(item.id))) {
               combinedOptions.push({
                 id: String(item.id),
@@ -127,7 +126,6 @@ export function SelectWithCustomOption({
   // Focus the search input when content opens
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      // Use a short timeout to ensure the select content is rendered
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 10);
@@ -161,8 +159,7 @@ export function SelectWithCustomOption({
         console.error('Check error:', checkError);
       }
 
-      // Add proper null checks for existingData
-      if (existingData && typeof existingData === 'object' && 'id' in existingData && existingData.id) {
+      if (existingData && typeof existingData === 'object' && existingData.id) {
         onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
@@ -195,8 +192,7 @@ export function SelectWithCustomOption({
                    tableName === 'schools' ? 'school' : 
                    tableName === 'majors' ? 'major' : 'position'}.`);
 
-      // Add proper null checks for data
-      if (data && typeof data === 'object' && 'id' in data && data.id) {
+      if (data && typeof data === 'object' && data.id) {
         const newOption: Option = {
           id: String(data.id),
           title: data.title || undefined,
@@ -284,7 +280,6 @@ export function SelectWithCustomOption({
               }}
               className="mb-2"
               onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
                 if (e.key === 'Enter') {
                   e.stopPropagation();
                 }

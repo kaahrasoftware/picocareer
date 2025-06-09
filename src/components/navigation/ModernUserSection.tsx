@@ -52,17 +52,8 @@ export function ModernUserSection() {
         onMarkAsRead={handleMarkAsRead}
       />
 
-      {/* User Avatar/Menu */}
-      {profile ? (
-        <UserMenu />
-      ) : (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={session.user.user_metadata?.avatar_url} />
-          <AvatarFallback>
-            {session.user.email?.charAt(0).toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
-      )}
+      {/* User Avatar/Menu - Always show UserMenu when authenticated */}
+      <UserMenu />
     </div>
   );
 }

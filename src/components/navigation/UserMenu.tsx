@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Calendar, User, Bookmark, GraduationCap, Settings, Wallet } from "lucide-react";
 import { useMobileMenu } from "@/context/MobileMenuContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserMenu() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export function UserMenu() {
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    closeMobileMenu(); // Close mobile menu when navigating
+    closeMobileMenu();
   };
 
   const handleSignOut = async () => {
@@ -71,35 +72,49 @@ export function UserMenu() {
     }
   };
 
-  if (isLoading) {
-    return <div className="w-10 h-10 rounded-full bg-muted animate-pulse"></div>;
+  // Don't render anything if no session
+  if (!session?.user) {
+    return null;
   }
 
-  if (!profile) return null;
+  // Use profile data if available, otherwise fall back to session data
+  const displayName = profile?.full_name || session.user.email || 'User';
+  const displayEmail = profile?.email || session.user.email || '';
+  const avatarUrl = profile?.avatar_url || session.user.user_metadata?.avatar_url;
+  const userType = profile?.user_type;
 
-  const isMentor = profile.user_type === 'mentor';
-  const isAdmin = profile.user_type === 'admin';
+  const isMentor = userType === 'mentor';
+  const isAdmin = userType === 'admin';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="outline-none" data-testid="user-menu-button">
-          <ProfileAvatar
-            avatarUrl={profile.avatar_url}
-            imageAlt={profile.full_name || profile.email}
-            size="sm"
-            userId={profile.id}
-            editable={false}
-          />
+          {profile ? (
+            <ProfileAvatar
+              avatarUrl={avatarUrl}
+              imageAlt={displayName}
+              size="sm"
+              userId={profile.id}
+              editable={false}
+            />
+          ) : (
+            <Avatar className="h-8 w-8 cursor-pointer">
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback>
+                {displayEmail?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="truncate max-w-[95%]">
-            {profile.full_name || profile.email}
+            {displayName}
           </div>
           <div className="text-xs text-gray-500 truncate max-w-[95%]">
-            {profile.email}
+            {displayEmail}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
