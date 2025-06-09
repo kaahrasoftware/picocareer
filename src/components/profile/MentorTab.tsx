@@ -56,6 +56,12 @@ export function MentorTab({ profile }: MentorTabProps) {
     return null;
   }
 
+  // Ensure sessionTypes have all required properties
+  const enrichedSessionTypes = (sessionTypes || []).map(sessionType => ({
+    ...sessionType,
+    custom_type_name: sessionType.custom_type_name || sessionType.type || 'Default Session'
+  }));
+
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
@@ -72,7 +78,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
-          sessionTypes={sessionTypes || []}
+          sessionTypes={enrichedSessionTypes}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>

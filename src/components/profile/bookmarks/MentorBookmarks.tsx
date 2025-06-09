@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,6 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
-  // Fetch bookmarked mentors with pagination
   const mentorBookmarksQuery = useQuery({
     queryKey: ["bookmarked-mentors", user?.id, currentPage],
     queryFn: async () => {

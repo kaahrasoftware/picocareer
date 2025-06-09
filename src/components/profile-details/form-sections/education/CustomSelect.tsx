@@ -62,7 +62,7 @@ export function CustomSelect({
       const existingData = existingQuery.data?.[0];
       if (existingData) {
         // Use existing entry
-        onValueChange(existingData.id);
+        onValueChange(String(existingData.id));
         setCustomValue('');
         setShowCustomInput(false);
         toast.success('Found existing entry');
@@ -87,13 +87,13 @@ export function CustomSelect({
 
       if (data) {
         const newOption: Option = {
-          id: data.id,
-          name: data.name,
-          title: data.title
+          id: String(data.id),
+          name: (data as any).name,
+          title: (data as any).title
         };
 
         setLocalOptions(prev => [...prev, newOption]);
-        onValueChange(data.id);
+        onValueChange(String(data.id));
         setCustomValue('');
         setShowCustomInput(false);
         toast.success('Added successfully');
