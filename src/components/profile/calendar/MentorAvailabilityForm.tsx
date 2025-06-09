@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
 interface MentorAvailabilityFormProps {
   onClose: () => void;

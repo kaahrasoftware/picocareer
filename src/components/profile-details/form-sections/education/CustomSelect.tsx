@@ -71,8 +71,8 @@ export function CustomSelect({
 
       // Create new entry
       const insertData = tableName === 'majors' || tableName === 'careers' 
-        ? { title: customValue.trim() }
-        : { name: customValue.trim() };
+        ? { title: customValue.trim(), status: 'Pending' }
+        : { name: customValue.trim(), status: 'Pending' };
 
       const { data, error } = await supabase
         .from(tableName as any)
