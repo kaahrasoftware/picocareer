@@ -40,6 +40,9 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
       const endDateTime = new Date(startDateTime);
       endDateTime.setHours(endDateTime.getHours() + 1);
 
+      // Calculate timezone offset
+      const timezoneOffset = -startDateTime.getTimezoneOffset();
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
@@ -47,6 +50,7 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
           reference_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone_offset: timezoneOffset,
           is_available: true,
           recurring: false
         });
