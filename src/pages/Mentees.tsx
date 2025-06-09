@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MenteeCard } from '@/components/mentees/MenteeCard';
 import { MenteeFilters } from '@/components/mentees/MenteeFilters';
-import { ProfileDetailsDialog } from '@/components/profile-details/ProfileDetailsDialog';
+import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 
 interface MenteeProfile {
   id: string;
@@ -295,9 +295,9 @@ export default function Mentees() {
       {/* Profile Dialog */}
       {selectedMenteeId && (
         <ProfileDetailsDialog
-          profileId={selectedMenteeId}
-          isOpen={!!selectedMenteeId}
-          onClose={() => setSelectedMenteeId(null)}
+          userId={selectedMenteeId}
+          open={!!selectedMenteeId}
+          onOpenChange={() => setSelectedMenteeId(null)}
         />
       )}
     </div>

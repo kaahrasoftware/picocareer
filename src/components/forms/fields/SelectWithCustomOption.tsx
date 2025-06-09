@@ -61,13 +61,23 @@ export function SelectWithCustomOption({
       if (query.length >= 2) {
         const safeQuery = String(query).toLowerCase();
         
-        let supabaseQuery = supabase
-          .from(tableName)
-          .select('id, title, name')
-          .limit(50);
+        const validTableNames = ['majors', 'schools', 'companies', 'careers'];
+        if (!validTableNames.includes(tableName)) {
+          // Fallback to local filtering for unknown table names
+          const filtered = options.filter(option => {
+            const searchValue = String(option.title || option.name || '').toLowerCase();
+            return searchValue.includes(safeQuery);
+          });
+          setFilteredOptions(filtered);
+          setIsSearching(false);
+          return;
+        }
         
-        // Try both title and name fields
-        const { data, error } = await supabaseQuery.or(`title.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`);
+        const { data, error } = await supabase
+          .from(tableName as any)
+          .select('id, title, name')
+          .or(`title.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`)
+          .limit(50);
         
         if (error) {
           console.error('Search error:', error);
@@ -81,8 +91,12 @@ export function SelectWithCustomOption({
           // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
           data.forEach(item => {
-            if (!combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push(item);
+            if (!combinedOptions.some(existing => existing.id === String(item.id))) {
+              combinedOptions.push({
+                id: String(item.id),
+                title: item.title,
+                name: item.name
+              });
             }
           });
           
@@ -135,9 +149,15 @@ export function SelectWithCustomOption({
 
     setIsLoading(true);
     try {
+      const validTableNames = ['majors', 'schools', 'companies', 'careers'];
+      if (!validTableNames.includes(tableName)) {
+        toast.error('Invalid table name');
+        return;
+      }
+
       // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('id, title, name')
         .or(`title.eq.${customValue},name.eq.${customValue}`)
         .maybeSingle();
@@ -147,7 +167,7 @@ export function SelectWithCustomOption({
       }
 
       if (existingData) {
-        onValueChange(existingData.id);
+        onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
         return;
@@ -166,7 +186,7 @@ export function SelectWithCustomOption({
           };
 
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .insert(insertData)
         .select('id, title, name')
         .single();

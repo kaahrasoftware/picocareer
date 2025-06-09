@@ -47,6 +47,12 @@ export function CustomSelect({
 
     setIsAdding(true);
     try {
+      const validTableNames = ['majors', 'schools', 'companies', 'careers'];
+      if (!validTableNames.includes(tableName)) {
+        toast.error('Invalid table name');
+        return;
+      }
+
       // First check if the value already exists
       const checkField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
       const { data: existingData, error: existingError } = await supabase
