@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -57,13 +56,11 @@ export function SelectWithCustomOption({
     setIsSearching(true);
     
     try {
-      // For longer queries, fetch from database
       if (query.length >= 2) {
         const safeQuery = String(query).toLowerCase();
         
         const validTableNames = ['majors', 'schools', 'companies', 'careers'];
         if (!validTableNames.includes(tableName)) {
-          // Fallback to local filtering for unknown table names
           const filtered = options.filter(option => {
             const searchValue = String(option.title || option.name || '').toLowerCase();
             return searchValue.includes(safeQuery);
@@ -81,17 +78,16 @@ export function SelectWithCustomOption({
         
         if (error) {
           console.error('Search error:', error);
-          // Fall back to local filtering on error
           const filtered = options.filter(option => {
             const searchValue = String(option.title || option.name || '').toLowerCase();
             return searchValue.includes(safeQuery);
           });
           setFilteredOptions(filtered);
         } else if (data && Array.isArray(data) && data.length > 0) {
-          // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
           data.forEach(item => {
-            if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
+            if (item && typeof item === 'object' && 'id' in item && item.id && 
+                !combinedOptions.some(existing => existing.id === String(item.id))) {
               combinedOptions.push({
                 id: String(item.id),
                 title: item.title || undefined,
@@ -100,7 +96,6 @@ export function SelectWithCustomOption({
             }
           });
           
-          // Filter the combined results
           const filtered = combinedOptions.filter(option => {
             const searchValue = String(option.title || option.name || '').toLowerCase();
             return searchValue.includes(safeQuery);
@@ -108,7 +103,6 @@ export function SelectWithCustomOption({
           
           setFilteredOptions(filtered);
         } else {
-          // If no results from API, filter local options
           const filtered = options.filter(option => {
             const searchValue = String(option.title || option.name || '').toLowerCase();
             return searchValue.includes(safeQuery);
@@ -118,7 +112,6 @@ export function SelectWithCustomOption({
       }
     } catch (error) {
       console.error('Search error:', error);
-      // Fall back to local filtering on error
       const filtered = options.filter(option => {
         const searchValue = String(option.title || option.name || '').toLowerCase();
         return searchValue.includes(query.toLowerCase());
@@ -155,7 +148,6 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // Check if entry already exists
       const { data: existingData, error: checkError } = await supabase
         .from(tableName as any)
         .select('id, title, name')
@@ -173,7 +165,6 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // Create new entry
       const insertData = tableName === 'majors' || tableName === 'careers' 
         ? { 
             title: customValue,
