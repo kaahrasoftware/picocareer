@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -86,6 +87,7 @@ export function SelectWithCustomOption({
         } else if (data && Array.isArray(data) && data.length > 0) {
           const combinedOptions = [...options];
           data.forEach(item => {
+            // Add proper null checks for item
             if (item && typeof item === 'object' && 'id' in item && item.id && 
                 !combinedOptions.some(existing => existing.id === String(item.id))) {
               combinedOptions.push({
@@ -148,6 +150,7 @@ export function SelectWithCustomOption({
         return;
       }
 
+      // Check for existing data with proper error handling
       const { data: existingData, error: checkError } = await supabase
         .from(tableName as any)
         .select('id, title, name')
@@ -158,7 +161,8 @@ export function SelectWithCustomOption({
         console.error('Check error:', checkError);
       }
 
-      if (existingData && existingData.id) {
+      // Add proper null checks for existingData
+      if (existingData && typeof existingData === 'object' && 'id' in existingData && existingData.id) {
         onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
@@ -191,7 +195,8 @@ export function SelectWithCustomOption({
                    tableName === 'schools' ? 'school' : 
                    tableName === 'majors' ? 'major' : 'position'}.`);
 
-      if (data && data.id) {
+      // Add proper null checks for data
+      if (data && typeof data === 'object' && 'id' in data && data.id) {
         const newOption: Option = {
           id: String(data.id),
           title: data.title || undefined,
