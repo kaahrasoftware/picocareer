@@ -86,6 +86,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       telegram_username: sessionType.telegram_username || '',
       meeting_platform: meetingPlatforms,
       token_cost: sessionType.token_cost || 0,
+      price: sessionType.token_cost || 0, // Add price property mapped from token_cost
       created_at: sessionType.created_at,
       updated_at: sessionType.updated_at
     };

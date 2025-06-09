@@ -36,10 +36,16 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
   const { data: majors = [] } = useQuery({
     queryKey: ['majors-filter'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('majors')
         .select('id, title')
         .order('title');
+      
+      if (error) {
+        console.error('Error fetching majors:', error);
+        return [];
+      }
+      
       return data || [];
     }
   });
@@ -48,10 +54,16 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
   const { data: schools = [] } = useQuery({
     queryKey: ['schools-filter'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('schools')
         .select('id, name')
         .order('name');
+      
+      if (error) {
+        console.error('Error fetching schools:', error);
+        return [];
+      }
+      
       return data || [];
     }
   });
@@ -60,11 +72,16 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
   const { data: popularSkills = [] } = useQuery({
     queryKey: ['popular-skills'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('skills, fields_of_interest')
         .eq('user_type', 'mentee')
         .not('skills', 'is', null);
+      
+      if (error) {
+        console.error('Error fetching skills:', error);
+        return [];
+      }
       
       const allSkills = new Set<string>();
       data?.forEach(profile => {
@@ -77,9 +94,12 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
   });
 
   const handleFilterChange = (key: string, value: any) => {
+    // Convert "all" values back to empty strings for filtering logic
+    const processedValue = value === "all" ? "" : value;
+    
     onFiltersChange({
       ...selectedFilters,
-      [key]: value
+      [key]: processedValue
     });
   };
 
@@ -112,14 +132,14 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
     <div className="flex flex-wrap gap-3 items-center">
       {/* Major Filter */}
       <Select 
-        value={selectedFilters.major} 
+        value={selectedFilters.major || "all"} 
         onValueChange={(value) => handleFilterChange('major', value)}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select major" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Majors</SelectItem>
+          <SelectItem value="all">All Majors</SelectItem>
           {majors.map((major) => (
             <SelectItem key={major.id} value={major.id}>
               {major.title}
@@ -130,14 +150,14 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
 
       {/* School Filter */}
       <Select 
-        value={selectedFilters.school} 
+        value={selectedFilters.school || "all"} 
         onValueChange={(value) => handleFilterChange('school', value)}
       >
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select school" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Schools</SelectItem>
+          <SelectItem value="all">All Schools</SelectItem>
           {schools.map((school) => (
             <SelectItem key={school.id} value={school.id}>
               {school.name}
@@ -148,14 +168,14 @@ export function MenteeFilters({ selectedFilters, onFiltersChange }: MenteeFilter
 
       {/* GPA Range Filter */}
       <Select 
-        value={selectedFilters.gpaRange} 
+        value={selectedFilters.gpaRange || "all"} 
         onValueChange={(value) => handleFilterChange('gpaRange', value)}
       >
         <SelectTrigger className="w-[150px]">
           <SelectValue placeholder="GPA Range" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All GPAs</SelectItem>
+          <SelectItem value="all">All GPAs</SelectItem>
           <SelectItem value="3.5+">3.5+</SelectItem>
           <SelectItem value="3.0-3.5">3.0 - 3.5</SelectItem>
           <SelectItem value="2.5-3.0">2.5 - 3.0</SelectItem>

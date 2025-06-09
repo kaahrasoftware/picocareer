@@ -87,11 +87,11 @@ export function SelectWithCustomOption({
             return searchValue.includes(safeQuery);
           });
           setFilteredOptions(filtered);
-        } else if (data && data.length > 0) {
+        } else if (data && Array.isArray(data) && data.length > 0) {
           // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
           data.forEach(item => {
-            if (!combinedOptions.some(existing => existing.id === String(item.id))) {
+            if (item && typeof item === 'object' && 'id' in item && !combinedOptions.some(existing => existing.id === String(item.id))) {
               combinedOptions.push({
                 id: String(item.id),
                 title: item.title,
@@ -166,7 +166,7 @@ export function SelectWithCustomOption({
         console.error('Check error:', checkError);
       }
 
-      if (existingData) {
+      if (existingData && typeof existingData === 'object' && 'id' in existingData) {
         onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
@@ -200,7 +200,7 @@ export function SelectWithCustomOption({
                    tableName === 'schools' ? 'school' : 
                    tableName === 'majors' ? 'major' : 'position'}.`);
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         const newOption: Option = {
           id: String(data.id),
           title: data.title,

@@ -65,7 +65,7 @@ export function CustomSelect({
         console.error('Error checking existing data:', existingError);
       }
 
-      if (existingData) {
+      if (existingData && typeof existingData === 'object' && 'id' in existingData) {
         // Use existing entry
         onValueChange(String(existingData.id));
         setCustomValue('');
@@ -90,7 +90,7 @@ export function CustomSelect({
         throw error;
       }
 
-      if (data) {
+      if (data && typeof data === 'object' && 'id' in data) {
         const newOption: Option = {
           id: String(data.id),
           name: tableName !== 'majors' && tableName !== 'careers' ? (data as any)[checkField] : undefined,
