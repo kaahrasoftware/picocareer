@@ -766,6 +766,50 @@ export type Database = {
           },
         ]
       }
+      essay_prompts: {
+        Row: {
+          category: Database["public"]["Enums"]["essay_prompt_category"]
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          prompt_text: string
+          title: string
+          updated_at: string
+          word_limit: number | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["essay_prompt_category"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          prompt_text: string
+          title: string
+          updated_at?: string
+          word_limit?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["essay_prompt_category"]
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          prompt_text?: string
+          title?: string
+          updated_at?: string
+          word_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "essay_prompts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
           country: Database["public"]["Enums"]["country"] | null
@@ -2131,6 +2175,292 @@ export type Database = {
           },
         ]
       }
+      mentee_academic_records: {
+        Row: {
+          awards: string[] | null
+          class_rank: number | null
+          created_at: string
+          credits_attempted: number | null
+          credits_earned: number | null
+          cumulative_gpa: number | null
+          honors: string[] | null
+          id: string
+          mentee_id: string
+          semester: string
+          semester_gpa: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          awards?: string[] | null
+          class_rank?: number | null
+          created_at?: string
+          credits_attempted?: number | null
+          credits_earned?: number | null
+          cumulative_gpa?: number | null
+          honors?: string[] | null
+          id?: string
+          mentee_id: string
+          semester: string
+          semester_gpa?: number | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          awards?: string[] | null
+          class_rank?: number | null
+          created_at?: string
+          credits_attempted?: number | null
+          credits_earned?: number | null
+          cumulative_gpa?: number | null
+          honors?: string[] | null
+          id?: string
+          mentee_id?: string
+          semester?: string
+          semester_gpa?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentee_academic_records_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentee_courses: {
+        Row: {
+          course_code: string | null
+          course_name: string
+          created_at: string
+          credits: number | null
+          description: string | null
+          grade: string | null
+          id: string
+          instructor_name: string | null
+          mentee_id: string
+          semester: string | null
+          status: Database["public"]["Enums"]["course_status"]
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          course_code?: string | null
+          course_name: string
+          created_at?: string
+          credits?: number | null
+          description?: string | null
+          grade?: string | null
+          id?: string
+          instructor_name?: string | null
+          mentee_id: string
+          semester?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          course_code?: string | null
+          course_name?: string
+          created_at?: string
+          credits?: number | null
+          description?: string | null
+          grade?: string | null
+          id?: string
+          instructor_name?: string | null
+          mentee_id?: string
+          semester?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentee_courses_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentee_essay_responses: {
+        Row: {
+          created_at: string
+          id: string
+          is_draft: boolean
+          mentee_id: string
+          prompt_id: string
+          response_text: string | null
+          updated_at: string
+          version: number
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_draft?: boolean
+          mentee_id: string
+          prompt_id: string
+          response_text?: string | null
+          updated_at?: string
+          version?: number
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_draft?: boolean
+          mentee_id?: string
+          prompt_id?: string
+          response_text?: string | null
+          updated_at?: string
+          version?: number
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentee_essay_responses_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentee_essay_responses_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "essay_prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentee_interests: {
+        Row: {
+          category: Database["public"]["Enums"]["interest_category"]
+          created_at: string
+          description: string | null
+          id: string
+          interest_name: string
+          mentee_id: string
+          proficiency_level: string | null
+          related_career_id: string | null
+          related_major_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["interest_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          interest_name: string
+          mentee_id: string
+          proficiency_level?: string | null
+          related_career_id?: string | null
+          related_major_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["interest_category"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          interest_name?: string
+          mentee_id?: string
+          proficiency_level?: string | null
+          related_career_id?: string | null
+          related_major_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentee_interests_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentee_interests_related_career_id_fkey"
+            columns: ["related_career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentee_interests_related_major_id_fkey"
+            columns: ["related_major_id"]
+            isOneToOne: false
+            referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentee_projects: {
+        Row: {
+          collaborators: string[] | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          github_url: string | null
+          id: string
+          image_urls: string[] | null
+          live_demo_url: string | null
+          mentee_id: string
+          skills_used: string[] | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          technologies: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collaborators?: string[] | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          github_url?: string | null
+          id?: string
+          image_urls?: string[] | null
+          live_demo_url?: string | null
+          mentee_id: string
+          skills_used?: string[] | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          technologies?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collaborators?: string[] | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          github_url?: string | null
+          id?: string
+          image_urls?: string[] | null
+          live_demo_url?: string | null
+          mentee_id?: string
+          skills_used?: string[] | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          technologies?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentee_projects_mentee_id_fkey"
+            columns: ["mentee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_availability: {
         Row: {
           booked_session_id: string | null
@@ -3080,17 +3410,23 @@ export type Database = {
       profiles: {
         Row: {
           academic_major_id: string | null
+          academic_status: Database["public"]["Enums"]["academic_status"] | null
           avatar_url: string | null
           background_check_consent: boolean | null
           bio: string | null
+          city: string | null
+          class_rank: number | null
           company_id: string | null
+          country: string | null
           created_at: string
+          current_gpa: number | null
           email: string
           facebook_url: string | null
           fields_of_interest: string[] | null
           first_name: string | null
           full_name: string | null
           github_url: string | null
+          graduation_year: number | null
           highest_degree: Database["public"]["Enums"]["degree"] | null
           id: string
           instagram_url: string | null
@@ -3109,6 +3445,7 @@ export type Database = {
           tools_used: string[] | null
           top_mentor: boolean | null
           total_booked_sessions: number | null
+          total_credits: number | null
           updated_at: string
           user_type: Database["public"]["Enums"]["user_type"] | null
           website_url: string | null
@@ -3118,17 +3455,25 @@ export type Database = {
         }
         Insert: {
           academic_major_id?: string | null
+          academic_status?:
+            | Database["public"]["Enums"]["academic_status"]
+            | null
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null
+          city?: string | null
+          class_rank?: number | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
+          current_gpa?: number | null
           email: string
           facebook_url?: string | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
+          graduation_year?: number | null
           highest_degree?: Database["public"]["Enums"]["degree"] | null
           id?: string
           instagram_url?: string | null
@@ -3147,6 +3492,7 @@ export type Database = {
           tools_used?: string[] | null
           top_mentor?: boolean | null
           total_booked_sessions?: number | null
+          total_credits?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
@@ -3156,17 +3502,25 @@ export type Database = {
         }
         Update: {
           academic_major_id?: string | null
+          academic_status?:
+            | Database["public"]["Enums"]["academic_status"]
+            | null
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null
+          city?: string | null
+          class_rank?: number | null
           company_id?: string | null
+          country?: string | null
           created_at?: string
+          current_gpa?: number | null
           email?: string
           facebook_url?: string | null
           fields_of_interest?: string[] | null
           first_name?: string | null
           full_name?: string | null
           github_url?: string | null
+          graduation_year?: number | null
           highest_degree?: Database["public"]["Enums"]["degree"] | null
           id?: string
           instagram_url?: string | null
@@ -3185,6 +3539,7 @@ export type Database = {
           tools_used?: string[] | null
           top_mentor?: boolean | null
           total_booked_sessions?: number | null
+          total_credits?: number | null
           updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"] | null
           website_url?: string | null
@@ -4310,6 +4665,12 @@ export type Database = {
       }
     }
     Enums: {
+      academic_status:
+        | "current_student"
+        | "gap_year"
+        | "graduated"
+        | "transfer_student"
+        | "prospective_student"
       announcement_category: "event" | "news" | "alert" | "general"
       application_status:
         | "Not Applied"
@@ -4571,6 +4932,7 @@ export type Database = {
         | "Zambia"
         | "Zimbabwe"
         | "Democratic Republic of Congo"
+      course_status: "completed" | "in_progress" | "planned" | "dropped"
       degree:
         | "No Degree"
         | "High School"
@@ -4590,6 +4952,13 @@ export type Database = {
         | "Perceiving (P)"
       document_type: "pdf" | "word" | "powerpoint" | "excel" | "other"
       email_content_section: "header" | "intro" | "cta" | "footer"
+      essay_prompt_category:
+        | "college_application"
+        | "scholarship"
+        | "personal_statement"
+        | "supplemental"
+        | "creative_writing"
+        | "academic_reflection"
       event_types:
         | "Coffee Time"
         | "Hackathon"
@@ -4605,6 +4974,13 @@ export type Database = {
         | "search"
         | "bookmark"
         | "content_view"
+      interest_category:
+        | "career"
+        | "academic"
+        | "extracurricular"
+        | "hobby"
+        | "industry"
+        | "skill"
       language:
         | "English"
         | "Spanish"
@@ -4685,6 +5061,7 @@ export type Database = {
         | "multiple_choice"
         | "likert_scale"
         | "open_ended"
+      project_status: "completed" | "in_progress" | "planned" | "on_hold"
       recommendation_type: "career" | "major" | "trait"
       resource_access_level: "public" | "members" | "faculty" | "admin"
       resource_type: "document" | "image" | "video" | "audio" | "external_link"
@@ -5034,6 +5411,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      academic_status: [
+        "current_student",
+        "gap_year",
+        "graduated",
+        "transfer_student",
+        "prospective_student",
+      ],
       announcement_category: ["event", "news", "alert", "general"],
       application_status: [
         "Not Applied",
@@ -5300,6 +5684,7 @@ export const Constants = {
         "Zimbabwe",
         "Democratic Republic of Congo",
       ],
+      course_status: ["completed", "in_progress", "planned", "dropped"],
       degree: [
         "No Degree",
         "High School",
@@ -5321,6 +5706,14 @@ export const Constants = {
       ],
       document_type: ["pdf", "word", "powerpoint", "excel", "other"],
       email_content_section: ["header", "intro", "cta", "footer"],
+      essay_prompt_category: [
+        "college_application",
+        "scholarship",
+        "personal_statement",
+        "supplemental",
+        "creative_writing",
+        "academic_reflection",
+      ],
       event_types: ["Coffee Time", "Hackathon", "Panel", "Webinar", "Workshop"],
       feedback_type: ["mentor_feedback", "mentee_feedback"],
       hub_member_role: ["admin", "moderator", "member", "faculty", "student"],
@@ -5331,6 +5724,14 @@ export const Constants = {
         "search",
         "bookmark",
         "content_view",
+      ],
+      interest_category: [
+        "career",
+        "academic",
+        "extracurricular",
+        "hobby",
+        "industry",
+        "skill",
       ],
       language: [
         "English",
@@ -5419,6 +5820,7 @@ export const Constants = {
         "likert_scale",
         "open_ended",
       ],
+      project_status: ["completed", "in_progress", "planned", "on_hold"],
       recommendation_type: ["career", "major", "trait"],
       resource_access_level: ["public", "members", "faculty", "admin"],
       resource_type: ["document", "image", "video", "audio", "external_link"],

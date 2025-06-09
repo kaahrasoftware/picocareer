@@ -1,4 +1,3 @@
-
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
@@ -13,6 +12,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
+import { MenteeProfileTabs } from "./mentee/MenteeProfileTabs";
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -25,11 +25,18 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
+  const isMentee = profile.user_type === 'mentee';
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
 
+  // If it's a mentee, use the comprehensive mentee profile system
+  if (isMentee) {
+    return <MenteeProfileTabs profile={profile} isEditing={isEditing} onEditToggle={handleEditToggle} />;
+  }
+
+  // Keep existing mentor/admin profile structure
   const renderTags = (items: string[] | null, bgColor: string) => {
     if (!items || items.length === 0) return null;
     return (
