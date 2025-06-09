@@ -48,18 +48,17 @@ export function CustomSelect({
     setIsAdding(true);
     try {
       // First check if the value already exists
-      const existingQuery = await supabase
+      const checkField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
+      const { data: existingData, error: existingError } = await supabase
         .from(tableName as any)
-        .select('id, name, title')
-        .or(`name.ilike.${customValue.trim()},title.ilike.${customValue.trim()}`)
-        .limit(1);
+        .select(`id, ${checkField}`)
+        .eq(checkField, customValue.trim())
+        .maybeSingle();
 
-      if (existingQuery.error) {
-        console.error('Error checking existing data:', existingQuery.error);
-        throw existingQuery.error;
+      if (existingError) {
+        console.error('Error checking existing data:', existingError);
       }
 
-      const existingData = existingQuery.data?.[0];
       if (existingData) {
         // Use existing entry
         onValueChange(String(existingData.id));
@@ -77,7 +76,7 @@ export function CustomSelect({
       const { data, error } = await supabase
         .from(tableName as any)
         .insert(insertData)
-        .select('id, name, title')
+        .select(`id, ${checkField}`)
         .single();
 
       if (error) {
@@ -88,8 +87,8 @@ export function CustomSelect({
       if (data) {
         const newOption: Option = {
           id: String(data.id),
-          name: (data as any).name,
-          title: (data as any).title
+          name: tableName !== 'majors' && tableName !== 'careers' ? (data as any)[checkField] : undefined,
+          title: tableName === 'majors' || tableName === 'careers' ? (data as any)[checkField] : undefined
         };
 
         setLocalOptions(prev => [...prev, newOption]);

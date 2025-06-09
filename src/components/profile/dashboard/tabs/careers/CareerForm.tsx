@@ -59,17 +59,20 @@ export function CareerForm({ career, onSuccess, onCancel }: CareerFormProps) {
 
     setIsLoading(true);
     try {
-      const careerData = {
-        ...data,
-        author_id: session.user.id,
-        updated_at: new Date().toISOString(),
-      };
-
       if (career) {
         // Update existing career
         const { error } = await supabase
           .from('careers')
-          .update(careerData)
+          .update({
+            title: data.title,
+            description: data.description,
+            industry: data.industry,
+            salary_range: data.salary_range,
+            featured: data.featured,
+            status: data.status,
+            author_id: session.user.id,
+            updated_at: new Date().toISOString(),
+          })
           .eq('id', career.id);
 
         if (error) throw error;
@@ -82,10 +85,17 @@ export function CareerForm({ career, onSuccess, onCancel }: CareerFormProps) {
         // Create new career
         const { error } = await supabase
           .from('careers')
-          .insert([{
-            ...careerData,
+          .insert({
+            title: data.title,
+            description: data.description,
+            industry: data.industry,
+            salary_range: data.salary_range,
+            featured: data.featured,
+            status: data.status,
+            author_id: session.user.id,
             created_at: new Date().toISOString(),
-          }]);
+            updated_at: new Date().toISOString(),
+          });
 
         if (error) throw error;
 

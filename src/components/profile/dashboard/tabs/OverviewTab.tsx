@@ -165,7 +165,6 @@ export function OverviewTab() {
           value={(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
           subtitle={`${contentStats?.blogs.total || 0} blogs, ${contentStats?.videos.total || 0} videos`}
           icon={<BookOpen className="h-4 w-4" />}
-          contentType="blogs"
         />
         <StatsCard
           title="Total Sessions"
@@ -178,7 +177,6 @@ export function OverviewTab() {
           value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
           subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
           icon={<Video className="h-4 w-4" />}
-          contentType="videos"
         />
       </div>
 

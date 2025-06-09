@@ -8,10 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useState, useMemo } from "react";
 import { UserProfileDetailsDialog } from "@/components/admin/UserProfileDetailsDialog";
-import type { OnboardingStatus, UserType } from "@/types/database/enums";
+import type { UserType } from "@/types/database/enums";
 import { DateRangeFilter } from "@/components/admin/filters/DateRangeFilter";
 import { endOfDay, startOfDay } from "date-fns";
 import { MentorPerformanceTab } from "./MentorPerformanceTab";
+
+// Define onboarding status type
+type OnboardingStatus = "Pending" | "Under Review" | "Consent Signed" | "Approved" | "Rejected";
 
 interface User {
   id: string;
@@ -266,7 +269,10 @@ export function UsersTab() {
               </div>
             </div>
             <div className="flex items-center gap-4 mb-4">
-              <Select value={selectedUserType} onValueChange={setSelectedUserType}>
+              <Select 
+                value={selectedUserType} 
+                onValueChange={(value: "all" | UserType) => setSelectedUserType(value)}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by user type" />
                 </SelectTrigger>
@@ -279,7 +285,10 @@ export function UsersTab() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <Select 
+                value={selectedStatus} 
+                onValueChange={(value: "all" | OnboardingStatus) => setSelectedStatus(value)}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>

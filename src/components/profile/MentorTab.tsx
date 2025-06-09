@@ -62,7 +62,21 @@ export function MentorTab({ profile }: MentorTabProps) {
     custom_type_name: sessionType.custom_type_name || sessionType.type || 'Default Session',
     description: sessionType.description || '',
     phone_number: sessionType.phone_number || '',
-    telegram_username: sessionType.telegram_username || ''
+    telegram_username: sessionType.telegram_username || '',
+    // Convert meeting_platform to the expected array format
+    meeting_platform: Array.isArray(sessionType.meeting_platform) 
+      ? sessionType.meeting_platform.map(platform => {
+          // Map platform values to expected string literals
+          switch (platform) {
+            case 'Zoom': return 'Google Meet'; // Map Zoom to Google Meet as fallback
+            case 'Google Meet': return 'Google Meet';
+            case 'Telegram': return 'Telegram';
+            case 'WhatsApp': return 'WhatsApp';
+            case 'Phone Call': return 'Phone Call';
+            default: return 'Google Meet';
+          }
+        })
+      : ['Google Meet']
   }));
 
   return (
