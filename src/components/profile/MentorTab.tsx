@@ -14,21 +14,6 @@ interface MentorTabProps {
   profile: Profile;
 }
 
-interface SessionTypeWithOptionalCustomType {
-  id: string;
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  is_active: boolean;
-  meeting_platform: string[];
-  phone_number: string;
-  pricing_type: string;
-  created_at: string;
-  updated_at: string;
-  custom_type_name?: string;
-}
-
 export function MentorTab({ profile }: MentorTabProps) {
   const { toast } = useToast();
   const profileId = profile?.id;
@@ -71,12 +56,6 @@ export function MentorTab({ profile }: MentorTabProps) {
     return null;
   }
 
-  // Convert sessionTypes to have required custom_type_name
-  const sessionTypesWithCustomType = (sessionTypes || []).map((sessionType): SessionTypeWithOptionalCustomType => ({
-    ...sessionType,
-    custom_type_name: sessionType.custom_type_name || sessionType.type
-  }));
-
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
@@ -93,7 +72,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
-          sessionTypes={sessionTypesWithCustomType}
+          sessionTypes={sessionTypes || []}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>

@@ -134,7 +134,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
   const totalCount = mentorBookmarksQuery.data?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  const renderMentorCard = (mentor: MentorProfile, handleView: (item: MentorProfile) => void) => (
+  const renderMentorCard = (mentor: MentorProfile) => (
     <Card key={mentor.id} className="hover:shadow transition-all">
       <CardHeader className="flex flex-row items-center gap-3 pb-2">
         <ProfileAvatar avatarUrl={mentor.avatar_url} imageAlt={mentor.full_name || "Mentor"} size="md" />
@@ -150,7 +150,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
           {mentor.bio || "No bio available"}
         </p>
         <div className="mt-4">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => handleView(mentor)}>
+          <Button variant="outline" size="sm" className="w-full" onClick={() => onViewMentorProfile(mentor.id)}>
             View Profile
           </Button>
         </div>
@@ -171,7 +171,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
       currentPage={currentPage}
       setPage={setCurrentPage}
       onViewDetails={(mentor) => onViewMentorProfile(mentor.id)}
-      renderCard={renderMentorCard}
+      renderCard={(item) => renderMentorCard(item)}
       bookmarkType="mentor"
     />
   );

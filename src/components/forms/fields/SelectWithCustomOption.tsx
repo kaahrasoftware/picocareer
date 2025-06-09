@@ -85,9 +85,9 @@ export function SelectWithCustomOption({
         const newOption: Option = {
           id: String(data.id),
           title: tableName === 'majors' || tableName === 'careers' ? 
-            (data as any).title || customValue : undefined,
+            data.title || customValue : undefined,
           name: tableName !== 'majors' && tableName !== 'careers' ? 
-            (data as any).name || customValue : undefined
+            data.name || customValue : undefined
         };
 
         // Update options list
