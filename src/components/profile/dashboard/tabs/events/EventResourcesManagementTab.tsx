@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Upload, FileText, Download, Eye, BarChart3 } from 'lucide-react';
-import { EventResourceForm } from './forms/EventResourceForm';
+import { EventResourceForm } from '@/components/event/EventResourceForm';
 import { EventResourceMetrics } from './EventResourceMetrics';
 import { ModernResourceAnalytics } from './ModernResourceAnalytics';
-import { useEventResources, useEventResourceAnalytics } from '@/hooks/useEventData';
+import { useEventResources } from '@/hooks/useEventResources';
 
 interface EventResourcesManagementTabProps {
   eventId: string;
@@ -18,8 +18,7 @@ export function EventResourcesManagementTab({ eventId }: EventResourcesManagemen
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   
-  const { data: resources = [], isLoading } = useEventResources(eventId);
-  const { data: analytics = [] } = useEventResourceAnalytics(eventId);
+  const { resources = [], isLoading } = useEventResources(eventId);
 
   const getResourceIcon = (type: string) => {
     switch (type) {
@@ -125,18 +124,19 @@ export function EventResourcesManagementTab({ eventId }: EventResourcesManagemen
         </TabsContent>
 
         <TabsContent value="analytics">
-          <ModernResourceAnalytics eventId={eventId} />
+          <ModernResourceAnalytics />
         </TabsContent>
 
         <TabsContent value="metrics">
-          <EventResourceMetrics eventId={eventId} />
+          <EventResourceMetrics />
         </TabsContent>
       </Tabs>
 
       {showCreateForm && (
         <EventResourceForm
           eventId={eventId}
-          onClose={() => setShowCreateForm(false)}
+          onSuccess={() => setShowCreateForm(false)}
+          onCancel={() => setShowCreateForm(false)}
         />
       )}
     </div>
