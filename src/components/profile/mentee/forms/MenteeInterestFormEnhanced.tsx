@@ -23,7 +23,7 @@ type InterestFormData = z.infer<typeof interestSchema>;
 
 interface MenteeInterestFormEnhancedProps {
   menteeId: string;
-  interest?: (Omit<EnhancedMenteeInterest, 'display_name' | 'career_title' | 'major_title'> & { interest_name: string }) | null;
+  interest?: EnhancedMenteeInterest | null;
   onClose: () => void;
 }
 
@@ -36,7 +36,11 @@ export function MenteeInterestFormEnhanced({ menteeId, interest, onClose }: Ment
     resolver: zodResolver(interestSchema),
     defaultValues: {
       category: interest?.category as InterestCategory || "hobby",
-      interest_value: interest?.interest_name || "",
+      interest_value: interest ? (
+        interest.category === 'career' ? interest.related_career_id || '' :
+        interest.category === 'academic' ? interest.related_major_id || '' :
+        interest.interest_name || ''
+      ) : "",
       description: interest?.description || "",
       proficiency_level: interest?.proficiency_level || "not_specified",
     },
@@ -47,30 +51,31 @@ export function MenteeInterestFormEnhanced({ menteeId, interest, onClose }: Ment
   const onSubmit = async (data: InterestFormData) => {
     setIsSubmitting(true);
     try {
-      // Handle career and academic categories with proper foreign key relationships
       let interestData: any = {
-        interest_name: data.interest_value,
         category: data.category,
         mentee_id: menteeId,
         description: data.description || null,
         proficiency_level: data.proficiency_level === "not_specified" ? null : data.proficiency_level || null,
+        related_career_id: null,
+        related_major_id: null,
+        interest_name: data.interest_value,
       };
 
-      // For career category, store the career ID in related_career_id
+      // For career category, store the career ID in related_career_id and use title as interest_name
       if (data.category === 'career') {
         const selectedCareer = careers.find(c => c.id === data.interest_value);
         if (selectedCareer) {
           interestData.related_career_id = selectedCareer.id;
-          interestData.interest_name = selectedCareer.title; // Store the title as interest_name
+          interestData.interest_name = selectedCareer.title;
         }
       }
 
-      // For academic category, store the major ID in related_major_id
+      // For academic category, store the major ID in related_major_id and use title as interest_name
       if (data.category === 'academic') {
         const selectedMajor = majors.find(m => m.id === data.interest_value);
         if (selectedMajor) {
           interestData.related_major_id = selectedMajor.id;
-          interestData.interest_name = selectedMajor.title; // Store the title as interest_name
+          interestData.interest_name = selectedMajor.title;
         }
       }
 
@@ -123,7 +128,6 @@ export function MenteeInterestFormEnhanced({ menteeId, interest, onClose }: Ment
                   <Select 
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // Reset interest_value when category changes
                       form.setValue("interest_value", "");
                     }} 
                     defaultValue={field.value}

@@ -81,7 +81,7 @@ export function SelectWithCustomOption({
       if (data) {
         console.log(`Successfully added ${tableName}:`, data);
         
-        // Create normalized option object with proper type checking
+        // Create normalized option object
         const newOption: Option = {
           id: String(data.id),
           title: tableName === 'majors' || tableName === 'careers' ? 
@@ -160,7 +160,7 @@ export function SelectWithCustomOption({
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option.id} value={option.id}>
-              {option.title || option.name}
+              {option.title || option.name || 'Unknown'}
             </SelectItem>
           ))}
         </SelectContent>
