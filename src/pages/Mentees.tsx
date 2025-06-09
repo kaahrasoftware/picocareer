@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { Search, Users, GraduationCap, Star, MapPin } from 'lucide-react';
+import { Search, Users, GraduationCap, Star, MapPin, Shield, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EnhancedMenteeCard } from '@/components/mentees/EnhancedMenteeCard';
 import { MenteeFilters } from '@/components/mentees/MenteeFilters';
 import { MenteeProfileDialog } from '@/components/mentees/MenteeProfileDialog';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 interface MenteeProfile {
   id: string;
@@ -54,10 +55,32 @@ export default function Mentees() {
   });
   const [selectedMenteeId, setSelectedMenteeId] = useState<string | null>(null);
 
+  const { session } = useAuthSession();
+
+  // Check if user is authorized to view mentees
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id
+  });
+
   // Fetch mentee profiles with related data
-  const { data: mentees = [], isLoading } = useQuery({
+  const { data: mentees = [], isLoading, error } = useQuery({
     queryKey: ['mentees', selectedFilters],
     queryFn: async () => {
+      console.log('Fetching mentees with filters:', selectedFilters);
+      
       let query = supabase
         .from('profiles')
         .select(`
@@ -87,50 +110,68 @@ export default function Mentees() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching mentees:', error);
+        throw error;
+      }
 
       // Enhance profiles with academic data
       const enhancedProfiles = await Promise.all(
         (data || []).map(async (profile) => {
-          // Fetch academic records
-          const { data: academicRecords } = await supabase
-            .from('mentee_academic_records')
-            .select('*')
-            .eq('mentee_id', profile.id)
-            .order('year', { ascending: false })
-            .limit(3);
+          try {
+            // Fetch academic records
+            const { data: academicRecords } = await supabase
+              .from('mentee_academic_records')
+              .select('*')
+              .eq('mentee_id', profile.id)
+              .order('year', { ascending: false })
+              .limit(3);
 
-          // Fetch projects
-          const { data: projects } = await supabase
-            .from('mentee_projects')
-            .select('title, status, technologies')
-            .eq('mentee_id', profile.id)
-            .limit(3);
+            // Fetch projects
+            const { data: projects } = await supabase
+              .from('mentee_projects')
+              .select('title, status, technologies')
+              .eq('mentee_id', profile.id)
+              .limit(3);
 
-          // Fetch interests
-          const { data: interests } = await supabase
-            .from('mentee_interests')
-            .select('interest_name, category')
-            .eq('mentee_id', profile.id)
-            .limit(5);
+            // Fetch interests
+            const { data: interests } = await supabase
+              .from('mentee_interests')
+              .select('interest_name, category')
+              .eq('mentee_id', profile.id)
+              .limit(5);
 
-          return {
-            ...profile,
-            school: profile.schools,
-            academic_major: profile.majors,
-            academic_records: academicRecords || [],
-            projects: projects || [],
-            interests: interests || []
-          };
+            return {
+              ...profile,
+              school: profile.schools,
+              academic_major: profile.majors,
+              academic_records: academicRecords || [],
+              projects: projects || [],
+              interests: interests || []
+            };
+          } catch (error) {
+            console.error('Error enhancing profile:', error);
+            return {
+              ...profile,
+              school: profile.schools,
+              academic_major: profile.majors,
+              academic_records: [],
+              projects: [],
+              interests: []
+            };
+          }
         })
       );
 
       return enhancedProfiles;
-    }
+    },
+    enabled: !!userProfile && ['mentor', 'admin'].includes(userProfile.user_type)
   });
 
   // Filter mentees based on search and filters
   const filteredMentees = useMemo(() => {
+    if (!mentees) return [];
+    
     return mentees.filter((mentee) => {
       const matchesSearch = 
         mentee.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -164,12 +205,14 @@ export default function Mentees() {
 
   // Calculate statistics
   const stats = useMemo(() => {
+    if (!mentees) return { totalMentees: 0, universities: 0, avgGPA: 0, topPerformers: 0 };
+    
     const totalMentees = mentees.length;
     const universities = new Set(mentees.map(m => m.school?.name).filter(Boolean)).size;
-    const avgGPA = mentees
+    const gpaValues = mentees
       .map(m => m.academic_records?.[0]?.cumulative_gpa)
-      .filter(Boolean)
-      .reduce((sum, gpa, _, arr) => sum + (gpa || 0) / arr.length, 0);
+      .filter(Boolean) as number[];
+    const avgGPA = gpaValues.length > 0 ? gpaValues.reduce((sum, gpa) => sum + gpa, 0) / gpaValues.length : 0;
     const topPerformers = mentees.filter(m => 
       m.academic_records?.[0]?.cumulative_gpa && 
       m.academic_records[0].cumulative_gpa >= 3.5
@@ -178,6 +221,7 @@ export default function Mentees() {
     return { totalMentees, universities, avgGPA, topPerformers };
   }, [mentees]);
 
+  // Show loading state
   if (isLoading) {
     return (
       <div className="container py-6">
@@ -188,6 +232,40 @@ export default function Mentees() {
               <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if user is not authorized
+  if (!userProfile || !['mentor', 'admin'].includes(userProfile.user_type)) {
+    return (
+      <div className="container py-6">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <Shield className="h-16 w-16 text-gray-400" />
+          <h2 className="text-2xl font-bold text-gray-900">Access Restricted</h2>
+          <p className="text-gray-600 text-center max-w-md">
+            This page is only accessible to mentors and administrators. 
+            {userProfile?.user_type === 'mentee' && " As a mentee, you can access your profile through the Profile tab."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="container py-6">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <AlertCircle className="h-16 w-16 text-red-400" />
+          <h2 className="text-2xl font-bold text-gray-900">Error Loading Mentees</h2>
+          <p className="text-gray-600 text-center max-w-md">
+            There was an error loading the mentee data. Please try refreshing the page.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
         </div>
       </div>
     );
