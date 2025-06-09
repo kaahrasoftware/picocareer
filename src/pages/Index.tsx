@@ -1,10 +1,7 @@
 
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatisticsSection } from "@/components/sections/StatisticsSection";
-import { MentorBenefitsSection } from "@/components/sections/mentor/MentorBenefitsSection";
-import { MentorStatsSection } from "@/components/sections/mentor/MentorStatsSection";
-import { MentorProcessSection } from "@/components/sections/mentor/MentorProcessSection";
-import { MentorCallToActionSection } from "@/components/sections/mentor/MentorCallToActionSection";
+import { MentorTabsSection } from "@/components/sections/mentor/MentorTabsSection";
 import { FeaturedCareersSection } from "@/components/sections/FeaturedCareersSection";
 import { FeaturedMajorsSection } from "@/components/sections/FeaturedMajorsSection";
 import { FeaturedSchoolsSection } from "@/components/sections/FeaturedSchoolsSection";
@@ -44,10 +41,7 @@ const Index = () => {
               <Slides />
             </section>
             <ResourcesHighlightSection />
-            <MentorBenefitsSection />
-            <MentorStatsSection />
-            <MentorProcessSection />
-            <MentorCallToActionSection />
+            <MentorTabsSection />
             <div className="TopRatedMentorsSection">
               <TopRatedMentorsSection />
             </div>
