@@ -1,144 +1,160 @@
-import React, { useState } from "react";
+
+// Fix the calendar container component to remove day_range_middle
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format, isAfter } from "date-fns";
-import { Availability } from "@/types/calendar";
-import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionDetailsDialog } from "./SessionDetailsDialog";
-import { DateRange } from "react-day-picker";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMentorAvailability } from "@/hooks/useMentorAvailability";
+import { useMentorUpcomingSessions } from "@/hooks/useMentorUpcomingSessions";
 import { cn } from "@/lib/utils";
+import { addMonths, subMonths, format, isToday } from "date-fns";
+import { CalendarDayDisplay } from "./CalendarDayDisplay";
+import { SessionCard } from "./SessionCard";
+
 interface CalendarContainerProps {
-  selectedDate: Date | undefined;
-  setSelectedDate: (date: Date | undefined) => void;
-  availability: Availability[];
-  events?: CalendarEvent[];
-  selectedDateRange?: DateRange | undefined;
-  setSelectedDateRange?: (range: DateRange | undefined) => void;
-  selectionMode?: "single" | "range";
+  profileId: string;
 }
-export function CalendarContainer({
-  selectedDate,
-  setSelectedDate,
-  availability,
-  events = [],
-  selectedDateRange,
-  setSelectedDateRange,
-  selectionMode = "single"
-}: CalendarContainerProps) {
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
-  // Function to determine if a date has sessions
-  const hasSessionsOnDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+export function CalendarContainer({ profileId }: CalendarContainerProps) {
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [month, setMonth] = useState(new Date());
+  const [showDate, setShowDate] = useState<Date | null>(null);
+  
+  const { data: availabilityData } = useMentorAvailability(profileId);
+  const { data: upcomingSessions } = useMentorUpcomingSessions(profileId);
+
+  const goToPreviousMonth = () => {
+    setMonth(prev => subMonths(prev, 1));
   };
 
-  // Function to determine availability status for a date
-  const getAvailabilityStatus = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const dayOfWeek = date.getDay();
+  const goToNextMonth = () => {
+    setMonth(prev => addMonths(prev, 1));
+  };
+
+  const goToToday = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Get both one-time and recurring slots for this date
-    const dayAvailabilities = availability.filter(slot => {
-      // For one-time slots, check the specific date
-      if (!slot.recurring && format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
-        return true;
-      }
-
-      // For recurring slots, check if they apply to this date
-      if (slot.recurring && slot.day_of_week === dayOfWeek) {
-        // Check if the slot was created before the date we're checking
-        // This ensures recurring slots only apply to future dates from when they were created
-        const slotCreationDate = new Date(slot.created_at || slot.start_date_time);
-        slotCreationDate.setHours(0, 0, 0, 0);
-
-        // Only apply recurring slots to dates that are after the creation date
-        return isAfter(date, slotCreationDate) || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
-      }
-      return false;
-    });
-
-    // If there's at least one available slot, consider the day available
-    const hasAvailable = dayAvailabilities.some(slot => slot.is_available);
-    if (hasAvailable) return 'available';
-    return null;
+    setMonth(today);
+    setSelectedDate(today);
+    setShowDate(today);
   };
 
-  // Filter events for selected date
-  const selectedDateEvents = events.filter(event => {
-    if (!selectedDate) return false;
-    return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-  });
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
+  useEffect(() => {
+    if (selectedDate) {
+      setShowDate(selectedDate);
+    }
+  }, [selectedDate]);
+
+  // Format the available dates from the availability data
+  const availableDates = availabilityData ? availabilityData.map(date => 
+    new Date(date.start_date_time)
+  ) : [];
+
+  // Format the dates with booked sessions
+  const bookedDates = upcomingSessions ? upcomingSessions.map(session => 
+    new Date(session.start_time)
+  ) : [];
+
+  const hasEvents = (date: Date): boolean => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    return availableDates.some(d => format(d, 'yyyy-MM-dd') === dateString) ||
+           bookedDates.some(d => format(d, 'yyyy-MM-dd') === dateString);
   };
-  const handleCloseDialog = () => {
-    setSelectedEvent(null);
-  };
-  const handleCancelSession = async () => {
-    handleCloseDialog();
-  };
-  return <div className="space-y-6">
-      <div className={cn("mx-auto", selectionMode === "range" ? "w-full" : "w-fit")}>
-        {selectionMode === "single" ? <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} defaultMonth={selectedDate} className="rounded-lg border bg-card shadow-sm p-3" modifiers={{
-        sessions: hasSessionsOnDate,
-        available: date => getAvailabilityStatus(date) === 'available'
-      }} modifiersStyles={{
-        sessions: {
-          border: '2px solid #3b82f6',
-          borderRadius: '6px'
-        },
-        available: {
-          backgroundColor: 'rgba(34, 197, 94, 0.15)',
-          color: '#166534',
-          fontWeight: 500
-        }
-      }} /> : <div className="bg-card border rounded-lg shadow-sm p-4">
-            <Calendar mode="range" selected={selectedDateRange} onSelect={setSelectedDateRange} defaultMonth={selectedDate} className="mx-auto" numberOfMonths={2} modifiers={{
-          sessions: hasSessionsOnDate,
-          available: date => getAvailabilityStatus(date) === 'available'
-        }} modifiersStyles={{
-          sessions: {
-            border: '2px solid #3b82f6',
-            borderRadius: '6px'
-          },
-          available: {
-            backgroundColor: 'rgba(34, 197, 94, 0.15)',
-            color: '#166534',
-            fontWeight: 500
-          }
-        }} styles={{
-          day_range_middle: {
-            backgroundColor: 'rgba(147, 51, 234, 0.1)',
-            color: '#7e22ce'
-          },
-          day_selected: {
-            backgroundColor: '#9333ea',
-            color: 'white',
-            fontWeight: 'bold'
-          },
-          day_range_end: {
-            backgroundColor: '#9333ea',
-            color: 'white',
-            fontWeight: 'bold'
-          }
-        }} disabled={date => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return date < today;
-        }} />
-          </div>}
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={goToPreviousMonth}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={goToNextMonth}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <h3 className="text-lg font-semibold">
+              {format(month, 'MMMM yyyy')}
+            </h3>
+            <Button variant="outline" size="sm" onClick={goToToday}>Today</Button>
+          </div>
+
+          <div className="flex mb-4">
+            <Badge variant="outline" className="flex items-center gap-1 mr-2">
+              <span className="h-3 w-3 rounded-full bg-primary-foreground"></span>
+              Today
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1 mr-2">
+              <span className="h-3 w-3 rounded-full bg-green-500"></span>
+              Available
+            </Badge>
+            <Badge variant="outline" className="flex items-center gap-1">
+              <span className="h-3 w-3 rounded-full bg-blue-500"></span>
+              Booked
+            </Badge>
+          </div>
+
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            month={month}
+            onMonthChange={setMonth}
+            className="rounded-md"
+            modifiers={{
+              today: isToday,
+              booked: (date) => bookedDates.some(d => format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')),
+              available: (date) => availableDates.some(d => format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')),
+            }}
+            modifiersClassNames={{
+              today: "bg-primary-foreground text-foreground",
+              booked: "bg-blue-100 text-blue-800",
+              available: "bg-green-100 text-green-800",
+            }}
+            components={{
+              Day: (props) => {
+                const hasEventDot = hasEvents(props.date);
+                return (
+                  <div className={cn(
+                    "relative",
+                    props.className
+                  )}>
+                    {props.day}
+                    {hasEventDot && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full bg-foreground"></div>
+                    )}
+                  </div>
+                );
+              }
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      {showDate && (
+        <CalendarDayDisplay 
+          date={showDate}
+          profileId={profileId}
+        />
+      )}
+
+      {/* Upcoming Sessions */}
+      <div className="space-y-4 mt-8">
+        <h3 className="text-lg font-semibold">Upcoming Sessions</h3>
+        {upcomingSessions && upcomingSessions.length > 0 ? (
+          upcomingSessions.map((session) => (
+            <SessionCard key={session.id} session={session} />
+          ))
+        ) : (
+          <Card>
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground">No upcoming sessions scheduled.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-
-      {selectedDate && selectedDateEvents.length > 0}
-      
-      {selectedDate && selectedDateEvents.length > 0 && <ScrollArea className="h-[300px] w-full sm:w-[350px] mx-auto sm:mx-0">
-          
-        </ScrollArea>}
-
-      <SessionDetailsDialog session={selectedEvent} onClose={() => setSelectedEvent(null)} onCancel={handleCancelSession} />
-    </div>;
+    </div>
+  );
 }
