@@ -1,222 +1,196 @@
 
-import { useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { useUserContent, useBookmarkContent } from "@/hooks/useUserContent";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, BookOpen } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { BlogPostDialog } from "@/components/blog/BlogPostDialog";
 import { format } from "date-fns";
-
-// Define a safe type for BlogWithAuthor that avoids infinite type expansion
-interface BlogWithAuthor {
-  id: string;
-  title: string;
-  summary: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  author_id: string;
-  categories: string[];
-  subcategories: string[];
-  cover_image_url: string | null;
-  status: string;
-  is_recent: boolean;
-  profiles: any; // This can be more strictly typed if needed
-  [key: string]: any; // Allow other properties to exist
-}
+import { BlogWithAuthor } from "@/types/blog/types";
 
 interface ProfileContentTabProps {
   profileId: string;
-  contentType: string;
 }
 
-export function ProfileContentTab({ profileId, contentType }: ProfileContentTabProps) {
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { data: userContent, isLoading } = useUserContent(profileId, contentType);
-  const { addBookmark, removeBookmark, checkIsBookmarked } = useBookmarkContent(profileId);
+export function ProfileContentTab({ profileId }: ProfileContentTabProps) {
+  const [selectedBlog, setSelectedBlog] = useState<BlogWithAuthor | null>(null);
+  const [selectedResource, setSelectedResource] = useState<any | null>(null);
+  
+  const { data: blogs, isLoading: isLoadingBlogs } = useQuery({
+    queryKey: ['profile-blogs', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('author_id', profileId)
+        .order('created_at', { ascending: false });
 
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "MMM d, yyyy");
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!profileId,
+  });
+
+  const { data: resources, isLoading: isLoadingResources } = useQuery({
+    queryKey: ['profile-resources', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('hub_resources')
+        .select('*')
+        .eq('uploaded_by', profileId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!profileId,
+  });
+
+  const handleOpenBlog = (blog: BlogWithAuthor) => {
+    setSelectedBlog(blog);
   };
 
-  const handleBookmarkToggle = async (item: any) => {
-    const isBookmarked = await checkIsBookmarked(contentType, item.id);
-    
-    if (isBookmarked) {
-      await removeBookmark(contentType, item.id);
-    } else {
-      await addBookmark(contentType, item.id);
-    }
+  const handleOpenResource = (resource: any) => {
+    setSelectedResource(resource);
   };
-
-  const handleViewDetails = (item: any) => {
-    setSelectedItem(item);
-    setIsDialogOpen(true);
-  };
-
-  const renderItemCard = (item: any) => {
-    switch (contentType) {
-      case 'blogs': 
-        return (
-          <Card key={item.id} className="overflow-hidden">
-            <div className="h-40 bg-muted overflow-hidden">
-              {item.cover_image_url && (
-                <img 
-                  src={item.cover_image_url} 
-                  alt={item.title} 
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-            <CardHeader className="p-4">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{item.title}</CardTitle>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {item.categories?.slice(0, 3).map((category: string, idx: number) => (
-                  <Badge key={idx} variant="secondary">{category}</Badge>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-sm text-muted-foreground line-clamp-2">{item.summary}</p>
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(item.created_at)}
-                </span>
-                <Button size="sm" onClick={() => handleViewDetails(item)}>
-                  Read More
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      
-      case 'hub_resources':
-        return (
-          <Card key={item.id} className="overflow-hidden">
-            <CardHeader className="p-4">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{item.title}</CardTitle>
-                <Badge variant="outline">{item.resource_type}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
-              <div className="flex justify-between items-center mt-4">
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(item.created_at)}
-                </span>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
-                    Open
-                  </Button>
-                  <Button size="sm" onClick={() => handleViewDetails(item)}>
-                    Details
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      default:
-        return (
-          <Card key={item.id}>
-            <CardHeader>
-              <CardTitle>{item.title || item.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{item.description}</p>
-              <Button size="sm" className="mt-2" onClick={() => handleViewDetails(item)}>
-                View Details
-              </Button>
-            </CardContent>
-          </Card>
-        );
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading {contentType}...</div>;
-  }
-
-  if (!userContent || userContent.length === 0) {
-    return (
-      <Card className="text-center p-8">
-        <p className="text-muted-foreground">No {contentType.replace('_', ' ')} found for this profile.</p>
-      </Card>
-    );
-  }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {userContent.map((item: any) => renderItemCard(item))}
+    <ScrollArea className="h-full">
+      <div className="px-1 sm:px-2 py-4">
+        <Tabs defaultValue="blogs" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="blogs" className="flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              Blogs
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-1">
+              <FileText className="h-4 w-4" />
+              Resources
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="blogs" className="mt-0">
+            {isLoadingBlogs ? (
+              <div className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+            ) : blogs && blogs.length > 0 ? (
+              <div className="space-y-4">
+                {blogs.map((blog) => (
+                  <Card 
+                    key={blog.id} 
+                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
+                    onClick={() => handleOpenBlog(blog as BlogWithAuthor)}
+                  >
+                    <div className="flex flex-col md:flex-row">
+                      <div className="md:w-1/3 h-48">
+                        <img 
+                          src={blog.cover_image_url || `https://picsum.photos/seed/${blog.id}/400/300`} 
+                          alt={blog.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="md:w-2/3">
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{blog.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <p className="text-sm text-muted-foreground line-clamp-2">{blog.summary}</p>
+                          <div className="flex justify-between items-center mt-4">
+                            <span className="text-xs text-muted-foreground">{format(new Date(blog.created_at), 'MMM d, yyyy')}</span>
+                            {blog.categories && blog.categories[0] && (
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                                {blog.categories[0]}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-muted-foreground">No blogs published yet</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="resources" className="mt-0">
+            {isLoadingResources ? (
+              <div className="space-y-4">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+            ) : resources && resources.length > 0 ? (
+              <div className="space-y-4">
+                {resources.map((resource) => (
+                  <Card 
+                    key={resource.id} 
+                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200"
+                    onClick={() => handleOpenResource(resource)}
+                  >
+                    <div className="flex flex-col md:flex-row">
+                      <div className="md:w-1/3 h-48 bg-muted flex items-center justify-center">
+                        {resource.thumbnail_url ? (
+                          <img 
+                            src={resource.thumbnail_url} 
+                            alt={resource.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <FileText className="h-16 w-16 text-muted-foreground/50" />
+                        )}
+                      </div>
+                      <div className="md:w-2/3">
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-base">{resource.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <p className="text-sm text-muted-foreground line-clamp-2">{resource.description}</p>
+                          <div className="flex justify-between items-center mt-4">
+                            <span className="text-xs text-muted-foreground">{format(new Date(resource.created_at), 'MMM d, yyyy')}</span>
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{resource.content_type}</span>
+                          </div>
+                        </CardContent>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-muted-foreground">No resources shared yet</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {selectedItem && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{selectedItem.title || selectedItem.name}</DialogTitle>
-            </DialogHeader>
-            
-            {contentType === 'blogs' && (
-              <div className="space-y-4">
-                {selectedItem.cover_image_url && (
-                  <img 
-                    src={selectedItem.cover_image_url} 
-                    alt={selectedItem.title} 
-                    className="w-full max-h-60 object-cover rounded-md"
-                  />
-                )}
-                <div className="flex flex-wrap gap-2">
-                  {selectedItem.categories?.map((category: string, idx: number) => (
-                    <Badge key={idx} variant="secondary">{category}</Badge>
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Published: {formatDate(selectedItem.created_at)}
-                </p>
-                <div className="prose max-w-none">
-                  <p>{selectedItem.summary}</p>
-                  <div dangerouslySetInnerHTML={{ __html: selectedItem.content }} />
-                </div>
-              </div>
-            )}
-            
-            {contentType === 'hub_resources' && (
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <Badge variant="outline">{selectedItem.resource_type}</Badge>
-                  <Badge variant="outline">{selectedItem.access_level}</Badge>
-                </div>
-                <p>{selectedItem.description}</p>
-                <div className="flex justify-end gap-2">
-                  {selectedItem.file_url && (
-                    <Button>
-                      Download
-                    </Button>
-                  )}
-                  {selectedItem.external_url && (
-                    <Button variant="outline" asChild>
-                      <a href={selectedItem.external_url} target="_blank" rel="noopener noreferrer">
-                        Visit External Link
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
-          </DialogContent>
-        </Dialog>
+      {/* Blog post dialog */}
+      {selectedBlog && (
+        <BlogPostDialog
+          blog={selectedBlog}
+          isOpen={!!selectedBlog}
+          onClose={() => setSelectedBlog(null)}
+        />
       )}
-    </div>
+
+      {/* Resource dialog - we'd need to implement this component */}
+      {/* {selectedResource && (
+        <ResourceViewDialog
+          resource={selectedResource}
+          isOpen={!!selectedResource}
+          onClose={() => setSelectedResource(null)}
+        />
+      )} */}
+    </ScrollArea>
   );
 }

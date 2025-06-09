@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -33,33 +32,17 @@ export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilit
 
     setIsSubmitting(true);
     try {
-      // Create a date string in ISO format for start_date_time
-      const startDateTime = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(), 
-        selectedDate.getDate(),
-        parseInt(selectedTime.split(':')[0]),
-        parseInt(selectedTime.split(':')[1])
-      ).toISOString();
-
-      // Calculate end time (1 hour after start time)
-      const endDateTime = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(), 
-        selectedDate.getDate(),
-        parseInt(selectedTime.split(':')[0]) + 1,
-        parseInt(selectedTime.split(':')[1])
-      ).toISOString();
-      
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: userId,
-          start_date_time: startDateTime,
-          end_date_time: endDateTime,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          is_available: true,
-          dst_aware: true
+          date_available: format(selectedDate, 'yyyy-MM-dd'),
+          start_time: selectedTime,
+          end_time: format(
+            new Date(selectedDate.setHours(parseInt(selectedTime.split(':')[0]) + 1)),
+            'HH:mm'
+          ),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
         });
 
       if (error) throw error;

@@ -126,7 +126,7 @@ export function MenteeInterestForm({ menteeId, interest, onClose }: MenteeIntere
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="not_specified">Not specified</SelectItem>
+                      <SelectItem value="">Not specified</SelectItem>
                       <SelectItem value="beginner">Beginner</SelectItem>
                       <SelectItem value="intermediate">Intermediate</SelectItem>
                       <SelectItem value="advanced">Advanced</SelectItem>

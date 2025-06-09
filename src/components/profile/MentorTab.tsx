@@ -56,9 +56,6 @@ export function MentorTab({ profile }: MentorTabProps) {
     return null;
   }
 
-  // Fix: Pass sessionTypes as any to avoid TypeScript errors
-  // A more complete solution would involve updating the SessionTypeManager component
-  // to accept the correct type or adapting the data to match the expected format
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList>
@@ -75,7 +72,7 @@ export function MentorTab({ profile }: MentorTabProps) {
       <TabsContent value="session-types">
         <SessionTypeManager 
           profileId={profileId} 
-          sessionTypes={sessionTypes as any || []}
+          sessionTypes={sessionTypes || []}
           onUpdate={refetchSessionTypes}
         />
       </TabsContent>
