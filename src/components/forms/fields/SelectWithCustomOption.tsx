@@ -57,64 +57,61 @@ export function SelectWithCustomOption({
     setIsSearching(true);
     
     try {
-      // For longer queries, fetch from database
-      if (query.length >= 2) {
-        const safeQuery = String(query).toLowerCase();
+      const validTableNames = ['majors', 'schools', 'companies', 'careers'];
+      if (!validTableNames.includes(tableName)) {
+        // Fallback to local filtering for unknown table names
+        const filtered = options.filter(option => {
+          const searchValue = String(option.title || option.name || '').toLowerCase();
+          return searchValue.includes(query.toLowerCase());
+        });
+        setFilteredOptions(filtered);
+        setIsSearching(false);
+        return;
+      }
+      
+      const safeQuery = String(query).toLowerCase();
+      
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .select('id, title, name')
+        .or(`title.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`)
+        .limit(50);
+      
+      if (error) {
+        console.error('Search error:', error);
+        // Fall back to local filtering on error
+        const filtered = options.filter(option => {
+          const searchValue = String(option.title || option.name || '').toLowerCase();
+          return searchValue.includes(safeQuery);
+        });
+        setFilteredOptions(filtered);
+      } else if (data && Array.isArray(data) && data.length > 0) {
+        // Combine with existing options, removing duplicates
+        const combinedOptions = [...options];
+        data.forEach(item => {
+          if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
+            combinedOptions.push({
+              id: String(item.id),
+              title: item.title || undefined,
+              name: item.name || undefined
+            });
+          }
+        });
         
-        const validTableNames = ['majors', 'schools', 'companies', 'careers'];
-        if (!validTableNames.includes(tableName)) {
-          // Fallback to local filtering for unknown table names
-          const filtered = options.filter(option => {
-            const searchValue = String(option.title || option.name || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          setFilteredOptions(filtered);
-          setIsSearching(false);
-          return;
-        }
+        // Filter the combined results
+        const filtered = combinedOptions.filter(option => {
+          const searchValue = String(option.title || option.name || '').toLowerCase();
+          return searchValue.includes(safeQuery);
+        });
         
-        const { data, error } = await supabase
-          .from(tableName as any)
-          .select('id, title, name')
-          .or(`title.ilike.%${safeQuery}%,name.ilike.%${safeQuery}%`)
-          .limit(50);
-        
-        if (error) {
-          console.error('Search error:', error);
-          // Fall back to local filtering on error
-          const filtered = options.filter(option => {
-            const searchValue = String(option.title || option.name || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          setFilteredOptions(filtered);
-        } else if (data && Array.isArray(data) && data.length > 0) {
-          // Combine with existing options, removing duplicates
-          const combinedOptions = [...options];
-          data.forEach(item => {
-            if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
-              combinedOptions.push({
-                id: String(item.id),
-                title: item.title || undefined,
-                name: item.name || undefined
-              });
-            }
-          });
-          
-          // Filter the combined results
-          const filtered = combinedOptions.filter(option => {
-            const searchValue = String(option.title || option.name || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          
-          setFilteredOptions(filtered);
-        } else {
-          // If no results from API, filter local options
-          const filtered = options.filter(option => {
-            const searchValue = String(option.title || option.name || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          setFilteredOptions(filtered);
-        }
+        setFilteredOptions(filtered);
+      } else {
+        // If no results from API, filter local options
+        const filtered = options.filter(option => {
+          const searchValue = String(option.title || option.name || '').toLowerCase();
+          return searchValue.includes(safeQuery);
+        });
+        setFilteredOptions(filtered);
       }
     } catch (error) {
       console.error('Search error:', error);
@@ -132,7 +129,6 @@ export function SelectWithCustomOption({
   // Focus the search input when content opens
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      // Use a short timeout to ensure the select content is rendered
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 10);
@@ -288,7 +284,6 @@ export function SelectWithCustomOption({
               }}
               className="mb-2"
               onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
                 if (e.key === 'Enter') {
                   e.stopPropagation();
                 }
