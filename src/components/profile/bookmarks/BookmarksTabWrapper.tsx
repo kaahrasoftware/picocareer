@@ -14,37 +14,16 @@ export function BookmarksTabWrapper() {
     queryFn: async () => {
       if (!userId) return [];
       
+      // Simple query for now to avoid column issues
       const { data, error } = await supabase
         .from('user_bookmarks')
-        .select(`
-          id,
-          scholarship_id,
-          scholarships (
-            id,
-            title,
-            description,
-            provider_name,
-            amount,
-            deadline,
-            status,
-            application_url,
-            category,
-            tags,
-            featured,
-            eligibility_criteria,
-            academic_requirements,
-            application_process
-          )
-        `)
+        .select('*')
         .eq('user_id', userId)
         .eq('bookmark_type', 'scholarship');
 
       if (error) throw error;
       
-      return data?.map(bookmark => ({
-        ...bookmark.scholarships,
-        bookmarkId: bookmark.id
-      })) || [];
+      return data || [];
     },
     enabled: !!userId
   });

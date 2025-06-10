@@ -4541,6 +4541,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_hub_recommendations: {
         Args: { p_hub_id: string }
         Returns: {
@@ -4585,6 +4589,10 @@ export type Database = {
       }
       is_admin: {
         Args: Record<PropertyKey, never> | { user_id?: string }
+        Returns: boolean
+      }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       is_hub_admin: {
