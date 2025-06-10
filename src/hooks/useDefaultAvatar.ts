@@ -6,18 +6,18 @@ import { generateDefaultAvatar } from '@/utils/avatarGenerator';
 export function useDefaultAvatar(userId: string | undefined, currentAvatarUrl: string | null) {
   useEffect(() => {
     async function ensureDefaultAvatar() {
-      if (!userId || currentAvatarUrl) return;
+      if (!userId) return;
 
       try {
-        // Check if user already has an avatar_type set
+        // Check if user already has an avatar_url set
         const { data: profile } = await supabase
           .from('profiles')
           .select('avatar_type, avatar_url')
           .eq('id', userId)
           .single();
 
-        // If no avatar and no avatar_type, set default
-        if (profile && !profile.avatar_url && !profile.avatar_type) {
+        // If no avatar_url, set default
+        if (profile && !profile.avatar_url) {
           const defaultAvatarUrl = generateDefaultAvatar(userId);
           
           await supabase
