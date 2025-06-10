@@ -3411,6 +3411,7 @@ export type Database = {
         Row: {
           academic_major_id: string | null
           academic_status: Database["public"]["Enums"]["academic_status"] | null
+          avatar_type: string | null
           avatar_url: string | null
           background_check_consent: boolean | null
           bio: string | null
@@ -3458,6 +3459,7 @@ export type Database = {
           academic_status?:
             | Database["public"]["Enums"]["academic_status"]
             | null
+          avatar_type?: string | null
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null
@@ -3505,6 +3507,7 @@ export type Database = {
           academic_status?:
             | Database["public"]["Enums"]["academic_status"]
             | null
+          avatar_type?: string | null
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null

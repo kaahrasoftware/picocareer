@@ -1,100 +1,93 @@
 
-import { Badge } from "@/components/ui/badge";
-import { Award, Share2 } from "lucide-react";
+import React from "react";
+import { DialogTitle } from "@/components/ui/dialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { BookmarkButton } from "./BookmarkButton";
-import { ProfileInfo } from "./ProfileInfo";
-import { Button } from "@/components/ui/button";
-import type { Session } from "@supabase/supabase-js";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { SkillsList } from "@/components/profile/SkillsList";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
-interface ProfileHeaderProps {
-  profile: {
-    id: string;
-    avatar_url: string | null;
-    full_name: string | null;
-    user_type?: string | null;
-    top_mentor?: boolean | null;
-    career_title?: string | null;
-    school_name?: string | null;
-    company_name?: string | null;
-    location?: string | null;
-    academic_major?: string | null;
-    email?: string | null;
-  } | null;
-  session: Session | null;
-  onShare: () => void;
+interface Profile {
+  id: string;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+  academic_major: string | null;
+  school_name: string | null;
+  position: string | null;
+  company_name: string | null;
+  skills: string[] | null;
 }
 
-export function ProfileHeader({
-  profile,
-  session,
-  onShare
-}: ProfileHeaderProps) {
-  if (!profile) return null;
-  
-  const isOwnProfile = session?.user?.id === profile.id;
+interface ProfileHeaderProps {
+  profile: Profile | null;
+}
 
-  // Helper function to determine badge content and style
-  const getBadgeContent = () => {
-    if (profile.user_type !== 'mentor') return null;
-    if (profile.top_mentor) {
-      return {
-        content: <>
-            <Award className="h-3 w-3" />
-            Top Mentor
-          </>,
-        className: "bg-primary/20 text-primary hover:bg-primary/30 flex items-center gap-1"
-      };
-    }
-    return {
-      content: "mentor",
-      className: "bg-primary/20 text-primary hover:bg-primary/30"
-    };
-  };
-  
-  const badge = getBadgeContent();
-  
-  return (
-    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-6 bg-muted rounded-lg">
-      <ProfileAvatar 
-        avatarUrl={profile?.avatar_url || ""} 
-        imageAlt={profile?.full_name || profile?.email || ""} 
-        size="lg" 
-        editable={isOwnProfile} 
-        userId={profile?.id} 
-      />
-      
-      {/* Profile Information Section */}
-      <div className="flex-1 min-w-0">
-        {/* Name and Badges Row */}
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-2 flex-wrap flex-1">
-            <h2 className="text-base sm:text-2xl font-bold leading-tight sm:leading-normal break-words max-w-[200px] sm:max-w-none">
-              {profile.full_name}
-            </h2>
-            
-            {/* Render Badge if applicable */}
-            {badge && (
-              <Badge variant="secondary" className={badge.className}>
-                {badge.content}
-              </Badge>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <BookmarkButton profileId={profile.id} session={session} />
+export function ProfileHeader({ profile }: ProfileHeaderProps) {
+  const { session } = useAuthSession();
+
+  if (!profile) {
+    return (
+      <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
+        <div className="animate-pulse">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-16 h-16 bg-gray-300 rounded-full" />
+            <div className="flex-1">
+              <div className="h-6 bg-gray-300 rounded w-1/2 mb-2" />
+              <div className="h-4 bg-gray-300 rounded w-1/3" />
+            </div>
           </div>
         </div>
-
-        {/* Professional and Academic Information */}
-        <ProfileInfo 
-          careerTitle={profile.career_title} 
-          companyName={profile.company_name} 
-          schoolName={profile.school_name} 
-          location={profile.location} 
-          academicMajor={profile.academic_major} 
-        />
       </div>
+    );
+  }
+
+  // Determine primary and secondary display text
+  const primaryText = profile.position || profile.academic_major || "No position/major set";
+  const secondaryText = profile.position 
+    ? profile.company_name || "No company set"
+    : profile.school_name || "No school set";
+
+  const handleAvatarUpdate = (url: string) => {
+    // Update the profile avatar URL - this will be handled by the ProfileAvatar component
+    if (profile) {
+      profile.avatar_url = url;
+    }
+  };
+
+  return (
+    <div className="bg-background/80 backdrop-blur-sm border-b border-border p-3 dark:bg-kahra-darker/80">
+      <div className="flex items-start gap-3 mb-3">
+        <ProfileAvatar 
+          avatarUrl={profile.avatar_url}
+          imageAlt={profile.full_name || profile.email}
+          size="lg"
+          userId={profile.id}
+          editable={session?.user?.id === profile.id}
+          onAvatarUpdate={handleAvatarUpdate}
+        />
+        <div className="flex flex-col gap-1">
+          <div>
+            <DialogTitle className="text-xl font-bold">
+              {primaryText}
+            </DialogTitle>
+            <p className="text-sm text-gray-400 dark:text-gray-400">
+              {secondaryText}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">{profile.full_name}</h3>
+            <p className="text-sm text-gray-400 dark:text-gray-400">{profile.email}</p>
+          </div>
+        </div>
+      </div>
+      
+      <ProfileStats 
+        menteeCount={0}
+        connectionCount={495}
+        recordingCount={35}
+      />
+
+      <SkillsList />
     </div>
   );
 }

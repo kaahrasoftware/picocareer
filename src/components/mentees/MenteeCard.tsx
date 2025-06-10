@@ -77,7 +77,9 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
               <ProfileAvatar 
                 avatarUrl={mentee.avatar_url} 
                 imageAlt={mentee.full_name} 
-                size="lg" 
+                size="lg"
+                userId={mentee.id}
+                editable={false}
               />
               {(hasHonors || hasAwards) && (
                 <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
