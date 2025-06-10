@@ -86,26 +86,26 @@ export function UserMenu() {
   const isMentor = userType === 'mentor';
   const isAdmin = userType === 'admin';
 
+  // Get initials for fallback
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const names = name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+    }
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="outline-none" data-testid="user-menu-button">
-          {profile ? (
-            <ProfileAvatar
-              avatarUrl={avatarUrl}
-              imageAlt={displayName}
-              size="sm"
-              userId={profile.id}
-              editable={false}
-            />
-          ) : (
-            <Avatar className="h-8 w-8 cursor-pointer">
-              <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback>
-                {displayEmail?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          )}
+          <Avatar className="h-8 w-8 cursor-pointer">
+            <AvatarImage src={avatarUrl || undefined} alt={displayName} />
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </Avatar>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

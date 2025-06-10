@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { Profile } from "@/types/database/profiles";
 import { useMobileMenu } from "@/context/MobileMenuContext";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface ProfileTabsProps {
   profile: Profile | null;
@@ -26,28 +27,28 @@ interface ProfileTabsProps {
 }
 
 export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps) {
+  const { session } = useAuthSession();
   const isAdmin = profile?.user_type === 'admin';
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab');
   const defaultTab = tabFromUrl || 'profile';
   const { closeMobileMenu } = useMobileMenu();
 
-  if (!profile) {
-    return null;
-  }
-
   const handleTabChange = (value: string) => {
     onTabChange(value);
     closeMobileMenu();
   };
 
-  // Calculate number of tabs to display for grid
+  // Calculate number of tabs to display for grid - use session data as fallback
+  const showMentorTab = isMentor || (session?.user && !profile); // Show if mentor or if profile not loaded yet
+  const showWalletTab = isAdmin || (session?.user && !profile); // Show if admin or if profile not loaded yet
+  
   const numTabs = [
     true, // Profile tab always shown
     true, // Calendar tab
-    isMentor, // Mentor tab
+    showMentorTab, // Mentor tab
     true, // Bookmarks tab
-    isAdmin, // Wallet tab (only for admin)
+    showWalletTab, // Wallet tab (for admin)
     true, // Settings tab
   ].filter(Boolean).length;
 
@@ -70,7 +71,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
           <span className="hidden sm:inline">Calendar</span>
         </TabsTrigger>
         
-        {isMentor && (
+        {showMentorTab && (
           <TabsTrigger value="mentor" className="flex flex-col sm:flex-row items-center gap-1">
             <GraduationCap className="h-4 w-4" />
             <span className="hidden sm:inline">Mentor</span>
@@ -82,7 +83,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
           <span className="hidden sm:inline">Bookmarks</span>
         </TabsTrigger>
 
-        {isAdmin && (
+        {showWalletTab && (
           <TabsTrigger value="wallet" className="flex flex-col sm:flex-row items-center gap-1">
             <Wallet className="h-4 w-4" />
             <span className="hidden sm:inline">Wallet</span>
@@ -103,7 +104,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <CalendarTab profile={profile} />
       </TabsContent>
 
-      {isMentor && profile && (
+      {showMentorTab && (
         <TabsContent value="mentor">
           <MentorTab profile={profile} />
         </TabsContent>
@@ -113,7 +114,7 @@ export function ProfileTabs({ profile, isMentor, onTabChange }: ProfileTabsProps
         <BookmarksTab />
       </TabsContent>
 
-      {isAdmin && (
+      {showWalletTab && (
         <TabsContent value="wallet">
           <WalletTab profile={profile} />
         </TabsContent>

@@ -159,7 +159,7 @@ export function SelectWithCustomOption({
         console.error('Check error:', checkError);
       }
 
-      if (existingData && typeof existingData === 'object' && existingData.id) {
+      if (existingData && typeof existingData === 'object' && existingData && 'id' in existingData) {
         onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
@@ -192,11 +192,11 @@ export function SelectWithCustomOption({
                    tableName === 'schools' ? 'school' : 
                    tableName === 'majors' ? 'major' : 'position'}.`);
 
-      if (data && typeof data === 'object' && data.id) {
+      if (data && typeof data === 'object' && data && 'id' in data) {
         const newOption: Option = {
           id: String(data.id),
-          title: data.title || undefined,
-          name: data.name || undefined
+          title: 'title' in data ? data.title : undefined,
+          name: 'name' in data ? data.name : undefined
         };
 
         setOptions(prev => [...prev, newOption]);

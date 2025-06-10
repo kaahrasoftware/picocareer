@@ -1,3 +1,4 @@
+
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
@@ -13,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/types/database/profiles";
 import { MenteeProfileTabs } from "./mentee/MenteeProfileTabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileTabProps {
   profile: Profile | null;
@@ -21,15 +23,38 @@ interface ProfileTabProps {
 export function ProfileTab({ profile }: ProfileTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuthSession();
   
-  if (!profile) return null;
-
-  const isMentor = profile.user_type === 'mentor';
-  const isMentee = profile.user_type === 'mentee';
-
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
+
+  // Show loading skeleton if profile is null (still loading)
+  if (!profile && session) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-end mb-4">
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Profile information not available.</p>
+      </div>
+    );
+  }
+
+  const isMentor = profile.user_type === 'mentor';
+  const isMentee = profile.user_type === 'mentee';
 
   // If it's a mentee, use the comprehensive mentee profile system
   if (isMentee) {
