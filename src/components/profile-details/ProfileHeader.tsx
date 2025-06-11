@@ -110,9 +110,6 @@ export function ProfileHeader({
                 
               </div>
 
-              {/* Bio */}
-              {profile.bio}
-
               {/* Meta Information */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 {profile.location && <div className="flex items-center gap-1">
