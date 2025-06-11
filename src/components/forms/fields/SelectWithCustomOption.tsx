@@ -89,11 +89,11 @@ export function SelectWithCustomOption({
               id: String(item.id)
             };
             
-            if (item && 'title' in item && item.title && typeof item.title === 'string') {
+            if ('title' in item && item.title && typeof item.title === 'string') {
               newOption.title = String(item.title);
             }
             
-            if (item && 'name' in item && item.name && typeof item.name === 'string') {
+            if ('name' in item && item.name && typeof item.name === 'string') {
               newOption.name = String(item.name);
             }
             

@@ -3996,31 +3996,55 @@ export type Database = {
       token_transactions: {
         Row: {
           amount: number
+          category: Database["public"]["Enums"]["transaction_category"] | null
           created_at: string
           description: string | null
+          discount_amount: number | null
           id: string
+          metadata: Json | null
+          original_amount: number | null
+          reference_id: string | null
           related_entity_id: string | null
           related_entity_type: string | null
+          transaction_status:
+            | Database["public"]["Enums"]["transaction_status"]
+            | null
           transaction_type: string
           wallet_id: string
         }
         Insert: {
           amount: number
+          category?: Database["public"]["Enums"]["transaction_category"] | null
           created_at?: string
           description?: string | null
+          discount_amount?: number | null
           id?: string
+          metadata?: Json | null
+          original_amount?: number | null
+          reference_id?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
+          transaction_status?:
+            | Database["public"]["Enums"]["transaction_status"]
+            | null
           transaction_type: string
           wallet_id: string
         }
         Update: {
           amount?: number
+          category?: Database["public"]["Enums"]["transaction_category"] | null
           created_at?: string
           description?: string | null
+          discount_amount?: number | null
           id?: string
+          metadata?: Json | null
+          original_amount?: number | null
+          reference_id?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
+          transaction_status?:
+            | Database["public"]["Enums"]["transaction_status"]
+            | null
           transaction_type?: string
           wallet_id?: string
         }
@@ -4529,6 +4553,17 @@ export type Database = {
         }
         Returns: Json
       }
+      deduct_tokens: {
+        Args: {
+          p_wallet_id: string
+          p_amount: number
+          p_description: string
+          p_category?: Database["public"]["Enums"]["transaction_category"]
+          p_reference_id?: string
+          p_metadata?: Json
+        }
+        Returns: Json
+      }
       delete_session: {
         Args: { p_session_id: string }
         Returns: Json
@@ -4562,6 +4597,14 @@ export type Database = {
           bookmark_count: number
           search_count: number
         }[]
+      }
+      get_transaction_summary: {
+        Args: {
+          p_wallet_id: string
+          p_start_date?: string
+          p_end_date?: string
+        }
+        Returns: Json
       }
       gtrgm_compress: {
         Args: { "": unknown }
@@ -4642,6 +4685,16 @@ export type Database = {
       refresh_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      refund_tokens: {
+        Args: {
+          p_wallet_id: string
+          p_amount: number
+          p_description: string
+          p_reference_id?: string
+          p_metadata?: Json
+        }
+        Returns: Json
       }
       schedule_notification: {
         Args: { p_notifications: Json[]; p_scheduled_for: string }
@@ -5280,6 +5333,15 @@ export type Database = {
         | "Exploring Creative Hobbies"
         | "How Extracurriculars Boost Applications"
         | "Starting Your Own Club or Organization"
+      transaction_category:
+        | "purchase"
+        | "session"
+        | "content"
+        | "refund"
+        | "adjustment"
+        | "bonus"
+      transaction_status: "pending" | "completed" | "failed" | "cancelled"
+      transaction_type: "credit" | "debit" | "refund" | "adjustment" | "bonus"
       user_type: "mentor" | "mentee" | "admin" | "editor"
       webinar_platform: "Google Meet" | "Zoom"
       "where did you hear about us":
@@ -6044,6 +6106,16 @@ export const Constants = {
         "How Extracurriculars Boost Applications",
         "Starting Your Own Club or Organization",
       ],
+      transaction_category: [
+        "purchase",
+        "session",
+        "content",
+        "refund",
+        "adjustment",
+        "bonus",
+      ],
+      transaction_status: ["pending", "completed", "failed", "cancelled"],
+      transaction_type: ["credit", "debit", "refund", "adjustment", "bonus"],
       user_type: ["mentor", "mentee", "admin", "editor"],
       webinar_platform: ["Google Meet", "Zoom"],
       "where did you hear about us": [
