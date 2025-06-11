@@ -1,3 +1,4 @@
+
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { EditableField } from "@/components/profile/EditableField";
@@ -25,14 +26,14 @@ export function ProfileTab({ profile }: ProfileTabProps) {
   if (!profile) return null;
 
   const isMentor = profile.user_type === 'mentor';
-  const isMentee = profile.user_type === 'mentee';
+  const isStudent = profile.student_nonstudent === 'Student';
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
 
-  // If it's a mentee, use the comprehensive mentee profile system
-  if (isMentee) {
+  // If user is a student, use the comprehensive student profile system
+  if (isStudent) {
     return <MenteeProfileTabs profile={profile} isEditing={isEditing} onEditToggle={handleEditToggle} />;
   }
 

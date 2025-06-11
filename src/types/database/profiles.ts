@@ -31,6 +31,7 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   school?: School;
+  student_nonstudent?: string | null;
 }
 
 export interface ProfileWithDetails extends Profile {
