@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthState } from "@/hooks/useAuthState";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { User } from "lucide-react";
 import { CareerProfile } from "./types";
 import { BookmarksList } from "./BookmarksList";
@@ -16,15 +16,15 @@ interface CareerBookmarksProps {
 }
 
 export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookmarksProps) {
-  const { user } = useAuthState();
+  const { session } = useAuthSession();
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
   // Fetch bookmarked careers with pagination
   const careerBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-careers", user?.id, currentPage],
+    queryKey: ["bookmarked-careers", session?.user?.id, currentPage],
     queryFn: async () => {
-      if (!user) return {
+      if (!session?.user?.id) return {
         data: [],
         count: 0
       };
@@ -35,7 +35,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
         error: countError
       } = await supabase.from("user_bookmarks").select('*', {
         count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "career");
+      }).eq("profile_id", session.user.id).eq("content_type", "career");
       if (countError) {
         console.error("Error counting career bookmarks:", countError);
         throw countError;
@@ -49,7 +49,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
       const {
         data: bookmarks,
         error: bookmarksError
-      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", user.id).eq("content_type", "career").range(start, end);
+      } = await supabase.from("user_bookmarks").select("content_id").eq("profile_id", session.user.id).eq("content_type", "career").range(start, end);
       if (bookmarksError) {
         console.error("Error fetching career bookmarks:", bookmarksError);
         throw bookmarksError;
@@ -84,7 +84,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
         count: count || 0
       };
     },
-    enabled: !!user && activePage === "careers"
+    enabled: !!session?.user?.id && activePage === "careers"
   });
 
   const careerBookmarks = careerBookmarksQuery.data?.data || [];
@@ -110,7 +110,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
           {career.salary_range && <span className="text-sm font-medium bg-primary/10 text-primary rounded-full px-3 py-0.5 inline-block">
               {career.salary_range}
             </span>}
-          {career.profiles_count > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1">
+          {career.profiles_count && career.profiles_count > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1">
               <User className="h-3 w-3" />
               {career.profiles_count} {career.profiles_count === 1 ? 'Mentor' : 'Mentors'}
             </span>}

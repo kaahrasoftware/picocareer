@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, ExternalLink, BookmarkX, DollarSign, Calendar, Building } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Trash2, ExternalLink, BookmarkX, DollarSign, Calendar, Building, GraduationCap } from 'lucide-react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -38,15 +38,61 @@ interface ScholarshipData {
   bookmarkId?: string;
 }
 
-interface ScholarshipBookmarksProps {
-  scholarships: ScholarshipData[];
-}
-
-export function ScholarshipBookmarks({ scholarships }: ScholarshipBookmarksProps) {
+export function ScholarshipBookmarks() {
   const { session } = useAuthSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const { data: scholarships = [], isLoading } = useQuery({
+    queryKey: ['bookmarked-scholarships', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select(`
+          id,
+          content_id
+        `)
+        .eq('profile_id', session.user.id)
+        .eq('content_type', 'scholarship');
+
+      if (error) throw error;
+      
+      if (!data || data.length === 0) return [];
+
+      // Get scholarship details
+      const scholarshipIds = data.map(bookmark => bookmark.content_id);
+      const { data: scholarshipData, error: scholarshipError } = await supabase
+        .from('scholarships')
+        .select(`
+          id,
+          title,
+          description,
+          provider_name,
+          amount,
+          deadline,
+          status,
+          application_url,
+          category,
+          tags,
+          featured,
+          eligibility_criteria,
+          academic_requirements,
+          application_process
+        `)
+        .in('id', scholarshipIds);
+
+      if (scholarshipError) throw scholarshipError;
+
+      return scholarshipData?.map(scholarship => ({
+        ...scholarship,
+        bookmarkId: data.find(bookmark => bookmark.content_id === scholarship.id)?.id
+      })) || [];
+    },
+    enabled: !!session?.user?.id
+  });
 
   const removeBookmarkMutation = useMutation({
     mutationFn: async (scholarshipId: string) => {
@@ -55,9 +101,9 @@ export function ScholarshipBookmarks({ scholarships }: ScholarshipBookmarksProps
       const { error } = await supabase
         .from('user_bookmarks')
         .delete()
-        .eq('user_id', session.user.id)
-        .eq('scholarship_id', scholarshipId)
-        .eq('bookmark_type', 'scholarship');
+        .eq('profile_id', session.user.id)
+        .eq('content_id', scholarshipId)
+        .eq('content_type', 'scholarship');
 
       if (error) throw error;
     },
@@ -126,6 +172,14 @@ export function ScholarshipBookmarks({ scholarships }: ScholarshipBookmarksProps
     return 'text-green-600 bg-green-50';
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   if (scholarships.length === 0) {
     return (
       <div className="text-center py-12">
@@ -134,6 +188,9 @@ export function ScholarshipBookmarks({ scholarships }: ScholarshipBookmarksProps
         <p className="text-gray-500">
           Start exploring scholarships and bookmark the ones you're interested in.
         </p>
+        <Button className="mt-4" asChild>
+          <a href="/scholarships">Browse Scholarships</a>
+        </Button>
       </div>
     );
   }

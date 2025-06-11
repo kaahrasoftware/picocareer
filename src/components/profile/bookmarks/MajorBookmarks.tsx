@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthState } from "@/hooks/useAuthState";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { MajorProfile } from "./types";
 import { BookmarksList } from "./BookmarksList";
 
@@ -15,15 +15,15 @@ interface MajorBookmarksProps {
 }
 
 export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmarksProps) {
-  const { user } = useAuthState();
+  const { session } = useAuthSession();
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
   // Fetch bookmarked academic majors with pagination
   const majorBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-majors", user?.id, currentPage],
+    queryKey: ["bookmarked-majors", session?.user?.id, currentPage],
     queryFn: async () => {
-      if (!user) return {
+      if (!session?.user?.id) return {
         data: [],
         count: 0
       };
@@ -34,7 +34,7 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
         error: countError
       } = await supabase.from("user_bookmarks").select('*', {
         count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "major");
+      }).eq("profile_id", session.user.id).eq("content_type", "major");
       if (countError) {
         console.error("Error counting major bookmarks:", countError);
         throw countError;
@@ -48,7 +48,7 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
         error
       } = await supabase.from("user_bookmarks").select(`
           content_id
-        `).eq("profile_id", user.id).eq("content_type", "major").range(start, end);
+        `).eq("profile_id", session.user.id).eq("content_type", "major").range(start, end);
       if (error) {
         console.error("Error fetching major bookmarks:", error);
         throw error;
@@ -104,7 +104,7 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
         count: count || 0
       };
     },
-    enabled: !!user && activePage === "majors"
+    enabled: !!session?.user?.id && activePage === "majors"
   });
 
   const majorBookmarks = majorBookmarksQuery.data?.data || [];

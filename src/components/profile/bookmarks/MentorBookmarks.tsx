@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { useAuthState } from "@/hooks/useAuthState";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { MentorProfile } from "./types";
 import { BookmarksList } from "./BookmarksList";
 
@@ -15,14 +16,14 @@ interface MentorBookmarksProps {
 }
 
 export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookmarksProps) {
-  const { user } = useAuthState();
+  const { session } = useAuthSession();
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
   const mentorBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-mentors", user?.id, currentPage],
+    queryKey: ["bookmarked-mentors", session?.user?.id, currentPage],
     queryFn: async () => {
-      if (!user) return {
+      if (!session?.user?.id) return {
         data: [],
         count: 0
       };
@@ -33,7 +34,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         error: countError
       } = await supabase.from("user_bookmarks").select('*', {
         count: 'exact'
-      }).eq("profile_id", user.id).eq("content_type", "mentor");
+      }).eq("profile_id", session.user.id).eq("content_type", "mentor");
       if (countError) throw countError;
 
       // Get paginated data with proper join
@@ -44,7 +45,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         error
       } = await supabase.from("user_bookmarks").select(`
           content_id
-        `).eq("profile_id", user.id).eq("content_type", "mentor").range(start, end);
+        `).eq("profile_id", session.user.id).eq("content_type", "mentor").range(start, end);
       if (error) {
         console.error("Error fetching mentor bookmarks:", error);
         throw error;
@@ -74,8 +75,8 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         }
 
         // Fetch company names if needed
-        const companyIds = mentorProfiles.filter(profile => profile.company_id).map(profile => profile.company_id);
-        let companiesData = {};
+        const companyIds = mentorProfiles?.filter(profile => profile.company_id).map(profile => profile.company_id) || [];
+        let companiesData: Record<string, string> = {};
         if (companyIds.length > 0) {
           const {
             data: companies,
@@ -84,7 +85,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
           if (companiesError) {
             console.error("Error fetching companies:", companiesError);
           } else if (companies) {
-            companiesData = companies.reduce((acc, company) => {
+            companiesData = companies.reduce((acc: Record<string, string>, company) => {
               acc[company.id] = company.name;
               return acc;
             }, {});
@@ -92,8 +93,8 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         }
 
         // Fetch career titles for positions
-        const careerIds = mentorProfiles.filter(profile => profile.position).map(profile => profile.position);
-        let careersData = {};
+        const careerIds = mentorProfiles?.filter(profile => profile.position).map(profile => profile.position) || [];
+        let careersData: Record<string, string> = {};
         if (careerIds.length > 0) {
           const {
             data: careers,
@@ -102,7 +103,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
           if (careersError) {
             console.error("Error fetching careers:", careersError);
           } else if (careers) {
-            careersData = careers.reduce((acc, career) => {
+            careersData = careers.reduce((acc: Record<string, string>, career) => {
               acc[career.id] = career.title;
               return acc;
             }, {});
@@ -110,11 +111,12 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         }
 
         // Enrich mentor profiles with company names and career titles
-        const enrichedProfiles = mentorProfiles.map(profile => ({
+        const enrichedProfiles = mentorProfiles?.map(profile => ({
           ...profile,
           company_name: profile.company_id ? companiesData[profile.company_id] : null,
           career_title: profile.position ? careersData[profile.position] : null
-        }));
+        })) || [];
+        
         return {
           data: enrichedProfiles,
           count: count || 0
@@ -125,7 +127,7 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
         count: count || 0
       };
     },
-    enabled: !!user && activePage === "mentors"
+    enabled: !!session?.user?.id && activePage === "mentors"
   });
 
   const mentorBookmarks = mentorBookmarksQuery.data?.data || [];

@@ -3,82 +3,86 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { ScholarshipBookmarks } from './ScholarshipBookmarks';
+import { MentorBookmarks } from './MentorBookmarks';
+import { CareerBookmarks } from './CareerBookmarks';
+import { MajorBookmarks } from './MajorBookmarks';
+import { OpportunityBookmarks } from './OpportunityBookmarks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 
 export function BookmarksTabWrapper() {
   const { session } = useAuthSession();
   const userId = session?.user?.id;
+  const [activeTab, setActiveTab] = useState('scholarships');
 
-  const { data: bookmarkedScholarships = [], isLoading } = useQuery({
-    queryKey: ['bookmarked-scholarships', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      
-      const { data, error } = await supabase
-        .from('user_bookmarks')
-        .select(`
-          id,
-          scholarship_id,
-          scholarships (
-            id,
-            title,
-            description,
-            provider_name,
-            amount,
-            deadline,
-            status,
-            application_url,
-            category,
-            tags,
-            featured,
-            eligibility_criteria,
-            academic_requirements,
-            application_process
-          )
-        `)
-        .eq('user_id', userId)
-        .eq('bookmark_type', 'scholarship');
+  const handleViewMentorProfile = (mentorId: string) => {
+    // Navigate to mentor profile or open dialog
+    console.log('View mentor profile:', mentorId);
+  };
 
-      if (error) throw error;
-      
-      return data?.map(bookmark => ({
-        ...bookmark.scholarships,
-        bookmarkId: bookmark.id
-      })) || [];
-    },
-    enabled: !!userId
-  });
+  const handleViewCareerDetails = (careerId: string) => {
+    // Navigate to career details or open dialog
+    console.log('View career details:', careerId);
+  };
 
-  if (isLoading) {
+  const handleViewMajorDetails = (major: any) => {
+    // Navigate to major details or open dialog
+    console.log('View major details:', major);
+  };
+
+  const handleViewOpportunityDetails = (opportunityId: string) => {
+    // Navigate to opportunity details or open dialog
+    console.log('View opportunity details:', opportunityId);
+  };
+
+  if (!userId) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground">Please sign in to view your bookmarks.</p>
       </div>
     );
   }
 
   return (
-    <Tabs defaultValue="scholarships" className="w-full">
-      <TabsList>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
+        <TabsTrigger value="mentors">Mentors</TabsTrigger>
+        <TabsTrigger value="careers">Careers</TabsTrigger>
+        <TabsTrigger value="majors">Majors</TabsTrigger>
         <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-        <TabsTrigger value="events">Events</TabsTrigger>
       </TabsList>
 
       <TabsContent value="scholarships">
-        <ScholarshipBookmarks scholarships={bookmarkedScholarships} />
+        <ScholarshipBookmarks />
+      </TabsContent>
+
+      <TabsContent value="mentors">
+        <MentorBookmarks 
+          activePage={activeTab}
+          onViewMentorProfile={handleViewMentorProfile}
+        />
+      </TabsContent>
+
+      <TabsContent value="careers">
+        <CareerBookmarks 
+          activePage={activeTab}
+          onViewCareerDetails={handleViewCareerDetails}
+        />
+      </TabsContent>
+
+      <TabsContent value="majors">
+        <MajorBookmarks 
+          activePage={activeTab}
+          onViewMajorDetails={handleViewMajorDetails}
+        />
       </TabsContent>
 
       <TabsContent value="opportunities">
-        <div className="text-center py-8 text-muted-foreground">
-          Opportunity bookmarks coming soon
-        </div>
-      </TabsContent>
-
-      <TabsContent value="events">
-        <div className="text-center py-8 text-muted-foreground">
-          Event bookmarks coming soon
-        </div>
+        <OpportunityBookmarks 
+          activePage={activeTab}
+          onViewOpportunityDetails={handleViewOpportunityDetails}
+        />
       </TabsContent>
     </Tabs>
   );
