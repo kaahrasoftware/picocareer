@@ -64,17 +64,24 @@ export default function TokenShop() {
     enabled: !!session?.user?.id
   });
 
-  // Updated to fetch from database instead of Stripe
-  const { data: tokenPackages, isLoading } = useQuery({
+  // Updated to fetch from database with proper error handling
+  const { data: tokenPackages, isLoading, error } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
+      console.log('Fetching token packages from database...');
+      
       const { data, error } = await supabase
         .from('token_packages')
         .select('*')
         .eq('is_active', true)
-        .order('sort_order', { ascending: true });
+        .order('token_amount', { ascending: true }); // Order by token_amount instead of sort_order
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching token packages:', error);
+        throw error;
+      }
+      
+      console.log('Token packages fetched:', data);
       
       // Transform the data to match the expected interface
       return data.map(pkg => ({
@@ -88,6 +95,18 @@ export default function TokenShop() {
       })) as TokenPackage[];
     }
   });
+
+  // Log any errors
+  useEffect(() => {
+    if (error) {
+      console.error('Token packages query error:', error);
+      toast({
+        title: "Error loading packages",
+        description: "Failed to load token packages. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
   // Redirect non-admin users
   useEffect(() => {
@@ -205,6 +224,27 @@ export default function TokenShop() {
                 </CardFooter>
               </Card>
             ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <div className="container mx-auto py-8">
+          <TokenShopHero />
+          <div className="text-center py-12">
+            <div className="text-muted-foreground text-lg mb-4">
+              Failed to load token packages
+            </div>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="outline"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
