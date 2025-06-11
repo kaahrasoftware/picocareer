@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
 import { TokenShopFilters } from "@/components/token-shop/TokenShopFilters";
 import { TokenPackageCard } from "@/components/token-shop/TokenPackageCard";
 import { TokenShopHero } from "@/components/token-shop/TokenShopHero";
+import { PaymentMethodDialog } from "@/components/token-shop/PaymentMethodDialog";
 
 interface TokenPackage {
   id: string;
@@ -39,6 +39,10 @@ export default function TokenShop() {
     sortBy: 'price-asc',
     searchQuery: ''
   });
+
+  // Payment dialog state
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<TokenPackage | null>(null);
 
   // Call all hooks at the top level
   const { data: session } = useQuery({
@@ -121,6 +125,14 @@ export default function TokenShop() {
   }, [profile, navigate]);
 
   const handlePurchase = async (priceId: string) => {
+    const selectedPackage = tokenPackages?.find(pkg => pkg.default_price === priceId);
+    if (selectedPackage) {
+      setSelectedPackageForPayment(selectedPackage);
+      setIsPaymentDialogOpen(true);
+    }
+  };
+
+  const handleContinueWithStripe = async (priceId: string) => {
     try {
       if (!session) {
         toast({
@@ -331,6 +343,13 @@ export default function TokenShop() {
           </div>
         </div>
       </div>
+
+      <PaymentMethodDialog
+        isOpen={isPaymentDialogOpen}
+        onClose={() => setIsPaymentDialogOpen(false)}
+        selectedPackage={selectedPackageForPayment}
+        onContinueWithStripe={handleContinueWithStripe}
+      />
     </div>
   );
 }
