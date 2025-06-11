@@ -92,8 +92,8 @@ export function SelectWithCustomOption({
           if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
             combinedOptions.push({
               id: String(item.id),
-              title: item.title ? String(item.title) : undefined,
-              name: item.name ? String(item.name) : undefined
+              title: item && typeof item === 'object' && 'title' in item && item.title ? String(item.title) : undefined,
+              name: item && typeof item === 'object' && 'name' in item && item.name ? String(item.name) : undefined
             });
           }
         });
@@ -199,8 +199,8 @@ export function SelectWithCustomOption({
       if (data && 'id' in data && data.id) {
         const newOption: Option = {
           id: String(data.id),
-          title: 'title' in data ? String(data.title || '') : undefined,
-          name: 'name' in data ? String(data.name || '') : undefined
+          title: data && typeof data === 'object' && 'title' in data ? String(data.title || '') : undefined,
+          name: data && typeof data === 'object' && 'name' in data ? String(data.name || '') : undefined
         };
 
         setOptions(prev => [...prev, newOption]);

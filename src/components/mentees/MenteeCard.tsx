@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -116,12 +115,10 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Bio */}
         {mentee.bio && (
           <p className="text-sm text-gray-600 line-clamp-2">{mentee.bio}</p>
         )}
 
-        {/* Location */}
         {mentee.location && (
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <MapPin className="h-3 w-3" />
@@ -129,7 +126,6 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
           </div>
         )}
 
-        {/* Academic Highlights */}
         {(hasHonors || hasAwards) && (
           <div className="space-y-2">
             {hasHonors && (
@@ -170,7 +166,6 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
           </div>
         )}
 
-        {/* Projects Summary */}
         {(activeProjects > 0 || completedProjects > 0) && (
           <div className="bg-gray-50 rounded-lg p-3">
             <div className="flex items-center justify-between text-xs">
@@ -186,7 +181,6 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
           </div>
         )}
 
-        {/* Skills & Interests */}
         <div className="space-y-2">
           {mentee.skills && mentee.skills.length > 0 && (
             <div>
@@ -226,7 +220,6 @@ export function MenteeCard({ mentee, onViewProfile }: MenteeCardProps) {
           )}
         </div>
 
-        {/* Action Button */}
         <Button 
           onClick={onViewProfile}
           className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"

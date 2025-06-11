@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -111,6 +110,7 @@ export function EnhancedMenteeCard({ mentee, onViewProfile }: EnhancedMenteeCard
               avatarUrl={mentee.avatar_url} 
               imageAlt={mentee.full_name} 
               size="lg" 
+              userId={mentee.id}
               editable={false}
             />
             {/* Status indicator */}
