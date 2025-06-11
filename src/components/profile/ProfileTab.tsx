@@ -32,7 +32,7 @@ export function ProfileTab({ profile }: ProfileTabProps) {
     setIsEditing(!isEditing);
   };
 
-  // If user is a student, use the comprehensive student profile system
+  // If user has student status, use the comprehensive student profile system
   if (isStudent) {
     return <MenteeProfileTabs profile={profile} isEditing={isEditing} onEditToggle={handleEditToggle} />;
   }
