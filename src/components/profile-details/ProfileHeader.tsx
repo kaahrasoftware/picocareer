@@ -1,6 +1,5 @@
 
 import React from "react";
-import { DialogTitle } from "@/components/ui/dialog";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { SkillsList } from "@/components/profile/SkillsList";
@@ -20,6 +19,7 @@ interface Profile {
 
 interface ProfileHeaderProps {
   profile: Profile | null;
+  session?: any;
 }
 
 export function ProfileHeader({ profile }: ProfileHeaderProps) {
@@ -67,9 +67,9 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         />
         <div className="flex flex-col gap-1">
           <div>
-            <DialogTitle className="text-xl font-bold">
+            <h1 className="text-xl font-bold">
               {primaryText}
-            </DialogTitle>
+            </h1>
             <p className="text-sm text-gray-400 dark:text-gray-400">
               {secondaryText}
             </p>

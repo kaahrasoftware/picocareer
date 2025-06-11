@@ -89,12 +89,20 @@ export function SelectWithCustomOption({
         // Combine with existing options, removing duplicates
         const combinedOptions = [...options];
         data.forEach(item => {
-          if (item && typeof item === 'object' && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
-            combinedOptions.push({
-              id: String(item.id),
-              title: item && typeof item === 'object' && 'title' in item && item.title ? String(item.title) : undefined,
-              name: item && typeof item === 'object' && 'name' in item && item.name ? String(item.name) : undefined
-            });
+          if (item && typeof item === 'object' && item !== null && 'id' in item && item.id && !combinedOptions.some(existing => existing.id === String(item.id))) {
+            const newOption: Option = {
+              id: String(item.id)
+            };
+            
+            if ('title' in item && item.title) {
+              newOption.title = String(item.title);
+            }
+            
+            if ('name' in item && item.name) {
+              newOption.name = String(item.name);
+            }
+            
+            combinedOptions.push(newOption);
           }
         });
         
@@ -198,10 +206,16 @@ export function SelectWithCustomOption({
 
       if (data && 'id' in data && data.id) {
         const newOption: Option = {
-          id: String(data.id),
-          title: data && typeof data === 'object' && 'title' in data ? String(data.title || '') : undefined,
-          name: data && typeof data === 'object' && 'name' in data ? String(data.name || '') : undefined
+          id: String(data.id)
         };
+        
+        if (data && typeof data === 'object' && data !== null && 'title' in data && data.title) {
+          newOption.title = String(data.title);
+        }
+        
+        if (data && typeof data === 'object' && data !== null && 'name' in data && data.name) {
+          newOption.name = String(data.name);
+        }
 
         setOptions(prev => [...prev, newOption]);
         onValueChange(String(data.id));
