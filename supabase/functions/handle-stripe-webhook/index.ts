@@ -56,108 +56,94 @@ serve(async (req) => {
       console.log('Processing checkout session:', session.id);
       console.log('Session metadata:', session.metadata);
 
-      // Get the price ID and JWT from metadata
+      // Get the price ID and user ID from metadata
       const priceId = session.metadata?.price_id;
-      const userJwt = session.metadata?.user_jwt;
+      const userId = session.metadata?.user_id;
 
-      if (!priceId || !userJwt) {
-        console.error('Missing price_id or user_jwt in session metadata');
+      if (!priceId || !userId) {
+        console.error('Missing price_id or user_id in session metadata');
         return new Response('Missing required metadata', { status: 400 });
       }
 
-      // Parse the JWT to get user ID (basic parsing - in production use proper JWT library)
-      try {
-        const payload = JSON.parse(atob(userJwt.split('.')[1]));
-        const userId = payload.sub;
+      console.log('Processing payment for user:', userId);
 
-        if (!userId) {
-          throw new Error('No user ID found in JWT');
-        }
+      // Get the token package details from the database
+      const { data: tokenPackage, error: packageError } = await supabase
+        .from('token_packages')
+        .select('*')
+        .eq('default_price', priceId)
+        .eq('is_active', true)
+        .single();
 
-        console.log('Processing payment for user:', userId);
-
-        // Get the token package details from the database
-        const { data: tokenPackage, error: packageError } = await supabase
-          .from('token_packages')
-          .select('*')
-          .eq('default_price', priceId)
-          .eq('is_active', true)
-          .single();
-
-        if (packageError || !tokenPackage) {
-          console.error('Token package not found:', packageError);
-          return new Response('Token package not found', { status: 404 });
-        }
-
-        console.log('Found token package:', tokenPackage);
-
-        // Get or create user's wallet
-        const { data: wallet, error: walletError } = await supabase
-          .from('wallets')
-          .select('*')
-          .eq('profile_id', userId)
-          .single();
-
-        if (walletError && walletError.code !== 'PGRST116') {
-          console.error('Error fetching wallet:', walletError);
-          return new Response('Error fetching wallet', { status: 500 });
-        }
-
-        let walletId = wallet?.id;
-
-        // Create wallet if it doesn't exist
-        if (!wallet) {
-          const { data: newWallet, error: createWalletError } = await supabase
-            .from('wallets')
-            .insert({ profile_id: userId, balance: 0 })
-            .select()
-            .single();
-
-          if (createWalletError) {
-            console.error('Error creating wallet:', createWalletError);
-            return new Response('Error creating wallet', { status: 500 });
-          }
-
-          walletId = newWallet.id;
-        }
-
-        // Update wallet balance
-        const { error: updateError } = await supabase
-          .from('wallets')
-          .update({ 
-            balance: (wallet?.balance || 0) + tokenPackage.token_amount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('profile_id', userId);
-
-        if (updateError) {
-          console.error('Error updating wallet balance:', updateError);
-          return new Response('Error updating wallet balance', { status: 500 });
-        }
-
-        // Record the transaction
-        const { error: transactionError } = await supabase
-          .from('token_transactions')
-          .insert({
-            wallet_id: walletId,
-            transaction_type: 'credit',
-            amount: tokenPackage.token_amount,
-            description: `Purchase: ${tokenPackage.name}`,
-            related_entity_type: 'stripe_session',
-            related_entity_id: session.id
-          });
-
-        if (transactionError) {
-          console.error('Error recording transaction:', transactionError);
-          return new Response('Error recording transaction', { status: 500 });
-        }
-
-        console.log(`Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
-
-      } catch (jwtError) {
-        console.error('Error parsing JWT:', jwtError);
-        return new Response('Invalid JWT', { status: 400 });
+      if (packageError || !tokenPackage) {
+        console.error('Token package not found:', packageError);
+        return new Response('Token package not found', { status: 404 });
       }
+
+      console.log('Found token package:', tokenPackage);
+
+      // Get or create user's wallet
+      const { data: wallet, error: walletError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('profile_id', userId)
+        .single();
+
+      if (walletError && walletError.code !== 'PGRST116') {
+        console.error('Error fetching wallet:', walletError);
+        return new Response('Error fetching wallet', { status: 500 });
+      }
+
+      let walletId = wallet?.id;
+
+      // Create wallet if it doesn't exist
+      if (!wallet) {
+        const { data: newWallet, error: createWalletError } = await supabase
+          .from('wallets')
+          .insert({ profile_id: userId, balance: 0 })
+          .select()
+          .single();
+
+        if (createWalletError) {
+          console.error('Error creating wallet:', createWalletError);
+          return new Response('Error creating wallet', { status: 500 });
+        }
+
+        walletId = newWallet.id;
+      }
+
+      // Update wallet balance
+      const { error: updateError } = await supabase
+        .from('wallets')
+        .update({ 
+          balance: (wallet?.balance || 0) + tokenPackage.token_amount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('profile_id', userId);
+
+      if (updateError) {
+        console.error('Error updating wallet balance:', updateError);
+        return new Response('Error updating wallet balance', { status: 500 });
+      }
+
+      // Record the transaction
+      const { error: transactionError } = await supabase
+        .from('token_transactions')
+        .insert({
+          wallet_id: walletId,
+          transaction_type: 'credit',
+          amount: tokenPackage.token_amount,
+          description: `Purchase: ${tokenPackage.name}`,
+          related_entity_type: 'stripe_session',
+          related_entity_id: session.id
+        });
+
+      if (transactionError) {
+        console.error('Error recording transaction:', transactionError);
+        return new Response('Error recording transaction', { status: 500 });
+      }
+
+      console.log(`Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
     }
 
     return new Response('OK', { 
