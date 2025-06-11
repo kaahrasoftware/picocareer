@@ -8,6 +8,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Deno-compatible webhook signature verification
+async function verifyWebhookSignature(body: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const elements = signature.split(',');
+    let timestamp = '';
+    let v1 = '';
+    
+    for (const element of elements) {
+      const [key, value] = element.split('=');
+      if (key === 't') {
+        timestamp = value;
+      } else if (key === 'v1') {
+        v1 = value;
+      }
+    }
+    
+    if (!timestamp || !v1) {
+      console.error('Missing timestamp or signature in header');
+      return false;
+    }
+    
+    // Create the payload string
+    const payload = `${timestamp}.${body}`;
+    
+    // Create HMAC using Deno's crypto API
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature_bytes = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+    const expected_signature = Array.from(new Uint8Array(signature_bytes))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    // Compare signatures
+    return expected_signature === v1;
+  } catch (error) {
+    console.error('Error verifying webhook signature:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -15,14 +62,19 @@ serve(async (req) => {
 
   try {
     const stripeKey = Deno.env.get('STRIPE_API');
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK'); // Changed from STRIPE_WEBHOOK_SECRET
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK');
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+    console.log('Webhook received - checking environment variables...');
+
     if (!stripeKey || !webhookSecret || !supabaseUrl || !supabaseServiceKey) {
       console.error('Missing required environment variables');
+      console.error('stripeKey:', !!stripeKey, 'webhookSecret:', !!webhookSecret, 'supabaseUrl:', !!supabaseUrl, 'supabaseServiceKey:', !!supabaseServiceKey);
       throw new Error('Missing required environment variables');
     }
+
+    console.log('Environment variables verified');
 
     const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
@@ -34,20 +86,35 @@ serve(async (req) => {
     const body = await req.text();
     const signature = req.headers.get('stripe-signature');
 
+    console.log('Request body length:', body.length);
+    console.log('Signature header present:', !!signature);
+
     if (!signature) {
+      console.error('No stripe signature found');
       throw new Error('No stripe signature found');
     }
 
-    // Verify the webhook signature
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+    // Verify the webhook signature using our Deno-compatible method
+    const isValidSignature = await verifyWebhookSignature(body, signature, webhookSecret);
+    
+    if (!isValidSignature) {
+      console.error('Webhook signature verification failed');
       return new Response('Webhook signature verification failed', { status: 400 });
     }
 
+    console.log('Webhook signature verified successfully');
+
+    // Parse the event
+    let event: Stripe.Event;
+    try {
+      event = JSON.parse(body);
+    } catch (err) {
+      console.error('Error parsing webhook body:', err);
+      return new Response('Invalid JSON', { status: 400 });
+    }
+
     console.log('Webhook event type:', event.type);
+    console.log('Event ID:', event.id);
 
     // Handle the checkout.session.completed event
     if (event.type === 'checkout.session.completed') {
@@ -62,10 +129,11 @@ serve(async (req) => {
 
       if (!priceId || !userId) {
         console.error('Missing price_id or user_id in session metadata');
+        console.error('Available metadata:', session.metadata);
         return new Response('Missing required metadata', { status: 400 });
       }
 
-      console.log('Processing payment for user:', userId);
+      console.log('Processing payment for user:', userId, 'with price:', priceId);
 
       // Get the token package details from the database
       const { data: tokenPackage, error: packageError } = await supabase
@@ -76,11 +144,12 @@ serve(async (req) => {
         .single();
 
       if (packageError || !tokenPackage) {
-        console.error('Token package not found:', packageError);
+        console.error('Token package not found for price:', priceId);
+        console.error('Package error:', packageError);
         return new Response('Token package not found', { status: 404 });
       }
 
-      console.log('Found token package:', tokenPackage);
+      console.log('Found token package:', tokenPackage.name, 'with', tokenPackage.token_amount, 'tokens');
 
       // Get or create user's wallet
       const { data: wallet, error: walletError } = await supabase
@@ -95,9 +164,13 @@ serve(async (req) => {
       }
 
       let walletId = wallet?.id;
+      const currentBalance = wallet?.balance || 0;
+
+      console.log('Current wallet balance:', currentBalance);
 
       // Create wallet if it doesn't exist
       if (!wallet) {
+        console.log('Creating new wallet for user:', userId);
         const { data: newWallet, error: createWalletError } = await supabase
           .from('wallets')
           .insert({ profile_id: userId, balance: 0 })
@@ -110,13 +183,17 @@ serve(async (req) => {
         }
 
         walletId = newWallet.id;
+        console.log('Created new wallet with ID:', walletId);
       }
 
       // Update wallet balance
+      const newBalance = currentBalance + tokenPackage.token_amount;
+      console.log('Updating wallet balance from', currentBalance, 'to', newBalance);
+
       const { error: updateError } = await supabase
         .from('wallets')
         .update({ 
-          balance: (wallet?.balance || 0) + tokenPackage.token_amount,
+          balance: newBalance,
           updated_at: new Date().toISOString()
         })
         .eq('profile_id', userId);
@@ -126,24 +203,33 @@ serve(async (req) => {
         return new Response('Error updating wallet balance', { status: 500 });
       }
 
+      console.log('Successfully updated wallet balance to:', newBalance);
+
       // Record the transaction
+      const transactionData = {
+        wallet_id: walletId,
+        transaction_type: 'credit',
+        amount: tokenPackage.token_amount,
+        description: `Purchase: ${tokenPackage.name}`,
+        related_entity_type: 'stripe_session',
+        related_entity_id: session.id
+      };
+
+      console.log('Recording transaction:', transactionData);
+
       const { error: transactionError } = await supabase
         .from('token_transactions')
-        .insert({
-          wallet_id: walletId,
-          transaction_type: 'credit',
-          amount: tokenPackage.token_amount,
-          description: `Purchase: ${tokenPackage.name}`,
-          related_entity_type: 'stripe_session',
-          related_entity_id: session.id
-        });
+        .insert(transactionData);
 
       if (transactionError) {
         console.error('Error recording transaction:', transactionError);
         return new Response('Error recording transaction', { status: 500 });
       }
 
-      console.log(`Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
+      console.log(`✅ Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
+      console.log(`💰 New wallet balance: ${newBalance} tokens`);
+    } else {
+      console.log('Webhook event type not handled:', event.type);
     }
 
     return new Response('OK', { 
@@ -152,7 +238,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('❌ Webhook error:', error);
     return new Response(
       JSON.stringify({ error: error.message }), 
       { 
