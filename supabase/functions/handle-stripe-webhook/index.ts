@@ -164,9 +164,6 @@ serve(async (req) => {
       }
 
       let walletId = wallet?.id;
-      const currentBalance = wallet?.balance || 0;
-
-      console.log('Current wallet balance:', currentBalance);
 
       // Create wallet if it doesn't exist
       if (!wallet) {
@@ -186,57 +183,38 @@ serve(async (req) => {
         console.log('Created new wallet with ID:', walletId);
       }
 
-      // Update wallet balance
-      const newBalance = currentBalance + tokenPackage.token_amount;
-      console.log('Updating wallet balance from', currentBalance, 'to', newBalance);
+      // Use the credit_tokens RPC function for atomic transaction
+      console.log('Crediting tokens using RPC function...');
+      
+      const { data: creditResult, error: creditError } = await supabase.rpc('credit_tokens', {
+        p_wallet_id: walletId,
+        p_amount: tokenPackage.token_amount,
+        p_description: `Purchase: ${tokenPackage.name}`,
+        p_reference_id: session.id,
+        p_metadata: {
+          stripe_session_id: session.id,
+          package_name: tokenPackage.name,
+          package_id: tokenPackage.id,
+          price_id: priceId,
+          amount_paid: session.amount_total ? session.amount_total / 100 : tokenPackage.price_usd,
+          currency: session.currency || 'usd',
+          payment_method: session.payment_method_types?.[0] || 'card'
+        }
+      });
 
-      const { error: updateError } = await supabase
-        .from('wallets')
-        .update({ 
-          balance: newBalance,
-          updated_at: new Date().toISOString()
-        })
-        .eq('profile_id', userId);
-
-      if (updateError) {
-        console.error('Error updating wallet balance:', updateError);
-        return new Response('Error updating wallet balance', { status: 500 });
+      if (creditError) {
+        console.error('Error crediting tokens:', creditError);
+        return new Response('Error crediting tokens', { status: 500 });
       }
 
-      console.log('Successfully updated wallet balance to:', newBalance);
-
-      // Record the transaction with proper enum casting
-      console.log('Recording transaction with wallet ID:', walletId);
-      
-      const { error: transactionError } = await supabase
-        .from('token_transactions')
-        .insert({
-          wallet_id: walletId,
-          transaction_type: 'credit',
-          amount: tokenPackage.token_amount,
-          description: `Purchase: ${tokenPackage.name}`,
-          transaction_status: 'completed',
-          category: 'purchase',
-          reference_id: session.id,
-          metadata: {
-            stripe_session_id: session.id,
-            package_name: tokenPackage.name,
-            package_id: tokenPackage.id,
-            price_id: priceId,
-            amount_paid: session.amount_total ? session.amount_total / 100 : tokenPackage.price_usd,
-            currency: session.currency || 'usd',
-            payment_method: session.payment_method_types?.[0] || 'card'
-          }
-        });
-
-      if (transactionError) {
-        console.error('Error recording transaction:', transactionError);
-        console.error('Transaction error details:', JSON.stringify(transactionError, null, 2));
-        return new Response('Error recording transaction', { status: 500 });
+      if (!creditResult?.success) {
+        console.error('Token credit failed:', creditResult?.message);
+        return new Response('Token credit failed', { status: 500 });
       }
 
       console.log(`✅ Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
-      console.log(`💰 New wallet balance: ${newBalance} tokens`);
+      console.log(`💰 New wallet balance: ${creditResult.new_balance} tokens`);
+      console.log(`📝 Transaction ID: ${creditResult.transaction_id}`);
     } else {
       console.log('Webhook event type not handled:', event.type);
     }
