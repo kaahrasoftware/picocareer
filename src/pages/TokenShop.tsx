@@ -1,11 +1,18 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
+import { TokenShopFilters } from "@/components/token-shop/TokenShopFilters";
+import { TokenPackageCard } from "@/components/token-shop/TokenPackageCard";
+import { TokenShopHero } from "@/components/token-shop/TokenShopHero";
+import { Grid, List } from "lucide-react";
 
 interface TokenPackage {
   id: string;
@@ -17,8 +24,22 @@ interface TokenPackage {
   image_url?: string;
 }
 
+interface FilterState {
+  priceRange: [number, number];
+  tokenRange: [number, number];
+  sortBy: string;
+  searchQuery: string;
+}
+
 export default function TokenShop() {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filters, setFilters] = useState<FilterState>({
+    priceRange: [0, 100],
+    tokenRange: [0, 500],
+    sortBy: 'price-asc',
+    searchQuery: ''
+  });
 
   // Call all hooks at the top level
   const { data: session } = useQuery({
@@ -102,6 +123,29 @@ export default function TokenShop() {
     }
   };
 
+  // Filter and sort packages
+  const filteredPackages = tokenPackages?.filter(pkg => {
+    const matchesPrice = pkg.price_usd >= filters.priceRange[0] && pkg.price_usd <= filters.priceRange[1];
+    const matchesTokens = pkg.token_amount >= filters.tokenRange[0] && pkg.token_amount <= filters.tokenRange[1];
+    const matchesSearch = pkg.name.toLowerCase().includes(filters.searchQuery.toLowerCase());
+    return matchesPrice && matchesTokens && matchesSearch;
+  }).sort((a, b) => {
+    switch (filters.sortBy) {
+      case 'price-asc':
+        return a.price_usd - b.price_usd;
+      case 'price-desc':
+        return b.price_usd - a.price_usd;
+      case 'tokens-asc':
+        return a.token_amount - b.token_amount;
+      case 'tokens-desc':
+        return b.token_amount - a.token_amount;
+      case 'value-best':
+        return (a.price_usd / a.token_amount) - (b.price_usd / b.token_amount);
+      default:
+        return 0;
+    }
+  });
+
   // Don't render anything while checking user type
   if (!profile) {
     return null;
@@ -114,54 +158,109 @@ export default function TokenShop() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">Token Shop</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="w-full">
-              <CardHeader>
-                <Skeleton className="h-8 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-16 w-full" />
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-10 w-full" />
-              </CardFooter>
-            </Card>
-          ))}
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <div className="container mx-auto py-8">
+          <TokenShopHero />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="w-full">
+                <CardHeader>
+                  <Skeleton className="h-8 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
+  const getBestValuePackage = () => {
+    if (!tokenPackages) return null;
+    return tokenPackages.reduce((best, current) => {
+      const currentValue = current.price_usd / current.token_amount;
+      const bestValue = best.price_usd / best.token_amount;
+      return currentValue < bestValue ? current : best;
+    });
+  };
+
+  const getMostPopularPackage = () => {
+    // For now, we'll assume the middle-priced package is most popular
+    if (!tokenPackages) return null;
+    const sorted = [...tokenPackages].sort((a, b) => a.price_usd - b.price_usd);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+
+  const bestValue = getBestValuePackage();
+  const mostPopular = getMostPopularPackage();
+
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Token Shop</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tokenPackages?.map((pkg) => (
-          <Card key={pkg.id} className="w-full">
-            <CardHeader>
-              <CardTitle>{pkg.name}</CardTitle>
-              <CardDescription>
-                {pkg.description}
-                <div className="mt-2">{pkg.token_amount} Tokens</div>
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${pkg.price_usd}</div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full" 
-                onClick={() => handlePurchase(pkg.default_price)}
-              >
-                Purchase
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="container mx-auto py-8">
+        <TokenShopHero />
+        
+        <div className="mt-12">
+          <TokenShopHeader 
+            totalPackages={filteredPackages?.length || 0}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+          
+          <div className="flex flex-col lg:flex-row gap-8 mt-6">
+            <div className="lg:w-1/4">
+              <TokenShopFilters 
+                filters={filters}
+                onFiltersChange={setFilters}
+                packages={tokenPackages || []}
+              />
+            </div>
+            
+            <div className="lg:w-3/4">
+              {filteredPackages && filteredPackages.length > 0 ? (
+                <div className={viewMode === 'grid' 
+                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+                  : "space-y-4"
+                }>
+                  {filteredPackages.map((pkg) => (
+                    <TokenPackageCard
+                      key={pkg.id}
+                      package={pkg}
+                      onPurchase={handlePurchase}
+                      isBestValue={bestValue?.id === pkg.id}
+                      isMostPopular={mostPopular?.id === pkg.id}
+                      viewMode={viewMode}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-muted-foreground text-lg">
+                    No token packages found matching your criteria.
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setFilters({
+                      priceRange: [0, 100],
+                      tokenRange: [0, 500],
+                      sortBy: 'price-asc',
+                      searchQuery: ''
+                    })}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
