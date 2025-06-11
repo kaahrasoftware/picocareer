@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileStats } from "@/components/profile/ProfileStats";
@@ -39,7 +40,7 @@ export function ProfileHeader({
   } = useAuthSession();
   if (!profile) {
     return <div className="bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="container py-6">
+        <div className="container py-6 mt-20">
           <div className="animate-pulse">
             <div className="flex items-start gap-6 mb-6">
               <div className="w-24 h-24 bg-muted rounded-full" />
@@ -73,7 +74,7 @@ export function ProfileHeader({
     });
   };
   return <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 backdrop-blur-sm border-b border-border">
-      <div className="container py-8">
+      <div className="container py-8 mt-20">
         {/* Cover/Banner Area */}
         
         
