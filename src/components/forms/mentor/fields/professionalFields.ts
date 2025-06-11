@@ -1,3 +1,4 @@
+
 import { FormFieldProps } from "@/components/forms/FormField";
 
 export const professionalFields: FormFieldProps[] = [
@@ -18,15 +19,17 @@ export const professionalFields: FormFieldProps[] = [
   {
     name: "position",
     label: "Current Position",
-    type: "select",
+    type: "select-with-custom",
     placeholder: "Select your current position",
+    tableName: "careers",
     required: true
   },
   {
     name: "company_id",
     label: "Company",
-    type: "select",
+    type: "select-with-custom",
     placeholder: "Select your company",
+    tableName: "companies",
     required: true
   },
   {

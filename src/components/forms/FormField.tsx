@@ -105,7 +105,7 @@ export function FormField<T extends FieldValues = FieldValues>({
         return (
           <SelectWithCustomOption
             selectedValue={field.value || ''}
-            value={field.value}
+            value={field.value || ''}
             onValueChange={field.onChange}
             options={normalizedOptions}
             placeholder={placeholder || `Select ${label.toLowerCase()}`}
