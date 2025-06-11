@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SelectWithCustomOption } from './fields/SelectWithCustomOption';
+import { DegreeField } from './fields/DegreeField';
 import { Control, FieldPath, FieldValues, UseFormWatch } from 'react-hook-form';
 
 export interface FormFieldProps<T extends FieldValues = FieldValues> {
@@ -112,6 +113,16 @@ export function FormField<T extends FieldValues = FieldValues>({
           />
         );
 
+      case 'degree':
+        return (
+          <DegreeField
+            field={field}
+            label={label}
+            description={description}
+            required={required}
+          />
+        );
+
       case 'datetime-local':
         return (
           <Input 
@@ -135,7 +146,6 @@ export function FormField<T extends FieldValues = FieldValues>({
       case 'category':
       case 'subcategory':
       case 'array':
-      case 'degree':
         // These types are handled by the parent component
         return (
           <Input 
@@ -155,6 +165,17 @@ export function FormField<T extends FieldValues = FieldValues>({
         );
     }
   };
+
+  // For degree type, don't wrap in FormField since DegreeField handles it
+  if (type === 'degree') {
+    return (
+      <ShadcnFormField
+        control={control}
+        name={name}
+        render={({ field }) => renderField(field)}
+      />
+    );
+  }
 
   return (
     <ShadcnFormField

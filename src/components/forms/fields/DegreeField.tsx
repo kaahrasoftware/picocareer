@@ -1,5 +1,6 @@
+
 import React from "react";
-import { FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { degreeOptions } from "@/constants/degrees";
 
@@ -18,7 +19,7 @@ export function DegreeField({
 }: DegreeFieldProps) {
   return (
     <FormItem>
-      <FormLabel className={required ? "required" : ""}>
+      <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
         {label}
       </FormLabel>
       <FormControl>
@@ -41,6 +42,7 @@ export function DegreeField({
       {description && (
         <FormDescription>{description}</FormDescription>
       )}
+      <FormMessage />
     </FormItem>
   );
 }
