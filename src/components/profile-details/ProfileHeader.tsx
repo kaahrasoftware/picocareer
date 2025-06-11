@@ -78,7 +78,7 @@ export function ProfileHeader({
         
         
         {/* Main Profile Content */}
-        <div className="relative -mt-16 bg-background/80 backdrop-blur-md rounded-xl border shadow-lg p-6">
+        <div className="relative -mt-16 bg-background/80 backdrop-blur-md rounded-xl border shadow-lg p-6 py-[18px] my-[10px]">
           <div className="flex flex-col lg:flex-row items-start gap-6">
             
             {/* Left Section - Avatar & Basic Info */}
