@@ -1,189 +1,178 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+import Stripe from 'https://esm.sh/stripe@14.21.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_API') || '', {
+    const stripeKey = Deno.env.get('STRIPE_API');
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!stripeKey || !webhookSecret || !supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables');
+      throw new Error('Missing required environment variables');
+    }
+
+    const stripe = new Stripe(stripeKey, {
       apiVersion: '2023-10-16',
     });
 
-    console.log('Webhook received - starting processing');
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get the raw body
+    // Get the body and signature
     const body = await req.text();
-    console.log('Received webhook body:', body);
-    
-    // Get the signature from the headers
     const signature = req.headers.get('stripe-signature');
-    if (!signature) {
-      console.error('No Stripe signature found in headers');
-      return new Response(
-        JSON.stringify({ error: 'No signature found' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK');
-    if (!webhookSecret) {
-      console.error('Webhook secret not configured in environment');
-      return new Response(
-        JSON.stringify({ error: 'Webhook secret not configured' }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!signature) {
+      throw new Error('No stripe signature found');
     }
 
     // Verify the webhook signature
-    let event;
+    let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(
-        body,
-        signature,
-        webhookSecret
-      );
-      console.log('Webhook signature verified successfully');
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err.message);
-      return new Response(
-        JSON.stringify({ error: 'Invalid signature' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('Webhook signature verification failed:', err);
+      return new Response('Webhook signature verification failed', { status: 400 });
     }
 
-    console.log('Processing Stripe webhook event:', event.type);
+    console.log('Webhook event type:', event.type);
 
-    // Initialize Supabase client with service role key
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
-
-    // Handle successful payment
+    // Handle the checkout.session.completed event
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      console.log('Processing successful payment. Session ID:', session.id);
+      const session = event.data.object as Stripe.Checkout.Session;
+      
+      console.log('Processing checkout session:', session.id);
+      console.log('Session metadata:', session.metadata);
 
-      // Get user ID from metadata
-      const userId = session.metadata?.userId;
-      if (!userId) {
-        console.error('No user ID found in session metadata');
-        throw new Error('No user ID found in session metadata');
+      // Get the price ID and JWT from metadata
+      const priceId = session.metadata?.price_id;
+      const userJwt = session.metadata?.user_jwt;
+
+      if (!priceId || !userJwt) {
+        console.error('Missing price_id or user_jwt in session metadata');
+        return new Response('Missing required metadata', { status: 400 });
       }
 
-      console.log('User ID from metadata:', userId);
+      // Parse the JWT to get user ID (basic parsing - in production use proper JWT library)
+      try {
+        const payload = JSON.parse(atob(userJwt.split('.')[1]));
+        const userId = payload.sub;
 
-      // Get the price ID from the line items
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-      const priceId = lineItems.data[0]?.price?.id;
-      if (!priceId) {
-        console.error('No price ID found in session line items');
-        throw new Error('No price ID found in session');
+        if (!userId) {
+          throw new Error('No user ID found in JWT');
+        }
+
+        console.log('Processing payment for user:', userId);
+
+        // Get the token package details from the database
+        const { data: tokenPackage, error: packageError } = await supabase
+          .from('token_packages')
+          .select('*')
+          .eq('default_price', priceId)
+          .eq('is_active', true)
+          .single();
+
+        if (packageError || !tokenPackage) {
+          console.error('Token package not found:', packageError);
+          return new Response('Token package not found', { status: 404 });
+        }
+
+        console.log('Found token package:', tokenPackage);
+
+        // Get or create user's wallet
+        const { data: wallet, error: walletError } = await supabase
+          .from('wallets')
+          .select('*')
+          .eq('profile_id', userId)
+          .single();
+
+        if (walletError && walletError.code !== 'PGRST116') {
+          console.error('Error fetching wallet:', walletError);
+          return new Response('Error fetching wallet', { status: 500 });
+        }
+
+        let walletId = wallet?.id;
+
+        // Create wallet if it doesn't exist
+        if (!wallet) {
+          const { data: newWallet, error: createWalletError } = await supabase
+            .from('wallets')
+            .insert({ profile_id: userId, balance: 0 })
+            .select()
+            .single();
+
+          if (createWalletError) {
+            console.error('Error creating wallet:', createWalletError);
+            return new Response('Error creating wallet', { status: 500 });
+          }
+
+          walletId = newWallet.id;
+        }
+
+        // Update wallet balance
+        const { error: updateError } = await supabase
+          .from('wallets')
+          .update({ 
+            balance: (wallet?.balance || 0) + tokenPackage.token_amount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('profile_id', userId);
+
+        if (updateError) {
+          console.error('Error updating wallet balance:', updateError);
+          return new Response('Error updating wallet balance', { status: 500 });
+        }
+
+        // Record the transaction
+        const { error: transactionError } = await supabase
+          .from('token_transactions')
+          .insert({
+            wallet_id: walletId,
+            transaction_type: 'credit',
+            amount: tokenPackage.token_amount,
+            description: `Purchase: ${tokenPackage.name}`,
+            related_entity_type: 'stripe_session',
+            related_entity_id: session.id
+          });
+
+        if (transactionError) {
+          console.error('Error recording transaction:', transactionError);
+          return new Response('Error recording transaction', { status: 500 });
+        }
+
+        console.log(`Successfully credited ${tokenPackage.token_amount} tokens to user ${userId}`);
+
+      } catch (jwtError) {
+        console.error('Error parsing JWT:', jwtError);
+        return new Response('Invalid JWT', { status: 400 });
       }
-
-      console.log('Found price ID:', priceId);
-
-      // Get token package details
-      const { data: tokenPackage, error: tokenPackageError } = await supabaseAdmin
-        .from('token_packages')
-        .select('*')
-        .eq('default_price', priceId)
-        .single();
-
-      if (tokenPackageError || !tokenPackage) {
-        console.error('Token package error:', tokenPackageError);
-        throw new Error('Token package not found');
-      }
-
-      console.log('Found token package:', tokenPackage);
-
-      // Get user's wallet
-      const { data: wallet, error: walletError } = await supabaseAdmin
-        .from('wallets')
-        .select('*')
-        .eq('profile_id', userId)
-        .single();
-
-      if (walletError || !wallet) {
-        console.error('Wallet error:', walletError);
-        throw new Error('Wallet not found');
-      }
-
-      console.log('Found wallet:', wallet);
-
-      // First, update the wallet balance
-      const { error: updateWalletError } = await supabaseAdmin
-        .from('wallets')
-        .update({ 
-          balance: wallet.balance + tokenPackage.token_amount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', wallet.id);
-
-      if (updateWalletError) {
-        console.error('Update wallet error:', updateWalletError);
-        throw updateWalletError;
-      }
-
-      console.log('Successfully updated wallet balance');
-
-      // Then, record the transaction
-      const { error: transactionError } = await supabaseAdmin
-        .from('token_transactions')
-        .insert({
-          wallet_id: wallet.id,
-          transaction_type: 'credit',
-          amount: tokenPackage.token_amount,
-          description: `Purchase of ${tokenPackage.name}`,
-          related_entity_type: 'stripe_payment',
-          related_entity_id: session.id
-        });
-
-      if (transactionError) {
-        console.error('Transaction error:', transactionError);
-        throw transactionError;
-      }
-
-      console.log('Successfully recorded token transaction');
-
-      // Create a success notification for the user
-      const { error: notificationError } = await supabaseAdmin
-        .from('notifications')
-        .insert({
-          profile_id: userId,
-          title: 'Token Purchase Successful',
-          message: `${tokenPackage.token_amount} tokens have been added to your wallet`,
-          type: 'system_update',
-          category: 'general'
-        });
-
-      if (notificationError) {
-        console.error('Notification error:', notificationError);
-        // Don't throw here, as tokens were already added successfully
-      }
-
-      console.log('Successfully processed payment and added tokens for user:', userId);
     }
 
-    return new Response(
-      JSON.stringify({ received: true }), 
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response('OK', { 
+      headers: corsHeaders,
+      status: 200 
+    });
 
   } catch (error) {
-    console.error('Error processing webhook:', error.message);
+    console.error('Webhook error:', error);
     return new Response(
       JSON.stringify({ error: error.message }), 
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
     );
   }
 });

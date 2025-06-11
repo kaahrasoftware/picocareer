@@ -94,11 +94,11 @@ export function SelectWithCustomOption({
               id: String(item.id)
             };
             
-            if ('title' in item && item.title) {
+            if ('title' in item && item.title && typeof item.title === 'string') {
               newOption.title = String(item.title);
             }
             
-            if ('name' in item && item.name) {
+            if ('name' in item && item.name && typeof item.name === 'string') {
               newOption.name = String(item.name);
             }
             
@@ -209,11 +209,11 @@ export function SelectWithCustomOption({
           id: String(data.id)
         };
         
-        if (data && typeof data === 'object' && data !== null && 'title' in data && data.title) {
+        if (data && typeof data === 'object' && data !== null && 'title' in data && data.title && typeof data.title === 'string') {
           newOption.title = String(data.title);
         }
         
-        if (data && typeof data === 'object' && data !== null && 'name' in data && data.name) {
+        if (data && typeof data === 'object' && data !== null && 'name' in data && data.name && typeof data.name === 'string') {
           newOption.name = String(data.name);
         }
 

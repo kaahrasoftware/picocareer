@@ -12,7 +12,6 @@ import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
 import { TokenShopFilters } from "@/components/token-shop/TokenShopFilters";
 import { TokenPackageCard } from "@/components/token-shop/TokenPackageCard";
 import { TokenShopHero } from "@/components/token-shop/TokenShopHero";
-import { Grid, List } from "lucide-react";
 
 interface TokenPackage {
   id: string;
@@ -65,12 +64,28 @@ export default function TokenShop() {
     enabled: !!session?.user?.id
   });
 
+  // Updated to fetch from database instead of Stripe
   const { data: tokenPackages, isLoading } = useQuery({
     queryKey: ['tokenPackages'],
     queryFn: async () => {
-      const response = await supabase.functions.invoke('get-token-packages');
-      if (response.error) throw response.error;
-      return response.data as TokenPackage[];
+      const { data, error } = await supabase
+        .from('token_packages')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Transform the data to match the expected interface
+      return data.map(pkg => ({
+        id: pkg.id,
+        name: pkg.name,
+        description: pkg.description,
+        token_amount: pkg.token_amount,
+        price_usd: Number(pkg.price_usd),
+        default_price: pkg.default_price,
+        image_url: pkg.image_url
+      })) as TokenPackage[];
     }
   });
 
@@ -122,6 +137,20 @@ export default function TokenShop() {
       });
     }
   };
+
+  // Update max values based on actual data
+  useEffect(() => {
+    if (tokenPackages && tokenPackages.length > 0) {
+      const maxPrice = Math.max(...tokenPackages.map(p => p.price_usd));
+      const maxTokens = Math.max(...tokenPackages.map(p => p.token_amount));
+      
+      setFilters(prev => ({
+        ...prev,
+        priceRange: [0, maxPrice],
+        tokenRange: [0, maxTokens]
+      }));
+    }
+  }, [tokenPackages]);
 
   // Filter and sort packages
   const filteredPackages = tokenPackages?.filter(pkg => {
