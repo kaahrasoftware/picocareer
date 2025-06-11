@@ -170,7 +170,7 @@ export function SelectWithCustomOption({
         console.error('Check error:', checkError);
       }
 
-      if (existingData && 'id' in existingData && existingData.id) {
+      if (existingData && existingData !== null && 'id' in existingData && existingData.id) {
         onValueChange(String(existingData.id));
         setShowCustomInput(false);
         setCustomValue('');
@@ -204,7 +204,7 @@ export function SelectWithCustomOption({
                    tableName === 'schools' ? 'school' : 
                    tableName === 'majors' ? 'major' : 'position'}.`);
 
-      if (data && 'id' in data && data.id) {
+      if (data && data !== null && 'id' in data && data.id) {
         const newOption: Option = {
           id: String(data.id)
         };
