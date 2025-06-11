@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
@@ -10,7 +11,12 @@ export function useUserProfile(session: Session | null) {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          companies:company_id(name),
+          schools:school_id(name),
+          majors:academic_major_id(title)
+        `)
         .eq('id', session.user.id)
         .single();
       
@@ -18,7 +24,14 @@ export function useUserProfile(session: Session | null) {
         console.error('Error fetching profile:', error);
         return null;
       }
-      return data;
+
+      // Transform the data to flatten related fields
+      return {
+        ...data,
+        company_name: data.companies?.name || null,
+        school_name: data.schools?.name || null,
+        academic_major: data.majors?.title || null,
+      };
     },
     enabled: !!session?.user?.id,
     retry: 1,

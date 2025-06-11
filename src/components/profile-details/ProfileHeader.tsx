@@ -7,6 +7,8 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Globe, MessageCircle, UserPlus, Share2, Edit3, CheckCircle, Clock } from "lucide-react";
+import { StudentStatusBadge } from "./StudentStatusBadge";
+
 interface Profile {
   id: string;
   full_name: string;
@@ -25,12 +27,15 @@ interface Profile {
   linkedin_url?: string;
   github_url?: string;
   website_url?: string;
+  student_nonstudent?: string | null;
 }
+
 interface ProfileHeaderProps {
   profile: Profile | null;
   session?: any;
   onShare?: () => void;
 }
+
 export function ProfileHeader({
   profile,
   onShare
@@ -103,9 +108,16 @@ export function ProfileHeader({
                   <h1 className="text-3xl font-bold text-foreground">
                     {profile.full_name}
                   </h1>
-                  {isMentor && <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                      Mentor
-                    </Badge>}
+                  <div className="flex items-center gap-2">
+                    {isMentor && <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        Mentor
+                      </Badge>}
+                    <StudentStatusBadge 
+                      status={profile.student_nonstudent}
+                      profileId={profile.id}
+                      isOwnProfile={isOwnProfile}
+                    />
+                  </div>
                 </div>
                 
                 

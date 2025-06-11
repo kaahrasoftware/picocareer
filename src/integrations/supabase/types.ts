@@ -3442,6 +3442,9 @@ export type Database = {
           position: string | null
           school_id: string | null
           skills: string[] | null
+          student_nonstudent:
+            | Database["public"]["Enums"]["student_nonstudent"]
+            | null
           tiktok_url: string | null
           tools_used: string[] | null
           top_mentor: boolean | null
@@ -3490,6 +3493,9 @@ export type Database = {
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
+          student_nonstudent?:
+            | Database["public"]["Enums"]["student_nonstudent"]
+            | null
           tiktok_url?: string | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
@@ -3538,6 +3544,9 @@ export type Database = {
           position?: string | null
           school_id?: string | null
           skills?: string[] | null
+          student_nonstudent?:
+            | Database["public"]["Enums"]["student_nonstudent"]
+            | null
           tiktok_url?: string | null
           tools_used?: string[] | null
           top_mentor?: boolean | null
@@ -5167,6 +5176,7 @@ export type Database = {
         | "U.S. Virgin Islands - VI"
         | "Puerto Rico - PR"
       status: "Approved" | "Pending" | "Rejected"
+      student_nonstudent: "Student" | "Non-Student"
       subcategories:
         | "Industry-Specific Career Insights"
         | "Choosing the Right Career Path"
@@ -5929,6 +5939,7 @@ export const Constants = {
         "Puerto Rico - PR",
       ],
       status: ["Approved", "Pending", "Rejected"],
+      student_nonstudent: ["Student", "Non-Student"],
       subcategories: [
         "Industry-Specific Career Insights",
         "Choosing the Right Career Path",
