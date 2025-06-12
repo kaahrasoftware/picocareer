@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
@@ -12,6 +11,8 @@ import { useSessionTypes } from "@/hooks/useSessionTypes";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -44,8 +45,30 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
   const { data: profile } = useUserProfile(session);
   const { processPaymentAndBooking } = useSessionPayment();
   const sessionTypes = useSessionTypes(mentorId, true);
+  
+  // Fetch mentor details to get the name
+  const { data: mentorProfile } = useQuery({
+    queryKey: ['mentor-profile', mentorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', mentorId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching mentor profile:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    enabled: !!mentorId
+  });
+
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
   const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
+  const mentorName = mentorProfile?.full_name || 'Unknown Mentor';
 
   const formData = {
     date,
@@ -72,16 +95,28 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
   };
 
   const handleConfirmPayment = async () => {
-    if (!profile?.full_name) return;
+    if (!profile?.full_name) {
+      console.error('No profile or full name found');
+      return;
+    }
+
+    console.log('Starting payment with notification integration');
+    console.log('Mentor Name:', mentorName);
+    console.log('Mentee Name:', profile.full_name);
 
     await processPaymentAndBooking({
       mentorId,
-      mentorName: "Mentor", // This should be passed as prop or fetched
+      mentorName,
       menteeName: profile.full_name,
       formData,
-      onSuccess,
+      onSuccess: () => {
+        console.log('Payment and booking completed successfully');
+        setShowPaymentDialog(false);
+        onSuccess();
+      },
       onError: (error) => {
         console.error('Booking error:', error);
+        // Keep dialog open so user can try again
       }
     });
   };
@@ -199,7 +234,7 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
         onClose={() => setShowPaymentDialog(false)}
         onConfirmPayment={handleConfirmPayment}
         sessionDetails={{
-          mentorName: "Mentor", // This should be passed as prop
+          mentorName: mentorName,
           date: date || new Date(),
           time: selectedTime || "",
           sessionType: selectedSessionTypeDetails?.type || ""

@@ -37,7 +37,7 @@ export function SessionPaymentDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [processingStep, setProcessingStep] = useState<'payment' | 'booking' | 'complete' | null>(null);
+  const [processingStep, setProcessingStep] = useState<'payment' | 'booking' | 'notifications' | 'complete' | null>(null);
   const { balance, isLoading, refreshBalance } = useWalletBalance();
   const navigate = useNavigate();
 
@@ -53,7 +53,12 @@ export function SessionPaymentDialog({
     
     try {
       console.log('Starting payment and booking process...');
+      setProcessingStep('booking');
       await onConfirmPayment();
+      
+      setProcessingStep('notifications');
+      // Give a brief moment for notifications to process
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       setProcessingStep('complete');
       setSuccess(true);
@@ -89,8 +94,10 @@ export function SessionPaymentDialog({
         return 'Processing payment...';
       case 'booking':
         return 'Booking session...';
+      case 'notifications':
+        return 'Sending notifications...';
       case 'complete':
-        return 'Payment Complete!';
+        return 'Booking Complete!';
       default:
         return 'Processing...';
     }
@@ -130,7 +137,7 @@ export function SessionPaymentDialog({
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium text-green-800">Session Booked Successfully!</p>
-                    <p className="text-sm text-green-600">25 tokens deducted. Check your email for confirmation details.</p>
+                    <p className="text-sm text-green-600">25 tokens deducted. Notifications and confirmations have been sent.</p>
                   </div>
                 </div>
               </CardContent>
@@ -221,7 +228,7 @@ export function SessionPaymentDialog({
                 className="w-full gap-2"
               >
                 <Coins className="h-4 w-4" />
-                {isProcessing ? getProcessingMessage() : success ? "Payment Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
+                {isProcessing ? getProcessingMessage() : success ? "Booking Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
               </Button>
             ) : (
               <Card className="border-orange-200 bg-orange-50">
