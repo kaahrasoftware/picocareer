@@ -214,52 +214,22 @@ export function useSessionPayment() {
           // Don't fail the booking for notification issues
         }
 
-        // Send email confirmations
+        // Send email confirmations using the correct edge function
         try {
           console.log('📧 Sending email confirmations...');
           
-          // Send email to mentor
-          const { error: mentorEmailError } = await supabase.functions.invoke('send-session-confirmation', {
+          // Call the correct edge function with proper parameters
+          const { error: emailError } = await supabase.functions.invoke('send-session-email', {
             body: {
-              type: 'mentor',
-              sessionId: sessionId,
-              recipientId: mentorId,
-              sessionDetails: {
-                menteeName,
-                date: formData.date.toISOString(),
-                time: formData.selectedTime,
-                meetingPlatform: formData.meetingPlatform,
-                note: formData.note
-              }
+              type: 'confirmation',
+              sessionId: sessionId
             }
           });
 
-          if (mentorEmailError) {
-            console.error('❌ Mentor email failed:', mentorEmailError);
+          if (emailError) {
+            console.error('❌ Email confirmation failed:', emailError);
           } else {
-            console.log('✅ Mentor email sent successfully');
-          }
-
-          // Send email to mentee
-          const { error: menteeEmailError } = await supabase.functions.invoke('send-session-confirmation', {
-            body: {
-              type: 'mentee',
-              sessionId: sessionId,
-              recipientId: user.id,
-              sessionDetails: {
-                mentorName,
-                date: formData.date.toISOString(),
-                time: formData.selectedTime,
-                meetingPlatform: formData.meetingPlatform,
-                note: formData.note
-              }
-            }
-          });
-
-          if (menteeEmailError) {
-            console.error('❌ Mentee email failed:', menteeEmailError);
-          } else {
-            console.log('✅ Mentee email sent successfully');
+            console.log('✅ Email confirmations sent successfully');
           }
 
         } catch (emailError) {
