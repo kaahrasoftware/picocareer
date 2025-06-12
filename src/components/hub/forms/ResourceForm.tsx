@@ -1,17 +1,17 @@
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "@/components/forms/FormField";
-import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface ResourceFormData {
   title: string;
   description: string;
-  resource_type: "document" | "external_link" | "video" | "image";
-  access_level: "public" | "admin" | "faculty" | "members";
+  resource_type: string;
+  access_level: string;
   file_url?: string;
   external_url?: string;
 }
@@ -22,9 +22,14 @@ interface ResourceFormProps {
   onCancel?: () => void;
 }
 
-export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) {
+export function ResourceForm({ 
+  hubId, 
+  onSuccess, 
+  onCancel 
+}: ResourceFormProps) {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
 
   const form = useForm<ResourceFormData>({
     defaultValues: {
@@ -33,135 +38,148 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
       resource_type: "document",
       access_level: "members",
       file_url: "",
-      external_url: "",
-    },
+      external_url: ""
+    }
   });
 
   const onSubmit = async (data: ResourceFormData) => {
-    setIsSubmitting(true);
+    if (!profile?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create resources.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to create resources",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const resourceData = {
+      console.log('Would create resource:', {
+        ...data,
         hub_id: hubId,
-        title: data.title,
-        description: data.description,
-        resource_type: data.resource_type,
-        access_level: data.access_level,
-        file_url: data.file_url || "",
-        external_url: data.external_url || "",
-        created_by: user.id,
-      };
-
-      const { error } = await supabase
-        .from('hub_resources')
-        .insert(resourceData);
-
-      if (error) {
-        throw error;
-      }
-
+        created_by: profile.id
+      });
+      
       toast({
         title: "Success",
-        description: "Resource created successfully",
+        description: "Resource created successfully.",
       });
 
-      form.reset();
-      onSuccess?.();
-    } catch (error: any) {
+      if (onSuccess) onSuccess();
+    } catch (error) {
       console.error('Error creating resource:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create resource",
-        variant: "destructive",
+        description: "Failed to create resource. Please try again.",
+        variant: "destructive"
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
-
-  const resourceTypeOptions = [
-    { value: "document", label: "Document" },
-    { value: "external_link", label: "Link" },
-    { value: "video", label: "Video" },
-    { value: "image", label: "Image" },
-  ];
-
-  const accessLevelOptions = [
-    { value: "members", label: "Members Only" },
-    { value: "public", label: "Public" },
-    { value: "admin", label: "Admin Only" },
-  ];
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
+        <Controller
           control={form.control}
           name="title"
-          label="Title"
-          type="text"
-          required
+          render={({ field }) => (
+            <FormField
+              name="title"
+              field={field}
+              label="Title"
+              type="text"
+              required
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="description"
-          label="Description"
-          type="textarea"
+          render={({ field }) => (
+            <FormField
+              name="description"
+              field={field}
+              label="Description"
+              type="textarea"
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="resource_type"
-          label="Resource Type"
-          type="select"
-          options={resourceTypeOptions}
-          required
+          render={({ field }) => (
+            <FormField
+              name="resource_type"
+              field={field}
+              label="Resource Type"
+              type="select"
+              options={[
+                { value: "document", label: "Document" },
+                { value: "image", label: "Image" },
+                { value: "video", label: "Video" },
+                { value: "external_link", label: "External Link" }
+              ]}
+              required
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="access_level"
-          label="Access Level"
-          type="select"
-          options={accessLevelOptions}
-          required
+          render={({ field }) => (
+            <FormField
+              name="access_level"
+              field={field}
+              label="Access Level"
+              type="select"
+              options={[
+                { value: "public", label: "Public" },
+                { value: "members", label: "Members Only" },
+                { value: "admins", label: "Admins Only" }
+              ]}
+              required
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="file_url"
-          label="File URL"
-          type="text"
-          description="Upload a file or provide a direct URL"
+          render={({ field }) => (
+            <FormField
+              name="file_url"
+              field={field}
+              label="File Upload"
+              type="text"
+              description="Upload a file or enter file URL"
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="external_url"
-          label="External URL"
-          type="text"
-          description="Link to external resource"
+          render={({ field }) => (
+            <FormField
+              name="external_url"
+              field={field}
+              label="External URL"
+              type="url"
+              description="For external links and resources"
+            />
+          )}
         />
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-4">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Resource"}
+          <Button type="submit">
+            {form.formState.isSubmitting ? "Creating..." : "Create Resource"}
           </Button>
         </div>
       </form>

@@ -134,6 +134,7 @@ export function GenericUploadForm({
               name={field.name}
               render={({ field: controllerField }) => (
                 <FormField
+                  name={field.name}
                   field={controllerField}
                   label={field.label}
                   type={field.type}
