@@ -1,37 +1,39 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+
 interface RequestAvailabilityButtonProps {
   mentorId: string;
   userId?: string;
   onRequestComplete: () => void;
 }
+
 export function RequestAvailabilityButton({
   mentorId,
   userId,
   onRequestComplete
 }: RequestAvailabilityButtonProps) {
   const [isRequestingAvailability, setIsRequestingAvailability] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Check if mentor has any future availability
-  const {
-    data: hasFutureAvailability,
-    isLoading
-  } = useQuery({
+  const { data: hasFutureAvailability, isLoading } = useQuery({
     queryKey: ['mentorFutureAvailability', mentorId],
     queryFn: async () => {
       const now = new Date();
-      const {
-        data,
-        error
-      } = await supabase.from('mentor_availability').select('id').eq('profile_id', mentorId).eq('is_available', true).or(`and(recurring.eq.true),and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`).limit(1);
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('id')
+        .eq('profile_id', mentorId)
+        .eq('is_available', true)
+        .or(`and(recurring.eq.true),and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`)
+        .limit(1);
+      
       if (error) {
         console.error('Error checking mentor availability:', error);
         return true; // Return true on error to prevent unnecessary requests
@@ -40,6 +42,7 @@ export function RequestAvailabilityButton({
     },
     staleTime: 1000 * 60 * 5 // Cache for 5 minutes
   });
+
   const handleRequestAvailability = async () => {
     if (!userId) {
       toast({
@@ -50,6 +53,7 @@ export function RequestAvailabilityButton({
       navigate("/auth");
       return;
     }
+
     if (hasFutureAvailability) {
       toast({
         title: "Mentor is Available",
@@ -58,6 +62,7 @@ export function RequestAvailabilityButton({
       });
       return;
     }
+
     try {
       setIsRequestingAvailability(true);
 
@@ -69,51 +74,68 @@ export function RequestAvailabilityButton({
         cleanUserId
       });
 
-      // Check for existing pending request
-      const {
-        data: existingRequest,
-        error: checkError
-      } = await supabase.from('availability_requests').select('*').eq('mentor_id', cleanMentorId).eq('mentee_id', cleanUserId).eq('status', 'pending').maybeSingle();
-      if (existingRequest) {
+      // Calculate the cutoff time (48 hours ago)
+      const cutoffTime = new Date();
+      cutoffTime.setHours(cutoffTime.getHours() - 48);
+
+      // Check for any existing request within the last 48 hours (regardless of status)
+      const { data: recentRequest, error: checkError } = await supabase
+        .from('availability_requests')
+        .select('*')
+        .eq('mentor_id', cleanMentorId)
+        .eq('mentee_id', cleanUserId)
+        .gte('created_at', cutoffTime.toISOString())
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking recent requests:', checkError);
+        throw checkError;
+      }
+
+      if (recentRequest) {
+        const timeRemaining = 48 - Math.floor((Date.now() - new Date(recentRequest.created_at).getTime()) / (1000 * 60 * 60));
         toast({
           title: "Request Already Sent",
-          description: "You have already requested availability from this mentor.",
+          description: `You can request availability from this mentor again in ${timeRemaining} hours.`,
           variant: "destructive"
         });
         return;
       }
 
       // Insert new request
-      const {
-        data: requestData,
-        error: insertError
-      } = await supabase.from('availability_requests').insert({
-        mentor_id: cleanMentorId,
-        mentee_id: cleanUserId,
-        status: 'pending'
-      }).select().single();
+      const { data: requestData, error: insertError } = await supabase
+        .from('availability_requests')
+        .insert({
+          mentor_id: cleanMentorId,
+          mentee_id: cleanUserId,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
       if (insertError) {
         console.error('Error creating request:', insertError);
         throw insertError;
       }
+
       console.log('Availability request created:', requestData);
+
       try {
         // Call the edge function to notify mentor
-        const {
-          data: notifyData,
-          error: notifyError
-        } = await supabase.functions.invoke('notify-mentor-availability', {
+        const { data: notifyData, error: notifyError } = await supabase.functions.invoke('notify-mentor-availability', {
           body: JSON.stringify({
             mentorId: cleanMentorId,
             menteeId: cleanUserId,
             requestId: requestData.id
           })
         });
+
         console.log('Notification response:', notifyData);
         if (notifyError) {
           console.error('Error notifying mentor:', notifyError);
           throw notifyError;
         }
+
         toast({
           title: "Request Sent",
           description: "The mentor has been notified of your request."
@@ -149,10 +171,18 @@ export function RequestAvailabilityButton({
   if (isLoading) {
     return null;
   }
-  return <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
-      <p className="text-muted-foreground text-center">Don’t see any availabilities?</p>
-      <Button variant="secondary" onClick={handleRequestAvailability} disabled={isRequestingAvailability} className="w-full max-w-sm">
+
+  return (
+    <div className="mt-4 flex flex-col items-center justify-center space-y-3 bg-muted p-4 rounded-lg">
+      <p className="text-muted-foreground text-center">Don't see any availabilities?</p>
+      <Button 
+        variant="secondary" 
+        onClick={handleRequestAvailability} 
+        disabled={isRequestingAvailability} 
+        className="w-full max-w-sm"
+      >
         {isRequestingAvailability ? "Sending Request..." : "Request Availability"}
       </Button>
-    </div>;
+    </div>
+  );
 }
