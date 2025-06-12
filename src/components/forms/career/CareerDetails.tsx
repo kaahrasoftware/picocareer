@@ -1,9 +1,10 @@
+
 import { FormField, FormFieldProps } from "@/components/forms/FormField";
-import { Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { CareerFormValues } from "@/lib/validations/blog";
 
 interface CareerDetailsProps {
-  control: Control<CareerFormValues>;
+  control: any;
 }
 
 export function CareerDetails({ control }: CareerDetailsProps) {
@@ -43,10 +44,16 @@ export function CareerDetails({ control }: CareerDetailsProps) {
   return (
     <div className="space-y-6">
       {fields.map((field) => (
-        <FormField
+        <Controller
           key={field.name}
           control={control}
-          {...field}
+          name={field.name}
+          render={({ field: controllerField }) => (
+            <FormField
+              {...field}
+              field={controllerField}
+            />
+          )}
         />
       ))}
     </div>

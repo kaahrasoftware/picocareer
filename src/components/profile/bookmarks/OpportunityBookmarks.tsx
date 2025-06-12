@@ -8,95 +8,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bookmark, ExternalLink, MapPin, Building, Calendar, BookmarkCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { BookmarkedEntity, BookmarkType } from "./types";
 
-interface OpportunityBookmark {
-  id: string;
-  opportunity_id: string;
-  opportunities: {
-    id: string;
-    title: string;
-    description?: string;
-    organization?: string;
-    location?: string;
-    deadline?: string;
-    type?: string;
-    status?: string;
-    external_url?: string;
-  };
+interface OpportunityBookmarksProps {
+  activePage: string;
 }
 
-export function OpportunityBookmarks() {
+export function OpportunityBookmarks({ activePage }: OpportunityBookmarksProps) {
   const { session } = useAuthSession();
   const { toast } = useToast();
-  const [removingBookmarks, setRemovingBookmarks] = useState<Set<string>>(new Set());
 
-  const { data: bookmarks = [], isLoading, refetch } = useQuery({
+  const { data: bookmarks = [], isLoading } = useQuery({
     queryKey: ['opportunity-bookmarks', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return [];
       
       const { data, error } = await supabase
         .from('user_bookmarks')
-        .select(`
-          id,
-          opportunity_id,
-          opportunities (
-            id,
-            title,
-            description,
-            organization,
-            location,
-            deadline,
-            type,
-            status,
-            external_url
-          )
-        `)
+        .select('*')
         .eq('profile_id', session.user.id)
-        .eq('bookmark_type', 'opportunity')
-        .not('opportunities', 'is', null);
+        .eq('content_type', 'opportunity');
 
       if (error) throw error;
-      return data as OpportunityBookmark[];
+      return data || [];
     },
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id && activePage === 'opportunities',
   });
-
-  const removeBookmark = async (bookmarkId: string, opportunityTitle: string) => {
-    if (!session?.user?.id) return;
-
-    setRemovingBookmarks(prev => new Set(prev).add(bookmarkId));
-
-    try {
-      const { error } = await supabase
-        .from('user_bookmarks')
-        .delete()
-        .eq('id', bookmarkId)
-        .eq('profile_id', session.user.id);
-
-      if (error) throw error;
-
-      await refetch();
-      toast({
-        title: "Bookmark removed",
-        description: `Removed "${opportunityTitle}" from your bookmarks`,
-      });
-    } catch (error) {
-      console.error('Error removing bookmark:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove bookmark. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setRemovingBookmarks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(bookmarkId);
-        return newSet;
-      });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -131,89 +67,15 @@ export function OpportunityBookmarks() {
     );
   }
 
-  // Convert bookmarks to BookmarkedEntity format
-  const bookmarkedEntities: BookmarkedEntity[] = bookmarks.map(bookmark => ({
-    id: bookmark.opportunities.id,
-    title: bookmark.opportunities.title,
-    description: bookmark.opportunities.description,
-    organization: bookmark.opportunities.organization,
-    location: bookmark.opportunities.location,
-    deadline: bookmark.opportunities.deadline,
-    type: bookmark.opportunities.type,
-    status: bookmark.opportunities.status,
-    external_url: bookmark.opportunities.external_url,
-    bookmark_id: bookmark.id
-  }));
-
-  const bookmarkType: BookmarkType = 'opportunity';
-
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {bookmarkedEntities.map((opportunity) => (
-        <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
+      {bookmarks.map((bookmark) => (
+        <Card key={bookmark.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <CardTitle className="text-lg line-clamp-2">{opportunity.title}</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeBookmark(opportunity.bookmark_id, opportunity.title || 'Untitled')}
-                disabled={removingBookmarks.has(opportunity.bookmark_id)}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <BookmarkCheck className="h-4 w-4" />
-              </Button>
-            </div>
-            {opportunity.organization && (
-              <div className="flex items-center text-sm text-gray-600">
-                <Building className="h-4 w-4 mr-1" />
-                {opportunity.organization}
-              </div>
-            )}
+            <CardTitle className="text-lg line-clamp-2">Opportunity Bookmark</CardTitle>
           </CardHeader>
-          
-          <CardContent className="space-y-3">
-            {opportunity.description && (
-              <p className="text-sm text-gray-600 line-clamp-3">{opportunity.description}</p>
-            )}
-            
-            <div className="flex flex-wrap gap-2">
-              {opportunity.type && (
-                <Badge variant="secondary">{opportunity.type}</Badge>
-              )}
-              {opportunity.status && (
-                <Badge variant={opportunity.status === 'active' ? 'default' : 'outline'}>
-                  {opportunity.status}
-                </Badge>
-              )}
-            </div>
-            
-            <div className="space-y-1 text-sm text-gray-500">
-              {opportunity.location && (
-                <div className="flex items-center">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {opportunity.location}
-                </div>
-              )}
-              {opportunity.deadline && (
-                <div className="flex items-center">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
-                </div>
-              )}
-            </div>
-            
-            {opportunity.external_url && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => window.open(opportunity.external_url, '_blank')}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View Details
-              </Button>
-            )}
+          <CardContent>
+            <p className="text-sm text-gray-600">Bookmark ID: {bookmark.id}</p>
           </CardContent>
         </Card>
       ))}

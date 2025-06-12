@@ -1,9 +1,10 @@
+
 import { FormField, FormFieldProps } from "@/components/forms/FormField";
-import { Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { CareerFormValues } from "@/lib/validations/blog";
 
 interface CareerMetadataProps {
-  control: Control<CareerFormValues>;
+  control: any;
 }
 
 export function CareerMetadata({ control }: CareerMetadataProps) {
@@ -58,18 +59,30 @@ export function CareerMetadata({ control }: CareerMetadataProps) {
   return (
     <div className="space-y-6">
       {fields.map((field) => (
-        <FormField
+        <Controller
           key={field.name}
           control={control}
-          {...field}
+          name={field.name}
+          render={({ field: controllerField }) => (
+            <FormField
+              {...field}
+              field={controllerField}
+            />
+          )}
         />
       ))}
       <div className="grid grid-cols-2 gap-4">
         {toggleFields.map((field) => (
-          <FormField
+          <Controller
             key={field.name}
             control={control}
-            {...field}
+            name={field.name}
+            render={({ field: controllerField }) => (
+              <FormField
+                {...field}
+                field={controllerField}
+              />
+            )}
           />
         ))}
       </div>

@@ -13,7 +13,7 @@ export interface Profile {
   company_id?: string;
   school_id?: string;
   academic_major_id?: string;
-  highest_degree?: string;
+  highest_degree?: "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD";
   years_of_experience?: number;
   languages?: string[];
   skills?: string[];

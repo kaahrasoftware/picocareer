@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { FormFields, ProfileFormProps } from "./types/form-types";
-import { Degree } from "@/types/database/enums";
 import { useQuery } from "@tanstack/react-query";
 import { PersonalSection } from "./sections/PersonalSection";
 import { BioSection } from "./sections/BioSection";
@@ -26,7 +25,6 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
   const { data: allSchoolsData } = useAllSchools();
   const { data: allMajorsData } = useAllMajors();
   
-  // Ensure data is properly typed as arrays
   const allSchools = Array.isArray(allSchoolsData) ? allSchoolsData : [];
   const allMajors = Array.isArray(allMajorsData) ? allMajorsData : [];
   
@@ -62,7 +60,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
       company_id: profile.company_id || "",
       school_id: profile.school_id || "",
       academic_major_id: profile.academic_major_id || "",
-      highest_degree: (profile.highest_degree as keyof typeof Degree) || "NO_DEGREE",
+      highest_degree: profile.highest_degree || "No Degree",
     }
   });
 
@@ -158,7 +156,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
             majors={allMajors}
             schoolId={localProfile.school_id}
             academicMajorId={localProfile.academic_major_id}
-            highestDegree={localProfile.highest_degree as keyof typeof Degree}
+            highestDegree={localProfile.highest_degree}
           />
           
           <SkillsSection

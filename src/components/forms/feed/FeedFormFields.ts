@@ -71,15 +71,13 @@ export const feedFormFields: FormFieldProps[] = [
 export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
   const baseFields = [...feedFormFields];
   
-  // Add resource-type specific fields
   switch (resourceType) {
     case "video":
       baseFields.push({
         name: "video_url",
         label: "Video URL",
         type: "url",
-        placeholder: "Enter video URL or upload video file",
-        bucket: "feed-videos"
+        placeholder: "Enter video URL or upload video file"
       });
       break;
     case "audio":
@@ -87,17 +85,15 @@ export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
         name: "audio_url",
         label: "Audio URL",
         type: "url",
-        placeholder: "Enter audio URL or upload audio file",
-        bucket: "feed-audio"
+        placeholder: "Enter audio URL or upload audio file"
       });
       break;
     case "document":
       baseFields.push({
         name: "file_url",
         label: "Document",
-        type: "file",
-        placeholder: "Upload document file",
-        bucket: "feed-documents"
+        type: "url",
+        placeholder: "Upload document file or enter URL"
       });
       break;
     case "link":
@@ -110,14 +106,11 @@ export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
       });
       break;
     case "image":
-      // Image fields are already included in base fields
       break;
     default:
-      // Text content - no additional fields needed
       break;
   }
 
-  // Add hashtags field for all types
   baseFields.push({
     name: "hashtags",
     label: "Hashtags",

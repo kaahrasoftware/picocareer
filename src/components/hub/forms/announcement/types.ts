@@ -5,7 +5,6 @@ export interface AnnouncementFormProps {
   hubId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  existingAnnouncement?: HubAnnouncement;
 }
 
 export interface FormFields {

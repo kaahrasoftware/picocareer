@@ -10,7 +10,7 @@ import { ImageUpload } from "./ImageUpload";
 
 interface BaseFieldProps {
   name: string;
-  field?: any; // Make field optional for field definition files
+  field?: any;
   label: string;
   description?: string;
   required?: boolean;
@@ -90,7 +90,6 @@ export type FormFieldProps =
 export function FormField(props: FormFieldProps) {
   const { field, label, description, required, placeholder, disabled } = props;
 
-  // If no field is provided, return null (for field definition files)
   if (!field) {
     return null;
   }
@@ -124,7 +123,6 @@ export function FormField(props: FormFieldProps) {
         );
 
       case "array":
-        // For array fields, treat them as textarea with comma-separated values
         return (
           <Textarea
             placeholder={placeholder}
@@ -217,7 +215,6 @@ export function FormField(props: FormFieldProps) {
       case "richtext":
       case "category":
       case "subcategory":
-        // These types are handled by specialized components
         return (
           <Input
             type="text"

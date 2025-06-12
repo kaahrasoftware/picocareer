@@ -1,46 +1,73 @@
 
-export type BookmarkType = 
-  | 'career' 
-  | 'major' 
-  | 'mentor' 
-  | 'scholarship' 
-  | 'opportunity';
-
-export interface BookmarkedEntity {
-  id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  [key: string]: any;
-}
-
 export interface CareerProfile {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   salary_range?: string;
-  job_growth?: string;
-  work_environment?: string;
-  skills_required?: string[];
+  image_url?: string;
+  industry?: string;
+  profiles_count?: number;
 }
 
 export interface MajorProfile {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   degree_levels?: string[];
-  career_opportunities?: string[];
+  featured?: boolean;
+  potential_salary?: string;
+  skill_match?: string[];
+  tools_knowledge?: string[];
   common_courses?: string[];
+  profiles_count?: number;
+  learning_objectives?: string[];
+  interdisciplinary_connections?: string[];
+  job_prospects?: string;
+  certifications_to_consider?: string[];
+  affiliated_programs?: string[];
+  gpa_expectations?: number;
+  transferable_skills?: string[];
+  passion_for_subject?: string;
+  professional_associations?: string[];
+  global_applicability?: string;
+  common_difficulties?: string[];
+  career_opportunities?: string[];
+  intensity?: string;
+  stress_level?: string;
+  dropout_rates?: string;
+  majors_to_consider_switching_to?: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MentorProfile {
   id: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   full_name?: string;
-  bio?: string;
+  avatar_url?: string;
+  user_type?: string;
   position?: string;
-  company_name?: string;
-  years_of_experience?: number;
+  bio?: string;
+  company_id?: string;
+  location?: string;
   skills?: string[];
+  top_mentor?: boolean;
+  company_name?: string;
+  career_title?: string;
 }
+
+export interface BookmarkedEntity {
+  id: string;
+  title?: string;
+  description?: string;
+  organization?: string;
+  location?: string;
+  deadline?: string;
+  type?: string;
+  status?: string;
+  external_url?: string;
+  bookmark_id: string;
+}
+
+export type BookmarkType = 'opportunity' | 'career' | 'mentor' | 'major';
