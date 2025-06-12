@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface FormFieldProps {
+export interface FormFieldProps {
   name: string;
   control: any;
   label: string;
@@ -147,9 +148,20 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
   const { data: options = [] } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
+      // Handle different table schemas based on tableName
+      let selectQuery = 'id, title, name';
+      
+      if (tableName === 'majors') {
+        selectQuery = 'id, title';
+      } else if (tableName === 'careers') {
+        selectQuery = 'id, title';
+      } else if (tableName === 'schools') {
+        selectQuery = 'id, name';
+      }
+      
       const { data, error } = await supabase
-        .from(tableName)
-        .select('id, title, name')
+        .from(tableName as any)
+        .select(selectQuery)
         .eq('status', 'Approved');
       
       if (error) throw error;

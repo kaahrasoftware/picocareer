@@ -8,9 +8,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/booking/BookingForm";
-import { useSessionBooking } from "@/hooks/useSessionBooking";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { MeetingPlatform } from "@/types/calendar";
 
 interface BookSessionDialogProps {
@@ -37,25 +34,12 @@ export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDia
     meetingPlatform: "Google Meet"
   });
 
-  const handleSessionBooking = useSessionBooking();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-
   if (!mentor) {
     return null;
   }
 
   const handleSuccess = () => {
-    handleSessionBooking({
-      mentorId: mentor.id,
-      mentorName: mentor.name,
-      menteeName: profile?.full_name || 'Unknown User',
-      formData,
-      onSuccess: () => onOpenChange(false),
-      onError: (error) => {
-        console.error('Booking error:', error);
-      }
-    });
+    onOpenChange(false);
   };
 
   return (
@@ -64,7 +48,7 @@ export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDia
         <DialogHeader>
           <DialogTitle>Book a Session with {mentor.name}</DialogTitle>
           <DialogDescription>
-            Select your preferred date, time, and session type
+            Select your preferred date, time, and session type. Sessions cost 25 tokens.
           </DialogDescription>
         </DialogHeader>
 
