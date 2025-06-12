@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
@@ -44,9 +43,7 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
   const { data: profile } = useUserProfile(session);
   const { processPaymentAndBooking } = useSessionPaymentDebug();
   const sessionTypes = useSessionTypes(mentorId, true);
-  const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
-  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
-
+  
   const formData = {
     date,
     selectedTime,
@@ -118,7 +115,7 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
                 mentorId={mentorId}
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
-                selectedSessionType={selectedSessionTypeDetails}
+                selectedSessionType={sessionTypes.find(type => type.id === sessionType)}
               />
             </div>
           )}
@@ -202,7 +199,7 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
           mentorName: "Mentor", // This should be passed as prop
           date: date || new Date(),
           time: selectedTime || "",
-          sessionType: selectedSessionTypeDetails?.type || ""
+          sessionType: sessionTypes.find(type => type.id === sessionType)?.type || ""
         }}
       />
     </>

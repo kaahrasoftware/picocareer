@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTokenOperations } from './useTokenOperations';
 import { useWalletBalance } from './useWalletBalance';
-import { useBookSession } from './useBookSession';
+import { useSessionBooking } from '@/components/booking/SessionBookingHandler';
 import { MeetingPlatform } from '@/types/calendar';
 import { toast } from 'sonner';
 
@@ -23,103 +23,48 @@ interface SessionPaymentParams {
   onError: (error: any) => void;
 }
 
-interface DebugLog {
-  step: string;
-  timestamp: string;
-  data: any;
-  success: boolean;
-  error?: string;
-}
-
 export function useSessionPaymentDebug() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
   const { deductTokens, refundTokens } = useTokenOperations();
-  const { wallet, refreshBalance } = useWalletBalance();
-  const bookSession = useBookSession();
-
-  const addDebugLog = (step: string, data: any, success: boolean, error?: string) => {
-    const log: DebugLog = {
-      step,
-      timestamp: new Date().toISOString(),
-      data,
-      success,
-      error
-    };
-    console.log(`[TOKEN DEBUG] ${step}:`, log);
-    setDebugLogs(prev => [...prev, log]);
-  };
-
-  const clearDebugLogs = () => {
-    setDebugLogs([]);
-  };
+  const { wallet } = useWalletBalance();
+  const handleSessionBooking = useSessionBooking();
 
   const processPaymentAndBooking = async (params: SessionPaymentParams) => {
     const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
     
-    clearDebugLogs();
-    addDebugLog('PROCESS_START', { mentorId, mentorName, menteeName, formData }, true);
+    console.log('🚀 Starting session payment and booking process with debug logging...');
+    console.log('📋 Form data:', formData);
+    console.log('💰 Wallet info:', wallet);
     
-    // Step 1: Validate input parameters
     if (!formData.date || !formData.selectedTime || !formData.sessionType) {
       const error = new Error('Please select a date, time and session type');
-      addDebugLog('VALIDATION_FAILED', { 
-        date: formData.date, 
-        selectedTime: formData.selectedTime, 
-        sessionType: formData.sessionType 
-      }, false, error.message);
+      console.error('❌ Missing required form data:', { date: formData.date, time: formData.selectedTime, sessionType: formData.sessionType });
       onError(error);
       return;
     }
 
-    addDebugLog('VALIDATION_PASSED', { 
-      date: formData.date, 
-      selectedTime: formData.selectedTime, 
-      sessionType: formData.sessionType 
-    }, true);
-
-    // Step 2: Check wallet existence
     if (!wallet) {
       const error = new Error('Wallet not found');
-      addDebugLog('WALLET_CHECK_FAILED', { wallet }, false, error.message);
+      console.error('❌ No wallet found for user');
       onError(error);
       return;
     }
 
-    addDebugLog('WALLET_CHECK_PASSED', { 
-      walletId: wallet.id, 
-      balance: wallet.balance,
-      profileId: wallet.profile_id 
-    }, true);
-
-    // Step 3: Check balance
     if (wallet.balance < 25) {
       const error = new Error('Insufficient tokens. You need 25 tokens to book a session.');
-      addDebugLog('BALANCE_CHECK_FAILED', { 
-        currentBalance: wallet.balance, 
-        required: 25 
-      }, false, error.message);
+      console.error('❌ Insufficient balance:', wallet.balance);
       onError(error);
       return;
     }
-
-    addDebugLog('BALANCE_CHECK_PASSED', { 
-      currentBalance: wallet.balance, 
-      required: 25,
-      sufficient: true 
-    }, true);
 
     setIsProcessing(true);
     let transactionId: string | null = null;
+    let bookingSucceeded = false;
 
     try {
-      addDebugLog('TOKEN_DEDUCTION_START', { 
-        walletId: wallet.id, 
-        amount: 25,
-        description: `Session booking with ${mentorName}` 
-      }, true);
+      console.log('💳 Step 1: Deducting 25 tokens...');
       
-      // Step 4: Deduct tokens first
+      // Step 1: Deduct tokens first
       const tokenResult = await deductTokens.mutateAsync({
         walletId: wallet.id,
         amount: 25,
@@ -134,53 +79,46 @@ export function useSessionPaymentDebug() {
         }
       });
 
-      addDebugLog('TOKEN_DEDUCTION_RESULT', tokenResult, tokenResult.success);
-
       if (!tokenResult.success) {
+        console.error('❌ Token deduction failed:', tokenResult.message);
         throw new Error(tokenResult.message || 'Failed to deduct tokens');
       }
 
       transactionId = tokenResult.transaction_id;
-      addDebugLog('TOKEN_DEDUCTION_SUCCESS', { 
-        transactionId, 
-        newBalance: tokenResult.new_balance 
-      }, true);
+      console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
 
-      // Refresh wallet balance immediately
-      refreshBalance();
-
-      addDebugLog('SESSION_BOOKING_START', {
-        mentorId,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
-        note: formData.note,
-        meetingPlatform: formData.meetingPlatform
-      }, true);
+      console.log('📅 Step 2: Attempting to book session...');
       
-      // Step 5: Book the session
-      const bookingResult = await bookSession({
-        mentorId,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
-        note: formData.note,
-        meetingPlatform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername,
-      });
+      // Step 2: Book the session using the session booking handler
+      try {
+        await handleSessionBooking({
+          mentorId,
+          mentorName,
+          menteeName,
+          formData,
+          onSuccess: () => {
+            console.log('✅ Session booking handler reported success');
+            bookingSucceeded = true;
+          },
+          onError: (bookingError) => {
+            console.error('❌ Session booking handler reported error:', bookingError);
+            throw bookingError;
+          }
+        });
 
-      addDebugLog('SESSION_BOOKING_RESULT', bookingResult, bookingResult.success);
+        // If we get here without throwing, the booking succeeded
+        if (!bookingSucceeded) {
+          console.log('✅ Session booking completed successfully (fallback success detection)');
+          bookingSucceeded = true;
+        }
 
-      if (!bookingResult.success) {
-        addDebugLog('SESSION_BOOKING_FAILED_ROLLBACK_START', { 
-          error: bookingResult.error,
-          transactionId 
-        }, false, bookingResult.error);
+      } catch (bookingError: any) {
+        console.error('❌ Session booking failed, details:', bookingError);
         
         // Rollback: Refund the tokens
+        console.log('🔄 Rolling back token deduction...');
         try {
-          const refundResult = await refundTokens.mutateAsync({
+          await refundTokens.mutateAsync({
             walletId: wallet.id,
             amount: 25,
             description: `Refund for failed session booking with ${mentorName}`,
@@ -188,37 +126,26 @@ export function useSessionPaymentDebug() {
             metadata: {
               original_transaction_id: transactionId,
               refund_reason: 'Session booking failed',
-              mentor_name: mentorName
+              mentor_name: mentorName,
+              error_details: bookingError.message
             }
           });
-          
-          addDebugLog('TOKEN_REFUND_RESULT', refundResult, refundResult.success);
-          
-          if (refundResult.success) {
-            refreshBalance();
-            addDebugLog('TOKEN_REFUND_SUCCESS', { newBalance: refundResult.new_balance }, true);
-          }
-          
+          console.log('✅ Tokens refunded successfully');
         } catch (refundError) {
-          addDebugLog('TOKEN_REFUND_FAILED', refundError, false, 'Failed to refund tokens');
+          console.error('❌ Failed to refund tokens:', refundError);
           throw new Error('Session booking failed and token refund also failed. Please contact support.');
         }
         
-        throw new Error(bookingResult.error || 'Failed to book session');
+        throw new Error(bookingError.message || 'Failed to book session');
       }
 
-      addDebugLog('SESSION_BOOKING_SUCCESS', { sessionId: bookingResult.sessionId }, true);
-      addDebugLog('PROCESS_COMPLETE', { 
-        sessionId: bookingResult.sessionId,
-        transactionId,
-        finalBalance: tokenResult.new_balance 
-      }, true);
-
+      console.log('🎉 Session booking process completed successfully!');
+      
       toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
       onSuccess();
       
     } catch (error: any) {
-      addDebugLog('PROCESS_ERROR', error, false, error.message);
+      console.error('💥 Error in session payment process:', error);
       
       // Provide specific error messages
       if (error.message.includes('Insufficient token balance')) {
@@ -234,14 +161,11 @@ export function useSessionPaymentDebug() {
       onError(error);
     } finally {
       setIsProcessing(false);
-      addDebugLog('PROCESS_END', { isProcessing: false }, true);
     }
   };
 
   return {
     processPaymentAndBooking,
-    isProcessing,
-    debugLogs,
-    clearDebugLogs
+    isProcessing
   };
 }
