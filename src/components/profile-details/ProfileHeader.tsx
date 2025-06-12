@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileStats } from "@/components/profile/ProfileStats";
@@ -8,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Globe, MessageCircle, UserPlus, Share2, Edit3, CheckCircle, Clock } from "lucide-react";
 import { StudentStatusBadge } from "./StudentStatusBadge";
-
 interface Profile {
   id: string;
   full_name: string;
@@ -29,13 +27,11 @@ interface Profile {
   website_url?: string;
   student_nonstudent?: string | null;
 }
-
 interface ProfileHeaderProps {
   profile: Profile | null;
   session?: any;
   onShare?: () => void;
 }
-
 export function ProfileHeader({
   profile,
   onShare
@@ -112,11 +108,7 @@ export function ProfileHeader({
                     {isMentor && <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                         Mentor
                       </Badge>}
-                    <StudentStatusBadge 
-                      status={profile.student_nonstudent}
-                      profileId={profile.id}
-                      isOwnProfile={isOwnProfile}
-                    />
+                    <StudentStatusBadge status={profile.student_nonstudent} profileId={profile.id} isOwnProfile={isOwnProfile} />
                   </div>
                 </div>
                 
@@ -167,18 +159,9 @@ export function ProfileHeader({
             {/* Right Section - Actions */}
             <div className="flex flex-col gap-3 min-w-[200px]">
               {!isOwnProfile && <>
-                  <Button className="w-full">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                  {isMentor && <Button variant="outline" className="w-full">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Book Session
-                    </Button>}
-                  <Button variant="outline" className="w-full">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Connect
-                  </Button>
+                  
+                  {isMentor}
+                  
                 </>}
               
               {isOwnProfile}
