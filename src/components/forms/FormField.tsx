@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface FormFieldProps {
   name: string;
-  control: any;
+  control?: any; // Made optional since it's provided at runtime
   label: string;
   required?: boolean;
   type?: string;

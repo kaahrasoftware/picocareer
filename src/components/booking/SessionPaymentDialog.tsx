@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -53,11 +52,6 @@ export function SessionPaymentDialog({
       console.log('Confirming payment for session...');
       await onConfirmPayment();
       setSuccess(true);
-      // Close dialog after a short delay to show success state
-      setTimeout(() => {
-        onClose();
-        setSuccess(false);
-      }, 2000);
     } catch (error: any) {
       console.error('Payment confirmation failed:', error);
       setError(error.message || 'Payment failed. Please try again.');
@@ -109,7 +103,7 @@ export function SessionPaymentDialog({
           {success && (
             <Card className="border-green-200 bg-green-50">
               <CardContent className="p-4">
-                <div className="flex items-center gap-3 text-center">
+                <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium text-green-800">Session Booked Successfully!</p>
@@ -189,7 +183,7 @@ export function SessionPaymentDialog({
                 className="w-full gap-2"
               >
                 <Coins className="h-4 w-4" />
-                {isProcessing ? "Processing..." : success ? "Booking Confirmed!" : `Confirm & Pay ${SESSION_COST} Tokens`}
+                {isProcessing ? "Processing..." : success ? "Payment Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
               </Button>
             ) : (
               <Card className="border-orange-200 bg-orange-50">

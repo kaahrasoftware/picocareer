@@ -106,12 +106,22 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      // Create the insertion data with proper typing
+      const insertData = {
+        event_id: eventId,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        email: values.email,
+        student_or_professional: values.student_or_professional,
+        "current academic field/position": values["current academic field/position"],
+        "current school/company": values["current school/company"] || "",
+        country: values.country as any, // Type assertion for enum
+        "where did you hear about us": values["where did you hear about us"] as any, // Type assertion for enum
+      };
+
       const { error } = await supabase
         .from('event_registrations')
-        .insert({
-          event_id: eventId,
-          ...values,
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
