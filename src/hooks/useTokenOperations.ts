@@ -25,7 +25,7 @@ export function useTokenOperations() {
 
   const deductTokens = useMutation({
     mutationFn: async (params: DeductTokensParams) => {
-      console.log('Deducting tokens:', params);
+      console.log('🔄 Deducting tokens with corrected function:', params);
       
       const { data, error } = await supabase.rpc('deduct_tokens', {
         p_wallet_id: params.walletId,
@@ -37,30 +37,33 @@ export function useTokenOperations() {
       });
 
       if (error) {
-        console.error('Token deduction error:', error);
+        console.error('❌ Token deduction error:', error);
         throw error;
       }
 
+      console.log('✅ Token deduction result:', data);
       return data;
     },
     onSuccess: (data, variables) => {
       if (data.success) {
+        console.log(`✅ Successfully deducted ${variables.amount} tokens`);
         toast.success(`${variables.amount} tokens used successfully`);
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
       } else {
+        console.error('❌ Token deduction failed:', data.message);
         toast.error(data.message || 'Failed to use tokens');
       }
     },
     onError: (error) => {
-      console.error('Token deduction failed:', error);
+      console.error('❌ Token deduction mutation failed:', error);
       toast.error('Failed to process token transaction');
     }
   });
 
   const refundTokens = useMutation({
     mutationFn: async (params: RefundTokensParams) => {
-      console.log('Refunding tokens:', params);
+      console.log('🔄 Refunding tokens:', params);
       
       const { data, error } = await supabase.rpc('refund_tokens', {
         p_wallet_id: params.walletId,
@@ -71,23 +74,26 @@ export function useTokenOperations() {
       });
 
       if (error) {
-        console.error('Token refund error:', error);
+        console.error('❌ Token refund error:', error);
         throw error;
       }
 
+      console.log('✅ Token refund result:', data);
       return data;
     },
     onSuccess: (data, variables) => {
       if (data.success) {
+        console.log(`✅ Successfully refunded ${variables.amount} tokens`);
         toast.success(`${variables.amount} tokens refunded successfully`);
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
       } else {
+        console.error('❌ Token refund failed:', data.message);
         toast.error(data.message || 'Failed to refund tokens');
       }
     },
     onError: (error) => {
-      console.error('Token refund failed:', error);
+      console.error('❌ Token refund mutation failed:', error);
       toast.error('Failed to process token refund');
     }
   });
