@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EventDetailsDialog } from './events/EventDetailsDialog';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventRegistrationsTab } from './events/EventRegistrationsTab';
 import { EventSummaryTab } from './events/EventSummaryTab';
@@ -40,36 +40,62 @@ export function EventManagementTab() {
         </Button>
       </div>
 
-      <Tabs defaultValue="summary" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="registrations">Registrations</TabsTrigger>
-          <TabsTrigger value="resources">Event Resources</TabsTrigger>
-        </TabsList>
+      <Card className="min-h-[600px]">
+        <CardContent className="p-6">
+          <Tabs defaultValue="summary" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+              <TabsTrigger 
+                value="summary" 
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
+              >
+                Summary
+              </TabsTrigger>
+              <TabsTrigger 
+                value="events"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
+              >
+                Events
+              </TabsTrigger>
+              <TabsTrigger 
+                value="registrations"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
+              >
+                Registrations
+              </TabsTrigger>
+              <TabsTrigger 
+                value="resources"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
+              >
+                Event Resources
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="summary">
-          <EventSummaryTab />
-        </TabsContent>
+            <TabsContent value="summary" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
+              <EventSummaryTab />
+            </TabsContent>
 
-        <TabsContent value="events" className="space-y-6">
-          <EventDashboardStats />
+            <TabsContent value="events" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
+              <EventDashboardStats />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Events Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <EventDataTable onViewDetails={handleViewDetails} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <Card>
-            <CardContent className="p-6">
-              <EventDataTable onViewDetails={handleViewDetails} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <TabsContent value="registrations" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
+              <EventRegistrationsTab />
+            </TabsContent>
 
-        <TabsContent value="registrations">
-          <EventRegistrationsTab />
-        </TabsContent>
-
-        <TabsContent value="resources">
-          <EventResourcesManagementTab eventId={selectedEvent?.id || ""} />
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="resources" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
+              <EventResourcesManagementTab eventId={selectedEvent?.id || ""} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {selectedEvent && (
         <EventDetailsDialog

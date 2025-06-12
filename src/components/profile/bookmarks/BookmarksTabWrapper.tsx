@@ -9,6 +9,21 @@ import { MajorBookmarks } from "./MajorBookmarks";
 export function BookmarksTabWrapper() {
   const [activePage, setActivePage] = useState("opportunities");
 
+  const handleViewCareerDetails = (career: any) => {
+    // Handle career details view
+    console.log('View career details:', career);
+  };
+
+  const handleViewMentorProfile = (mentor: any) => {
+    // Handle mentor profile view
+    console.log('View mentor profile:', mentor);
+  };
+
+  const handleViewMajorDetails = (major: any) => {
+    // Handle major details view
+    console.log('View major details:', major);
+  };
+
   return (
     <div className="w-full">
       <Tabs value={activePage} onValueChange={setActivePage} className="w-full">
@@ -24,15 +39,24 @@ export function BookmarksTabWrapper() {
         </TabsContent>
         
         <TabsContent value="careers" className="mt-6">
-          <CareerBookmarks activePage={activePage} />
+          <CareerBookmarks 
+            activePage={activePage} 
+            onViewCareerDetails={handleViewCareerDetails}
+          />
         </TabsContent>
         
         <TabsContent value="mentors" className="mt-6">
-          <MentorBookmarks activePage={activePage} />
+          <MentorBookmarks 
+            activePage={activePage}
+            onViewMentorProfile={handleViewMentorProfile}
+          />
         </TabsContent>
         
         <TabsContent value="majors" className="mt-6">
-          <MajorBookmarks activePage={activePage} />
+          <MajorBookmarks 
+            activePage={activePage}
+            onViewMajorDetails={handleViewMajorDetails}
+          />
         </TabsContent>
       </Tabs>
     </div>

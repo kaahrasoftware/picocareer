@@ -1,64 +1,48 @@
 
-import { useState } from "react";
-import { User } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { MentorProfile } from "./types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bookmark, MapPin, Building, Star } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { BookmarksList } from "./BookmarksList";
-
-interface MentorBookmarksProps {
-  activePage: string;
-  onViewMentorProfile: (mentorId: string) => void;
-}
+import { MentorProfile, MentorBookmarksProps } from "./types";
 
 export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookmarksProps) {
   const { session } = useAuthSession();
+  const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 6;
 
-  const mentorBookmarksQuery = useQuery({
-    queryKey: ["bookmarked-mentors", session?.user?.id, currentPage],
+  const { data: bookmarksData, isLoading } = useQuery({
+    queryKey: ['mentor-bookmarks', session?.user?.id, currentPage],
     queryFn: async () => {
-      if (!session?.user?.id) return {
-        data: [],
-        count: 0
-      };
+      if (!session?.user?.id) return { data: [], count: 0 };
+      
+      const { count, error: countError } = await supabase
+        .from('user_bookmarks')
+        .select('*', { count: 'exact' })
+        .eq('profile_id', session.user.id)
+        .eq('content_type', 'mentor');
 
-      // First query for total count
-      const {
-        count,
-        error: countError
-      } = await supabase.from("user_bookmarks").select('*', {
-        count: 'exact'
-      }).eq("profile_id", session.user.id).eq("content_type", "mentor");
       if (countError) throw countError;
 
-      // Get paginated data with proper join
       const start = (currentPage - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE - 1;
-      const {
-        data,
-        error
-      } = await supabase.from("user_bookmarks").select(`
-          content_id
-        `).eq("profile_id", session.user.id).eq("content_type", "mentor").range(start, end);
-      if (error) {
-        console.error("Error fetching mentor bookmarks:", error);
-        throw error;
-      }
 
-      // Now fetch the actual mentor profiles
-      if (data && data.length > 0) {
-        const mentorIds = data.map(bookmark => bookmark.content_id);
-        const {
-          data: mentorProfiles,
-          error: mentorError
-        } = await supabase.from("profiles").select(`
+      const { data, error } = await supabase
+        .from('user_bookmarks')
+        .select(`
+          id,
+          content_id,
+          profiles!inner (
             id,
+            first_name,
+            last_name,
             full_name,
             avatar_url,
             user_type,
@@ -67,90 +51,90 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
             company_id,
             location,
             skills,
-            top_mentor
-          `).in("id", mentorIds);
-        if (mentorError) {
-          console.error("Error fetching mentor profiles:", mentorError);
-          throw mentorError;
-        }
+            top_mentor,
+            companies (name)
+          )
+        `)
+        .eq('profile_id', session.user.id)
+        .eq('content_type', 'mentor')
+        .eq('profiles.user_type', 'mentor')
+        .range(start, end);
 
-        // Fetch company names if needed
-        const companyIds = mentorProfiles?.filter(profile => profile.company_id).map(profile => profile.company_id) || [];
-        let companiesData: Record<string, string> = {};
-        if (companyIds.length > 0) {
-          const {
-            data: companies,
-            error: companiesError
-          } = await supabase.from("companies").select("id, name").in("id", companyIds);
-          if (companiesError) {
-            console.error("Error fetching companies:", companiesError);
-          } else if (companies) {
-            companiesData = companies.reduce((acc: Record<string, string>, company) => {
-              acc[company.id] = company.name;
-              return acc;
-            }, {});
-          }
-        }
+      if (error) throw error;
 
-        // Fetch career titles for positions
-        const careerIds = mentorProfiles?.filter(profile => profile.position).map(profile => profile.position) || [];
-        let careersData: Record<string, string> = {};
-        if (careerIds.length > 0) {
-          const {
-            data: careers,
-            error: careersError
-          } = await supabase.from("careers").select("id, title").in("id", careerIds);
-          if (careersError) {
-            console.error("Error fetching careers:", careersError);
-          } else if (careers) {
-            careersData = careers.reduce((acc: Record<string, string>, career) => {
-              acc[career.id] = career.title;
-              return acc;
-            }, {});
-          }
-        }
+      const mentors: MentorProfile[] = (data || []).map(bookmark => ({
+        id: bookmark.profiles?.id || bookmark.content_id,
+        first_name: bookmark.profiles?.first_name || '',
+        last_name: bookmark.profiles?.last_name || '',
+        full_name: bookmark.profiles?.full_name || 'Unknown Mentor',
+        avatar_url: bookmark.profiles?.avatar_url || '',
+        user_type: bookmark.profiles?.user_type || '',
+        position: bookmark.profiles?.position || '',
+        bio: bookmark.profiles?.bio || '',
+        company_id: bookmark.profiles?.company_id || '',
+        location: bookmark.profiles?.location || '',
+        skills: bookmark.profiles?.skills || [],
+        top_mentor: bookmark.profiles?.top_mentor || false,
+        company_name: bookmark.profiles?.companies?.name || '',
+        career_title: bookmark.profiles?.position || '',
+        bookmark_id: bookmark.id
+      }));
 
-        // Enrich mentor profiles with company names and career titles
-        const enrichedProfiles = mentorProfiles?.map(profile => ({
-          ...profile,
-          company_name: profile.company_id ? companiesData[profile.company_id] : null,
-          career_title: profile.position ? careersData[profile.position] : null
-        })) || [];
-        
-        return {
-          data: enrichedProfiles,
-          count: count || 0
-        };
-      }
-      return {
-        data: [],
-        count: count || 0
-      };
+      return { data: mentors, count: count || 0 };
     },
-    enabled: !!session?.user?.id && activePage === "mentors"
+    enabled: !!session?.user?.id && activePage === 'mentors',
   });
 
-  const mentorBookmarks = mentorBookmarksQuery.data?.data || [];
-  const totalCount = mentorBookmarksQuery.data?.count || 0;
+  const bookmarks = bookmarksData?.data || [];
+  const totalCount = bookmarksData?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const renderMentorCard = (mentor: MentorProfile) => (
-    <Card key={mentor.id} className="hover:shadow transition-all">
-      <CardHeader className="flex flex-row items-center gap-3 pb-2">
-        <ProfileAvatar avatarUrl={mentor.avatar_url} imageAlt={mentor.full_name || "Mentor"} size="md" />
-        <div>
-          <CardTitle className="text-lg">{mentor.full_name}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {mentor.career_title || "Mentor"} {mentor.company_name ? `at ${mentor.company_name}` : ""}
-          </p>
+    <Card key={mentor.id} className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={mentor.avatar_url} alt={mentor.full_name} />
+            <AvatarFallback>
+              {mentor.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'M'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg line-clamp-1">{mentor.full_name}</CardTitle>
+              {mentor.top_mentor && <Star className="h-4 w-4 text-yellow-500" />}
+            </div>
+            {mentor.position && (
+              <p className="text-sm text-muted-foreground">{mentor.position}</p>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="line-clamp-3 text-sm">
-          {mentor.bio || "No bio available"}
-        </p>
-        <div className="mt-4">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => onViewMentorProfile(mentor.id)}>
+        {mentor.company_name && (
+          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
+            <Building className="h-3 w-3" />
+            {mentor.company_name}
+          </p>
+        )}
+        {mentor.location && (
+          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
+            <MapPin className="h-3 w-3" />
+            {mentor.location}
+          </p>
+        )}
+        {mentor.bio && (
+          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+            {mentor.bio}
+          </p>
+        )}
+        <div className="flex items-center justify-between">
+          {mentor.skills && mentor.skills.length > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              {mentor.skills.length} skills
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={() => onViewMentorProfile(mentor)}>
             View Profile
           </Button>
         </div>
@@ -160,18 +144,18 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
 
   return (
     <BookmarksList
-      bookmarks={mentorBookmarks}
-      isLoading={mentorBookmarksQuery.isLoading}
+      bookmarks={bookmarks}
+      isLoading={isLoading}
       emptyStateProps={{
-        icon: <User className="h-8 w-8 text-primary" />,
-        linkPath: "/mentor",
+        icon: <Bookmark className="h-8 w-8 text-primary" />,
+        linkPath: "/community",
         type: "mentors"
       }}
       totalPages={totalPages}
       currentPage={currentPage}
       setPage={setCurrentPage}
-      onViewDetails={(mentor) => onViewMentorProfile(mentor.id)}
-      renderCard={(item) => renderMentorCard(item)}
+      onViewDetails={onViewMentorProfile}
+      renderCard={renderMentorCard}
       bookmarkType="mentor"
     />
   );

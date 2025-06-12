@@ -74,3 +74,18 @@ export interface BookmarkedEntity {
 }
 
 export type BookmarkType = 'opportunity' | 'career' | 'mentor' | 'major';
+
+export interface CareerBookmarksProps {
+  activePage: string;
+  onViewCareerDetails: (career: CareerProfile) => void;
+}
+
+export interface MentorBookmarksProps {
+  activePage: string;
+  onViewMentorProfile: (mentor: MentorProfile) => void;
+}
+
+export interface MajorBookmarksProps {
+  activePage: string;
+  onViewMajorDetails: (major: MajorProfile) => void;
+}
