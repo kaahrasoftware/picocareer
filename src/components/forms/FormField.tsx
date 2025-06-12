@@ -69,6 +69,11 @@ interface SubcategoryFieldProps extends BaseFieldProps {
   options?: Array<{ value: string; label: string }>;
 }
 
+interface ArrayFieldProps extends BaseFieldProps {
+  type: "array";
+  itemType?: "text" | "textarea";
+}
+
 export type FormFieldProps = 
   | TextFieldProps 
   | TextareaFieldProps 
@@ -79,7 +84,8 @@ export type FormFieldProps =
   | SwitchFieldProps
   | RichTextFieldProps
   | CategoryFieldProps
-  | SubcategoryFieldProps;
+  | SubcategoryFieldProps
+  | ArrayFieldProps;
 
 export function FormField(props: FormFieldProps) {
   const { field, label, description, required, placeholder, disabled } = props;
@@ -112,6 +118,18 @@ export function FormField(props: FormFieldProps) {
             placeholder={placeholder}
             disabled={disabled}
             rows={props.rows || 3}
+            {...field}
+            value={field.value || ""}
+          />
+        );
+
+      case "array":
+        // For array fields, treat them as textarea with comma-separated values
+        return (
+          <Textarea
+            placeholder={placeholder}
+            disabled={disabled}
+            rows={3}
             {...field}
             value={field.value || ""}
           />

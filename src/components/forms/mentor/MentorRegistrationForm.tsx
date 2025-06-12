@@ -76,7 +76,9 @@ export function MentorRegistrationForm({
   const handleSubmit = async (data: FormValues) => {
     console.log('Form submission initiated with data:', { 
       email: data.email,
-      consented: data.background_check_consent 
+      consented: data.background_check_consent,
+      formState: form.formState,
+      errors: form.formState.errors
     });
     
     setFormError(null);
@@ -116,6 +118,15 @@ export function MentorRegistrationForm({
 
   // Check if form has any validation errors
   const formHasErrors = Object.keys(form.formState.errors).length > 0;
+  
+  // Debug form state
+  console.log('Form validation state:', {
+    isValid: form.formState.isValid,
+    errors: form.formState.errors,
+    values: form.watch(),
+    hasErrors: formHasErrors,
+    backgroundConsent: form.watch("background_check_consent")
+  });
 
   return (
     <Form {...form}>
@@ -144,6 +155,18 @@ export function MentorRegistrationForm({
             <AlertTitle>Form Contains Errors</AlertTitle>
             <AlertDescription>
               Please fix the highlighted fields before submitting.
+              {Object.keys(form.formState.errors).length > 0 && (
+                <div className="mt-2">
+                  <strong>Issues found in:</strong>
+                  <ul className="list-disc list-inside mt-1">
+                    {Object.entries(form.formState.errors).map(([field, error]) => (
+                      <li key={field} className="text-sm">
+                        {field}: {error?.message || 'Invalid value'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}
@@ -159,9 +182,10 @@ export function MentorRegistrationForm({
               name="password"
               render={({ field }) => (
                 <FormField
+                  name="password"
                   field={field}
                   label="Password"
-                  type="text"
+                  type="password"
                   description="Create a secure password with at least 8 characters, including one lowercase letter, one uppercase letter, and one number."
                   required={true}
                 />
@@ -189,6 +213,7 @@ export function MentorRegistrationForm({
             name="background_check_consent"
             render={({ field }) => (
               <FormField
+                name="background_check_consent"
                 field={field}
                 type="checkbox"
                 label="I consent to a background check"
@@ -203,7 +228,7 @@ export function MentorRegistrationForm({
             type="submit" 
             size="lg"
             className="w-full sm:w-auto min-w-[200px]" 
-            disabled={isSubmitting || !form.watch("background_check_consent") || formHasErrors}
+            disabled={isSubmitting || !form.watch("background_check_consent")}
           >
             {isSubmitting ? (
               <>
