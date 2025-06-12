@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coins, CreditCard, User, Calendar, Clock } from "lucide-react";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { useTokenOperations } from "@/hooks/useTokenOperations";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -36,36 +35,22 @@ export function SessionPaymentDialog({
   sessionDetails 
 }: SessionPaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { balance, wallet, isLoading } = useWalletBalance();
-  const { deductTokens } = useTokenOperations();
+  const { balance, isLoading } = useWalletBalance();
   const navigate = useNavigate();
 
   const hasSufficientFunds = balance >= SESSION_COST;
 
   const handleConfirmPayment = async () => {
-    if (!wallet || !hasSufficientFunds) return;
+    if (!hasSufficientFunds) return;
 
     setIsProcessing(true);
     try {
-      // Deduct tokens first
-      await deductTokens.mutateAsync({
-        walletId: wallet.id,
-        amount: SESSION_COST,
-        description: `Mentor session with ${sessionDetails.mentorName}`,
-        category: 'session',
-        metadata: {
-          mentor_name: sessionDetails.mentorName,
-          session_date: format(sessionDetails.date, 'yyyy-MM-dd'),
-          session_time: sessionDetails.time,
-          session_type: sessionDetails.sessionType
-        }
-      });
-
-      // Process the booking
+      console.log('Confirming payment for session...');
+      // The booking process now handles both booking and token deduction
       await onConfirmPayment();
       onClose();
     } catch (error) {
-      console.error('Payment failed:', error);
+      console.error('Payment confirmation failed:', error);
     } finally {
       setIsProcessing(false);
     }

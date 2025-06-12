@@ -27,8 +27,8 @@ export function useSessionPayment() {
   const processPaymentAndBooking = async (params: SessionPaymentParams) => {
     setIsProcessing(true);
     try {
-      // The token deduction is handled in SessionPaymentDialog
-      // This hook just processes the actual booking
+      console.log('Processing payment and booking...', params);
+      // This now handles both booking and token deduction in the correct order
       await handleSessionBooking(params);
     } catch (error) {
       console.error('Session booking failed:', error);

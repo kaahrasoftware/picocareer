@@ -14,7 +14,15 @@ export interface FormFieldProps {
   control: any;
   label: string;
   required?: boolean;
-  children: React.ReactNode;
+  type?: string;
+  placeholder?: string;
+  options?: { value: string; label: string; }[];
+  tableName?: string;
+  description?: string;
+  bucket?: string;
+  dependsOn?: string;
+  watch?: any;
+  children?: React.ReactNode;
 }
 
 interface InputFieldProps {
@@ -148,7 +156,6 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
   const { data: options = [] } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
-      // Handle different table schemas based on tableName
       let selectQuery = 'id, title, name';
       
       if (tableName === 'majors') {
@@ -198,7 +205,29 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
   );
 };
 
-export const FormField = ({ name, control, label, required, children }: FormFieldProps) => {
+export const FormField = ({ name, control, label, required, children, type, placeholder, options, tableName }: FormFieldProps) => {
+  // Handle different field types based on props
+  if (type === "textarea") {
+    return <TextAreaField control={control} name={name} label={label} placeholder={placeholder} required={required} />;
+  }
+  
+  if (type === "checkbox") {
+    return <CheckboxField control={control} name={name} label={label} />;
+  }
+  
+  if (type === "select" && options) {
+    return <SelectField control={control} name={name} label={label} placeholder={placeholder} options={options} required={required} />;
+  }
+  
+  if (type === "dynamic-select" && tableName) {
+    return <DynamicSelectField control={control} name={name} label={label} placeholder={placeholder} tableName={tableName} required={required} />;
+  }
+  
+  if (type && ["text", "email", "number", "password", "tel", "url", "datetime-local"].includes(type)) {
+    return <InputField control={control} name={name} label={label} placeholder={placeholder} required={required} type={type} />;
+  }
+
+  // Default custom field with children
   return (
     <ShadcnFormField
       control={control}
