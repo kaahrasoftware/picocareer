@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -198,6 +197,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
             name="first_name"
             render={({ field }) => (
               <FormField
+                name="first_name"
                 field={field}
                 label="First Name"
                 type="text"
@@ -212,6 +212,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
             name="last_name"
             render={({ field }) => (
               <FormField
+                name="last_name"
                 field={field}
                 label="Last Name"
                 type="text"
@@ -227,6 +228,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
           name="email"
           render={({ field }) => (
             <FormField
+              name="email"
               field={field}
               label="Email"
               type="email"
@@ -241,6 +243,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
           name="student_or_professional"
           render={({ field }) => (
             <FormField
+              name="student_or_professional"
               field={field}
               label="Current Status"
               type="select"
@@ -258,6 +261,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
               name="current academic field/position"
               render={({ field }) => (
                 <FormField
+                  name="current academic field/position"
                   field={field}
                   label="Academic Field/Major"
                   type="select"
@@ -273,6 +277,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
               name="current school/company"
               render={({ field }) => (
                 <FormField
+                  name="current school/company"
                   field={field}
                   label="Current School"
                   type="select"
@@ -291,6 +296,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
               name="current academic field/position"
               render={({ field }) => (
                 <FormField
+                  name="current academic field/position"
                   field={field}
                   label="Current Position/Role"
                   type="select"
@@ -306,6 +312,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
               name="current school/company"
               render={({ field }) => (
                 <FormField
+                  name="current school/company"
                   field={field}
                   label="Current Company"
                   type="select"
@@ -323,6 +330,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
             name="current academic field/position"
             render={({ field }) => (
               <FormField
+                name="current academic field/position"
                 field={field}
                 label="Current Field/Position"
                 type="text"
@@ -338,6 +346,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
           name="country"
           render={({ field }) => (
             <FormField
+              name="country"
               field={field}
               label="Country"
               type="select"
@@ -353,6 +362,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
           name="where did you hear about us"
           render={({ field }) => (
             <FormField
+              name="where did you hear about us"
               field={field}
               label="How did you hear about us?"
               type="select"

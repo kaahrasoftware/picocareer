@@ -32,6 +32,7 @@ export function ProfessionalSection({ control, careers = [], companies = [] }: P
               name={fieldConfig.name as keyof FormValues}
               render={({ field }) => (
                 <FormField
+                  name={fieldConfig.name}
                   {...fieldConfig}
                   field={field}
                   {...(fieldConfig.type === "dynamic-select" && { options })}

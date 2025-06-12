@@ -22,6 +22,7 @@ export function PersonalInfoSection({ control }: PersonalInfoSectionProps) {
             name={fieldConfig.name as keyof FormValues}
             render={({ field }) => (
               <FormField
+                name={fieldConfig.name}
                 {...fieldConfig}
                 field={field}
               />

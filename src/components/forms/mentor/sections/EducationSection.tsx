@@ -32,6 +32,7 @@ export function EducationSection({ control, schools = [], majors = [] }: Educati
               name={fieldConfig.name as keyof FormValues}
               render={({ field }) => (
                 <FormField
+                  name={fieldConfig.name}
                   {...fieldConfig}
                   field={field}
                   {...(fieldConfig.type === "dynamic-select" && { options })}
