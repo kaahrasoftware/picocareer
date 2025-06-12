@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -196,7 +197,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
     name: option.title || option.name
   }));
 
-  const handleAddNew = async (newName: string) => {
+  const handleAddNew = async (newName: string): Promise<string> => {
     try {
       let insertData: any = {
         status: 'Pending'
@@ -217,7 +218,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
       const { data, error } = await supabase
         .from(tableName as any)
         .insert(insertData)
-        .select()
+        .select('id')
         .single();
 
       if (error) throw error;
@@ -236,7 +237,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
       queryClient.invalidateQueries({ queryKey: [tableName] });
 
       // Return the new option ID so it can be selected
-      return data.id;
+      return data?.id || '';
     } catch (error) {
       console.error(`Failed to add new ${tableName}:`, error);
       toast({
