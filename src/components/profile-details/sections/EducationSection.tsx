@@ -9,6 +9,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { degreeOptions } from "@/constants/degrees";
 
 interface EducationSectionProps {
   register: UseFormRegister<FormFields>;
@@ -29,16 +30,6 @@ export function EducationSection({
   academicMajorId,
   highestDegree,
 }: EducationSectionProps) {
-  const degrees: Degree[] = [
-    "No Degree",
-    "High School",
-    "Associate",
-    "Bachelor",
-    "Master",
-    "MD",
-    "PhD"
-  ];
-
   const majorOptions = majors.map(major => ({
     value: major.id,
     label: major.title
@@ -63,7 +54,7 @@ export function EducationSection({
               <SelectValue placeholder="Select degree" />
             </SelectTrigger>
             <SelectContent>
-              {degrees.map((degree) => (
+              {degreeOptions.map((degree) => (
                 <SelectItem key={degree} value={degree}>
                   {degree}
                 </SelectItem>

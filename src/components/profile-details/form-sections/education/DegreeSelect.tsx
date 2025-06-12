@@ -1,3 +1,4 @@
+
 import {
   Select,
   SelectContent,
@@ -5,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { degreeOptions } from "@/constants/degrees";
 
 interface DegreeSelectProps {
   value: string;
@@ -12,16 +14,6 @@ interface DegreeSelectProps {
 }
 
 export function DegreeSelect({ value, handleSelectChange }: DegreeSelectProps) {
-  const degreeOptions = [
-    "No Degree",
-    "High School",
-    "Associate",
-    "Bachelor",
-    "Master",
-    "MD",
-    "PhD"
-  ] as const;
-
   return (
     <div>
       <label className="text-sm font-medium">Highest Degree</label>
