@@ -6,7 +6,9 @@ import { TimeSlotSelector } from "./TimeSlotSelector";
 import { SessionTypeSelector } from "./SessionTypeSelector";
 import { SessionNote } from "./SessionNote";
 import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
 import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,6 +37,7 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
   const [telegramUsername, setTelegramUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { session } = useAuthSession();
   const sessionTypes = useSessionTypes(mentorId, true);
   const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
   const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
@@ -161,6 +164,16 @@ export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormPr
         >
           {isSubmitting ? "Booking..." : "Book Session"}
         </Button>
+
+        {/* Request Availability Button */}
+        <RequestAvailabilityButton
+          mentorId={mentorId}
+          userId={session?.user?.id}
+          onRequestComplete={() => {
+            // Optionally refresh the calendar or show a success message
+            console.log('Availability request completed');
+          }}
+        />
       </div>
     </div>
   );
