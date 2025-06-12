@@ -28,13 +28,13 @@ export enum Categories {
 }
 
 export enum Degree {
+  NO_DEGREE = "No Degree",
   HIGH_SCHOOL = "High School",
-  ASSOCIATES = "Associate's",
-  BACHELORS = "Bachelor's",
-  MASTERS = "Master's",
-  DOCTORATE = "Doctorate",
-  PROFESSIONAL = "Professional",
-  CERTIFICATE = "Certificate"
+  ASSOCIATE = "Associate",
+  BACHELOR = "Bachelor",
+  MASTER = "Master",
+  PHD = "PhD",
+  MD = "MD"
 }
 
 export enum FeedbackType {

@@ -1,6 +1,7 @@
 
 import { UseFormRegister } from "react-hook-form";
-import { FormFields, Degree } from "../types/form-types";
+import { FormFields } from "../types/form-types";
+import { Degree } from "@/types/database/enums";
 import { 
   Select,
   SelectContent,

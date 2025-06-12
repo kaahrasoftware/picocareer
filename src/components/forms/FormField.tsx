@@ -224,9 +224,9 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
       await refetch();
 
       // Auto-select the newly created item with proper null checks
-      if (data && control._fields && control._fields[name]) {
+      if (data && control?._fields?.[name]) {
         const fieldOnChange = control._fields[name]._f?.onChange;
-        if (fieldOnChange && data && typeof data === 'object' && 'id' in data) {
+        if (fieldOnChange && data && typeof data === 'object' && 'id' in data && data.id) {
           fieldOnChange(data.id);
         }
       }
