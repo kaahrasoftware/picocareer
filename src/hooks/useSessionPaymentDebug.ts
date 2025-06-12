@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTokenOperations } from './useTokenOperations';
 import { useWalletBalance } from './useWalletBalance';
-import { useSessionBooking } from '@/components/booking/SessionBookingHandler';
+import { useSessionBookingDebug } from '@/components/booking/SessionBookingHandlerDebug';
 import { MeetingPlatform } from '@/types/calendar';
 import { toast } from 'sonner';
 
@@ -27,12 +27,12 @@ export function useSessionPaymentDebug() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { deductTokens, refundTokens } = useTokenOperations();
   const { wallet } = useWalletBalance();
-  const handleSessionBooking = useSessionBooking();
+  const handleSessionBooking = useSessionBookingDebug();
 
   const processPaymentAndBooking = async (params: SessionPaymentParams) => {
     const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
     
-    console.log('🚀 Starting session payment and booking process with debug logging...');
+    console.log('🚀 Starting enhanced session payment and booking process...');
     console.log('📋 Form data:', formData);
     console.log('💰 Wallet info:', wallet);
     
@@ -87,9 +87,9 @@ export function useSessionPaymentDebug() {
       transactionId = tokenResult.transaction_id;
       console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
 
-      console.log('📅 Step 2: Attempting to book session...');
+      console.log('📅 Step 2: Attempting to book session with enhanced handler...');
       
-      // Step 2: Book the session using the session booking handler
+      // Step 2: Book the session using the enhanced session booking handler
       try {
         await handleSessionBooking({
           mentorId,
@@ -97,11 +97,11 @@ export function useSessionPaymentDebug() {
           menteeName,
           formData,
           onSuccess: () => {
-            console.log('✅ Session booking handler reported success');
+            console.log('✅ Enhanced session booking handler reported success');
             bookingSucceeded = true;
           },
           onError: (bookingError) => {
-            console.error('❌ Session booking handler reported error:', bookingError);
+            console.error('❌ Enhanced session booking handler reported error:', bookingError);
             throw bookingError;
           }
         });
@@ -139,13 +139,13 @@ export function useSessionPaymentDebug() {
         throw new Error(bookingError.message || 'Failed to book session');
       }
 
-      console.log('🎉 Session booking process completed successfully!');
+      console.log('🎉 Enhanced session booking process completed successfully!');
       
       toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
       onSuccess();
       
     } catch (error: any) {
-      console.error('💥 Error in session payment process:', error);
+      console.error('💥 Error in enhanced session payment process:', error);
       
       // Provide specific error messages
       if (error.message.includes('Insufficient token balance')) {

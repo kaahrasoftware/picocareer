@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays, Clock, MessageSquare, Smartphone, Users, CreditCard, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { SessionBookingStatusDebug } from "./SessionBookingStatusDebug";
 
 interface SessionPaymentDialogProps {
   isOpen: boolean;
@@ -26,20 +26,30 @@ export function SessionPaymentDialogDebug({
   sessionDetails
 }: SessionPaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const [sessionId, setSessionId] = useState<string>();
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
+    setShowStatus(true);
+    
     try {
       await onConfirmPayment();
+      // In a real implementation, you'd get the session ID from the booking result
+      setSessionId(`session-${Date.now()}`);
     } finally {
       setIsProcessing(false);
-      onClose();
+      // Keep dialog open to show status
+      setTimeout(() => {
+        onClose();
+        setShowStatus(false);
+      }, 5000); // Close after 5 seconds
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
@@ -103,34 +113,43 @@ export function SessionPaymentDialogDebug({
             </CardContent>
           </Card>
 
+          {/* Booking Status Component */}
+          <SessionBookingStatusDebug 
+            isVisible={showStatus}
+            sessionId={sessionId}
+            meetingPlatform="Google Meet"
+          />
+
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmPayment}
-              disabled={isProcessing}
-              className="flex-1"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Confirm & Pay 25 Tokens
-                </>
-              )}
-            </Button>
-          </div>
+          {!showStatus && (
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmPayment}
+                disabled={isProcessing}
+                className="flex-1"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Confirm & Pay 25 Tokens
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
