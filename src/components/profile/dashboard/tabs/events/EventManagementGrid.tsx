@@ -1,495 +1,211 @@
 
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Trash2, 
-  CheckCircle, 
-  XCircle, 
-  Calendar,
-  SlidersHorizontal,
-  Grid3X3,
-  List
-} from 'lucide-react';
-import { EventCard } from './EventCard';
-import { EventEditDialog } from './EventEditDialog';
-import { useEventManagement, EnhancedEvent } from '@/hooks/useEventManagement';
-import { useMobileDetection } from '@/hooks/useMobileDetection';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format } from "date-fns";
+import { CalendarDays, Users, FileText, MoreHorizontal, Trash2, Edit, Eye } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { StandardPagination } from '@/components/common/StandardPagination';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-interface EventManagementGridProps {
-  onViewDetails?: (event: EnhancedEvent) => void;
-  onManageResources?: (event: EnhancedEvent) => void;
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  event_type: string;
+  max_attendees?: number;
+  registrations?: { count: number }[];
 }
 
-const EVENTS_PER_PAGE = 12;
+interface EventManagementGridProps {
+  events: Event[];
+  selectedEvents: string[];
+  onEventSelect: (eventId: string, selected: boolean) => void;
+  onSelectAll: (selected: boolean) => void;
+  onBulkDelete: () => void;
+  onEditEvent: (event: Event) => void;
+  onViewDetails: (event: Event) => void;
+  onDeleteEvent: (eventId: string) => void;
+  isDeleting?: boolean;
+}
 
 export function EventManagementGrid({
+  events,
+  selectedEvents,
+  onEventSelect,
+  onSelectAll,
+  onBulkDelete,
+  onEditEvent,
   onViewDetails,
-  onManageResources,
+  onDeleteEvent,
+  isDeleting = false
 }: EventManagementGridProps) {
-  const { isMobile, isTablet } = useMobileDetection();
-  
-  const {
-    events,
-    isLoading,
-    updateEvent,
-    deleteEvent,
-    bulkDelete,
-    updateStatus,
-    isUpdating,
-    isDeleting,
-    isBulkDeleting,
-    isUpdatingStatus,
-  } = useEventManagement();
+  const allSelected = events.length > 0 && selectedEvents.length === events.length;
+  const someSelected = selectedEvents.length > 0 && selectedEvents.length < events.length;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
-  const [editingEvent, setEditingEvent] = useState<EnhancedEvent | null>(null);
-  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Filter and search logic
-  const filteredEvents = useMemo(() => {
-    return events.filter(event => {
-      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (event.organized_by && event.organized_by.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      const matchesStatus = statusFilter === 'all' || event.status.toLowerCase() === statusFilter.toLowerCase();
-      
-      const matchesType = typeFilter === 'all' || event.event_type.toLowerCase() === typeFilter.toLowerCase();
-      
-      const now = new Date();
-      const eventStart = new Date(event.start_time);
-      const eventEnd = new Date(event.end_time);
-      
-      let matchesDate = true;
-      if (dateFilter === 'upcoming') {
-        matchesDate = eventStart > now;
-      } else if (dateFilter === 'past') {
-        matchesDate = eventEnd < now;
-      } else if (dateFilter === 'today') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        matchesDate = eventStart >= today && eventStart < tomorrow;
-      }
-
-      return matchesSearch && matchesStatus && matchesType && matchesDate;
-    });
-  }, [events, searchQuery, statusFilter, typeFilter, dateFilter]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * EVENTS_PER_PAGE;
-  const paginatedEvents = filteredEvents.slice(startIndex, startIndex + EVENTS_PER_PAGE);
-
-  // Reset pagination when filters change
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, typeFilter, dateFilter]);
-
-  const handleSelectEvent = (eventId: string, selected: boolean) => {
-    const newSelected = new Set(selectedEvents);
-    if (selected) {
-      newSelected.add(eventId);
-    } else {
-      newSelected.delete(eventId);
-    }
-    setSelectedEvents(newSelected);
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedEvents(new Set(paginatedEvents.map(event => event.id)));
-    } else {
-      setSelectedEvents(new Set());
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleBulkDelete = () => {
-    bulkDelete(Array.from(selectedEvents));
-    setSelectedEvents(new Set());
-    setShowBulkDeleteDialog(false);
+  const getTypeColor = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'webinar':
+        return 'bg-blue-100 text-blue-800';
+      case 'workshop':
+        return 'bg-purple-100 text-purple-800';
+      case 'networking':
+        return 'bg-green-100 text-green-800';
+      case 'conference':
+        return 'bg-orange-100 text-orange-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
-
-  const handleStatusUpdate = (status: string) => {
-    updateStatus({
-      eventIds: Array.from(selectedEvents),
-      status: status,
-    });
-    setSelectedEvents(new Set());
-  };
-
-  const allSelected = paginatedEvents.length > 0 && paginatedEvents.every(event => selectedEvents.has(event.id));
-  const someSelected = selectedEvents.size > 0;
-
-  // Get unique values for filters
-  const uniqueStatuses = Array.from(new Set(events.map(event => event.status)));
-  const uniqueTypes = Array.from(new Set(events.map(event => event.event_type)));
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                <Calendar className="h-5 w-5" />
-                Event Management
-                <Badge variant="secondary" className="ml-2">
-                  {filteredEvents.length} of {events.length}
-                </Badge>
-              </CardTitle>
+    <div className="space-y-4">
+      {/* Header with bulk actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            checked={allSelected}
+            onChange={(checked) => onSelectAll(checked as boolean)}
+            ref={(el) => {
+              if (el) {
+                el.indeterminate = someSelected;
+              }
+            }}
+          />
+          <span className="text-sm text-muted-foreground">
+            {selectedEvents.length > 0 
+              ? `${selectedEvents.length} selected`
+              : `${events.length} events`
+            }
+          </span>
+        </div>
+        
+        {selectedEvents.length > 0 && (
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={onBulkDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Selected ({selectedEvents.length})
+          </Button>
+        )}
+      </div>
+
+      {/* Events grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {events.map((event) => (
+          <Card key={event.id} className="relative">
+            <div className="absolute top-4 left-4">
+              <Checkbox
+                checked={selectedEvents.includes(event.id)}
+                onChange={(checked) => onEventSelect(event.id, checked as boolean)}
+              />
             </div>
             
-            {/* View mode toggle - desktop only */}
-            {!isMobile && !isTablet && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant={viewMode === 'grid' ? 'default' : 'outline'} 
-                  size="sm" 
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant={viewMode === 'list' ? 'default' : 'outline'} 
-                  size="sm" 
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search events..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
-
-          {/* Mobile: Collapsible filters */}
-          {(isMobile || isTablet) && (
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full justify-between h-11"
-              >
-                <span className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </span>
-                <Badge variant="secondary">
-                  {[statusFilter, typeFilter, dateFilter].filter(f => f !== 'all').length}
-                </Badge>
-              </Button>
-              
-              {showFilters && (
-                <div className="grid grid-cols-1 gap-3">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      {uniqueStatuses.map(status => (
-                        <SelectItem key={status} value={status.toLowerCase()}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      {uniqueTypes.map(type => (
-                        <SelectItem key={type} value={type.toLowerCase()}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select value={dateFilter} onValueChange={setDateFilter}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Date" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Dates</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="past">Past</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <CardHeader className="pl-12 pr-12">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1 flex-1">
+                  <CardTitle className="text-base line-clamp-2">{event.title}</CardTitle>
+                  <div className="flex gap-2">
+                    <Badge className={getStatusColor(event.status)}>
+                      {event.status}
+                    </Badge>
+                    <Badge className={getTypeColor(event.event_type)}>
+                      {event.event_type}
+                    </Badge>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Desktop: Inline filters */}
-          {!isMobile && !isTablet && (
-            <div className="flex gap-3">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32 h-11">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  {uniqueStatuses.map(status => (
-                    <SelectItem key={status} value={status.toLowerCase()}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-32 h-11">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {uniqueTypes.map(type => (
-                    <SelectItem key={type} value={type.toLowerCase()}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger className="w-32 h-11">
-                  <SelectValue placeholder="Date" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Dates</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="past">Past</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          {/* Bulk Actions */}
-          {someSelected && (
-            <div className="flex flex-col gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200 md:flex-row md:items-center">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={handleSelectAll}
-                  indeterminate={someSelected && !allSelected}
-                />
-                <span className="text-sm font-medium">
-                  {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''} selected
-                </span>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onViewDetails(event)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEditEvent(event)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => onDeleteEvent(event.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              
-              <div className="flex flex-col gap-2 md:flex-row md:ml-auto">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleStatusUpdate('Approved')}
-                  disabled={isUpdatingStatus}
-                  className="w-full md:w-auto h-10"
-                >
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleStatusUpdate('Rejected')}
-                  disabled={isUpdatingStatus}
-                  className="w-full md:w-auto h-10"
-                >
-                  <XCircle className="h-4 w-4 mr-1" />
-                  Reject
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => setShowBulkDeleteDialog(true)}
-                  disabled={isBulkDeleting}
-                  className="w-full md:w-auto h-10"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {/* Pagination Info */}
-          {filteredEvents.length > 0 && (
-            <div className="flex flex-col gap-2 text-sm text-gray-600 pt-2 border-t md:flex-row md:items-center md:justify-between">
-              <span>
-                Showing {startIndex + 1}-{Math.min(startIndex + EVENTS_PER_PAGE, filteredEvents.length)} of {filteredEvents.length} events
-              </span>
-              <span>
-                Page {currentPage} of {totalPages}
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
 
-      {/* Events Grid/List */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            <CardContent className="space-y-3">
+              <CardDescription className="line-clamp-2">
+                {event.description}
+              </CardDescription>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-muted-foreground">
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  {format(new Date(event.start_time), 'MMM d, yyyy • h:mm a')}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center text-muted-foreground">
+                    <Users className="h-4 w-4 mr-2" />
+                    {event.registrations?.[0]?.count || 0} registered
+                    {event.max_attendees && ` / ${event.max_attendees}`}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onViewDetails(event)}
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Details
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {events.length === 0 && (
+        <div className="text-center py-8">
+          <CalendarDays className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No events found</h3>
+          <p className="text-muted-foreground">Create your first event to get started.</p>
         </div>
-      ) : filteredEvents.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No Events Found
-            </h3>
-            <p className="text-gray-600">
-              {searchQuery || statusFilter !== 'all' || typeFilter !== 'all' || dateFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Create your first event to get started.'}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Mobile/Tablet: Always use single column */}
-          {(isMobile || isTablet) ? (
-            <div className="space-y-4">
-              {paginatedEvents.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isSelected={selectedEvents.has(event.id)}
-                  onSelect={handleSelectEvent}
-                  onEdit={setEditingEvent}
-                  onDelete={deleteEvent}
-                  onViewDetails={onViewDetails}
-                  onManageResources={onManageResources}
-                />
-              ))}
-            </div>
-          ) : (
-            /* Desktop: Use selected view mode */
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              : "space-y-4"
-            }>
-              {paginatedEvents.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isSelected={selectedEvents.has(event.id)}
-                  onSelect={handleSelectEvent}
-                  onEdit={setEditingEvent}
-                  onDelete={deleteEvent}
-                  onViewDetails={onViewDetails}
-                  onManageResources={onManageResources}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <StandardPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-              showPageNumbers={!isMobile}
-              maxPageButtons={isMobile ? 3 : 5}
-            />
-          )}
-        </>
       )}
-
-      {/* Edit Dialog */}
-      <EventEditDialog
-        event={editingEvent}
-        isOpen={!!editingEvent}
-        onClose={() => setEditingEvent(null)}
-        onSave={(data) => {
-          updateEvent(data);
-          setEditingEvent(null);
-        }}
-        isLoading={isUpdating}
-      />
-
-      {/* Bulk Delete Dialog */}
-      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <AlertDialogContent className="mx-4 max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Events</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedEvents.size} event{selectedEvents.size !== 1 ? 's' : ''}? 
-              This action cannot be undone and will also delete all associated resources and registrations.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleBulkDelete} 
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700"
-            >
-              Delete Events
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

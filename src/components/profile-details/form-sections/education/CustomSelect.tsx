@@ -1,183 +1,163 @@
 
-import React, { useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import React, { useState, useMemo } from "react";
+import { Search, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
-interface Option {
+interface SelectOption {
   id: string;
-  name?: string;
-  title?: string;
+  name: string;
 }
 
 interface CustomSelectProps {
-  options: Option[];
-  value: string;
+  options: SelectOption[];
+  value?: string;
   onValueChange: (value: string) => void;
-  placeholder: string;
-  tableName: string;
-  allowCustom?: boolean;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  addNewLabel?: string;
+  addNewPlaceholder?: string;
+  onAddNew?: (name: string) => Promise<void>;
+  className?: string;
+  disabled?: boolean;
 }
 
 export function CustomSelect({
   options,
   value,
   onValueChange,
-  placeholder,
-  tableName,
-  allowCustom = true
+  placeholder = "Select an option...",
+  searchPlaceholder = "Search options...",
+  addNewLabel = "Add New",
+  addNewPlaceholder = "Enter new option name",
+  onAddNew,
+  className,
+  disabled = false
 }: CustomSelectProps) {
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customValue, setCustomValue] = useState('');
+  const [search, setSearch] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newItemName, setNewItemName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
-  const [localOptions, setLocalOptions] = useState<Option[]>(options);
 
-  React.useEffect(() => {
-    setLocalOptions(options);
-  }, [options]);
+  const filteredOptions = useMemo(() => {
+    if (!search) return options;
+    return options.filter(option => 
+      option?.name?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [options, search]);
 
-  const handleAddCustom = async () => {
-    if (!customValue.trim()) {
-      toast.error('Please enter a value');
-      return;
-    }
-
+  const handleAddNew = async () => {
+    if (!newItemName.trim() || !onAddNew) return;
+    
     setIsAdding(true);
     try {
-      const validTableNames = ['majors', 'schools', 'companies', 'careers'];
-      if (!validTableNames.includes(tableName)) {
-        toast.error('Invalid table name');
-        return;
-      }
-
-      // First check if the value already exists
-      const checkField = tableName === 'majors' || tableName === 'careers' ? 'title' : 'name';
-      const { data: existingData, error: existingError } = await supabase
-        .from(tableName as any)
-        .select(`id, ${checkField}`)
-        .eq(checkField, customValue.trim())
-        .maybeSingle();
-
-      if (existingError) {
-        console.error('Error checking existing data:', existingError);
-      }
-
-      if (existingData && existingData.id) {
-        // Use existing entry
-        onValueChange(String(existingData.id));
-        setCustomValue('');
-        setShowCustomInput(false);
-        toast.success('Found existing entry');
-        return;
-      }
-
-      // Create new entry
-      const insertData = tableName === 'majors' || tableName === 'careers' 
-        ? { title: customValue.trim(), status: 'Pending' }
-        : { name: customValue.trim(), status: 'Pending' };
-
-      const { data, error } = await supabase
-        .from(tableName as any)
-        .insert(insertData)
-        .select(`id, ${checkField}`)
-        .single();
-
-      if (error) {
-        console.error('Error adding new entry:', error);
-        throw error;
-      }
-
-      if (data && data.id) {
-        const newOption: Option = {
-          id: String(data.id),
-          name: tableName !== 'majors' && tableName !== 'careers' ? (data as any)[checkField] : undefined,
-          title: tableName === 'majors' || tableName === 'careers' ? (data as any)[checkField] : undefined
-        };
-
-        setLocalOptions(prev => [...prev, newOption]);
-        onValueChange(String(data.id));
-        setCustomValue('');
-        setShowCustomInput(false);
-        toast.success('Added successfully');
-      }
+      await onAddNew(newItemName.trim());
+      setNewItemName("");
+      setIsDialogOpen(false);
     } catch (error) {
-      console.error('Error in handleAddCustom:', error);
-      toast.error('Failed to add entry');
+      console.error("Error adding new item:", error);
     } finally {
       setIsAdding(false);
     }
   };
 
-  if (showCustomInput) {
-    return (
-      <div className="space-y-2">
-        <Input
-          value={customValue}
-          onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter new ${tableName.slice(0, -1)}`}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleAddCustom();
-            } else if (e.key === 'Escape') {
-              setShowCustomInput(false);
-              setCustomValue('');
-            }
-          }}
-        />
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleAddCustom} 
-            disabled={!customValue.trim() || isAdding}
-            size="sm"
-          >
-            {isAdding ? 'Adding...' : 'Add'}
-          </Button>
-          <Button 
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomValue('');
-            }} 
-            variant="outline" 
-            size="sm"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const selectedOption = options.find(option => option?.id === value);
 
   return (
-    <div className="space-y-2">
-      <Select value={value} onValueChange={onValueChange}>
+    <div className={className}>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
         <SelectTrigger>
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholder}>
+            {selectedOption?.name}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {localOptions.map((option) => (
-            <SelectItem key={option.id} value={option.id}>
-              {option.name || option.title || 'Unknown'}
-            </SelectItem>
-          ))}
+          {/* Search Input */}
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+
+          {/* Options */}
+          <div className="max-h-48 overflow-y-auto">
+            {filteredOptions.map((item) => {
+              if (!item?.id || !item?.name) return null;
+              return (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name}
+                </SelectItem>
+              );
+            })}
+            
+            {filteredOptions.length === 0 && search && (
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                No options found
+              </div>
+            )}
+          </div>
+
+          {/* Add New Button */}
+          {onAddNew && (
+            <div className="p-2 border-t">
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {addNewLabel}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{addNewLabel}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="new-item-name">Name</Label>
+                      <Input
+                        id="new-item-name"
+                        placeholder={addNewPlaceholder}
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddNew();
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleAddNew} 
+                        disabled={!newItemName.trim() || isAdding}
+                        className="flex-1"
+                      >
+                        {isAdding ? "Adding..." : "Add"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
         </SelectContent>
       </Select>
-      
-      {allowCustom && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowCustomInput(true)}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New
-        </Button>
-      )}
     </div>
   );
 }

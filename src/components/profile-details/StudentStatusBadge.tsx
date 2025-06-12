@@ -1,84 +1,60 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Edit3, Check, X } from "lucide-react";
+import { Edit2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface StudentStatusBadgeProps {
-  status: string | null | undefined;
+  status: string | null;
   profileId: string;
   isOwnProfile: boolean;
 }
 
 export function StudentStatusBadge({ status, profileId, isOwnProfile }: StudentStatusBadgeProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState(status || '');
-  const [isLoading, setIsLoading] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<"Student" | "Non-Student" | null>(
+    status === "Student" || status === "Non-Student" ? status : null
+  );
+  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = async () => {
-    if (!selectedStatus) return;
-    
-    setIsLoading(true);
+  const handleStatusUpdate = async (newStatus: "Student" | "Non-Student") => {
+    setIsUpdating(true);
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ student_nonstudent: selectedStatus })
+        .update({ student_nonstudent: newStatus })
         .eq('id', profileId);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Student status updated successfully",
-      });
-      
+      setCurrentStatus(newStatus);
       setIsEditing(false);
+      toast({
+        title: "Status updated",
+        description: `Status changed to ${newStatus}`,
+      });
     } catch (error) {
-      console.error('Failed to update student status:', error);
+      console.error('Error updating status:', error);
       toast({
         title: "Error",
-        description: "Failed to update student status. Please try again.",
-        variant: "destructive",
+        description: "Failed to update status",
+        variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
-  const handleCancel = () => {
-    setSelectedStatus(status || '');
-    setIsEditing(false);
-  };
+  if (!currentStatus && !isOwnProfile) return null;
 
-  const getStatusDisplay = (status: string | null | undefined) => {
-    if (!status) return 'Not Set';
-    return status === 'Student' ? 'Student' : 'Non-Student';
-  };
-
-  const getStatusColor = (status: string | null | undefined) => {
-    if (!status) return 'bg-gray-100 text-gray-800';
-    return status === 'Student' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
-  };
-
-  if (!isOwnProfile) {
-    // Read-only view for other users
-    if (!status) return null;
-    
-    return (
-      <Badge variant="secondary" className={getStatusColor(status)}>
-        {getStatusDisplay(status)}
-      </Badge>
-    );
-  }
-
-  if (isEditing) {
+  if (isEditing && isOwnProfile) {
     return (
       <div className="flex items-center gap-2">
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+        <Select onValueChange={handleStatusUpdate} disabled={isUpdating}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
@@ -88,21 +64,12 @@ export function StudentStatusBadge({ status, profileId, isOwnProfile }: StudentS
           </SelectContent>
         </Select>
         <Button
+          variant="ghost"
           size="sm"
-          onClick={handleSave}
-          disabled={isLoading || !selectedStatus}
-          className="h-6 w-6 p-0"
+          onClick={() => setIsEditing(false)}
+          disabled={isUpdating}
         >
-          <Check className="h-3 w-3" />
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleCancel}
-          disabled={isLoading}
-          className="h-6 w-6 p-0"
-        >
-          <X className="h-3 w-3" />
+          Cancel
         </Button>
       </div>
     );
@@ -110,17 +77,22 @@ export function StudentStatusBadge({ status, profileId, isOwnProfile }: StudentS
 
   return (
     <div className="flex items-center gap-1">
-      <Badge variant="secondary" className={getStatusColor(status)}>
-        {getStatusDisplay(status)}
-      </Badge>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => setIsEditing(true)}
-        className="h-6 w-6 p-0 opacity-50 hover:opacity-100"
+      <Badge 
+        variant={currentStatus === "Student" ? "default" : "secondary"}
+        className="text-xs"
       >
-        <Edit3 className="h-3 w-3" />
-      </Button>
+        {currentStatus || "Not specified"}
+      </Badge>
+      {isOwnProfile && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsEditing(true)}
+          className="h-5 w-5 p-0"
+        >
+          <Edit2 className="h-3 w-3" />
+        </Button>
+      )}
     </div>
   );
 }
