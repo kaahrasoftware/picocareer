@@ -90,16 +90,16 @@ export function ResourceForm({ hubId, onSuccess, onCancel }: ResourceFormProps) 
   };
 
   const resourceTypeOptions = [
-    { id: "document", name: "Document" },
-    { id: "external_link", name: "Link" },
-    { id: "video", name: "Video" },
-    { id: "image", name: "Image" },
+    { value: "document", label: "Document" },
+    { value: "external_link", label: "Link" },
+    { value: "video", label: "Video" },
+    { value: "image", label: "Image" },
   ];
 
   const accessLevelOptions = [
-    { id: "members", name: "Members Only" },
-    { id: "public", name: "Public" },
-    { id: "admin", name: "Admin Only" },
+    { value: "members", label: "Members Only" },
+    { value: "public", label: "Public" },
+    { value: "admin", label: "Admin Only" },
   ];
 
   return (

@@ -42,6 +42,7 @@ import AdminEmailCampaigns from "../pages/AdminEmailCampaigns";
 import Partnerships from "../pages/Partnerships";
 import Careers from "../pages/Careers";
 import Mentees from "../pages/Mentees";
+import TokenDeductionDebug from "../pages/TokenDeductionDebug";
 
 export const router = createBrowserRouter([
   {
@@ -204,6 +205,10 @@ export const router = createBrowserRouter([
       {
         path: "admin/email-campaigns",
         element: <AdminEmailCampaigns />,
+      },
+      {
+        path: "debug/token-deduction",
+        element: <TokenDeductionDebug />,
       },
     ],
   },
