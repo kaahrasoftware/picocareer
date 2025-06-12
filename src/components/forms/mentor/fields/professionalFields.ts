@@ -19,7 +19,7 @@ export const professionalFields: FormFieldProps[] = [
   {
     name: "position",
     label: "Current Position",
-    type: "select-with-custom",
+    type: "dynamic-select",
     placeholder: "Select your current position",
     tableName: "careers",
     required: true
@@ -27,7 +27,7 @@ export const professionalFields: FormFieldProps[] = [
   {
     name: "company_id",
     label: "Company",
-    type: "select-with-custom",
+    type: "dynamic-select",
     placeholder: "Select your company",
     tableName: "companies",
     required: true

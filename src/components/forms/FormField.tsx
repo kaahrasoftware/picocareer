@@ -1,5 +1,6 @@
+
 import React from "react";
-import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,6 +33,7 @@ interface InputFieldProps {
   placeholder?: string;
   required?: boolean;
   type?: string;
+  description?: string;
 }
 
 interface TextAreaFieldProps {
@@ -40,12 +42,14 @@ interface TextAreaFieldProps {
   label: string;
   placeholder?: string;
   required?: boolean;
+  description?: string;
 }
 
 interface CheckboxFieldProps {
   name: string;
   control: any;
   label: string;
+  description?: string;
 }
 
 interface SelectFieldProps {
@@ -55,6 +59,7 @@ interface SelectFieldProps {
   placeholder?: string;
   options: { value: string; label: string; }[];
   required?: boolean;
+  description?: string;
 }
 
 interface DynamicSelectFieldProps {
@@ -64,9 +69,10 @@ interface DynamicSelectFieldProps {
   placeholder?: string;
   tableName: string;
   required?: boolean;
+  description?: string;
 }
 
-const InputField = ({ control, name, label, placeholder, required, type = "text" }: InputFieldProps) => (
+const InputField = ({ control, name, label, placeholder, required, type = "text", description }: InputFieldProps) => (
   <ShadcnFormField
     control={control}
     name={name}
@@ -78,13 +84,14 @@ const InputField = ({ control, name, label, placeholder, required, type = "text"
         <FormControl>
           <Input placeholder={placeholder} required={required} type={type} {...field} />
         </FormControl>
+        {description && <FormDescription>{description}</FormDescription>}
         <FormMessage />
       </FormItem>
     )}
   />
 );
 
-const TextAreaField = ({ control, name, label, placeholder, required }: TextAreaFieldProps) => (
+const TextAreaField = ({ control, name, label, placeholder, required, description }: TextAreaFieldProps) => (
   <ShadcnFormField
     control={control}
     name={name}
@@ -96,13 +103,14 @@ const TextAreaField = ({ control, name, label, placeholder, required }: TextArea
         <FormControl>
           <Textarea placeholder={placeholder} required={required} {...field} />
         </FormControl>
+        {description && <FormDescription>{description}</FormDescription>}
         <FormMessage />
       </FormItem>
     )}
   />
 );
 
-const CheckboxField = ({ control, name, label }: CheckboxFieldProps) => (
+const CheckboxField = ({ control, name, label, description }: CheckboxFieldProps) => (
   <ShadcnFormField
     control={control}
     name={name}
@@ -116,6 +124,7 @@ const CheckboxField = ({ control, name, label }: CheckboxFieldProps) => (
         </FormControl>
         <div className="space-y-1 leading-none">
           <FormLabel>{label}</FormLabel>
+          {description && <FormDescription>{description}</FormDescription>}
         </div>
         <FormMessage />
       </FormItem>
@@ -123,7 +132,7 @@ const CheckboxField = ({ control, name, label }: CheckboxFieldProps) => (
   />
 );
 
-const SelectField = ({ control, name, label, placeholder, options, required }: SelectFieldProps) => (
+const SelectField = ({ control, name, label, placeholder, options, required, description }: SelectFieldProps) => (
   <ShadcnFormField
     control={control}
     name={name}
@@ -146,13 +155,14 @@ const SelectField = ({ control, name, label, placeholder, options, required }: S
             ))}
           </SelectContent>
         </Select>
+        {description && <FormDescription>{description}</FormDescription>}
         <FormMessage />
       </FormItem>
     )}
   />
 );
 
-const DynamicSelectField = ({ control, name, label, placeholder, tableName, required }: DynamicSelectFieldProps) => {
+const DynamicSelectField = ({ control, name, label, placeholder, tableName, required, description }: DynamicSelectFieldProps) => {
   const { data: options = [] } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
@@ -163,6 +173,8 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
       } else if (tableName === 'careers') {
         selectQuery = 'id, title';
       } else if (tableName === 'schools') {
+        selectQuery = 'id, name';
+      } else if (tableName === 'companies') {
         selectQuery = 'id, name';
       }
       
@@ -198,6 +210,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
               placeholder={placeholder}
             />
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
@@ -205,32 +218,32 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
   );
 };
 
-export const FormField = ({ name, control, label, required, children, type, placeholder, options, tableName, component }: FormFieldProps) => {
+export const FormField = ({ name, control, label, required, children, type, placeholder, options, tableName, description, component }: FormFieldProps) => {
   // Handle component prop for backwards compatibility
   if (component) {
     const Component = component;
-    return <Component name={name} control={control} label={label} required={required} type={type} placeholder={placeholder} options={options} tableName={tableName} />;
+    return <Component name={name} control={control} label={label} required={required} type={type} placeholder={placeholder} options={options} tableName={tableName} description={description} />;
   }
 
   // Handle different field types based on props
   if (type === "textarea") {
-    return <TextAreaField control={control} name={name} label={label} placeholder={placeholder} required={required} />;
+    return <TextAreaField control={control} name={name} label={label} placeholder={placeholder} required={required} description={description} />;
   }
   
   if (type === "checkbox") {
-    return <CheckboxField control={control} name={name} label={label} />;
+    return <CheckboxField control={control} name={name} label={label} description={description} />;
   }
   
   if (type === "select" && options) {
-    return <SelectField control={control} name={name} label={label} placeholder={placeholder} options={options} required={required} />;
+    return <SelectField control={control} name={name} label={label} placeholder={placeholder} options={options} required={required} description={description} />;
   }
   
   if (type === "dynamic-select" && tableName) {
-    return <DynamicSelectField control={control} name={name} label={label} placeholder={placeholder} tableName={tableName} required={required} />;
+    return <DynamicSelectField control={control} name={name} label={label} placeholder={placeholder} tableName={tableName} required={required} description={description} />;
   }
   
   if (type && ["text", "email", "number", "password", "tel", "url", "datetime-local"].includes(type)) {
-    return <InputField control={control} name={name} label={label} placeholder={placeholder} required={required} type={type} />;
+    return <InputField control={control} name={name} label={label} placeholder={placeholder} required={required} type={type} description={description} />;
   }
 
   // Default custom field with children
@@ -244,6 +257,7 @@ export const FormField = ({ name, control, label, required, children, type, plac
             {label} {required && <span className="text-red-500">*</span>}
           </FormLabel>
           {children}
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}
