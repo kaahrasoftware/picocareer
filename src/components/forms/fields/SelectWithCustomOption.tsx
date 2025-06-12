@@ -57,6 +57,7 @@ export function SelectWithCustomOption({
       await onAddNew(newItemName.trim());
       setNewItemName("");
       setIsDialogOpen(false);
+      setSearch(""); // Clear search when adding new item
     } catch (error) {
       console.error("Error adding new item:", error);
     } finally {

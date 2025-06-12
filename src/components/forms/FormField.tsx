@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export interface FormFieldProps {
   name: string;
@@ -163,7 +164,9 @@ const SelectField = ({ control, name, label, placeholder, options, required, des
 );
 
 const DynamicSelectField = ({ control, name, label, placeholder, tableName, required, description }: DynamicSelectFieldProps) => {
-  const { data: options = [] } = useQuery({
+  const { toast } = useToast();
+  
+  const { data: options = [], refetch } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
       let selectQuery = 'id, title, name';
@@ -193,6 +196,87 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
     name: option.title || option.name
   }));
 
+  const handleAddNew = async (name: string): Promise<void> => {
+    try {
+      let insertData: any = {
+        status: 'Pending'
+      };
+
+      // Set the appropriate field based on table type
+      if (tableName === 'majors' || tableName === 'careers') {
+        insertData.title = name;
+        if (tableName === 'careers') {
+          insertData.description = `Custom position: ${name}`;
+        } else {
+          insertData.description = `Custom major: ${name}`;
+        }
+      } else {
+        insertData.name = name;
+      }
+
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .insert(insertData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Refetch the options to include the new item
+      await refetch();
+
+      // Auto-select the newly created item
+      const fieldOnChange = control._fields[name]?._f?.onChange;
+      if (fieldOnChange && data) {
+        fieldOnChange(data.id);
+      }
+
+      toast({
+        title: "Success",
+        description: `Successfully added new ${tableName === 'companies' ? 'company' : 
+                     tableName === 'schools' ? 'school' : 
+                     tableName === 'majors' ? 'major' : 'position'}.`,
+      });
+    } catch (error) {
+      console.error(`Failed to add new ${tableName}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to add new ${tableName}. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getAddNewLabel = () => {
+    switch (tableName) {
+      case 'companies':
+        return 'Add New Company';
+      case 'schools':
+        return 'Add New School';
+      case 'majors':
+        return 'Add New Major';
+      case 'careers':
+        return 'Add New Position';
+      default:
+        return 'Add New';
+    }
+  };
+
+  const getAddNewPlaceholder = () => {
+    switch (tableName) {
+      case 'companies':
+        return 'Enter company name';
+      case 'schools':
+        return 'Enter school name';
+      case 'majors':
+        return 'Enter major name';
+      case 'careers':
+        return 'Enter position title';
+      default:
+        return 'Enter name';
+    }
+  };
+
   return (
     <ShadcnFormField
       control={control}
@@ -208,6 +292,9 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
               onValueChange={field.onChange}
               options={formattedOptions}
               placeholder={placeholder}
+              addNewLabel={getAddNewLabel()}
+              addNewPlaceholder={getAddNewPlaceholder()}
+              onAddNew={handleAddNew}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
