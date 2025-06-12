@@ -5,7 +5,7 @@ export const educationFields: FormFieldProps[] = [
   {
     name: "school_id",
     label: "School",
-    type: "select-with-custom",
+    type: "dynamic-select",
     placeholder: "Select your school",
     tableName: "schools",
     required: true
@@ -13,7 +13,7 @@ export const educationFields: FormFieldProps[] = [
   {
     name: "academic_major_id",
     label: "Academic Major",
-    type: "select-with-custom",
+    type: "dynamic-select",
     placeholder: "Select your major",
     tableName: "majors",
     required: true
@@ -21,7 +21,16 @@ export const educationFields: FormFieldProps[] = [
   {
     name: "highest_degree",
     label: "Highest Degree",
-    type: "degree",
-    required: true
+    type: "select",
+    required: true,
+    options: [
+      { value: "No Degree", label: "No Degree" },
+      { value: "High School", label: "High School" },
+      { value: "Associate", label: "Associate" },
+      { value: "Bachelor", label: "Bachelor" },
+      { value: "Master", label: "Master" },
+      { value: "MD", label: "MD" },
+      { value: "PhD", label: "PhD" }
+    ]
   }
 ];

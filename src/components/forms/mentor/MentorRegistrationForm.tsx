@@ -11,6 +11,7 @@ import { ProfessionalSection } from "./sections/ProfessionalSection";
 import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialSection } from "./sections/SocialSection";
+import { processFormDataForSubmission } from "./utils/formDataProcessing";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -69,10 +70,10 @@ export function MentorRegistrationForm({
       tiktok_url: "",
       youtube_url: ""
     },
-    mode: "onChange" // Enable validation as fields change
+    mode: "onChange"
   });
 
-  // Handle submission, delegating to the passed onSubmit function
+  // Handle submission with form data processing
   const handleSubmit = async (data: FormValues) => {
     console.log('Form submission initiated with data:', { 
       email: data.email,
@@ -84,15 +85,18 @@ export function MentorRegistrationForm({
     
     if (!data.background_check_consent) {
       setFormError('You must consent to the background check to register as a mentor');
+      setSubmissionProgress(null);
       return;
     }
     
     try {
       setSubmissionProgress("Validating form data...");
-      // Additional client-side validation can be added here
+      
+      // Process form data to convert textarea fields to arrays
+      const processedData = processFormDataForSubmission(data);
       
       setSubmissionProgress("Uploading profile information...");
-      await onSubmit(data);
+      await onSubmit(processedData);
       setSubmissionProgress(null);
     } catch (error: any) {
       console.error('Form submission error:', error);
