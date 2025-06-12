@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import type { FormValues } from "./types";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useFormDebug } from "@/hooks/mentor/useFormDebug";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: FormValues) => Promise<void>;
@@ -49,7 +50,7 @@ export function MentorRegistrationForm({
       password: "",
       avatar_url: "",
       bio: "",
-      years_of_experience: 0,
+      years_of_experience: "0", // Changed to string to match schema transformation
       position: "",
       company_id: "",
       school_id: "",
@@ -71,6 +72,9 @@ export function MentorRegistrationForm({
     },
     mode: "onChange"
   });
+
+  // Add form debugging
+  useFormDebug(form);
 
   // Handle submission with form data processing
   const handleSubmit = async (data: FormValues) => {

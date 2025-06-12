@@ -11,7 +11,7 @@ export const mentorRegistrationSchema = z.object({
   
   // Professional Information
   bio: z.string().min(10, "Bio must be at least 10 characters"),
-  years_of_experience: z.number().min(0, "Years of experience must be 0 or greater"),
+  years_of_experience: z.string().transform((val) => parseInt(val) || 0).pipe(z.number().min(0, "Years of experience must be 0 or greater")),
   position: z.string().min(1, "Position is required"),
   company_id: z.string().min(1, "Company is required"),
   location: z.string().min(1, "Location is required"),

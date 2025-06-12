@@ -12,7 +12,7 @@ export const professionalFields: FormFieldProps[] = [
   {
     name: "years_of_experience",
     label: "Years of Experience",
-    type: "number",
+    type: "text",
     placeholder: "Enter your years of experience",
     required: true
   },
