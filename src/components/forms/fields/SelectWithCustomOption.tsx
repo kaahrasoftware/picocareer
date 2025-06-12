@@ -20,7 +20,7 @@ interface SelectWithCustomOptionProps {
   searchPlaceholder?: string;
   addNewLabel?: string;
   addNewPlaceholder?: string;
-  onAddNew?: (name: string) => Promise<string>;
+  onAddNew?: (name: string) => Promise<void>;
   className?: string;
   disabled?: boolean;
 }
@@ -54,11 +54,9 @@ export function SelectWithCustomOption({
     
     setIsAdding(true);
     try {
-      const newId = await onAddNew(newItemName.trim());
+      await onAddNew(newItemName.trim());
       setNewItemName("");
       setIsDialogOpen(false);
-      // Auto-select the newly added item
-      onValueChange(newId);
     } catch (error) {
       console.error("Error adding new item:", error);
     } finally {
@@ -66,19 +64,11 @@ export function SelectWithCustomOption({
     }
   };
 
-  const handleSelectChange = (selectedValue: string) => {
-    if (selectedValue === "add_new") {
-      setIsDialogOpen(true);
-    } else {
-      onValueChange(selectedValue);
-    }
-  };
-
   const selectedOption = options.find(option => option?.id === value);
 
   return (
     <div className={className}>
-      <Select value={value} onValueChange={handleSelectChange} disabled={disabled}>
+      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
         <SelectTrigger>
           <SelectValue placeholder={placeholder}>
             {selectedOption?.name}
@@ -119,59 +109,55 @@ export function SelectWithCustomOption({
           {/* Add New Button */}
           {onAddNew && (
             <div className="p-2 border-t">
-              <SelectItem value="add_new">
-                <div className="flex items-center">
-                  <Plus className="h-4 w-4 mr-2" />
-                  {addNewLabel}
-                </div>
-              </SelectItem>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {addNewLabel}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{addNewLabel}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="new-item-name">Name</Label>
+                      <Input
+                        id="new-item-name"
+                        placeholder={addNewPlaceholder}
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddNew();
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleAddNew} 
+                        disabled={!newItemName.trim() || isAdding}
+                        className="flex-1"
+                      >
+                        {isAdding ? "Adding..." : "Add"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsDialogOpen(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </SelectContent>
       </Select>
-
-      {/* Add New Dialog */}
-      {onAddNew && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{addNewLabel}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="new-item-name">Name</Label>
-                <Input
-                  id="new-item-name"
-                  placeholder={addNewPlaceholder}
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleAddNew();
-                    }
-                  }}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleAddNew} 
-                  disabled={!newItemName.trim() || isAdding}
-                  className="flex-1"
-                >
-                  {isAdding ? "Adding..." : "Add"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
