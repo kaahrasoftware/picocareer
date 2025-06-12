@@ -176,7 +176,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
     }
   });
 
-  const formattedOptions = options.map(option => ({
+  const formattedOptions = options.map((option: any) => ({
     id: option.id,
     name: option.title || option.name
   }));
