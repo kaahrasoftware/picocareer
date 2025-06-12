@@ -1,10 +1,12 @@
+
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { FormFields, ProfileFormProps, Degree } from "./types/form-types";
+import { FormFields, ProfileFormProps } from "./types/form-types";
+import { Degree } from "@/types/database/enums";
 import { useQuery } from "@tanstack/react-query";
 import { PersonalSection } from "./sections/PersonalSection";
 import { BioSection } from "./sections/BioSection";
@@ -60,7 +62,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
       company_id: profile.company_id || "",
       school_id: profile.school_id || "",
       academic_major_id: profile.academic_major_id || "",
-      highest_degree: (profile.highest_degree as Degree) || Degree["No Degree"],
+      highest_degree: (profile.highest_degree as keyof typeof Degree) || "NO_DEGREE",
     }
   });
 
@@ -156,7 +158,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
             majors={allMajors}
             schoolId={localProfile.school_id}
             academicMajorId={localProfile.academic_major_id}
-            highestDegree={localProfile.highest_degree as Degree}
+            highestDegree={localProfile.highest_degree as keyof typeof Degree}
           />
           
           <SkillsSection

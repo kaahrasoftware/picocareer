@@ -1,8 +1,6 @@
 
 import type { Profile } from "@/types/database/profiles";
 
-export type Degree = "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD";
-
 export type FormFields = {
   first_name: string;
   last_name: string;
@@ -20,7 +18,7 @@ export type FormFields = {
   company_id: string;
   school_id: string;
   academic_major_id: string;
-  highest_degree: Degree;
+  highest_degree: string;
 };
 
 export interface ProfileFormProps {

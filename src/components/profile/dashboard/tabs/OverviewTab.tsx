@@ -1,7 +1,9 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAllSchools } from "@/hooks/useAllReferenceData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, BookOpen, Calendar, Star, TrendingUp, Clock } from "lucide-react";
 import { StatsCard } from "../StatsCard";
@@ -199,7 +201,7 @@ export function OverviewTab() {
           title="Pending Reviews"
           value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
           subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
-          icon={<Video className="h-4 w-4" />}
+          icon={<Star className="h-4 w-4" />}
         />
       </div>
 
@@ -274,7 +276,10 @@ export function OverviewTab() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ActivityChart />
+            <ActivityChart 
+              data={monthlyStats || []}
+              title=""
+            />
           </CardContent>
         </Card>
 
