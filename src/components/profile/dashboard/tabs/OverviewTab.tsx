@@ -1,160 +1,59 @@
 
-import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Users, BookOpen, GraduationCap, Building, Calendar, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useAllSchools } from "@/hooks/useAllReferenceData";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Calendar, Star, TrendingUp, Clock } from "lucide-react";
-import { StatsCard } from "../StatsCard";
-import { ActivityChart } from "../ActivityChart";
-import { ContentDistributionChart } from "../ContentDistributionChart";
-import { ContentStatusCard } from "../ContentStatusCard";
 
 export function OverviewTab() {
   const { session } = useAuthSession();
-
-  // Fetch users statistics
-  const { data: userStats, refetch: refetchUsers } = useQuery({
-    queryKey: ['dashboard-users'],
+  
+  // Always call all hooks unconditionally
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
     queryFn: async () => {
-      const { data: mentors } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_type', 'mentor');
-
-      const { data: mentees } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_type', 'mentee');
-
-      return {
-        mentors: mentors?.length || 0,
-        mentees: mentees?.length || 0
-      };
-    }
-  });
-
-  // Fetch content statistics
-  const { data: contentStats, refetch: refetchContent } = useQuery({
-    queryKey: ['dashboard-content'],
-    queryFn: async () => {
-      const [blogs, videos, sessions, careers, majors, schools, notifications] = await Promise.all([
-        supabase.from('blogs').select('status'),
-        supabase.from('videos').select('status'),
-        supabase.from('mentor_sessions').select('scheduled_at'),
-        supabase.from('careers').select('status'),
-        supabase.from('majors').select('status'),
-        supabase.from('schools').select('status'),
-        supabase.from('notifications').select('read')
+      const [
+        profilesRes,
+        careersRes,
+        majorsRes,
+        schoolsRes,
+        feedRes,
+        opportunitiesRes
+      ] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact' }),
+        supabase.from('careers').select('id', { count: 'exact' }),
+        supabase.from('majors').select('id', { count: 'exact' }),
+        supabase.from('schools').select('id', { count: 'exact' }),
+        supabase.from('feed_content').select('id', { count: 'exact' }),
+        supabase.from('opportunities').select('id', { count: 'exact' })
       ]);
 
-      // Calculate total and upcoming sessions
-      const now = new Date();
-      const totalSessions = sessions.data?.length || 0;
-      const upcomingSessions = sessions.data?.filter(s => 
-        new Date(s.scheduled_at) > now
-      ).length || 0;
-      const completedSessions = totalSessions - upcomingSessions;
-
-      // Calculate total notifications and unread count
-      const totalNotifications = notifications.data?.length || 0;
-      const unreadNotifications = notifications.data?.filter(n => !n.read).length || 0;
-
       return {
-        blogs: {
-          total: blogs.data?.length || 0,
-          pending: blogs.data?.filter(b => b.status === 'Pending').length || 0,
-          approved: blogs.data?.filter(b => b.status === 'Approved').length || 0,
-          rejected: blogs.data?.filter(b => b.status === 'Rejected').length || 0
-        },
-        videos: {
-          total: videos.data?.length || 0,
-          pending: videos.data?.filter(v => v.status === 'Pending').length || 0,
-          approved: videos.data?.filter(v => v.status === 'Approved').length || 0,
-          rejected: videos.data?.filter(v => v.status === 'Rejected').length || 0
-        },
-        sessions: {
-          total: totalSessions,
-          upcoming: upcomingSessions,
-          completed: completedSessions
-        },
-        careers: {
-          total: careers.data?.length || 0,
-          pending: careers.data?.filter(c => c.status === 'Pending').length || 0,
-          approved: careers.data?.filter(c => c.status === 'Approved').length || 0,
-          rejected: careers.data?.filter(c => c.status === 'Rejected').length || 0
-        },
-        majors: {
-          total: majors.data?.length || 0,
-          pending: majors.data?.filter(m => m.status === 'Pending').length || 0,
-          approved: majors.data?.filter(m => m.status === 'Approved').length || 0,
-          rejected: majors.data?.filter(m => m.status === 'Rejected').length || 0
-        },
-        schools: {
-          total: schools.data?.length || 0,
-          pending: schools.data?.filter(s => s.status === 'Pending').length || 0,
-          approved: schools.data?.filter(s => s.status === 'Approved').length || 0,
-          rejected: schools.data?.filter(s => s.status === 'Rejected').length || 0
-        },
-        notifications: {
-          total: totalNotifications,
-          unread: unreadNotifications,
-          read: totalNotifications - unreadNotifications
-        }
+        profiles: profilesRes.count || 0,
+        careers: careersRes.count || 0,
+        majors: majorsRes.count || 0,
+        schools: schoolsRes.count || 0,
+        feedContent: feedRes.count || 0,
+        opportunities: opportunitiesRes.count || 0
       };
     }
   });
 
-  // Use the useAllSchools hook to get full count
-  const { data: allSchools } = useAllSchools();
-
-  // Monthly session data for chart
-  const { data: monthlyStats } = useQuery({
-    queryKey: ['dashboard-monthly'],
+  const { data: recentActivity, isLoading: activityLoading } = useQuery({
+    queryKey: ['recent-activity'],
     queryFn: async () => {
-      const { data: sessions } = await supabase
-        .from('mentor_sessions')
-        .select('scheduled_at')
-        .gte('scheduled_at', new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString());
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, created_at, user_type')
+        .order('created_at', { ascending: false })
+        .limit(5);
 
-      const monthlyData = Array.from({ length: 6 }, (_, i) => {
-        const date = new Date();
-        date.setMonth(date.getMonth() - i);
-        const month = date.toLocaleString('default', { month: 'short' });
-        const sessionsInMonth = sessions?.filter(s => 
-          new Date(s.scheduled_at).getMonth() === date.getMonth() &&
-          new Date(s.scheduled_at).getFullYear() === date.getFullYear()
-        );
-
-        return {
-          month,
-          total: sessionsInMonth?.length || 0,
-          completed: sessionsInMonth?.filter(s => new Date(s.scheduled_at) < new Date()).length || 0
-        };
-      }).reverse();
-
-      return monthlyData;
+      if (error) throw error;
+      return data || [];
     }
   });
 
-  const handleStatusChange = () => {
-    refetchContent();
-    refetchUsers();
-  };
-
-  if (!contentStats || !userStats) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  // Calculate the actual total number of schools
-  const schoolsTotal = allSchools?.length || contentStats?.schools.total || 0;
-
-  // Fetch mentoring sessions
   const { data: mentoringSessions = [], isLoading: isLoadingSessions } = useQuery({
     queryKey: ['mentoring-sessions', session?.user?.id],
     queryFn: async () => {
@@ -162,152 +61,160 @@ export function OverviewTab() {
       
       const { data, error } = await supabase
         .from('mentor_sessions')
-        .select('*')
-        .eq('mentor_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .select(`
+          id,
+          session_date,
+          status,
+          mentee_id,
+          mentor_id
+        `)
+        .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
+        .order('session_date', { ascending: false })
+        .limit(10);
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!session?.user?.id,
+    enabled: !!session?.user?.id
   });
 
-  const sessionsCount = Array.isArray(mentoringSessions) ? mentoringSessions.length : 0;
+  const statsCards = [
+    {
+      title: "Total Users",
+      value: stats?.profiles || 0,
+      icon: Users,
+      color: "text-blue-600"
+    },
+    {
+      title: "Careers",
+      value: stats?.careers || 0,
+      icon: Building,
+      color: "text-green-600"
+    },
+    {
+      title: "Academic Majors",
+      value: stats?.majors || 0,
+      icon: GraduationCap,
+      color: "text-purple-600"
+    },
+    {
+      title: "Schools",
+      value: stats?.schools || 0,
+      icon: Building,
+      color: "text-orange-600"
+    },
+    {
+      title: "Feed Content",
+      value: stats?.feedContent || 0,
+      icon: BookOpen,
+      color: "text-indigo-600"
+    },
+    {
+      title: "Opportunities",
+      value: stats?.opportunities || 0,
+      icon: TrendingUp,
+      color: "text-red-600"
+    }
+  ];
+
+  if (statsLoading || activityLoading || isLoadingSessions) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard
-          title="Total Users"
-          value={(userStats?.mentors || 0) + (userStats?.mentees || 0)}
-          subtitle={`${userStats?.mentors || 0} mentors, ${userStats?.mentees || 0} mentees`}
-          icon={<Users className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Total Content"
-          value={(contentStats?.blogs.total || 0) + (contentStats?.videos.total || 0)}
-          subtitle={`${contentStats?.blogs.total || 0} blogs, ${contentStats?.videos.total || 0} videos`}
-          icon={<BookOpen className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Total Sessions"
-          value={contentStats?.sessions.total || 0}
-          subtitle={`${contentStats?.sessions.completed || 0} completed sessions`}
-          icon={<Calendar className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Pending Reviews"
-          value={(contentStats?.blogs.pending || 0) + (contentStats?.videos.pending || 0)}
-          subtitle={`${contentStats?.blogs.pending || 0} blogs, ${contentStats?.videos.pending || 0} videos`}
-          icon={<Star className="h-4 w-4" />}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {statsCards.map((stat) => (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Additional Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ContentStatusCard
-          title="Careers"
-          total={contentStats?.careers.total || 0}
-          approved={contentStats?.careers.approved || 0}
-          pending={contentStats?.careers.pending || 0}
-          rejected={contentStats?.careers.rejected || 0}
-          tableName="careers"
-          itemId="career-id"
-          onStatusChange={handleStatusChange}
-        />
-        <ContentStatusCard
-          title="Majors"
-          total={contentStats?.majors.total || 0}
-          approved={contentStats?.majors.approved || 0}
-          pending={contentStats?.majors.pending || 0}
-          rejected={contentStats?.majors.rejected || 0}
-          tableName="majors"
-          itemId="major-id"
-          onStatusChange={handleStatusChange}
-        />
-        <ContentStatusCard
-          title="Schools"
-          total={schoolsTotal}
-          approved={contentStats?.schools.approved || 0}
-          pending={contentStats?.schools.pending || 0}
-          rejected={contentStats?.schools.rejected || 0}
-          tableName="schools"
-          itemId="school-id"
-          onStatusChange={handleStatusChange}
-        />
-        <ContentStatusCard
-          title="Notifications"
-          total={contentStats?.notifications.total || 0}
-          approved={contentStats?.notifications.read || 0}
-          pending={contentStats?.notifications.unread || 0}
-          rejected={0}
-          tableName="notifications"
-          itemId="notification-id"
-          onStatusChange={handleStatusChange}
-        />
-      </div>
-
-      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActivityChart 
-          data={monthlyStats || []}
-          title="Session Activity (Last 6 Months)"
-        />
-        <ContentDistributionChart
-          data={[
-            { name: 'Approved Blogs', value: contentStats?.blogs.approved || 0 },
-            { name: 'Pending Blogs', value: contentStats?.blogs.pending || 0 },
-            { name: 'Approved Videos', value: contentStats?.videos.approved || 0 },
-            { name: 'Pending Videos', value: contentStats?.videos.pending || 0 }
-          ]}
-          title="Content Distribution"
-        />
-      </div>
-
-      {/* Activity Overview */}
-      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Activity Overview
+              <Calendar className="h-5 w-5" />
+              Recent Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ActivityChart 
-              data={monthlyStats || []}
-              title=""
-            />
+            <div className="space-y-3">
+              {recentActivity && recentActivity.length > 0 ? (
+                recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">{activity.full_name || 'Unknown User'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Joined {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant="outline">
+                      {activity.user_type || 'User'}
+                    </Badge>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Recent Activity
+              <Users className="h-5 w-5" />
+              Your Sessions
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {sessionsCount > 0 ? (
-                mentoringSessions.slice(0, 3).map((session: any) => (
-                  <div key={session.id} className="flex items-center justify-between py-2 border-b last:border-0">
+            <div className="space-y-3">
+              {mentoringSessions && Array.isArray(mentoringSessions) && mentoringSessions.length > 0 ? (
+                mentoringSessions.slice(0, 5).map((session) => (
+                  <div key={session.id} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium">Mentoring Session</p>
+                      <p className="text-sm font-medium">
+                        Session #{session.id}
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(session.created_at).toLocaleDateString()}
+                        {new Date(session.session_date).toLocaleDateString()}
                       </p>
                     </div>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    <Badge 
+                      variant={session.status === 'completed' ? 'default' : 'secondary'}
+                    >
                       {session.status}
-                    </span>
+                    </Badge>
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">No recent activity</p>
+                <p className="text-sm text-muted-foreground">No sessions found</p>
               )}
             </div>
           </CardContent>

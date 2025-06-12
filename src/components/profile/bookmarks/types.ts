@@ -7,6 +7,7 @@ export interface CareerProfile {
   image_url?: string;
   industry?: string;
   profiles_count?: number;
+  bookmark_id?: string;
 }
 
 export interface MajorProfile {
@@ -38,6 +39,7 @@ export interface MajorProfile {
   majors_to_consider_switching_to?: string[];
   created_at: string;
   updated_at: string;
+  bookmark_id?: string;
 }
 
 export interface MentorProfile {
@@ -55,6 +57,7 @@ export interface MentorProfile {
   top_mentor?: boolean;
   company_name?: string;
   career_title?: string;
+  bookmark_id?: string;
 }
 
 export interface BookmarkedEntity {

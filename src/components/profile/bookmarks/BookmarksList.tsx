@@ -1,32 +1,29 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReactNode } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { StandardPagination } from "@/components/common/StandardPagination";
-import { EmptyState } from "@/components/scholarships/EmptyState";
-import { BookmarkedEntity, BookmarkType } from "./types";
-import { ProfileAvatar } from "@/components/ui/profile-avatar";
 
-interface BookmarksListProps<T extends BookmarkedEntity> {
+interface EmptyStateProps {
+  icon: ReactNode;
+  linkPath: string;
+  type: string;
+}
+
+interface BookmarksListProps<T> {
   bookmarks: T[];
   isLoading: boolean;
-  emptyStateProps: {
-    icon: React.ReactNode;
-    linkPath: string;
-    type: string;
-  };
+  emptyStateProps: EmptyStateProps;
   totalPages: number;
   currentPage: number;
   setPage: (page: number) => void;
   onViewDetails: (item: T) => void;
-  renderCard: (item: T, handleView: (item: T) => void) => React.ReactNode;
-  bookmarkType: BookmarkType;
+  renderCard: (item: T, handleView: (item: T) => void) => ReactNode;
+  bookmarkType: string;
 }
 
-export function BookmarksList<T extends BookmarkedEntity>({
+export function BookmarksList<T extends { id: string }>({
   bookmarks,
   isLoading,
   emptyStateProps,
@@ -39,43 +36,73 @@ export function BookmarksList<T extends BookmarkedEntity>({
 }: BookmarksListProps<T>) {
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
   if (bookmarks.length === 0) {
     return (
-      <Card className="text-center p-8 border-dashed bg-muted/30">
-        <div className="flex flex-col items-center gap-2">
-          <div className="bg-primary/10 p-3 rounded-full">
-            {emptyStateProps.icon}
-          </div>
-          <h3 className="font-semibold text-xl mt-2">No bookmarked {emptyStateProps.type}</h3>
-          <p className="text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-            You haven't bookmarked any {emptyStateProps.type} yet. When you find {emptyStateProps.type} you 
-            like, click the bookmark icon to save them here.
-          </p>
-          <Button asChild>
-            <Link to={bookmarkType === "major" ? "/program" : emptyStateProps.linkPath}>Browse {emptyStateProps.type}</Link>
+      <div className="text-center py-12">
+        {emptyStateProps.icon}
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No bookmarked {emptyStateProps.type}</h3>
+        <p className="mt-1 text-sm text-gray-500">
+          Start exploring {emptyStateProps.type} and bookmark the ones you're interested in.
+        </p>
+        <div className="mt-6">
+          <Button asChild variant="outline">
+            <Link to={emptyStateProps.linkPath}>
+              Explore {emptyStateProps.type}
+            </Link>
           </Button>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bookmarks.map((item) => renderCard(item, onViewDetails))}
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {bookmarks.map((bookmark) => renderCard(bookmark, onViewDetails))}
       </div>
-      
-      <StandardPagination 
-        currentPage={currentPage} 
-        totalPages={totalPages} 
-        onPageChange={setPage} 
-      />
-    </>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

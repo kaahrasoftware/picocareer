@@ -84,7 +84,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         position: data.position || null,
         company_id: data.company_id || null,
         years_of_experience: data.years_of_experience,
-        highest_degree: data.highest_degree,
+        highest_degree: data.highest_degree as "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD",
         skills: data.skills ? data.skills.split(",").map(s => s.trim()) : [],
         tools_used: data.tools_used ? data.tools_used.split(",").map(t => t.trim()) : [],
         keywords: data.keywords ? data.keywords.split(",").map(k => k.trim()) : [],
@@ -156,7 +156,7 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
             majors={allMajors}
             schoolId={localProfile.school_id}
             academicMajorId={localProfile.academic_major_id}
-            highestDegree={localProfile.highest_degree}
+            highestDegree={localProfile.highest_degree as "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD"}
           />
           
           <SkillsSection

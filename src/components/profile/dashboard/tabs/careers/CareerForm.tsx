@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FormField } from '@/components/forms/FormField';
-import { careerFormFields } from '@/components/forms/career/CareerFormFields';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthSession } from '@/hooks/useAuthSession';
@@ -19,7 +18,6 @@ const careerSchema = z.object({
   salary_range: z.string().optional(),
   featured: z.boolean().default(false),
   status: z.enum(['Pending', 'Approved', 'Rejected']).default('Pending'),
-  // Add other fields as needed
 });
 
 type CareerFormData = z.infer<typeof careerSchema>;
@@ -60,7 +58,6 @@ export function CareerForm({ career, onSuccess, onCancel }: CareerFormProps) {
     setIsLoading(true);
     try {
       if (career) {
-        // Update existing career
         const { error } = await supabase
           .from('careers')
           .update({
@@ -82,7 +79,6 @@ export function CareerForm({ career, onSuccess, onCancel }: CareerFormProps) {
           description: 'Career updated successfully',
         });
       } else {
-        // Create new career
         const { error } = await supabase
           .from('careers')
           .insert({
@@ -130,70 +126,104 @@ export function CareerForm({ career, onSuccess, onCancel }: CareerFormProps) {
           </TabsList>
 
           <TabsContent value="basic" className="space-y-4">
-            <FormField
+            <Controller
               control={form.control}
               name="title"
-              label="Career Title"
-              type="text"
-              placeholder="e.g., Software Engineer"
-              required
+              render={({ field }) => (
+                <FormField
+                  name="title"
+                  field={field}
+                  label="Career Title"
+                  type="text"
+                  placeholder="e.g., Software Engineer"
+                  required
+                />
+              )}
             />
-            <FormField
+            <Controller
               control={form.control}
               name="description"
-              label="Description"
-              type="textarea"
-              placeholder="Detailed description of the career path"
-              required
+              render={({ field }) => (
+                <FormField
+                  name="description"
+                  field={field}
+                  label="Description"
+                  type="textarea"
+                  placeholder="Detailed description of the career path"
+                  required
+                />
+              )}
             />
-            <FormField
+            <Controller
               control={form.control}
               name="industry"
-              label="Industry"
-              type="text"
-              placeholder="e.g., Technology, Healthcare"
+              render={({ field }) => (
+                <FormField
+                  name="industry"
+                  field={field}
+                  label="Industry"
+                  type="text"
+                  placeholder="e.g., Technology, Healthcare"
+                />
+              )}
             />
-            <FormField
+            <Controller
               control={form.control}
               name="salary_range"
-              label="Salary Range"
-              type="text"
-              placeholder="e.g., $70,000 - $120,000"
+              render={({ field }) => (
+                <FormField
+                  name="salary_range"
+                  field={field}
+                  label="Salary Range"
+                  type="text"
+                  placeholder="e.g., $70,000 - $120,000"
+                />
+              )}
             />
           </TabsContent>
 
           <TabsContent value="requirements" className="space-y-4">
-            {/* Add education, skills, tools fields here */}
             <div className="text-center py-8 text-muted-foreground">
               Additional requirement fields will be added here
             </div>
           </TabsContent>
 
           <TabsContent value="details" className="space-y-4">
-            {/* Add work environment, job outlook fields here */}
             <div className="text-center py-8 text-muted-foreground">
               Career detail fields will be added here
             </div>
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
-            <FormField
+            <Controller
               control={form.control}
               name="featured"
-              label="Featured Career"
-              type="checkbox"
-              description="Check if this career should be featured"
+              render={({ field }) => (
+                <FormField
+                  name="featured"
+                  field={field}
+                  label="Featured Career"
+                  type="checkbox"
+                  description="Check if this career should be featured"
+                />
+              )}
             />
-            <FormField
+            <Controller
               control={form.control}
               name="status"
-              label="Status"
-              type="select"
-              options={[
-                { id: 'Pending', title: 'Pending' },
-                { id: 'Approved', title: 'Approved' },
-                { id: 'Rejected', title: 'Rejected' }
-              ]}
+              render={({ field }) => (
+                <FormField
+                  name="status"
+                  field={field}
+                  label="Status"
+                  type="select"
+                  options={[
+                    { value: 'Pending', label: 'Pending' },
+                    { value: 'Approved', label: 'Approved' },
+                    { value: 'Rejected', label: 'Rejected' }
+                  ]}
+                />
+              )}
             />
           </TabsContent>
         </Tabs>
