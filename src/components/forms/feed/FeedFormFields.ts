@@ -1,3 +1,4 @@
+
 import { FormFieldProps } from "@/components/forms/FormField";
 import { z } from "zod";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
@@ -104,7 +105,7 @@ const documentFields: FormFieldProps[] = [
     name: "document_type",
     label: "Document Type",
     type: "select",
-    options: DOCUMENT_TYPES.map(type => ({ id: type.value, name: type.label })),
+    options: DOCUMENT_TYPES,
     dependsOn: "resource_type",
     required: true,
   },
@@ -193,5 +194,5 @@ const schools = [
   { id: 3, name: "Harvard University" },
 ];
 
-const formattedMajors = majors.map(major => ({ value: major.id, label: major.title }));
-const formattedSchools = schools.map(school => ({ value: school.id, label: school.name }));
+const formattedMajors = majors.map(major => ({ value: major.id.toString(), label: major.title }));
+const formattedSchools = schools.map(school => ({ value: school.id.toString(), label: school.name }));

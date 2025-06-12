@@ -1,4 +1,4 @@
-import { Home } from "@/pages/Home";
+import Index from "@/pages/Index";
 import { Profile } from "@/pages/Profile";
 import { Pricing } from "@/pages/Pricing";
 import { Contact } from "@/pages/Contact";
@@ -24,13 +24,13 @@ import { CommunityPost } from "@/pages/CommunityPost";
 import { CommunityCreate } from "@/pages/CommunityCreate";
 import { CommunityCategory } from "@/pages/CommunityCategory";
 import { Feed } from "@/pages/Feed";
-import { TokenDeductionTest } from "@/pages/TokenDeductionTest";
+import TokenDeductionTest from "@/pages/TokenDeductionTest";
 
 export const router = {
   routes: [
     {
       path: "/",
-      element: <Home />,
+      element: <Index />,
     },
     {
       path: "/profile",

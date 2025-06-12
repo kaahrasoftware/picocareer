@@ -2,7 +2,7 @@
 import React from 'react';
 import { TokenDeductionDebugger } from '@/components/debug/TokenDeductionDebugger';
 
-export default function TokenDeductionTest() {
+const TokenDeductionTest = () => {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
@@ -15,4 +15,6 @@ export default function TokenDeductionTest() {
       <TokenDeductionDebugger />
     </div>
   );
-}
+};
+
+export default TokenDeductionTest;
