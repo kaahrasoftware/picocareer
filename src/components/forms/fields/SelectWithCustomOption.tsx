@@ -20,7 +20,7 @@ interface SelectWithCustomOptionProps {
   searchPlaceholder?: string;
   addNewLabel?: string;
   addNewPlaceholder?: string;
-  onAddNew?: (name: string) => Promise<string>;
+  onAddNew?: (name: string) => Promise<void>;
   className?: string;
   disabled?: boolean;
 }
@@ -54,10 +54,7 @@ export function SelectWithCustomOption({
     
     setIsAdding(true);
     try {
-      const newId = await onAddNew(newItemName.trim());
-      if (newId) {
-        onValueChange(newId);
-      }
+      await onAddNew(newItemName.trim());
       setNewItemName("");
       setIsDialogOpen(false);
     } catch (error) {

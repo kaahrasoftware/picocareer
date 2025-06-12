@@ -6,9 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 export interface FormFieldProps {
   name: string;
@@ -164,9 +163,6 @@ const SelectField = ({ control, name, label, placeholder, options, required, des
 );
 
 const DynamicSelectField = ({ control, name, label, placeholder, tableName, required, description }: DynamicSelectFieldProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
   const { data: options = [] } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
@@ -197,91 +193,6 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
     name: option.title || option.name
   }));
 
-  const handleAddNew = async (newName: string): Promise<string> => {
-    try {
-      let insertData: any = {
-        status: 'Pending'
-      };
-
-      // Customize insertion based on table type
-      if (tableName === 'majors' || tableName === 'careers') {
-        insertData.title = newName;
-        if (tableName === 'majors') {
-          insertData.description = `Custom major: ${newName}`;
-        } else {
-          insertData.description = `Custom position: ${newName}`;
-        }
-      } else {
-        insertData.name = newName;
-      }
-
-      const { data, error } = await supabase
-        .from(tableName as any)
-        .insert(insertData)
-        .select('id')
-        .single();
-
-      if (error) throw error;
-
-      // Show success message
-      const entityType = tableName === 'companies' ? 'company' : 
-                        tableName === 'schools' ? 'school' : 
-                        tableName === 'majors' ? 'major' : 'position';
-      
-      toast({
-        title: "Success",
-        description: `Successfully added new ${entityType}. It will be reviewed and approved.`,
-      });
-
-      // Invalidate the query to refetch options
-      queryClient.invalidateQueries({ queryKey: [tableName] });
-
-      // Return the new option ID so it can be selected
-      return data?.id || '';
-    } catch (error) {
-      console.error(`Failed to add new ${tableName}:`, error);
-      toast({
-        title: "Error",
-        description: `Failed to add new ${tableName}. Please try again.`,
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-
-  // Get customized labels and placeholders
-  const getLabels = () => {
-    switch (tableName) {
-      case 'companies':
-        return {
-          addNewLabel: 'Add New Company',
-          addNewPlaceholder: 'Enter company name'
-        };
-      case 'schools':
-        return {
-          addNewLabel: 'Add New School',
-          addNewPlaceholder: 'Enter school name'
-        };
-      case 'majors':
-        return {
-          addNewLabel: 'Add New Major',
-          addNewPlaceholder: 'Enter major name'
-        };
-      case 'careers':
-        return {
-          addNewLabel: 'Add New Position',
-          addNewPlaceholder: 'Enter position title'
-        };
-      default:
-        return {
-          addNewLabel: 'Add New',
-          addNewPlaceholder: 'Enter name'
-        };
-    }
-  };
-
-  const { addNewLabel, addNewPlaceholder } = getLabels();
-
   return (
     <ShadcnFormField
       control={control}
@@ -297,9 +208,6 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
               onValueChange={field.onChange}
               options={formattedOptions}
               placeholder={placeholder}
-              addNewLabel={addNewLabel}
-              addNewPlaceholder={addNewPlaceholder}
-              onAddNew={handleAddNew}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
