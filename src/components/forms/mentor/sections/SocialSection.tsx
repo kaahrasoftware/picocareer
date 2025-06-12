@@ -1,14 +1,16 @@
+
+import { Controller } from "react-hook-form";
 import { FormField } from "@/components/forms/FormField";
 import { Card } from "@/components/ui/card";
 import { Control } from "react-hook-form";
 import { FormValues } from "../types";
+import { socialFields } from "../fields/socialFields";
 
 interface SocialSectionProps {
   control: Control<FormValues>;
-  fields: any[];
 }
 
-export function SocialSection({ control, fields }: SocialSectionProps) {
+export function SocialSection({ control }: SocialSectionProps) {
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Social Links</h2>
@@ -16,11 +18,21 @@ export function SocialSection({ control, fields }: SocialSectionProps) {
         While social links are optional, we highly recommend adding them to enhance your mentor profile and build trust with potential mentees.
       </p>
       <div className="grid gap-6 sm:grid-cols-2">
-        {fields.map((field) => (
-          <FormField
+        {socialFields.map((field) => (
+          <Controller
             key={field.name}
             control={control}
-            {...field}
+            name={field.name as keyof FormValues}
+            render={({ field: controllerField }) => (
+              <FormField
+                field={controllerField}
+                label={field.label}
+                type={field.type}
+                placeholder={field.placeholder}
+                description={field.description}
+                required={field.required}
+              />
+            )}
           />
         ))}
       </div>

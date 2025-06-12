@@ -1,23 +1,35 @@
+
+import { Controller } from "react-hook-form";
 import { FormField } from "@/components/forms/FormField";
 import { Card } from "@/components/ui/card";
 import { Control } from "react-hook-form";
 import { FormValues } from "../types";
+import { personalFields } from "../fields/personalFields";
 
 interface PersonalInfoSectionProps {
   control: Control<FormValues>;
-  fields: any[];
 }
 
-export function PersonalInfoSection({ control, fields }: PersonalInfoSectionProps) {
+export function PersonalInfoSection({ control }: PersonalInfoSectionProps) {
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
       <div className="grid gap-6 sm:grid-cols-2">
-        {fields.map((field) => (
-          <FormField
+        {personalFields.map((field) => (
+          <Controller
             key={field.name}
             control={control}
-            {...field}
+            name={field.name as keyof FormValues}
+            render={({ field: controllerField }) => (
+              <FormField
+                field={controllerField}
+                label={field.label}
+                type={field.type}
+                placeholder={field.placeholder}
+                description={field.description}
+                required={field.required}
+              />
+            )}
           />
         ))}
       </div>

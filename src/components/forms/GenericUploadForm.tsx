@@ -1,5 +1,5 @@
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -128,20 +128,21 @@ export function GenericUploadForm({
             );
           }
           return (
-            <FormField
+            <Controller
               key={field.name}
               control={form.control}
               name={field.name}
-              label={field.label}
-              type={field.type}
-              placeholder={field.placeholder}
-              description={field.description}
-              required={field.required}
-              options={field.options}
-              tableName={field.tableName}
-              bucket={field.bucket}
-              dependsOn={field.dependsOn}
-              watch={form.watch}
+              render={({ field: controllerField }) => (
+                <FormField
+                  field={controllerField}
+                  label={field.label}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  description={field.description}
+                  required={field.required}
+                  options={field.options}
+                />
+              )}
             />
           );
         })}

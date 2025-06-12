@@ -38,7 +38,7 @@ interface SwitchFieldProps extends BaseFieldProps {
   type: "switch";
 }
 
-type FormFieldProps = TextFieldProps | TextareaFieldProps | SelectFieldProps | CheckboxFieldProps | SwitchFieldProps;
+export type FormFieldProps = TextFieldProps | TextareaFieldProps | SelectFieldProps | CheckboxFieldProps | SwitchFieldProps;
 
 export function FormField(props: FormFieldProps) {
   const { field, label, description, required, placeholder, disabled } = props;

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -193,119 +193,174 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
+          <Controller
             control={form.control}
             name="first_name"
-            label="First Name"
-            type="text"
-            placeholder="Enter your first name"
-            required
+            render={({ field }) => (
+              <FormField
+                field={field}
+                label="First Name"
+                type="text"
+                placeholder="Enter your first name"
+                required
+              />
+            )}
           />
           
-          <FormField
+          <Controller
             control={form.control}
             name="last_name"
-            label="Last Name"
-            type="text"
-            placeholder="Enter your last name"
-            required
+            render={({ field }) => (
+              <FormField
+                field={field}
+                label="Last Name"
+                type="text"
+                placeholder="Enter your last name"
+                required
+              />
+            )}
           />
         </div>
 
-        <FormField
+        <Controller
           control={form.control}
           name="email"
-          label="Email"
-          type="email"
-          placeholder="Enter your email address"
-          required
+          render={({ field }) => (
+            <FormField
+              field={field}
+              label="Email"
+              type="email"
+              placeholder="Enter your email address"
+              required
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="student_or_professional"
-          label="Current Status"
-          type="select"
-          placeholder="Select your current status"
-          options={studentOrProfessionalOptions}
-          required
+          render={({ field }) => (
+            <FormField
+              field={field}
+              label="Current Status"
+              type="select"
+              placeholder="Select your current status"
+              options={studentOrProfessionalOptions}
+              required
+            />
+          )}
         />
 
         {(watchStudentOrProfessional?.includes("Student") || watchStudentOrProfessional === "Recent Graduate") && (
           <>
-            <FormField
+            <Controller
               control={form.control}
               name="current academic field/position"
-              label="Academic Field/Major"
-              type="select"
-              placeholder="Select your academic field"
-              options={formattedMajors}
-              required
+              render={({ field }) => (
+                <FormField
+                  field={field}
+                  label="Academic Field/Major"
+                  type="select"
+                  placeholder="Select your academic field"
+                  options={formattedMajors}
+                  required
+                />
+              )}
             />
             
-            <FormField
+            <Controller
               control={form.control}
               name="current school/company"
-              label="Current School"
-              type="select"
-              placeholder="Select your school"
-              options={formattedSchools}
+              render={({ field }) => (
+                <FormField
+                  field={field}
+                  label="Current School"
+                  type="select"
+                  placeholder="Select your school"
+                  options={formattedSchools}
+                />
+              )}
             />
           </>
         )}
 
         {watchStudentOrProfessional === "Working Professional" && (
           <>
-            <FormField
+            <Controller
               control={form.control}
               name="current academic field/position"
-              label="Current Position/Role"
-              type="select"
-              placeholder="Select your career field"
-              options={formattedCareers}
-              required
+              render={({ field }) => (
+                <FormField
+                  field={field}
+                  label="Current Position/Role"
+                  type="select"
+                  placeholder="Select your career field"
+                  options={formattedCareers}
+                  required
+                />
+              )}
             />
             
-            <FormField
+            <Controller
               control={form.control}
               name="current school/company"
-              label="Current Company"
-              type="select"
-              placeholder="Select your company"
-              options={formattedCompanies}
+              render={({ field }) => (
+                <FormField
+                  field={field}
+                  label="Current Company"
+                  type="select"
+                  placeholder="Select your company"
+                  options={formattedCompanies}
+                />
+              )}
             />
           </>
         )}
 
         {(watchStudentOrProfessional === "Career Changer" || watchStudentOrProfessional === "Other") && (
-          <FormField
+          <Controller
             control={form.control}
             name="current academic field/position"
-            label="Current Field/Position"
-            type="text"
-            placeholder="Describe your current situation"
-            required
+            render={({ field }) => (
+              <FormField
+                field={field}
+                label="Current Field/Position"
+                type="text"
+                placeholder="Describe your current situation"
+                required
+              />
+            )}
           />
         )}
 
-        <FormField
+        <Controller
           control={form.control}
           name="country"
-          label="Country"
-          type="select"
-          placeholder="Select your country"
-          options={countryOptions}
-          required
+          render={({ field }) => (
+            <FormField
+              field={field}
+              label="Country"
+              type="select"
+              placeholder="Select your country"
+              options={countryOptions}
+              required
+            />
+          )}
         />
 
-        <FormField
+        <Controller
           control={form.control}
           name="where did you hear about us"
-          label="How did you hear about us?"
-          type="select"
-          placeholder="Select how you heard about us"
-          options={hearAboutUsOptions}
-          required
+          render={({ field }) => (
+            <FormField
+              field={field}
+              label="How did you hear about us?"
+              type="select"
+              placeholder="Select how you heard about us"
+              options={hearAboutUsOptions}
+              required
+            />
+          )}
         />
 
         <Button type="submit" disabled={isSubmitting} className="w-full">

@@ -1,5 +1,5 @@
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -114,18 +114,6 @@ export function MentorRegistrationForm({
     }
   };
 
-  // Get the field groups from mentorFormFields
-  const personalFields = mentorFormFields.filter(field => 
-    ['first_name', 'last_name', 'email', 'avatar_url'].includes(field.name));
-  const professionalFields = mentorFormFields.filter(field => 
-    ['bio', 'years_of_experience', 'position', 'company_id', 'location', 'languages'].includes(field.name));
-  const educationFields = mentorFormFields.filter(field => 
-    ['school_id', 'academic_major_id'].includes(field.name));
-  const skillsFields = mentorFormFields.filter(field => 
-    ['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(field.name));
-  const socialFields = mentorFormFields.filter(field => 
-    ['linkedin_url', 'github_url', 'website_url', 'X_url', 'facebook_url', 'instagram_url', 'tiktok_url', 'youtube_url'].includes(field.name));
-
   // Check if form has any validation errors
   const formHasErrors = Object.keys(form.formState.errors).length > 0;
 
@@ -160,45 +148,53 @@ export function MentorRegistrationForm({
           </Alert>
         )}
         
-        <PersonalInfoSection control={form.control} fields={personalFields} />
+        <PersonalInfoSection control={form.control} />
         
         {/* Show password field only for new users who aren't logged in */}
         {!session && (
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Account Information</h2>
-            <FormField
+            <Controller
               control={form.control}
               name="password"
-              label="Password"
-              type="text"
-              description="Create a secure password with at least 8 characters, including one lowercase letter, one uppercase letter, and one number."
-              required={true}
+              render={({ field }) => (
+                <FormField
+                  field={field}
+                  label="Password"
+                  type="text"
+                  description="Create a secure password with at least 8 characters, including one lowercase letter, one uppercase letter, and one number."
+                  required={true}
+                />
+              )}
             />
           </Card>
         )}
 
         <ProfessionalSection 
-          control={form.control} 
-          fields={professionalFields}
+          control={form.control}
           careers={careers}
           companies={companies}
         />
         <EducationSection 
-          control={form.control} 
-          fields={educationFields}
+          control={form.control}
           schools={schools}
           majors={majors}
         />
-        <SkillsSection control={form.control} fields={skillsFields} />
-        <SocialSection control={form.control} fields={socialFields} />
+        <SkillsSection control={form.control} />
+        <SocialSection control={form.control} />
 
         <Card className="p-6">
-          <FormField
+          <Controller
             control={form.control}
             name="background_check_consent"
-            type="checkbox"
-            label="I consent to a background check"
-            description="By checking this box, you agree to allow us to conduct a background check using the information provided above."
+            render={({ field }) => (
+              <FormField
+                field={field}
+                type="checkbox"
+                label="I consent to a background check"
+                description="By checking this box, you agree to allow us to conduct a background check using the information provided above."
+              />
+            )}
           />
         </Card>
 

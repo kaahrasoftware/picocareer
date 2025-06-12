@@ -1,23 +1,35 @@
+
+import { Controller } from "react-hook-form";
 import { FormField } from "@/components/forms/FormField";
 import { Card } from "@/components/ui/card";
 import { Control } from "react-hook-form";
 import { FormValues } from "../types";
+import { skillsFields } from "../fields/skillsFields";
 
 interface SkillsSectionProps {
   control: Control<FormValues>;
-  fields: any[];
 }
 
-export function SkillsSection({ control, fields }: SkillsSectionProps) {
+export function SkillsSection({ control }: SkillsSectionProps) {
   return (
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Skills & Expertise</h2>
       <div className="space-y-6">
-        {fields.map((field) => (
-          <FormField
+        {skillsFields.map((field) => (
+          <Controller
             key={field.name}
             control={control}
-            {...field}
+            name={field.name as keyof FormValues}
+            render={({ field: controllerField }) => (
+              <FormField
+                field={controllerField}
+                label={field.label}
+                type={field.type}
+                placeholder={field.placeholder}
+                description={field.description}
+                required={field.required}
+              />
+            )}
           />
         ))}
       </div>
