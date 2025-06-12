@@ -10,7 +10,7 @@ import { ImageUpload } from "./ImageUpload";
 
 interface BaseFieldProps {
   name: string;
-  field: any;
+  field?: any; // Make field optional for field definition files
   label: string;
   description?: string;
   required?: boolean;
@@ -83,6 +83,11 @@ export type FormFieldProps =
 
 export function FormField(props: FormFieldProps) {
   const { field, label, description, required, placeholder, disabled } = props;
+
+  // If no field is provided, return null (for field definition files)
+  if (!field) {
+    return null;
+  }
 
   const renderField = () => {
     switch (props.type) {
