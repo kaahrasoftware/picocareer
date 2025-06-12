@@ -16,6 +16,7 @@ interface Profile {
   academic_major: string | null;
   school_name: string | null;
   position: string | null;
+  career_title?: string | null;
   company_name: string | null;
   skills: string[] | null;
   bio?: string;
@@ -75,7 +76,7 @@ export function ProfileHeader({
   };
 
   return (
-    <div className="bg-background/80 backdrop-blur-sm border rounded-lg p-4">
+    <div className="bg-background/80 backdrop-blur-sm border rounded-lg p-3">
       <div className="flex items-start gap-4">
         {/* Left Section - Avatar */}
         <div className="flex-shrink-0">
@@ -118,9 +119,9 @@ export function ProfileHeader({
               </div>
             </div>
             
-            {(profile.position || profile.academic_major) && (
+            {(profile.career_title || profile.position || profile.academic_major) && (
               <p className="text-sm text-muted-foreground">
-                {profile.position || profile.academic_major}
+                {profile.career_title || profile.position || profile.academic_major}
                 {(profile.company_name || profile.school_name) && (
                   <span> at {profile.company_name || profile.school_name}</span>
                 )}
