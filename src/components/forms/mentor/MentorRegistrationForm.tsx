@@ -1,3 +1,4 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -53,7 +54,6 @@ export function MentorRegistrationForm({
       company_id: "",
       school_id: "",
       academic_major_id: "",
-      highest_degree: "",
       location: "",
       languages: "",
       skills: "",
@@ -120,7 +120,7 @@ export function MentorRegistrationForm({
   const professionalFields = mentorFormFields.filter(field => 
     ['bio', 'years_of_experience', 'position', 'company_id', 'location', 'languages'].includes(field.name));
   const educationFields = mentorFormFields.filter(field => 
-    ['school_id', 'academic_major_id', 'highest_degree'].includes(field.name));
+    ['school_id', 'academic_major_id'].includes(field.name));
   const skillsFields = mentorFormFields.filter(field => 
     ['skills', 'tools_used', 'keywords', 'fields_of_interest'].includes(field.name));
   const socialFields = mentorFormFields.filter(field => 

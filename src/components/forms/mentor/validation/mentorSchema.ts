@@ -20,7 +20,6 @@ export const mentorRegistrationSchema = z.object({
   company_id: z.string().min(1, "Company is required"),
   school_id: z.string().min(1, "School is required"),
   academic_major_id: z.string().min(1, "Academic major is required"),
-  highest_degree: z.string().min(1, "Highest degree is required"),
   location: z.string().min(1, "Location is required"),
   skills: z.string().min(1, "Skills are required"),
   tools_used: z.string().min(1, "Tools and technologies are required"),
