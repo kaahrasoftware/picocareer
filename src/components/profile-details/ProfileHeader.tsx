@@ -1,12 +1,13 @@
+
 import React from "react";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
-import { ProfileStats } from "@/components/profile/ProfileStats";
 import { SkillsList } from "@/components/profile/SkillsList";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Calendar, Globe, MessageCircle, UserPlus, Share2, Edit3, CheckCircle, Clock } from "lucide-react";
+import { MapPin, Calendar, Globe, Share2, CheckCircle, Clock } from "lucide-react";
 import { StudentStatusBadge } from "./StudentStatusBadge";
+
 interface Profile {
   id: string;
   full_name: string;
@@ -27,45 +28,43 @@ interface Profile {
   website_url?: string;
   student_nonstudent?: string | null;
 }
+
 interface ProfileHeaderProps {
   profile: Profile | null;
   session?: any;
   onShare?: () => void;
 }
+
 export function ProfileHeader({
   profile,
   onShare
 }: ProfileHeaderProps) {
-  const {
-    session
-  } = useAuthSession();
+  const { session } = useAuthSession();
+
   if (!profile) {
-    return <div className="bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="container py-6 mt-20">
-          <div className="animate-pulse">
-            <div className="flex items-start gap-6 mb-6">
-              <div className="w-24 h-24 bg-muted rounded-full" />
-              <div className="flex-1 space-y-3">
-                <div className="h-8 bg-muted rounded w-1/2" />
-                <div className="h-5 bg-muted rounded w-1/3" />
-                <div className="h-4 bg-muted rounded w-2/3" />
-              </div>
-            </div>
+    return (
+      <div className="animate-pulse">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-16 h-16 bg-muted rounded-full" />
+          <div className="flex-1 space-y-2">
+            <div className="h-6 bg-muted rounded w-1/2" />
+            <div className="h-4 bg-muted rounded w-1/3" />
+            <div className="h-3 bg-muted rounded w-2/3" />
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
+
   const isOwnProfile = session?.user?.id === profile.id;
   const isMentor = profile.user_type === 'mentor';
 
-  // Determine primary and secondary display text
-  const primaryText = profile.position || profile.academic_major || "No position/major set";
-  const secondaryText = profile.position ? profile.company_name || "No company set" : profile.school_name || "No school set";
   const handleAvatarUpdate = (url: string) => {
     if (profile) {
       profile.avatar_url = url;
     }
   };
+
   const getMemberSince = () => {
     if (!profile.created_at) return null;
     const date = new Date(profile.created_at);
@@ -74,108 +73,124 @@ export function ProfileHeader({
       year: 'numeric'
     });
   };
-  return <div className="bg-gradient-to-br from-background via-background/95 to-muted/30 backdrop-blur-sm border-b border-border">
-      <div className="container py-8 mt-20">
-        {/* Cover/Banner Area */}
-        
-        
-        {/* Main Profile Content */}
-        <div className="relative -mt-16 bg-background/80 backdrop-blur-md rounded-xl border shadow-lg p-6 py-[20px] my-[10px]">
-          <div className="flex flex-col lg:flex-row items-start gap-6">
+
+  return (
+    <div className="bg-background/80 backdrop-blur-sm border rounded-lg p-4">
+      <div className="flex items-start gap-4">
+        {/* Left Section - Avatar */}
+        <div className="flex-shrink-0">
+          <div className="relative">
+            <ProfileAvatar 
+              avatarUrl={profile.avatar_url} 
+              imageAlt={profile.full_name || profile.email} 
+              size="lg" 
+              userId={profile.id} 
+              editable={isOwnProfile} 
+              onAvatarUpdate={handleAvatarUpdate} 
+            />
+            {isMentor && (
+              <div className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-1">
+                <CheckCircle className="h-3 w-3" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Center Section - Main Info */}
+        <div className="flex-1 min-w-0">
+          {/* Name & Title */}
+          <div className="mb-2">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h1 className="text-xl font-bold text-foreground truncate">
+                {profile.full_name}
+              </h1>
+              <div className="flex items-center gap-1 flex-wrap">
+                {isMentor && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                    Mentor
+                  </Badge>
+                )}
+                <StudentStatusBadge 
+                  status={profile.student_nonstudent} 
+                  profileId={profile.id} 
+                  isOwnProfile={isOwnProfile} 
+                />
+              </div>
+            </div>
             
-            {/* Left Section - Avatar & Basic Info */}
-            <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-              <div className="relative mb-4">
-                <ProfileAvatar avatarUrl={profile.avatar_url} imageAlt={profile.full_name || profile.email} size="lg" userId={profile.id} editable={isOwnProfile} onAvatarUpdate={handleAvatarUpdate} />
-                {isMentor && <div className="absolute -bottom-1 -right-1 bg-green-500 text-white rounded-full p-1">
-                    <CheckCircle className="h-4 w-4" />
-                  </div>}
-              </div>
-              
-              {/* Status & Availability */}
-              
-            </div>
-
-            {/* Center Section - Main Info */}
-            <div className="flex-1 space-y-4">
-              {/* Name & Title */}
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">
-                    {profile.full_name}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    {isMentor && <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                        Mentor
-                      </Badge>}
-                    <StudentStatusBadge status={profile.student_nonstudent} profileId={profile.id} isOwnProfile={isOwnProfile} />
-                  </div>
-                </div>
-                
-                
-              </div>
-
-              {/* Meta Information */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                {profile.location && <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>{profile.location}</span>
-                  </div>}
-                
-                {profile.years_of_experience && <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{profile.years_of_experience} years experience</span>
-                  </div>}
-                
-                {getMemberSince() && <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>Member since {getMemberSince()}</span>
-                  </div>}
-              </div>
-
-              {/* Social Links */}
-              <div className="flex items-center gap-3">
-                {profile.website_url && <Button variant="ghost" size="sm" asChild>
-                    <a href={profile.website_url} target="_blank" rel="noopener noreferrer">
-                      <Globe className="h-4 w-4" />
-                    </a>
-                  </Button>}
-                {profile.linkedin_url && <Button variant="ghost" size="sm" asChild>
-                    <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      LinkedIn
-                    </a>
-                  </Button>}
-                {profile.github_url && <Button variant="ghost" size="sm" asChild>
-                    <a href={profile.github_url} target="_blank" rel="noopener noreferrer">
-                      GitHub
-                    </a>
-                  </Button>}
-              </div>
-
-              {/* Skills */}
-              <SkillsList />
-            </div>
-
-            {/* Right Section - Actions */}
-            <div className="flex flex-col gap-3 min-w-[200px]">
-              {!isOwnProfile && <>
-                  
-                  {isMentor}
-                  
-                </>}
-              
-              {isOwnProfile}
-              
-              <Button variant="ghost" className="w-full" onClick={onShare}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Profile
-              </Button>
-            </div>
+            {(profile.position || profile.academic_major) && (
+              <p className="text-sm text-muted-foreground">
+                {profile.position || profile.academic_major}
+                {(profile.company_name || profile.school_name) && (
+                  <span> at {profile.company_name || profile.school_name}</span>
+                )}
+              </p>
+            )}
           </div>
 
-          {/* Stats Section */}
-          
+          {/* Meta Information */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-2">
+            {profile.location && (
+              <div className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                <span>{profile.location}</span>
+              </div>
+            )}
+            
+            {profile.years_of_experience && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{profile.years_of_experience} years experience</span>
+              </div>
+            )}
+            
+            {getMemberSince() && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                <span>Member since {getMemberSince()}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Social Links */}
+          <div className="flex items-center gap-2">
+            {profile.website_url && (
+              <Button variant="ghost" size="sm" asChild className="h-7 px-2">
+                <a href={profile.website_url} target="_blank" rel="noopener noreferrer">
+                  <Globe className="h-3 w-3" />
+                </a>
+              </Button>
+            )}
+            {profile.linkedin_url && (
+              <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
+                <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
+                  LinkedIn
+                </a>
+              </Button>
+            )}
+            {profile.github_url && (
+              <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
+                <a href={profile.github_url} target="_blank" rel="noopener noreferrer">
+                  GitHub
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Right Section - Share Button Only */}
+        <div className="flex-shrink-0">
+          <Button variant="ghost" size="sm" onClick={onShare} className="h-8">
+            <Share2 className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
         </div>
       </div>
-    </div>;
+
+      {/* Skills Section */}
+      <div className="mt-3 pt-3 border-t">
+        <SkillsList />
+      </div>
+    </div>
+  );
 }

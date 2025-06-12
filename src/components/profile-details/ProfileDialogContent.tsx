@@ -44,46 +44,49 @@ export function ProfileDialogContent({
   };
 
   return (
-    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-2xl h-[85vh] sm:h-[85vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6 flex flex-col">
-      <DialogHeader className="pb-0">
-        <div className="relative pb-6 sm:pb-8">
-          <ProfileHeader 
-            profile={profile} 
-            session={session} 
-            onShare={onShare}
-          />
-          {isMentor && (
-            isOwnProfile ? (
-              <Button 
-                size="sm"
-                onClick={handleEditClick}
-                className="absolute right-0 top-10 sm:top-12"
-              >
-                {isEditing ? "Cancel Editing" : "Edit Profile"}
-              </Button>
-            ) : (
-              <Button 
-                size="sm"
-                onClick={handleBookSession}
-                className="absolute left-1/2 -translate-x-1/2 bottom-0 h-7 sm:h-8 px-2 sm:px-3 text-sm w-[85%] sm:w-auto"
-              >
-                Book a Session
-              </Button>
-            )
-          )}
-        </div>
+    <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-4xl max-h-[90vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6 flex flex-col overflow-auto">
+      <DialogHeader className="pb-2 flex-shrink-0">
+        <ProfileHeader 
+          profile={profile} 
+          session={session} 
+          onShare={onShare}
+        />
+        {isMentor && isOwnProfile && (
+          <div className="flex justify-end mt-2">
+            <Button 
+              size="sm"
+              onClick={handleEditClick}
+              variant="outline"
+            >
+              Edit Profile
+            </Button>
+          </div>
+        )}
+        {isMentor && !isOwnProfile && (
+          <div className="flex justify-center mt-2">
+            <Button 
+              size="sm"
+              onClick={handleBookSession}
+              className="w-full max-w-xs"
+            >
+              Book a Session
+            </Button>
+          </div>
+        )}
       </DialogHeader>
 
       {isEditing ? (
-        <ProfileEditForm 
-          profile={profile} 
-          onCancel={() => setIsEditing(false)}
-          onSuccess={() => setIsEditing(false)}
-        />
+        <div className="flex-1 overflow-auto">
+          <ProfileEditForm 
+            profile={profile} 
+            onCancel={() => setIsEditing(false)}
+            onSuccess={() => setIsEditing(false)}
+          />
+        </div>
       ) : (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto">
           <Tabs defaultValue="overview" className="h-full flex flex-col">
-            <TabsList className="mb-2">
+            <TabsList className="mb-3 flex-shrink-0">
               <TabsTrigger value="overview" className="flex items-center gap-1">
                 <User className="h-4 w-4" />
                 Overview
@@ -100,17 +103,17 @@ export function ProfileDialogContent({
               )}
             </TabsList>
             
-            <div className="flex-1 overflow-hidden">
-              <TabsContent value="overview" className="h-full m-0 overflow-hidden">
+            <div className="flex-1 overflow-auto">
+              <TabsContent value="overview" className="h-full m-0 overflow-auto">
                 <ProfileOverviewTab profile={profile} />
               </TabsContent>
               
-              <TabsContent value="content" className="h-full m-0 overflow-hidden">
+              <TabsContent value="content" className="h-full m-0 overflow-auto">
                 <ProfileContentTab profileId={profile.id} />
               </TabsContent>
               
               {isMentor && (
-                <TabsContent value="insights" className="h-full m-0 overflow-hidden">
+                <TabsContent value="insights" className="h-full m-0 overflow-auto">
                   <ProfileInsightsTab profileId={profile.id} />
                 </TabsContent>
               )}
