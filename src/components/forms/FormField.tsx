@@ -163,7 +163,7 @@ const SelectField = ({ control, name, label, placeholder, options, required, des
 );
 
 const DynamicSelectField = ({ control, name, label, placeholder, tableName, required, description }: DynamicSelectFieldProps) => {
-  const { data: options = [] } = useQuery({
+  const { data: options = [], refetch } = useQuery({
     queryKey: [tableName],
     queryFn: async () => {
       let selectQuery = 'id, title, name';
@@ -193,6 +193,33 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
     name: option.title || option.name
   }));
 
+  const handleAddNew = async (name: string): Promise<string> => {
+    const insertData = {
+      status: 'Pending' as const,
+      ...(tableName === 'majors' || tableName === 'careers' 
+        ? {
+            title: name,
+            description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${name}`
+          }
+        : {
+            name: name
+          })
+    };
+
+    const { data, error } = await supabase
+      .from(tableName as any)
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Refetch options to include the new item
+    await refetch();
+    
+    return data.id;
+  };
+
   return (
     <ShadcnFormField
       control={control}
@@ -208,6 +235,13 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
               onValueChange={field.onChange}
               options={formattedOptions}
               placeholder={placeholder}
+              onAddNew={handleAddNew}
+              addNewLabel={`Add New ${tableName === 'companies' ? 'Company' : 
+                         tableName === 'schools' ? 'School' : 
+                         tableName === 'majors' ? 'Major' : 'Position'}`}
+              addNewPlaceholder={`Enter ${tableName === 'companies' ? 'company' : 
+                               tableName === 'schools' ? 'school' : 
+                               tableName === 'majors' ? 'major' : 'position'} name`}
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
