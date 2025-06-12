@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,6 @@ export interface FormFieldProps {
   dependsOn?: string;
   watch?: any;
   children?: React.ReactNode;
-  component?: React.ComponentType<any>; // Add component prop for backwards compatibility
 }
 
 interface InputFieldProps {
@@ -205,13 +205,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
   );
 };
 
-export const FormField = ({ name, control, label, required, children, type, placeholder, options, tableName, component }: FormFieldProps) => {
-  // Handle component prop for backwards compatibility
-  if (component) {
-    const Component = component;
-    return <Component name={name} control={control} label={label} required={required} type={type} placeholder={placeholder} options={options} tableName={tableName} />;
-  }
-
+export const FormField = ({ name, control, label, required, children, type, placeholder, options, tableName }: FormFieldProps) => {
   // Handle different field types based on props
   if (type === "textarea") {
     return <TextAreaField control={control} name={name} label={label} placeholder={placeholder} required={required} />;
