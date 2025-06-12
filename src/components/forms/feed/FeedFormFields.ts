@@ -1,4 +1,3 @@
-
 import { FormFieldProps } from "@/components/forms/FormField";
 import { z } from "zod";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
@@ -180,3 +179,19 @@ export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
 
   return [...baseFields, ...specificFields];
 };
+
+// Example usage
+const majors = [
+  { id: 1, title: "Computer Science" },
+  { id: 2, title: "Mathematics" },
+  { id: 3, title: "Physics" },
+];
+
+const schools = [
+  { id: 1, name: "University of California, Berkeley" },
+  { id: 2, name: "Stanford University" },
+  { id: 3, name: "Harvard University" },
+];
+
+const formattedMajors = majors.map(major => ({ value: major.id, label: major.title }));
+const formattedSchools = schools.map(school => ({ value: school.id, label: school.name }));

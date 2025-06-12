@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coins, CreditCard, User, Calendar, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
+import { useTokenOperations } from "@/hooks/useTokenOperations";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const SESSION_COST = 25;
 
@@ -38,13 +40,22 @@ export function SessionPaymentDialog({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [processingStep, setProcessingStep] = useState<'payment' | 'booking' | 'complete' | null>(null);
-  const { balance, isLoading, refreshBalance } = useWalletBalance();
+  const { balance, isLoading, refreshBalance, wallet } = useWalletBalance();
+  const { deductTokens } = useTokenOperations();
   const navigate = useNavigate();
 
   const hasSufficientFunds = balance >= SESSION_COST;
 
   const handleConfirmPayment = async () => {
-    if (!hasSufficientFunds) return;
+    if (!hasSufficientFunds) {
+      setError('Insufficient tokens for this session');
+      return;
+    }
+
+    if (!wallet) {
+      setError('Wallet not found. Please refresh the page.');
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
@@ -52,18 +63,58 @@ export function SessionPaymentDialog({
     setProcessingStep('payment');
     
     try {
-      console.log('Starting payment and booking process...');
+      console.log('=== STARTING TOKEN DEDUCTION DEBUG ===');
+      console.log('Wallet:', wallet);
+      console.log('Balance:', balance);
+      console.log('Session cost:', SESSION_COST);
+      
+      // Step 1: Deduct tokens first
+      console.log('Step 1: Attempting token deduction...');
+      const tokenResult = await deductTokens.mutateAsync({
+        walletId: wallet.id,
+        amount: SESSION_COST,
+        description: `Session booking with ${sessionDetails.mentorName}`,
+        category: 'session',
+        metadata: {
+          mentor_name: sessionDetails.mentorName,
+          session_date: sessionDetails.date.toISOString(),
+          session_time: sessionDetails.time,
+          session_type: sessionDetails.sessionType
+        }
+      });
+
+      console.log('Token deduction result:', tokenResult);
+
+      if (!tokenResult.success) {
+        throw new Error(tokenResult.message || 'Failed to deduct tokens');
+      }
+
+      console.log('✅ Tokens deducted successfully');
+      setProcessingStep('booking');
+
+      // Step 2: Proceed with session booking
+      console.log('Step 2: Proceeding with session booking...');
       await onConfirmPayment();
       
       setProcessingStep('complete');
       setSuccess(true);
+      console.log('✅ Session booking completed successfully');
       
       // Refresh wallet balance to show updated amount
-      refreshBalance();
+      await refreshBalance();
+      
+      toast.success(`Session booked successfully! ${SESSION_COST} tokens deducted.`);
+      
     } catch (error: any) {
-      console.error('Payment and booking failed:', error);
-      setError(error.message || 'Payment and booking failed. Please try again.');
+      console.error('❌ Payment process failed:', error);
+      setError(error.message || 'Payment failed. Please try again.');
       setProcessingStep(null);
+      
+      // TODO: Implement token refund if session booking fails after successful payment
+      if (processingStep === 'booking') {
+        console.log('TODO: Refund tokens since session booking failed after payment');
+        toast.error('Session booking failed. Please contact support for token refund.');
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -211,6 +262,19 @@ export function SessionPaymentDialog({
               </div>
             </CardContent>
           </Card>
+
+          {/* Debug Info (only show in development) */}
+          {process.env.NODE_ENV === 'development' && (
+            <Card className="border-gray-200 bg-gray-50">
+              <CardContent className="p-3">
+                <div className="text-xs text-gray-600">
+                  <div>Wallet ID: {wallet?.id || 'None'}</div>
+                  <div>Balance: {balance}</div>
+                  <div>Processing Step: {processingStep || 'None'}</div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons */}
           <div className="space-y-2">
