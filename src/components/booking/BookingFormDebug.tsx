@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
@@ -43,6 +44,10 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
   const { data: profile } = useUserProfile(session);
   const { processPaymentAndBooking } = useSessionPaymentDebug();
   const sessionTypes = useSessionTypes(mentorId, true);
+  
+  // Get available platforms from session types
+  const selectedSessionTypeData = sessionTypes.find(type => type.id === sessionType);
+  const availablePlatforms: MeetingPlatform[] = selectedSessionTypeData?.meeting_platform || ["Google Meet"];
   
   const formData = {
     date,

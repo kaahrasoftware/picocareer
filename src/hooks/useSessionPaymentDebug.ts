@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useTokenOperations } from './useTokenOperations';
 import { useWalletBalance } from './useWalletBalance';
-import { useSessionBooking } from '@/components/booking/SessionBookingHandler';
+import { useSessionBookingDebug } from '@/components/booking/SessionBookingHandlerDebug';
 import { MeetingPlatform } from '@/types/calendar';
 import { toast } from 'sonner';
 
@@ -27,12 +27,12 @@ export function useSessionPaymentDebug() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { deductTokens, refundTokens } = useTokenOperations();
   const { wallet } = useWalletBalance();
-  const handleSessionBooking = useSessionBooking();
+  const handleSessionBooking = useSessionBookingDebug();
 
   const processPaymentAndBooking = async (params: SessionPaymentParams) => {
     const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
     
-    console.log('🚀 Starting session payment and booking process with debug logging...');
+    console.log('🚀 Starting session payment and booking process with enhanced debug logging...');
     console.log('📋 Form data:', formData);
     console.log('💰 Wallet info:', wallet);
     
@@ -53,6 +53,7 @@ export function useSessionPaymentDebug() {
     if (wallet.balance < 25) {
       const error = new Error('Insufficient tokens. You need 25 tokens to book a session.');
       console.error('❌ Insufficient balance:', wallet.balance);
+      toast.error('Insufficient tokens. You need 25 tokens to book a session.');
       onError(error);
       return;
     }
@@ -87,9 +88,9 @@ export function useSessionPaymentDebug() {
       transactionId = tokenResult.transaction_id;
       console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
 
-      console.log('📅 Step 2: Attempting to book session...');
+      console.log('📅 Step 2: Attempting to book session with enhanced logging...');
       
-      // Step 2: Book the session using the session booking handler
+      // Step 2: Book the session using the enhanced debug booking handler
       try {
         await handleSessionBooking({
           mentorId,
@@ -118,7 +119,7 @@ export function useSessionPaymentDebug() {
         // Rollback: Refund the tokens
         console.log('🔄 Rolling back token deduction...');
         try {
-          await refundTokens.mutateAsync({
+          const refundResult = await refundTokens.mutateAsync({
             walletId: wallet.id,
             amount: 25,
             description: `Refund for failed session booking with ${mentorName}`,
@@ -130,9 +131,17 @@ export function useSessionPaymentDebug() {
               error_details: bookingError.message
             }
           });
-          console.log('✅ Tokens refunded successfully');
+          
+          if (refundResult.success) {
+            console.log('✅ Tokens refunded successfully');
+            toast.info('Tokens have been refunded due to booking failure.');
+          } else {
+            console.error('❌ Token refund failed:', refundResult.message);
+            toast.error('Session booking failed and token refund also failed. Please contact support.');
+          }
         } catch (refundError) {
           console.error('❌ Failed to refund tokens:', refundError);
+          toast.error('Session booking failed and token refund also failed. Please contact support.');
           throw new Error('Session booking failed and token refund also failed. Please contact support.');
         }
         

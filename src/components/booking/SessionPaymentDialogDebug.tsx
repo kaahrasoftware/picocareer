@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays, Clock, MessageSquare, Smartphone, Users, CreditCard, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { SessionBookingStatusDebug } from "./SessionBookingStatusDebug";
 
 interface SessionPaymentDialogProps {
   isOpen: boolean;
@@ -26,24 +27,30 @@ export function SessionPaymentDialogDebug({
   sessionDetails
 }: SessionPaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
+    setShowStatus(true);
     try {
       await onConfirmPayment();
     } finally {
       setIsProcessing(false);
-      onClose();
     }
   };
 
+  const handleClose = () => {
+    setShowStatus(false);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />
-            Confirm Session Booking
+            Confirm Session Booking (Debug Mode)
           </DialogTitle>
           <DialogDescription>
             Review your session details and confirm payment
@@ -98,16 +105,22 @@ export function SessionPaymentDialogDebug({
                 <span className="text-sm font-medium">Debug Mode Active</span>
               </div>
               <p className="text-xs text-yellow-700 mt-1">
-                Enhanced logging and error tracking enabled
+                Enhanced logging and error tracking enabled. Check console for detailed logs.
               </p>
             </CardContent>
           </Card>
+
+          {/* Status Display */}
+          <SessionBookingStatusDebug 
+            isVisible={showStatus}
+            onClose={() => setShowStatus(false)}
+          />
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               className="flex-1"
               disabled={isProcessing}
             >
