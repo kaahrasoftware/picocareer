@@ -227,7 +227,7 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
 
       // Auto-select the newly created item
       const fieldOnChange = control._fields[name]?._f?.onChange;
-      if (fieldOnChange && data) {
+      if (fieldOnChange && data && typeof data === 'object' && 'id' in data) {
         fieldOnChange(data.id);
       }
 

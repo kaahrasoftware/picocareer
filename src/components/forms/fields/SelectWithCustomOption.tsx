@@ -1,11 +1,9 @@
 
 import React, { useState, useMemo } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 
 interface SelectOption {
   id: string;
@@ -38,7 +36,7 @@ export function SelectWithCustomOption({
   disabled = false
 }: SelectWithCustomOptionProps) {
   const [search, setSearch] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddingNew, setIsAddingNew] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
@@ -56,8 +54,8 @@ export function SelectWithCustomOption({
     try {
       await onAddNew(newItemName.trim());
       setNewItemName("");
-      setIsDialogOpen(false);
-      setSearch(""); // Clear search when adding new item
+      setIsAddingNew(false);
+      setSearch("");
     } catch (error) {
       console.error("Error adding new item:", error);
     } finally {
@@ -65,11 +63,68 @@ export function SelectWithCustomOption({
     }
   };
 
+  const handleCancel = () => {
+    setIsAddingNew(false);
+    setNewItemName("");
+  };
+
+  const handleSelectChange = (selectedValue: string) => {
+    if (selectedValue === "__ADD_NEW__") {
+      setIsAddingNew(true);
+      return;
+    }
+    onValueChange(selectedValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddNew();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
   const selectedOption = options.find(option => option?.id === value);
+
+  // If we're in "adding new" mode, show the input field
+  if (isAddingNew) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Input
+          value={newItemName}
+          onChange={(e) => setNewItemName(e.target.value)}
+          placeholder={addNewPlaceholder}
+          disabled={isAdding}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          className="flex-1"
+        />
+        <Button
+          onClick={handleAddNew}
+          disabled={!newItemName.trim() || isAdding}
+          size="sm"
+          className="px-3"
+        >
+          <Check className="h-4 w-4" />
+        </Button>
+        <Button
+          onClick={handleCancel}
+          variant="outline"
+          size="sm"
+          className="px-3"
+          disabled={isAdding}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className={className}>
-      <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+      <Select value={value} onValueChange={handleSelectChange} disabled={disabled}>
         <SelectTrigger>
           <SelectValue placeholder={placeholder}>
             {selectedOption?.name}
@@ -105,58 +160,14 @@ export function SelectWithCustomOption({
                 No options found
               </div>
             )}
-          </div>
 
-          {/* Add New Button */}
-          {onAddNew && (
-            <div className="p-2 border-t">
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {addNewLabel}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{addNewLabel}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="new-item-name">Name</Label>
-                      <Input
-                        id="new-item-name"
-                        placeholder={addNewPlaceholder}
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleAddNew();
-                          }
-                        }}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={handleAddNew} 
-                        disabled={!newItemName.trim() || isAdding}
-                        className="flex-1"
-                      >
-                        {isAdding ? "Adding..." : "Add"}
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsDialogOpen(false)}
-                        className="flex-1"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
+            {/* Add New Option */}
+            {onAddNew && (
+              <SelectItem value="__ADD_NEW__" className="font-medium text-primary">
+                + {addNewLabel}
+              </SelectItem>
+            )}
+          </div>
         </SelectContent>
       </Select>
     </div>
