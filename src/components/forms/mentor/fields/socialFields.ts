@@ -1,60 +1,53 @@
+
 import { FormFieldProps } from "@/components/forms/FormField";
 
 export const socialFields: FormFieldProps[] = [
   {
     name: "linkedin_url",
-    label: "LinkedIn Profile",
-    type: "text",
-    placeholder: "https://linkedin.com/in/username",
-    description: "Highly recommended - LinkedIn helps establish your professional credibility"
+    label: "LinkedIn URL",
+    type: "url",
+    placeholder: "https://linkedin.com/in/your-profile"
   },
   {
     name: "github_url",
-    label: "GitHub Profile",
-    type: "text",
-    placeholder: "https://github.com/username",
-    description: "Recommended for tech mentors - showcase your coding projects"
+    label: "GitHub URL",
+    type: "url",
+    placeholder: "https://github.com/your-username"
   },
   {
     name: "website_url",
     label: "Personal Website",
-    type: "text",
-    placeholder: "https://yourwebsite.com",
-    description: "Share your portfolio or personal brand"
+    type: "url",
+    placeholder: "https://your-website.com"
   },
   {
     name: "X_url",
-    label: "X (Twitter) Profile",
-    type: "text",
-    placeholder: "https://x.com/username",
-    description: "Connect with mentees through social media"
+    label: "X (Twitter) URL",
+    type: "url",
+    placeholder: "https://x.com/your-username"
   },
   {
     name: "facebook_url",
-    label: "Facebook Profile",
-    type: "text",
-    placeholder: "https://facebook.com/username",
-    description: "Optional social media presence"
+    label: "Facebook URL",
+    type: "url",
+    placeholder: "https://facebook.com/your-profile"
   },
   {
     name: "instagram_url",
-    label: "Instagram Profile",
-    type: "text",
-    placeholder: "https://instagram.com/username",
-    description: "Optional social media presence"
+    label: "Instagram URL",
+    type: "url",
+    placeholder: "https://instagram.com/your-username"
   },
   {
     name: "tiktok_url",
-    label: "TikTok Profile",
-    type: "text",
-    placeholder: "https://tiktok.com/@username",
-    description: "Optional social media presence"
+    label: "TikTok URL",
+    type: "url",
+    placeholder: "https://tiktok.com/@your-username"
   },
   {
     name: "youtube_url",
-    label: "YouTube Channel",
-    type: "text",
-    placeholder: "https://youtube.com/@username",
-    description: "Share your educational content"
+    label: "YouTube URL",
+    type: "url",
+    placeholder: "https://youtube.com/c/your-channel"
   }
 ];

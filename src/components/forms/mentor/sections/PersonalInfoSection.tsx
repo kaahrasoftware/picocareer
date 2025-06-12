@@ -15,19 +15,15 @@ export function PersonalInfoSection({ control }: PersonalInfoSectionProps) {
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
       <div className="grid gap-6 sm:grid-cols-2">
-        {personalFields.map((field) => (
+        {personalFields.map((fieldConfig) => (
           <Controller
-            key={field.name}
+            key={fieldConfig.name}
             control={control}
-            name={field.name as keyof FormValues}
-            render={({ field: controllerField }) => (
+            name={fieldConfig.name as keyof FormValues}
+            render={({ field }) => (
               <FormField
-                field={controllerField}
-                label={field.label}
-                type={field.type}
-                placeholder={field.placeholder}
-                description={field.description}
-                required={field.required}
+                {...fieldConfig}
+                field={field}
               />
             )}
           />

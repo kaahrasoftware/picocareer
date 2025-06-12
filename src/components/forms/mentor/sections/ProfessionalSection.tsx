@@ -17,28 +17,24 @@ export function ProfessionalSection({ control, careers = [], companies = [] }: P
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Professional Experience</h2>
       <div className="space-y-6">
-        {professionalFields.map((field) => {
+        {professionalFields.map((fieldConfig) => {
           let options = [];
-          if (field.name === "position") {
+          if (fieldConfig.name === "position") {
             options = careers.map(career => ({ value: career.id, label: career.title }));
-          } else if (field.name === "company_id") {
+          } else if (fieldConfig.name === "company_id") {
             options = companies.map(company => ({ value: company.id, label: company.name }));
           }
 
           return (
             <Controller
-              key={field.name}
+              key={fieldConfig.name}
               control={control}
-              name={field.name as keyof FormValues}
-              render={({ field: controllerField }) => (
+              name={fieldConfig.name as keyof FormValues}
+              render={({ field }) => (
                 <FormField
-                  field={controllerField}
-                  label={field.label}
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  description={field.description}
-                  required={field.required}
-                  {...(field.type === "select" && { options })}
+                  {...fieldConfig}
+                  field={field}
+                  {...(fieldConfig.type === "dynamic-select" && { options })}
                 />
               )}
             />

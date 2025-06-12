@@ -17,28 +17,24 @@ export function EducationSection({ control, schools = [], majors = [] }: Educati
     <Card className="p-6">
       <h2 className="text-lg font-semibold mb-4">Education</h2>
       <div className="space-y-6">
-        {educationFields.map((field) => {
+        {educationFields.map((fieldConfig) => {
           let options = [];
-          if (field.name === "school_id") {
+          if (fieldConfig.name === "school_id") {
             options = schools.map(school => ({ value: school.id, label: school.name }));
-          } else if (field.name === "academic_major_id") {
+          } else if (fieldConfig.name === "academic_major_id") {
             options = majors.map(major => ({ value: major.id, label: major.title }));
           }
 
           return (
             <Controller
-              key={field.name}
+              key={fieldConfig.name}
               control={control}
-              name={field.name as keyof FormValues}
-              render={({ field: controllerField }) => (
+              name={fieldConfig.name as keyof FormValues}
+              render={({ field }) => (
                 <FormField
-                  field={controllerField}
-                  label={field.label}
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  description={field.description}
-                  required={field.required}
-                  {...(field.type === "select" && { options })}
+                  {...fieldConfig}
+                  field={field}
+                  {...(fieldConfig.type === "dynamic-select" && { options })}
                 />
               )}
             />

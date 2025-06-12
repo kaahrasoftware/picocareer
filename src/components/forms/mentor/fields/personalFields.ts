@@ -1,3 +1,4 @@
+
 import { FormFieldProps } from "@/components/forms/FormField";
 
 export const personalFields: FormFieldProps[] = [
@@ -18,7 +19,7 @@ export const personalFields: FormFieldProps[] = [
   {
     name: "email",
     label: "Email",
-    type: "text",
+    type: "email",
     placeholder: "Enter your email address",
     required: true
   },

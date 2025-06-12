@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "./ImageUpload";
 
 interface BaseFieldProps {
+  name: string;
   field: any;
   label: string;
   description?: string;
@@ -30,6 +32,19 @@ interface SelectFieldProps extends BaseFieldProps {
   options: Array<{ value: string; label: string; disabled?: boolean }>;
 }
 
+interface DynamicSelectFieldProps extends BaseFieldProps {
+  type: "dynamic-select";
+  tableName: string;
+  options?: Array<{ value: string; label: string; disabled?: boolean }>;
+}
+
+interface ImageFieldProps extends BaseFieldProps {
+  type: "image";
+  bucket: string;
+  accept?: string;
+  folderPath?: string;
+}
+
 interface CheckboxFieldProps extends BaseFieldProps {
   type: "checkbox";
 }
@@ -38,7 +53,33 @@ interface SwitchFieldProps extends BaseFieldProps {
   type: "switch";
 }
 
-export type FormFieldProps = TextFieldProps | TextareaFieldProps | SelectFieldProps | CheckboxFieldProps | SwitchFieldProps;
+interface RichTextFieldProps extends BaseFieldProps {
+  type: "richtext";
+  component?: any;
+  bucket?: string;
+}
+
+interface CategoryFieldProps extends BaseFieldProps {
+  type: "category";
+  options?: Array<{ value: string; label: string }>;
+}
+
+interface SubcategoryFieldProps extends BaseFieldProps {
+  type: "subcategory";
+  options?: Array<{ value: string; label: string }>;
+}
+
+export type FormFieldProps = 
+  | TextFieldProps 
+  | TextareaFieldProps 
+  | SelectFieldProps 
+  | DynamicSelectFieldProps
+  | ImageFieldProps
+  | CheckboxFieldProps 
+  | SwitchFieldProps
+  | RichTextFieldProps
+  | CategoryFieldProps
+  | SubcategoryFieldProps;
 
 export function FormField(props: FormFieldProps) {
   const { field, label, description, required, placeholder, disabled } = props;
@@ -95,6 +136,43 @@ export function FormField(props: FormFieldProps) {
           </Select>
         );
 
+      case "dynamic-select":
+        return (
+          <Select
+            value={field.value || ""}
+            onValueChange={field.onChange}
+            disabled={disabled}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {props.options?.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+
+      case "image":
+        return (
+          <ImageUpload
+            control={undefined}
+            name={props.name}
+            label=""
+            bucket={props.bucket}
+            accept={props.accept}
+            folderPath={props.folderPath}
+            onUploadSuccess={(url) => field.onChange(url)}
+          />
+        );
+
       case "checkbox":
         return (
           <Checkbox
@@ -110,6 +188,20 @@ export function FormField(props: FormFieldProps) {
             checked={field.value || false}
             onCheckedChange={field.onChange}
             disabled={disabled}
+          />
+        );
+
+      case "richtext":
+      case "category":
+      case "subcategory":
+        // These types are handled by specialized components
+        return (
+          <Input
+            type="text"
+            placeholder={placeholder}
+            disabled={disabled}
+            {...field}
+            value={field.value || ""}
           />
         );
 

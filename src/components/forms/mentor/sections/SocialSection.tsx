@@ -18,19 +18,15 @@ export function SocialSection({ control }: SocialSectionProps) {
         While social links are optional, we highly recommend adding them to enhance your mentor profile and build trust with potential mentees.
       </p>
       <div className="grid gap-6 sm:grid-cols-2">
-        {socialFields.map((field) => (
+        {socialFields.map((fieldConfig) => (
           <Controller
-            key={field.name}
+            key={fieldConfig.name}
             control={control}
-            name={field.name as keyof FormValues}
-            render={({ field: controllerField }) => (
+            name={fieldConfig.name as keyof FormValues}
+            render={({ field }) => (
               <FormField
-                field={controllerField}
-                label={field.label}
-                type={field.type}
-                placeholder={field.placeholder}
-                description={field.description}
-                required={field.required}
+                {...fieldConfig}
+                field={field}
               />
             )}
           />
