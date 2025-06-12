@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -36,7 +37,8 @@ export function SessionPaymentDialog({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { balance, isLoading } = useWalletBalance();
+  const [processingStep, setProcessingStep] = useState<'payment' | 'booking' | 'complete' | null>(null);
+  const { balance, isLoading, refreshBalance } = useWalletBalance();
   const navigate = useNavigate();
 
   const hasSufficientFunds = balance >= SESSION_COST;
@@ -47,14 +49,21 @@ export function SessionPaymentDialog({
     setIsProcessing(true);
     setError(null);
     setSuccess(false);
+    setProcessingStep('payment');
     
     try {
-      console.log('Confirming payment for session...');
+      console.log('Starting payment and booking process...');
       await onConfirmPayment();
+      
+      setProcessingStep('complete');
       setSuccess(true);
+      
+      // Refresh wallet balance to show updated amount
+      refreshBalance();
     } catch (error: any) {
-      console.error('Payment confirmation failed:', error);
-      setError(error.message || 'Payment failed. Please try again.');
+      console.error('Payment and booking failed:', error);
+      setError(error.message || 'Payment and booking failed. Please try again.');
+      setProcessingStep(null);
     } finally {
       setIsProcessing(false);
     }
@@ -69,7 +78,21 @@ export function SessionPaymentDialog({
     if (!isProcessing) {
       setError(null);
       setSuccess(false);
+      setProcessingStep(null);
       onClose();
+    }
+  };
+
+  const getProcessingMessage = () => {
+    switch (processingStep) {
+      case 'payment':
+        return 'Processing payment...';
+      case 'booking':
+        return 'Booking session...';
+      case 'complete':
+        return 'Payment Complete!';
+      default:
+        return 'Processing...';
     }
   };
 
@@ -107,7 +130,7 @@ export function SessionPaymentDialog({
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
                     <p className="font-medium text-green-800">Session Booked Successfully!</p>
-                    <p className="text-sm text-green-600">Check your email for confirmation details.</p>
+                    <p className="text-sm text-green-600">25 tokens deducted. Check your email for confirmation details.</p>
                   </div>
                 </div>
               </CardContent>
@@ -123,6 +146,21 @@ export function SessionPaymentDialog({
                   <div>
                     <p className="font-medium text-red-800">Payment Failed</p>
                     <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Processing State */}
+          {isProcessing && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <div>
+                    <p className="font-medium text-blue-800">{getProcessingMessage()}</p>
+                    <p className="text-sm text-blue-600">Please wait while we process your request...</p>
                   </div>
                 </div>
               </CardContent>
@@ -183,7 +221,7 @@ export function SessionPaymentDialog({
                 className="w-full gap-2"
               >
                 <Coins className="h-4 w-4" />
-                {isProcessing ? "Processing..." : success ? "Payment Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
+                {isProcessing ? getProcessingMessage() : success ? "Payment Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
               </Button>
             ) : (
               <Card className="border-orange-200 bg-orange-50">
