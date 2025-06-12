@@ -18,15 +18,15 @@ export function OverviewTab() {
         careersRes,
         majorsRes,
         schoolsRes,
-        feedRes,
-        opportunitiesRes
+        blogsRes,
+        eventsRes
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact' }),
         supabase.from('careers').select('id', { count: 'exact' }),
         supabase.from('majors').select('id', { count: 'exact' }),
         supabase.from('schools').select('id', { count: 'exact' }),
-        supabase.from('feed_content').select('id', { count: 'exact' }),
-        supabase.from('opportunities').select('id', { count: 'exact' })
+        supabase.from('blogs').select('id', { count: 'exact' }),
+        supabase.from('events').select('id', { count: 'exact' })
       ]);
 
       return {
@@ -34,8 +34,8 @@ export function OverviewTab() {
         careers: careersRes.count || 0,
         majors: majorsRes.count || 0,
         schools: schoolsRes.count || 0,
-        feedContent: feedRes.count || 0,
-        opportunities: opportunitiesRes.count || 0
+        blogs: blogsRes.count || 0,
+        events: eventsRes.count || 0
       };
     }
   });
@@ -63,13 +63,13 @@ export function OverviewTab() {
         .from('mentor_sessions')
         .select(`
           id,
-          session_date,
+          scheduled_at,
           status,
           mentee_id,
           mentor_id
         `)
         .or(`mentor_id.eq.${session.user.id},mentee_id.eq.${session.user.id}`)
-        .order('session_date', { ascending: false })
+        .order('scheduled_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
@@ -104,14 +104,14 @@ export function OverviewTab() {
       color: "text-orange-600"
     },
     {
-      title: "Feed Content",
-      value: stats?.feedContent || 0,
+      title: "Blog Posts",
+      value: stats?.blogs || 0,
       icon: BookOpen,
       color: "text-indigo-600"
     },
     {
-      title: "Opportunities",
-      value: stats?.opportunities || 0,
+      title: "Events",
+      value: stats?.events || 0,
       icon: TrendingUp,
       color: "text-red-600"
     }
@@ -203,7 +203,7 @@ export function OverviewTab() {
                         Session #{session.id}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(session.session_date).toLocaleDateString()}
+                        {new Date(session.scheduled_at).toLocaleDateString()}
                       </p>
                     </div>
                     <Badge 

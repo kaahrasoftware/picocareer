@@ -8,9 +8,9 @@ import { useNavigate } from 'react-router-dom';
 import { EventDetailsDialog } from './events/EventDetailsDialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { EventRegistrationsTab } from './EventRegistrationsTab';
+import { EventRegistrationsTab } from './events/EventRegistrationsTab';
 import { EventSummaryTab } from './events/EventSummaryTab';
-import { EventResourcesManagementTab } from './events';
+import { EventResourcesManagementTab } from './events/EventResourcesManagementTab';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -43,9 +43,9 @@ export function EventManagementTab() {
       <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">Summary</TabsTrigger>
- <TabsTrigger value="events">Events</TabsTrigger>
- <TabsTrigger value="registrations">Registrations</TabsTrigger>
- <TabsTrigger value="resources">Event Resources</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="registrations">Registrations</TabsTrigger>
+          <TabsTrigger value="resources">Event Resources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary">
@@ -63,17 +63,17 @@ export function EventManagementTab() {
         </TabsContent>
 
         <TabsContent value="registrations">
- <EventRegistrationsTab />
- </TabsContent>
+          <EventRegistrationsTab />
+        </TabsContent>
 
- <TabsContent value="resources">
- <EventResourcesManagementTab eventId={selectedEvent?.id} />
+        <TabsContent value="resources">
+          <EventResourcesManagementTab eventId={selectedEvent?.id || ""} />
         </TabsContent>
       </Tabs>
 
       {selectedEvent && (
         <EventDetailsDialog
- event={selectedEvent}
+          event={selectedEvent}
           isOpen={isDetailsDialogOpen} 
           onClose={handleCloseDetailsDialog} 
         />

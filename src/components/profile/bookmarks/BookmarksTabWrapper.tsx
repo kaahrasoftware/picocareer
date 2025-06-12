@@ -1,89 +1,40 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { ScholarshipBookmarks } from './ScholarshipBookmarks';
-import { MentorBookmarks } from './MentorBookmarks';
-import { CareerBookmarks } from './CareerBookmarks';
-import { MajorBookmarks } from './MajorBookmarks';
-import { OpportunityBookmarks } from './OpportunityBookmarks';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OpportunityBookmarks } from "./OpportunityBookmarks";
+import { CareerBookmarks } from "./CareerBookmarks";
+import { MentorBookmarks } from "./MentorBookmarks";
+import { MajorBookmarks } from "./MajorBookmarks";
 
 export function BookmarksTabWrapper() {
-  const { session } = useAuthSession();
-  const userId = session?.user?.id;
-  const [activeTab, setActiveTab] = useState('scholarships');
-
-  const handleViewMentorProfile = (mentorId: string) => {
-    // Navigate to mentor profile or open dialog
-    console.log('View mentor profile:', mentorId);
-  };
-
-  const handleViewCareerDetails = (careerId: string) => {
-    // Navigate to career details or open dialog
-    console.log('View career details:', careerId);
-  };
-
-  const handleViewMajorDetails = (major: any) => {
-    // Navigate to major details or open dialog
-    console.log('View major details:', major);
-  };
-
-  const handleViewOpportunityDetails = (opportunityId: string) => {
-    // Navigate to opportunity details or open dialog
-    console.log('View opportunity details:', opportunityId);
-  };
-
-  if (!userId) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <p className="text-muted-foreground">Please sign in to view your bookmarks.</p>
-      </div>
-    );
-  }
+  const [activePage, setActivePage] = useState("opportunities");
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
-        <TabsTrigger value="mentors">Mentors</TabsTrigger>
-        <TabsTrigger value="careers">Careers</TabsTrigger>
-        <TabsTrigger value="majors">Majors</TabsTrigger>
-        <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="scholarships">
-        <ScholarshipBookmarks />
-      </TabsContent>
-
-      <TabsContent value="mentors">
-        <MentorBookmarks 
-          activePage={activeTab}
-          onViewMentorProfile={handleViewMentorProfile}
-        />
-      </TabsContent>
-
-      <TabsContent value="careers">
-        <CareerBookmarks 
-          activePage={activeTab}
-          onViewCareerDetails={handleViewCareerDetails}
-        />
-      </TabsContent>
-
-      <TabsContent value="majors">
-        <MajorBookmarks 
-          activePage={activeTab}
-          onViewMajorDetails={handleViewMajorDetails}
-        />
-      </TabsContent>
-
-      <TabsContent value="opportunities">
-        <OpportunityBookmarks 
-          activePage={activeTab}
-          onViewOpportunityDetails={handleViewOpportunityDetails}
-        />
-      </TabsContent>
-    </Tabs>
+    <div className="w-full">
+      <Tabs value={activePage} onValueChange={setActivePage} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+          <TabsTrigger value="careers">Careers</TabsTrigger>
+          <TabsTrigger value="mentors">Mentors</TabsTrigger>
+          <TabsTrigger value="majors">Majors</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="opportunities" className="mt-6">
+          <OpportunityBookmarks activePage={activePage} />
+        </TabsContent>
+        
+        <TabsContent value="careers" className="mt-6">
+          <CareerBookmarks activePage={activePage} />
+        </TabsContent>
+        
+        <TabsContent value="mentors" className="mt-6">
+          <MentorBookmarks activePage={activePage} />
+        </TabsContent>
+        
+        <TabsContent value="majors" className="mt-6">
+          <MajorBookmarks activePage={activePage} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

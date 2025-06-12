@@ -137,7 +137,7 @@ export function OpportunityBookmarks({ activePage }: OpportunityBookmarksProps) 
       totalPages={totalPages}
       currentPage={currentPage}
       setPage={setCurrentPage}
-      onViewDetails={() => {}} // No action needed for opportunities
+      onViewDetails={() => {}}
       renderCard={(item) => renderOpportunityCard(item)}
       bookmarkType="opportunity"
     />
