@@ -3,15 +3,26 @@ import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, UserSearch } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 import { cn } from "@/lib/utils";
 
 export const HeroSection = () => {
   const { session } = useAuthSession();
+  const navigate = useNavigate();
   const isLoggedIn = !!session?.user;
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+
+  const handleBecomeMentorClick = () => {
+    if (isLoggedIn) {
+      navigate('/mentor-registration');
+    } else {
+      setIsAuthDialogOpen(true);
+    }
+  };
 
   return (
     <div className="relative isolate overflow-visible">
@@ -85,14 +96,12 @@ export const HeroSection = () => {
               </Button>
             ) : (
               <Button
-                asChild
+                onClick={handleBecomeMentorClick}
                 size="lg"
                 className="bg-white text-picocareer-primary hover:bg-white/90 font-semibold px-8 py-6 h-auto text-lg shadow-lg group transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
               >
-                <Link to="/auth?tab=signup" className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 transition-transform group-hover:rotate-12" />
-                  Become a Mentee
-                </Link>
+                <GraduationCap className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                Become a Mentee
               </Button>
             )}
             <p className="text-white/90 text-sm">
@@ -101,6 +110,14 @@ export const HeroSection = () => {
           </div>
         </div>
       </section>
+
+      <AuthPromptDialog
+        isOpen={isAuthDialogOpen}
+        onClose={() => setIsAuthDialogOpen(false)}
+        title="Join Our Mentor Community"
+        description="Create an account or sign in to register as a mentor and start helping students achieve their dreams."
+        redirectUrl="/mentor-registration"
+      />
     </div>
   );
 };

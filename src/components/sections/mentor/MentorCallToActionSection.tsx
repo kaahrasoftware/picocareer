@@ -1,11 +1,26 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Users, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMentorStats } from "@/hooks/useMentorStats";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 
 export const MentorCallToActionSection = () => {
   const { data: stats, isLoading } = useMentorStats();
+  const { session } = useAuthSession();
+  const navigate = useNavigate();
+  const isLoggedIn = !!session?.user;
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+
+  const handleStartMentoringClick = () => {
+    if (isLoggedIn) {
+      navigate('/mentor-registration');
+    } else {
+      setIsAuthDialogOpen(true);
+    }
+  };
 
   return (
     <section className="py-16 relative overflow-hidden rounded-xl mx-4">
@@ -57,15 +72,13 @@ export const MentorCallToActionSection = () => {
         <div className="max-w-2xl mx-auto">
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <Button
-              asChild
+              onClick={handleStartMentoringClick}
               size="lg"
               variant="secondary"
               className="w-full sm:w-auto bg-white hover:bg-gray-100 text-picocareer-dark font-semibold text-lg py-6 px-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
             >
-              <Link to="/mentor-registration" className="flex items-center justify-center gap-3">
-                <GraduationCap className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
-                Start Your Mentoring Journey
-              </Link>
+              <GraduationCap className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+              Start Your Mentoring Journey
             </Button>
             
             <Button
@@ -99,6 +112,14 @@ export const MentorCallToActionSection = () => {
           </div>
         </div>
       </div>
+
+      <AuthPromptDialog
+        isOpen={isAuthDialogOpen}
+        onClose={() => setIsAuthDialogOpen(false)}
+        title="Join Our Mentor Community"
+        description="Create an account or sign in to register as a mentor and start helping students achieve their dreams."
+        redirectUrl="/mentor-registration"
+      />
     </section>
   );
 };
