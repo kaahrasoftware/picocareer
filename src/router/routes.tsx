@@ -2,6 +2,7 @@
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "../pages/Index";
 import Career from "../pages/Career";
 import Mentor from "../pages/Mentor";
@@ -128,7 +129,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "profile",
-        element: <Profile />,
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "personality-test",
@@ -152,7 +157,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "mentor-registration",
-        element: <MentorRegistration />,
+        element: (
+          <ProtectedRoute>
+            <MentorRegistration />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "password-reset",
@@ -160,7 +169,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <Dashboard />,
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "hubs",
