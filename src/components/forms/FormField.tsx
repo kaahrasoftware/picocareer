@@ -141,7 +141,7 @@ const SelectField = ({ control, name, label, placeholder, options, required, des
         <FormLabel>
           {label} {required && <span className="text-red-500">*</span>}
         </FormLabel>
-        <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <Select onValueChange={field.onChange} value={field.value}>
           <FormControl>
             <SelectTrigger>
               <SelectValue placeholder={placeholder} />
