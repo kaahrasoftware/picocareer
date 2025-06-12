@@ -205,33 +205,36 @@ serve(async (req) => {
 
       console.log('Successfully updated wallet balance to:', newBalance);
 
-      // Record the transaction with proper enum casting
-      console.log('Recording transaction with wallet ID:', walletId);
-      
+      // Record the transaction with enhanced structure
+      const transactionData = {
+        wallet_id: walletId,
+        transaction_type: 'credit',
+        amount: tokenPackage.token_amount,
+        description: `Purchase: ${tokenPackage.name}`,
+        transaction_status: 'completed',
+        category: 'purchase',
+        related_entity_type: 'stripe_session',
+        related_entity_id: session.id,
+        reference_id: session.id,
+        metadata: {
+          stripe_session_id: session.id,
+          package_name: tokenPackage.name,
+          package_id: tokenPackage.id,
+          price_id: priceId,
+          amount_paid: session.amount_total ? session.amount_total / 100 : tokenPackage.price_usd,
+          currency: session.currency || 'usd',
+          payment_method: session.payment_method_types?.[0] || 'card'
+        }
+      };
+
+      console.log('Recording transaction:', transactionData);
+
       const { error: transactionError } = await supabase
         .from('token_transactions')
-        .insert({
-          wallet_id: walletId,
-          transaction_type: 'credit',
-          amount: tokenPackage.token_amount,
-          description: `Purchase: ${tokenPackage.name}`,
-          transaction_status: 'completed',
-          category: 'purchase',
-          reference_id: session.id,
-          metadata: {
-            stripe_session_id: session.id,
-            package_name: tokenPackage.name,
-            package_id: tokenPackage.id,
-            price_id: priceId,
-            amount_paid: session.amount_total ? session.amount_total / 100 : tokenPackage.price_usd,
-            currency: session.currency || 'usd',
-            payment_method: session.payment_method_types?.[0] || 'card'
-          }
-        });
+        .insert(transactionData);
 
       if (transactionError) {
         console.error('Error recording transaction:', transactionError);
-        console.error('Transaction error details:', JSON.stringify(transactionError, null, 2));
         return new Response('Error recording transaction', { status: 500 });
       }
 
