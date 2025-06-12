@@ -2,6 +2,15 @@
 import { FormFieldProps } from "@/components/forms/FormField";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
 
+export const RESOURCE_TYPES = [
+  { value: "text", label: "Text Content" },
+  { value: "image", label: "Image" },
+  { value: "video", label: "Video" },
+  { value: "audio", label: "Audio" },
+  { value: "document", label: "Document" },
+  { value: "link", label: "External Link" }
+];
+
 export const feedFormFields: FormFieldProps[] = [
   {
     name: "title",
@@ -58,3 +67,63 @@ export const feedFormFields: FormFieldProps[] = [
     placeholder: "Any additional notes or information"
   }
 ];
+
+export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
+  const baseFields = [...feedFormFields];
+  
+  // Add resource-type specific fields
+  switch (resourceType) {
+    case "video":
+      baseFields.push({
+        name: "video_url",
+        label: "Video URL",
+        type: "url",
+        placeholder: "Enter video URL or upload video file",
+        bucket: "feed-videos"
+      });
+      break;
+    case "audio":
+      baseFields.push({
+        name: "audio_url",
+        label: "Audio URL",
+        type: "url",
+        placeholder: "Enter audio URL or upload audio file",
+        bucket: "feed-audio"
+      });
+      break;
+    case "document":
+      baseFields.push({
+        name: "file_url",
+        label: "Document",
+        type: "file",
+        placeholder: "Upload document file",
+        bucket: "feed-documents"
+      });
+      break;
+    case "link":
+      baseFields.push({
+        name: "external_url",
+        label: "External URL",
+        type: "url",
+        placeholder: "Enter external link URL",
+        required: true
+      });
+      break;
+    case "image":
+      // Image fields are already included in base fields
+      break;
+    default:
+      // Text content - no additional fields needed
+      break;
+  }
+
+  // Add hashtags field for all types
+  baseFields.push({
+    name: "hashtags",
+    label: "Hashtags",
+    type: "text",
+    placeholder: "Enter hashtags separated by commas (e.g., #education, #career)"
+  });
+
+  return baseFields;
+};
