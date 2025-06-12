@@ -1,15 +1,17 @@
-
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, BookOpen, Calendar, Star, TrendingUp, Clock } from "lucide-react";
 import { StatsCard } from "../StatsCard";
 import { ActivityChart } from "../ActivityChart";
 import { ContentDistributionChart } from "../ContentDistributionChart";
 import { ContentStatusCard } from "../ContentStatusCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, BookOpen, Video, Calendar } from 'lucide-react';
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAllSchools } from "@/hooks/useAllReferenceData";
 
 export function OverviewTab() {
+  const { session } = useAuthSession();
+
   // Fetch users statistics
   const { data: userStats, refetch: refetchUsers } = useQuery({
     queryKey: ['dashboard-users'],
@@ -150,8 +152,29 @@ export function OverviewTab() {
   // Calculate the actual total number of schools
   const schoolsTotal = allSchools?.length || contentStats?.schools.total || 0;
 
+  // Fetch mentoring sessions
+  const { data: mentoringSessions = [], isLoading: isLoadingSessions } = useQuery({
+    queryKey: ['mentoring-sessions', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('mentor_sessions')
+        .select('*')
+        .eq('mentor_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const sessionsCount = Array.isArray(mentoringSessions) ? mentoringSessions.length : 0;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
@@ -239,6 +262,51 @@ export function OverviewTab() {
           ]}
           title="Content Distribution"
         />
+      </div>
+
+      {/* Activity Overview */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Activity Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ActivityChart />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {sessionsCount > 0 ? (
+                mentoringSessions.slice(0, 3).map((session: any) => (
+                  <div key={session.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div>
+                      <p className="text-sm font-medium">Mentoring Session</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(session.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      {session.status}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

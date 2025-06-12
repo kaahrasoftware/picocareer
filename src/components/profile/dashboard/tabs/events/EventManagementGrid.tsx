@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,6 +37,7 @@ interface EventManagementGridProps {
 
 export function EventManagementGrid({ events, onViewDetails }: EventManagementGridProps) {
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+  const selectAllCheckboxRef = useRef<HTMLButtonElement>(null);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -57,6 +58,16 @@ export function EventManagementGrid({ events, onViewDetails }: EventManagementGr
   const isAllSelected = selectedEvents.length === events.length && events.length > 0;
   const isIndeterminate = selectedEvents.length > 0 && selectedEvents.length < events.length;
 
+  // Set indeterminate state on the checkbox
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      const element = selectAllCheckboxRef.current.querySelector('[role="checkbox"]') as HTMLElement;
+      if (element) {
+        (element as any).indeterminate = isIndeterminate;
+      }
+    }
+  }, [isIndeterminate]);
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border">
@@ -65,10 +76,8 @@ export function EventManagementGrid({ events, onViewDetails }: EventManagementGr
             <TableRow>
               <TableHead className="w-12">
                 <Checkbox
+                  ref={selectAllCheckboxRef}
                   checked={isAllSelected}
-                  ref={(el) => {
-                    if (el) el.indeterminate = isIndeterminate;
-                  }}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
