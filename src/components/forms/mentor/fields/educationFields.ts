@@ -22,6 +22,7 @@ export const educationFields: FormFieldProps[] = [
     name: "highest_degree",
     label: "Highest Degree",
     type: "select",
+    placeholder: "Select your highest degree",
     required: true,
     options: [
       { value: "No Degree", label: "No Degree" },
