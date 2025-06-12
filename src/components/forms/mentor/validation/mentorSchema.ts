@@ -21,7 +21,7 @@ export const mentorRegistrationSchema = z.object({
   school_id: z.string().min(1, "School is required"),
   academic_major_id: z.string().min(1, "Academic major is required"),
   
-  // Skills
+  // Skills - All should be strings for textarea inputs
   skills: z.string().min(1, "Skills are required"),
   tools_used: z.string().min(1, "Tools used are required"),
   keywords: z.string().min(1, "Keywords are required"),
