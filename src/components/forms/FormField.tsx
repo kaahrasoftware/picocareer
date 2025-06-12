@@ -1,181 +1,166 @@
+import React from "react";
+import { FormControl, FormField as ShadcnFormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectWithCustomOption } from "./fields/SelectWithCustomOption";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-import React from 'react';
-import { FormField as ShadcnFormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SelectWithCustomOption } from './fields/SelectWithCustomOption';
-import { DegreeField } from './fields/DegreeField';
-import { Control, FieldPath, FieldValues, UseFormWatch } from 'react-hook-form';
-
-export interface FormFieldProps<T extends FieldValues = FieldValues> {
-  control?: Control<T>;
-  name: FieldPath<T>;
+interface FormFieldProps {
+  name: string;
+  control: any;
   label: string;
-  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'checkbox' | 'select-with-custom' | 'datetime-local' | 'image' | 'richtext' | 'category' | 'subcategory' | 'array' | 'degree' | 'number';
-  placeholder?: string;
-  options?: Array<{ id: string; title?: string; name?: string; label?: string; value?: string }>;
-  tableName?: string;
-  description?: string;
   required?: boolean;
-  bucket?: string;
-  dependsOn?: string;
-  watch?: UseFormWatch<T>;
-  component?: React.ComponentType<any>;
-  defaultValue?: any;
+  children: React.ReactNode;
 }
 
-export function FormField<T extends FieldValues = FieldValues>({
-  control,
-  name,
-  label,
-  type = 'text',
-  placeholder,
-  options = [],
-  tableName,
-  description,
-  required = false,
-  bucket,
-  dependsOn,
-  watch
-}: FormFieldProps<T>) {
-  // If no control is provided, this is likely a field configuration object
-  if (!control) {
-    return null;
-  }
+interface InputFieldProps {
+  name: string;
+  control: any;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  type?: string;
+}
 
-  const renderField = (field: any) => {
-    switch (type) {
-      case 'textarea':
-        return (
-          <Textarea 
-            placeholder={placeholder} 
-            {...field} 
-            className="min-h-[100px]"
+interface TextAreaFieldProps {
+  name: string;
+  control: any;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+}
+
+interface CheckboxFieldProps {
+  name: string;
+  control: any;
+  label: string;
+}
+
+interface SelectFieldProps {
+  name: string;
+  control: any;
+  label: string;
+  placeholder?: string;
+  options: { value: string; label: string; }[];
+  required?: boolean;
+}
+
+interface DynamicSelectFieldProps {
+  name: string;
+  control: any;
+  label: string;
+  placeholder?: string;
+  tableName: string;
+  required?: boolean;
+}
+
+const InputField = ({ control, name, label, placeholder, required, type = "text" }: InputFieldProps) => (
+  <ShadcnFormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>
+          {label} {required && <span className="text-red-500">*</span>}
+        </FormLabel>
+        <FormControl>
+          <Input placeholder={placeholder} required={required} type={type} {...field} />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
+const TextAreaField = ({ control, name, label, placeholder, required }: TextAreaFieldProps) => (
+  <ShadcnFormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>
+          {label} {required && <span className="text-red-500">*</span>}
+        </FormLabel>
+        <FormControl>
+          <Textarea placeholder={placeholder} required={required} {...field} />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
+const CheckboxField = ({ control, name, label }: CheckboxFieldProps) => (
+  <ShadcnFormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+        <FormControl>
+          <Checkbox
+            checked={field.value}
+            onCheckedChange={field.onChange}
           />
-        );
-      
-      case 'checkbox':
-        return (
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              checked={field.value} 
-              onCheckedChange={field.onChange}
-              id={name}
-            />
-            <label htmlFor={name} className="text-sm">
-              {description || label}
-            </label>
-          </div>
-        );
-      
-      case 'select':
-        return (
-          <Select onValueChange={field.onChange} value={field.value}>
+        </FormControl>
+        <div className="space-y-1 leading-none">
+          <FormLabel>{label}</FormLabel>
+        </div>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
+const SelectField = ({ control, name, label, placeholder, options, required }: SelectFieldProps) => (
+  <ShadcnFormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>
+          {label} {required && <span className="text-red-500">*</span>}
+        </FormLabel>
+        <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <FormControl>
             <SelectTrigger>
-              <SelectValue placeholder={placeholder || `Select ${label.toLowerCase()}`} />
+              <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem 
-                  key={option.id || option.value} 
-                  value={option.id || option.value || ''}
-                >
-                  {option.title || option.name || option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
+          </FormControl>
+          <SelectContent>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
+const DynamicSelectField = ({ control, name, label, placeholder, tableName, required }: DynamicSelectFieldProps) => {
+  const { data: options = [] } = useQuery({
+    queryKey: [tableName],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('id, title, name')
+        .eq('status', 'Approved');
       
-      case 'select-with-custom':
-        if (!tableName) {
-          console.warn('tableName is required for select-with-custom type');
-          return <Input placeholder={placeholder} {...field} />;
-        }
-        
-        // Normalize options to have consistent structure
-        const normalizedOptions = options.map(option => ({
-          id: option.id || option.value || '',
-          title: option.title,
-          name: option.name
-        }));
-
-        return (
-          <SelectWithCustomOption
-            selectedValue={field.value || ''}
-            value={field.value || ''}
-            onValueChange={field.onChange}
-            options={normalizedOptions}
-            placeholder={placeholder || `Select ${label.toLowerCase()}`}
-            tableName={tableName}
-          />
-        );
-
-      case 'degree':
-        return (
-          <DegreeField
-            field={field}
-            label={label}
-            description={description}
-            required={required}
-          />
-        );
-
-      case 'datetime-local':
-        return (
-          <Input 
-            type="datetime-local" 
-            placeholder={placeholder} 
-            {...field} 
-          />
-        );
-
-      case 'number':
-        return (
-          <Input 
-            type="number" 
-            placeholder={placeholder} 
-            {...field} 
-          />
-        );
-
-      case 'image':
-      case 'richtext':
-      case 'category':
-      case 'subcategory':
-      case 'array':
-        // These types are handled by the parent component
-        return (
-          <Input 
-            type="text" 
-            placeholder={placeholder} 
-            {...field} 
-          />
-        );
-      
-      default:
-        return (
-          <Input 
-            type={type} 
-            placeholder={placeholder} 
-            {...field} 
-          />
-        );
+      if (error) throw error;
+      return data || [];
     }
-  };
+  });
 
-  // For degree type, don't wrap in FormField since DegreeField handles it
-  if (type === 'degree') {
-    return (
-      <ShadcnFormField
-        control={control}
-        name={name}
-        render={({ field }) => renderField(field)}
-      />
-    );
-  }
+  const formattedOptions = options.map(option => ({
+    id: option.id,
+    name: option.title || option.name
+  }));
 
   return (
     <ShadcnFormField
@@ -183,18 +168,44 @@ export function FormField<T extends FieldValues = FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
-            {label}
+          <FormLabel>
+            {label} {required && <span className="text-red-500">*</span>}
           </FormLabel>
           <FormControl>
-            {renderField(field)}
+            <SelectWithCustomOption
+              value={field.value}
+              onValueChange={field.onChange}
+              options={formattedOptions}
+              placeholder={placeholder}
+            />
           </FormControl>
-          {description && type !== 'checkbox' && (
-            <p className="text-sm text-muted-foreground">{description}</p>
-          )}
           <FormMessage />
         </FormItem>
       )}
     />
   );
-}
+};
+
+export const FormField = ({ name, control, label, required, children }: FormFieldProps) => {
+  return (
+    <ShadcnFormField
+      control={control}
+      name={name}
+      render={() => (
+        <FormItem>
+          <FormLabel>
+            {label} {required && <span className="text-red-500">*</span>}
+          </FormLabel>
+          {children}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};
+
+FormField.Input = InputField;
+FormField.TextArea = TextAreaField;
+FormField.Checkbox = CheckboxField;
+FormField.Select = SelectField;
+FormField.DynamicSelect = DynamicSelectField;

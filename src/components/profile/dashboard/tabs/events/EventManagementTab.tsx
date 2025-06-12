@@ -1,89 +1,70 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { EventDetailsDialog } from './EventDetailsDialog';
-import { EventDashboardStats } from './EventDashboardStats';
-import { EventSummaryTab } from './EventSummaryTab';
-import { EventRegistrationsTab } from './EventRegistrationsTab';
-import { EventResourcesManagementTab } from './EventResourcesManagementTab';
-import { EventManagementGrid } from './EventManagementGrid';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { EventManagementGrid } from "./EventManagementGrid";
+
+interface Event {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  event_type: string;
+  max_attendees?: number;
+}
 
 export function EventManagementTab() {
-  const navigate = useNavigate();
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("events");
+  const { session } = useAuthSession();
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-  const handleAddNewEvent = () => {
-    navigate('/event/upload');
-  };
+  const { data: events = [], isLoading } = useQuery({
+    queryKey: ['user-events', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('author_id', session.user.id)
+        .order('start_time', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!session?.user?.id
+  });
 
-  const handleViewDetails = (event: any) => {
+  const handleViewDetails = (event: Event) => {
     setSelectedEvent(event);
-    setIsDetailsDialogOpen(true);
   };
 
-  const handleCloseDetailsDialog = () => {
-    setIsDetailsDialogOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const handleEventSelect = (event: any) => {
-    setSelectedEvent(event);
-    // Switch to resources tab when an event is selected for resource management
-    setActiveTab("resources");
-  };
+  if (isLoading) {
+    return <div>Loading events...</div>;
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Event Management</h2>
-        <Button onClick={handleAddNewEvent} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Add New Event
+        <div>
+          <h3 className="text-lg font-semibold">Event Management</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your events and view analytics
+          </p>
+        </div>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Event
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="registrations">Registrations</TabsTrigger>
-          <TabsTrigger value="resources">Event Resources</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="summary">
-          <EventSummaryTab />
-        </TabsContent>
-
-        <TabsContent value="events" className="space-y-6">
-          <EventDashboardStats />
-
-          <EventManagementGrid
-            onViewDetails={handleViewDetails}
-            onManageResources={handleEventSelect}
-          />
-        </TabsContent>
-
-        <TabsContent value="registrations">
-          <EventRegistrationsTab />
-        </TabsContent>
-
-        <TabsContent value="resources">
-          <EventResourcesManagementTab eventId={selectedEvent?.id} />
-        </TabsContent>
-      </Tabs>
-
-      {selectedEvent && (
-        <EventDetailsDialog 
-          event={selectedEvent} 
-          isOpen={isDetailsDialogOpen} 
-          onClose={handleCloseDetailsDialog} 
-        />
-      )}
+      <EventManagementGrid
+        events={events}
+        onViewDetails={handleViewDetails}
+      />
     </div>
   );
 }
