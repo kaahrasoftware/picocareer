@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface FormFieldProps {
   name: string;
-  control?: any; // Made optional since it's provided at runtime
+  control?: any;
   label: string;
   required?: boolean;
   type?: string;
@@ -24,7 +24,7 @@ export interface FormFieldProps {
   dependsOn?: string;
   watch?: any;
   children?: React.ReactNode;
-  component?: React.ComponentType<any>; // Add component prop for backwards compatibility
+  component?: React.ComponentType<any>;
 }
 
 interface InputFieldProps {
@@ -202,7 +202,6 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
         status: 'Pending'
       };
 
-      // Set the appropriate field based on table type
       if (tableName === 'majors' || tableName === 'careers') {
         insertData.title = name;
         if (tableName === 'careers') {
@@ -222,13 +221,14 @@ const DynamicSelectField = ({ control, name, label, placeholder, tableName, requ
 
       if (error) throw error;
 
-      // Refetch the options to include the new item
       await refetch();
 
       // Auto-select the newly created item
-      const fieldOnChange = control._fields[name]?._f?.onChange;
-      if (fieldOnChange && data && typeof data === 'object' && 'id' in data) {
-        fieldOnChange(data.id);
+      if (data && control._fields && control._fields[name]) {
+        const fieldOnChange = control._fields[name]._f?.onChange;
+        if (fieldOnChange && typeof data === 'object' && 'id' in data) {
+          fieldOnChange(data.id);
+        }
       }
 
       toast({

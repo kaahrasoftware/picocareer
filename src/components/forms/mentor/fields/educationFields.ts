@@ -1,5 +1,6 @@
 
 import { FormFieldProps } from "@/components/forms/FormField";
+import { degreeOptions } from "@/constants/degrees";
 
 export const educationFields: FormFieldProps[] = [
   {
@@ -24,14 +25,9 @@ export const educationFields: FormFieldProps[] = [
     type: "select",
     placeholder: "Select your highest degree",
     required: true,
-    options: [
-      { value: "No Degree", label: "No Degree" },
-      { value: "High School", label: "High School" },
-      { value: "Associate", label: "Associate" },
-      { value: "Bachelor", label: "Bachelor" },
-      { value: "Master", label: "Master" },
-      { value: "MD", label: "MD" },
-      { value: "PhD", label: "PhD" }
-    ]
+    options: degreeOptions.map(degree => ({
+      value: degree,
+      label: degree
+    }))
   }
 ];

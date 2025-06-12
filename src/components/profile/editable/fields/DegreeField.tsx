@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -7,16 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const degreeOptions = [
-  "No Degree",
-  "High School",
-  "Associate",
-  "Bachelor",
-  "Master",
-  "MD",
-  "PhD"
-] as const;
+import { degreeOptions } from "@/constants/degrees";
 
 interface DegreeFieldProps {
   value: string;

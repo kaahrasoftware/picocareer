@@ -4,19 +4,21 @@ import { FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { degreeOptions } from "@/constants/degrees";
 
-interface DegreeFieldProps {
+interface DegreeSelectFieldProps {
   field: any;
   label: string;
   description?: string;
   required?: boolean;
+  placeholder?: string;
 }
 
-export function DegreeField({
+export function DegreeSelectField({
   field,
   label,
   description,
-  required
-}: DegreeFieldProps) {
+  required,
+  placeholder = "Select your highest degree"
+}: DegreeSelectFieldProps) {
   return (
     <FormItem>
       <FormLabel>
@@ -28,7 +30,7 @@ export function DegreeField({
           onValueChange={field.onChange}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select your highest degree" />
+            <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
             {degreeOptions.map((degree) => (
