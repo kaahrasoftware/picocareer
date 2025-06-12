@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MeetingPlatform } from "@/types/calendar";
 import { DateSelector } from "./DateSelector";
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 
 interface BookingFormProps {
   mentorId: string;
+  mentorName: string; // Add this prop to get mentor name
   onFormChange: (formData: {
     date?: Date;
     selectedTime?: string;
@@ -30,7 +30,7 @@ interface BookingFormProps {
   onSuccess: () => void;
 }
 
-export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingFormProps) {
+export function BookingFormDebug({ mentorId, mentorName, onFormChange, onSuccess }: BookingFormProps) {
   const [date, setDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
   const [sessionType, setSessionType] = useState<string>();
@@ -70,20 +70,33 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
 
   const handleContinueToPayment = () => {
     if (!date || !selectedTime || !sessionType) return;
+    console.log('🎯 Debug: Opening payment dialog with debug mode');
     setShowPaymentDialog(true);
   };
 
   const handleConfirmPayment = async () => {
-    if (!profile?.full_name) return;
+    if (!profile?.full_name) {
+      console.error('❌ Debug: No profile or full name found');
+      return;
+    }
+
+    console.log('🚀 Debug: Starting payment with enhanced debug notification handling');
+    console.log('👤 Debug: Mentor Name:', mentorName);
+    console.log('👤 Debug: Mentee Name:', profile.full_name);
 
     await processPaymentAndBooking({
       mentorId,
-      mentorName: "Mentor", // This should be passed as prop or fetched
+      mentorName, // Pass the mentor name to the payment handler
       menteeName: profile.full_name,
       formData,
-      onSuccess,
+      onSuccess: () => {
+        console.log('✅ Debug: Payment and booking completed successfully');
+        setShowPaymentDialog(false);
+        onSuccess();
+      },
       onError: (error) => {
-        console.error('Booking error:', error);
+        console.error('❌ Debug: Booking error:', error);
+        // Keep dialog open so user can try again
       }
     });
   };
@@ -201,7 +214,7 @@ export function BookingFormDebug({ mentorId, onFormChange, onSuccess }: BookingF
         onClose={() => setShowPaymentDialog(false)}
         onConfirmPayment={handleConfirmPayment}
         sessionDetails={{
-          mentorName: "Mentor", // This should be passed as prop
+          mentorName: mentorName,
           date: date || new Date(),
           time: selectedTime || "",
           sessionType: sessionTypes.find(type => type.id === sessionType)?.type || ""

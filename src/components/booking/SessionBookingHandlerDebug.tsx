@@ -60,7 +60,7 @@ export function useSessionBookingDebug() {
       const sessionId = bookingResult.sessionId;
       console.log('✅ Session booked successfully with ID:', sessionId);
 
-      console.log('📧 Step 2: Starting notification process...');
+      console.log('📧 Step 2: Starting enhanced notification process...');
       
       // Get current user for notifications
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -68,6 +68,8 @@ export function useSessionBookingDebug() {
         console.error('❌ Could not get current user for notifications:', userError);
         throw new Error('User authentication failed');
       }
+
+      console.log('👤 Current user ID:', user.id);
 
       // Initialize notification status tracking
       const notificationStatus = {
@@ -91,17 +93,24 @@ export function useSessionBookingDebug() {
           action_url: `/sessions/${sessionId}`
         };
 
-        console.log('📤 Creating mentor notification:', mentorNotificationData);
+        console.log('📤 Creating mentor notification with data:', mentorNotificationData);
         
-        const { error: mentorNotificationError } = await supabase
+        const { data: mentorNotificationResult, error: mentorNotificationError } = await supabase
           .from('notifications')
-          .insert(mentorNotificationData);
+          .insert(mentorNotificationData)
+          .select('*');
 
         if (mentorNotificationError) {
           console.error('❌ Mentor notification failed:', mentorNotificationError);
+          console.error('❌ Mentor notification error details:', {
+            message: mentorNotificationError.message,
+            details: mentorNotificationError.details,
+            hint: mentorNotificationError.hint,
+            code: mentorNotificationError.code
+          });
           notificationStatus.mentorNotification = { status: 'failed', error: mentorNotificationError.message };
         } else {
-          console.log('✅ Mentor notification created successfully');
+          console.log('✅ Mentor notification created successfully:', mentorNotificationResult);
           notificationStatus.mentorNotification = { status: 'success', error: null };
         }
       } catch (error: any) {
@@ -120,17 +129,24 @@ export function useSessionBookingDebug() {
           action_url: `/sessions/${sessionId}`
         };
 
-        console.log('📤 Creating mentee notification:', menteeNotificationData);
+        console.log('📤 Creating mentee notification with data:', menteeNotificationData);
 
-        const { error: menteeNotificationError } = await supabase
+        const { data: menteeNotificationResult, error: menteeNotificationError } = await supabase
           .from('notifications')
-          .insert(menteeNotificationData);
+          .insert(menteeNotificationData)
+          .select('*');
 
         if (menteeNotificationError) {
           console.error('❌ Mentee notification failed:', menteeNotificationError);
+          console.error('❌ Mentee notification error details:', {
+            message: menteeNotificationError.message,
+            details: menteeNotificationError.details,
+            hint: menteeNotificationError.hint,
+            code: menteeNotificationError.code
+          });
           notificationStatus.menteeNotification = { status: 'failed', error: menteeNotificationError.message };
         } else {
-          console.log('✅ Mentee notification created successfully');
+          console.log('✅ Mentee notification created successfully:', menteeNotificationResult);
           notificationStatus.menteeNotification = { status: 'success', error: null };
         }
       } catch (error: any) {
@@ -225,6 +241,10 @@ export function useSessionBookingDebug() {
 
       if (criticalFailures.length > 0) {
         console.warn('⚠️ Some notifications failed, but session was booked successfully');
+        console.warn('⚠️ Critical notification failures:', {
+          mentorFailed: notificationStatus.mentorNotification.status === 'failed',
+          menteeFailed: notificationStatus.menteeNotification.status === 'failed'
+        });
       }
 
       console.log('🎉 Session booking process completed!');

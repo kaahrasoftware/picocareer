@@ -33,6 +33,7 @@ export function useSessionPaymentDebug() {
     const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
     
     console.log('🚀 Starting session payment and booking process with enhanced debug logging...');
+    console.log('📋 Payment params:', { mentorId, mentorName, menteeName });
     console.log('📋 Form data:', formData);
     console.log('💰 Wallet info:', wallet);
     
@@ -88,30 +89,29 @@ export function useSessionPaymentDebug() {
       transactionId = tokenResult.transaction_id;
       console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
 
-      console.log('📅 Step 2: Attempting to book session with enhanced logging...');
+      console.log('📅 Step 2: Attempting to book session with enhanced debug notification handling...');
       
       // Step 2: Book the session using the enhanced debug booking handler
       try {
-        await handleSessionBooking({
-          mentorId,
-          mentorName,
-          menteeName,
-          formData,
-          onSuccess: () => {
-            console.log('✅ Session booking handler reported success');
-            bookingSucceeded = true;
-          },
-          onError: (bookingError) => {
-            console.error('❌ Session booking handler reported error:', bookingError);
-            throw bookingError;
-          }
+        await new Promise<void>((resolve, reject) => {
+          handleSessionBooking({
+            mentorId,
+            mentorName,
+            menteeName,
+            formData,
+            onSuccess: () => {
+              console.log('✅ Debug: Session booking handler reported success');
+              bookingSucceeded = true;
+              resolve();
+            },
+            onError: (bookingError) => {
+              console.error('❌ Debug: Session booking handler reported error:', bookingError);
+              reject(bookingError);
+            }
+          });
         });
 
-        // If we get here without throwing, the booking succeeded
-        if (!bookingSucceeded) {
-          console.log('✅ Session booking completed successfully (fallback success detection)');
-          bookingSucceeded = true;
-        }
+        console.log('✅ Session booking completed successfully with debug notifications');
 
       } catch (bookingError: any) {
         console.error('❌ Session booking failed, details:', bookingError);
@@ -148,7 +148,7 @@ export function useSessionPaymentDebug() {
         throw new Error(bookingError.message || 'Failed to book session');
       }
 
-      console.log('🎉 Session booking process completed successfully!');
+      console.log('🎉 Session booking process completed successfully with debug notifications!');
       
       toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
       onSuccess();
