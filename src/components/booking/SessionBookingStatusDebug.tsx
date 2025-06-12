@@ -31,6 +31,85 @@ export function SessionBookingStatusDebug({ isVisible, onClose }: SessionBooking
     menteeEmail: { status: 'pending' }
   });
 
+  // Listen for console logs to update status in real-time
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+
+    console.log = (...args) => {
+      originalConsoleLog(...args);
+      const message = args.join(' ');
+      
+      // Update status based on console messages
+      if (message.includes('✅ Mentor notification created successfully')) {
+        setStatus(prev => ({
+          ...prev,
+          mentorNotification: { status: 'success', error: null }
+        }));
+      } else if (message.includes('✅ Mentee notification created successfully')) {
+        setStatus(prev => ({
+          ...prev,
+          menteeNotification: { status: 'success', error: null }
+        }));
+      } else if (message.includes('✅ Admin notifications sent successfully')) {
+        setStatus(prev => ({
+          ...prev,
+          adminNotification: { status: 'success', error: null }
+        }));
+      } else if (message.includes('✅ Mentor email sent successfully')) {
+        setStatus(prev => ({
+          ...prev,
+          mentorEmail: { status: 'success', error: null }
+        }));
+      } else if (message.includes('✅ Mentee email sent successfully')) {
+        setStatus(prev => ({
+          ...prev,
+          menteeEmail: { status: 'success', error: null }
+        }));
+      }
+    };
+
+    console.error = (...args) => {
+      originalConsoleError(...args);
+      const message = args.join(' ');
+      
+      // Update status based on error messages
+      if (message.includes('❌ Mentor notification failed')) {
+        setStatus(prev => ({
+          ...prev,
+          mentorNotification: { status: 'failed', error: message }
+        }));
+      } else if (message.includes('❌ Mentee notification failed')) {
+        setStatus(prev => ({
+          ...prev,
+          menteeNotification: { status: 'failed', error: message }
+        }));
+      } else if (message.includes('❌ Admin notification failed')) {
+        setStatus(prev => ({
+          ...prev,
+          adminNotification: { status: 'failed', error: message }
+        }));
+      } else if (message.includes('❌ Mentor email failed')) {
+        setStatus(prev => ({
+          ...prev,
+          mentorEmail: { status: 'failed', error: message }
+        }));
+      } else if (message.includes('❌ Mentee email failed')) {
+        setStatus(prev => ({
+          ...prev,
+          menteeEmail: { status: 'failed', error: message }
+        }));
+      }
+    };
+
+    return () => {
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+    };
+  }, [isVisible]);
+
   const getStatusIcon = (status: 'pending' | 'success' | 'failed') => {
     switch (status) {
       case 'success':

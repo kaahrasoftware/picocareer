@@ -82,15 +82,20 @@ export function useSessionBookingDebug() {
       
       // Create notification for mentor
       try {
+        const mentorNotificationData = {
+          profile_id: mentorId,
+          title: "New Session Booking",
+          message: `${menteeName} has booked a session with you for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
+          type: "session_booked" as const,
+          category: "mentorship" as const,
+          action_url: `/sessions/${sessionId}`
+        };
+
+        console.log('📤 Creating mentor notification:', mentorNotificationData);
+        
         const { error: mentorNotificationError } = await supabase
           .from('notifications')
-          .insert({
-            profile_id: mentorId,
-            title: "New Session Booking",
-            message: `${menteeName} has booked a session with you for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
-            type: "session_booked",
-            category: "mentorship"
-          });
+          .insert(mentorNotificationData);
 
         if (mentorNotificationError) {
           console.error('❌ Mentor notification failed:', mentorNotificationError);
@@ -106,15 +111,20 @@ export function useSessionBookingDebug() {
 
       // Create notification for mentee
       try {
+        const menteeNotificationData = {
+          profile_id: user.id,
+          title: "Session Booking Confirmed",
+          message: `Your session with ${mentorName} has been confirmed for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
+          type: "session_booked" as const,
+          category: "mentorship" as const,
+          action_url: `/sessions/${sessionId}`
+        };
+
+        console.log('📤 Creating mentee notification:', menteeNotificationData);
+
         const { error: menteeNotificationError } = await supabase
           .from('notifications')
-          .insert({
-            profile_id: user.id,
-            title: "Session Booking Confirmed",
-            message: `Your session with ${mentorName} has been confirmed for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
-            type: "session_confirmed",
-            category: "mentorship"
-          });
+          .insert(menteeNotificationData);
 
         if (menteeNotificationError) {
           console.error('❌ Mentee notification failed:', menteeNotificationError);
