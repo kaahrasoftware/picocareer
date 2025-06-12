@@ -26,25 +26,15 @@ export function useSessionPayment() {
 
   const processPaymentAndBooking = async (params: SessionPaymentParams) => {
     setIsProcessing(true);
-    
     try {
       console.log('Processing payment and booking...', params);
-      
-      await handleSessionBooking({
-        ...params,
-        onSuccess: () => {
-          setIsProcessing(false);
-          params.onSuccess();
-        },
-        onError: (error) => {
-          setIsProcessing(false);
-          params.onError(error);
-        }
-      });
+      // This now handles both booking and token deduction in the correct order
+      await handleSessionBooking(params);
     } catch (error) {
       console.error('Session booking failed:', error);
-      setIsProcessing(false);
       params.onError(error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 

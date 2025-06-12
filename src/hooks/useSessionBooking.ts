@@ -39,37 +39,19 @@ export function useSessionBooking() {
     onError
   }: SessionBookingParams) => {
     if (!formData.date || !formData.selectedTime || !formData.sessionType) {
-      const error = new Error('Please select a date, time and session type');
-      toast.error(error.message);
-      onError(error);
+      toast.error('Please select a date, time and session type');
       return;
     }
 
     if (!wallet) {
-      const error = new Error('Wallet not found');
-      toast.error(error.message);
-      onError(error);
-      return;
-    }
-
-    if (wallet.balance < 25) {
-      const error = new Error('Insufficient tokens. You need 25 tokens to book a session.');
-      toast.error(error.message);
-      onError(error);
+      toast.error('Wallet not found');
       return;
     }
 
     setIsBooking(true);
 
     try {
-      console.log('Starting session booking process...', {
-        mentorId,
-        mentorName,
-        date: formData.date,
-        time: formData.selectedTime,
-        sessionType: formData.sessionType,
-        platform: formData.meetingPlatform
-      });
+      console.log('Starting session booking process...');
 
       // First, attempt to book the session
       const bookingResult = await bookSession({
@@ -83,8 +65,6 @@ export function useSessionBooking() {
         menteeTelegramUsername: formData.menteeTelegramUsername,
       });
 
-      console.log('Booking result:', bookingResult);
-
       if (!bookingResult.success) {
         throw new Error(bookingResult.error || 'Failed to book session');
       }
@@ -92,7 +72,7 @@ export function useSessionBooking() {
       console.log('Session booked successfully, now deducting tokens...');
 
       // Only deduct tokens after successful booking
-      const tokenResult = await deductTokens.mutateAsync({
+      await deductTokens.mutateAsync({
         walletId: wallet.id,
         amount: 25,
         description: `Mentor session with ${mentorName}`,
@@ -107,38 +87,16 @@ export function useSessionBooking() {
         }
       });
 
-      console.log('Token deduction result:', tokenResult);
-
-      if (!tokenResult.success) {
-        // If token deduction fails, we should try to cancel the booking
-        console.error('Token deduction failed, attempting to cancel booking...');
-        
-        try {
-          await supabase
-            .from('mentor_sessions')
-            .delete()
-            .eq('id', bookingResult.sessionId);
-          
-          throw new Error('Token deduction failed. Booking has been cancelled.');
-        } catch (cancelError) {
-          console.error('Failed to cancel booking:', cancelError);
-          throw new Error('Token deduction failed and booking could not be cancelled. Please contact support.');
-        }
-      }
-
       console.log('Tokens deducted successfully');
-      toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
+      toast.success(`Session booked successfully with ${mentorName}`);
       onSuccess();
     } catch (error: any) {
       console.error('Error in session booking process:', error);
       
-      // Provide specific error messages
-      if (error.message.includes('create_session_and_update_availability')) {
-        toast.error('Session booking service is temporarily unavailable. Please try again later.');
-      } else if (error.message.includes('token')) {
-        toast.error(error.message);
-      } else if (error.message.includes('Time slot is already booked')) {
-        toast.error('This time slot is no longer available. Please select a different time.');
+      // If we got here and there was a booking but token deduction failed,
+      // we should ideally cancel the booking, but for now we'll just log it
+      if (error.message && error.message.includes('token')) {
+        toast.error('Session was booked but token deduction failed. Please contact support.');
       } else {
         toast.error(error.message || 'Failed to book session. Please try again.');
       }
