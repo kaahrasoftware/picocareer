@@ -1,127 +1,50 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form } from '@/components/ui/form';
-import { FormField } from './FormField';
-import { COUNTRIES } from '@/constants/geography';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { FormField } from "./FormField";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-// Define proper types for form data
-const registrationSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  user_type: z.enum(['High School Student', 'College Student', 'Professional', 'Unemployed'], {
-    required_error: 'Please select your current status'
-  }),
-  academic_major_id: z.string().optional(),
-  position: z.string().optional(),
-  country: z.string().min(1, 'Country is required'),
-  where_did_you_hear_about_us: z.string().min(1, 'Please tell us how you heard about us')
-}).refine((data) => {
-  // Conditional validation: students need major, professionals/unemployed need position
-  if (data.user_type === 'High School Student' || data.user_type === 'College Student') {
-    return !!data.academic_major_id;
-  }
-  if (data.user_type === 'Professional' || data.user_type === 'Unemployed') {
-    return !!data.position;
-  }
-  return true;
-}, {
-  message: "Please complete all required fields for your status",
-  path: ["conditional_field"]
+const formSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email"),
+  student_or_professional: z.string().min(1, "Please select your status"),
+  "current academic field/position": z.string().min(1, "This field is required"),
+  "current school/company": z.string().optional(),
+  country: z.string().min(1, "Please select your country"),
+  "where did you hear about us": z.string().min(1, "Please select how you heard about us"),
 });
-
-type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 interface EventRegistrationFormProps {
   eventId: string;
-  onSubmit: (data: any) => Promise<void>;
-  onCancel: () => void;
+  onSuccess?: () => void;
 }
 
-const USER_TYPE_OPTIONS = [
-  { id: 'High School Student', name: 'High School Student' },
-  { id: 'College Student', name: 'College Student' },
-  { id: 'Professional', name: 'Professional' },
-  { id: 'Unemployed', name: 'Unemployed' }
-];
+export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const COUNTRY_OPTIONS = COUNTRIES.map(country => ({
-  id: country,
-  name: country
-}));
-
-// Updated options to match database enum values
-const HEARD_ABOUT_US_OPTIONS = [
-  // Social Media Platforms
-  { id: 'Facebook', name: 'Facebook' },
-  { id: 'Instagram', name: 'Instagram' },
-  { id: 'WhatsApp', name: 'WhatsApp' },
-  { id: 'Twitter/X', name: 'Twitter/X' },
-  { id: 'LinkedIn', name: 'LinkedIn' },
-  { id: 'TikTok', name: 'TikTok' },
-  { id: 'YouTube', name: 'YouTube' },
-  { id: 'Snapchat', name: 'Snapchat' },
-  { id: 'Reddit', name: 'Reddit' },
-  { id: 'Discord', name: 'Discord' },
-  
-  // Professional/Educational Channels
-  { id: 'Friend/Family', name: 'Friend/Family' },
-  { id: 'School/University', name: 'School/University' },
-  { id: 'Career Fair', name: 'Career Fair' },
-  { id: 'Professional Network/Association', name: 'Professional Network/Association' },
-  { id: 'Alumni Network', name: 'Alumni Network' },
-  
-  // Digital Discovery
-  { id: 'Google Search', name: 'Google Search' },
-  { id: 'Other Search Engine', name: 'Other Search Engine' },
-  { id: 'Email Newsletter', name: 'Email Newsletter' },
-  { id: 'Blog/Article', name: 'Blog/Article' },
-  { id: 'Podcast', name: 'Podcast' },
-  { id: 'Online Advertisement', name: 'Online Advertisement' },
-  
-  // Direct Discovery
-  { id: 'Website', name: 'Website' },
-  { id: 'Mobile App', name: 'Mobile App' },
-  { id: 'QR Code', name: 'QR Code' },
-  
-  // Other
-  { id: 'Other', name: 'Other' }
-];
-
-export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegistrationFormProps) {
-  const form = useForm<RegistrationFormData>({
-    resolver: zodResolver(registrationSchema)
-  });
-
-  const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = form;
-  
-  // Watch the user_type field to conditionally show fields
-  const userType = watch('user_type');
-
-  // Fetch majors for students
-  const { data: majors } = useQuery({
-    queryKey: ['majors'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('majors')
-        .select('id, title')
-        .eq('status', 'Approved')
-        .order('title');
-      if (error) throw error;
-      return data || [];
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      first_name: "",
+      last_name: "",
+      email: "",
+      student_or_professional: "",
+      "current academic field/position": "",
+      "current school/company": "",
+      country: "",
+      "where did you hear about us": "",
     },
-    enabled: userType === 'High School Student' || userType === 'College Student'
   });
 
-  // Fetch careers for professionals
-  const { data: careers } = useQuery({
+  // Fetch careers for the dropdown
+  const { data: careers = [] } = useQuery({
     queryKey: ['careers'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -129,234 +52,266 @@ export function EventRegistrationForm({ eventId, onSubmit, onCancel }: EventRegi
         .select('id, title')
         .eq('status', 'Approved')
         .order('title');
+      
       if (error) throw error;
       return data || [];
-    },
-    enabled: userType === 'Professional' || userType === 'Unemployed'
+    }
   });
 
-  const onFormSubmit = async (data: RegistrationFormData) => {
-    console.log('Form data before transformation:', data);
-    
-    // Get the actual title based on user type and selected ID
-    let academicFieldPosition = '';
-    
+  // Fetch majors for the dropdown
+  const { data: majors = [] } = useQuery({
+    queryKey: ['majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title')
+        .eq('status', 'Approved')
+        .order('title');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch schools for the dropdown
+  const { data: schools = [] } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch companies for the dropdown
+  const { data: companies = [] } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('status', 'Approved')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
     try {
-      if (userType === 'High School Student' || userType === 'College Student') {
-        if (data.academic_major_id) {
-          const major = majors?.find(m => m.id === data.academic_major_id);
-          academicFieldPosition = major?.title || '';
-        }
-      } else if (userType === 'Professional' || userType === 'Unemployed') {
-        if (data.position) {
-          const career = careers?.find(c => c.id === data.position);
-          academicFieldPosition = career?.title || '';
-        }
-      }
-      
-      console.log('Academic field/position value:', academicFieldPosition);
-      
-      // Ensure we have a value for the required field
-      if (!academicFieldPosition) {
-        console.error('Missing academic field/position value');
-        throw new Error('Please select your academic field or career position');
-      }
-      
-      // Transform data to match the database schema
-      const transformedData = {
-        email: data.email,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        'current academic field/position': academicFieldPosition,
-        student_or_professional: userType,
-        'current school/company': '', // This field is now nullable with default empty string
-        country: data.country,
-        'where did you hear about us': data.where_did_you_hear_about_us
+      // Create the insertion data with proper typing
+      const insertData = {
+        event_id: eventId,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        email: values.email,
+        student_or_professional: values.student_or_professional,
+        "current academic field/position": values["current academic field/position"],
+        "current school/company": values["current school/company"] || "",
+        country: values.country as any, // Type assertion for enum
+        "where did you hear about us": values["where did you hear about us"] as any, // Type assertion for enum
       };
-      
-      console.log('Transformed data for submission:', transformedData);
-      
-      await onSubmit(transformedData);
+
+      const { error } = await supabase
+        .from('event_registrations')
+        .insert(insertData);
+
+      if (error) throw error;
+
+      toast.success("Registration successful!");
+      form.reset();
+      onSuccess?.();
     } catch (error) {
-      console.error('Error submitting registration:', error);
-      throw error; // Re-throw to allow form to handle the error
+      console.error('Registration error:', error);
+      toast.error("Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Helper function to get the conditional field label with clearer messaging
-  const getConditionalFieldLabel = () => {
-    switch (userType) {
-      case 'High School Student':
-        return 'Major you are interested in pursuing';
-      case 'College Student':
-        return 'Major you are currently pursuing';
-      case 'Professional':
-        return 'Your current career/profession';
-      case 'Unemployed':
-        return 'Career you are interested in';
-      default:
-        return '';
-    }
-  };
+  const studentOrProfessionalOptions = [
+    { value: "High School Student", label: "High School Student" },
+    { value: "College/University Student", label: "College/University Student" },
+    { value: "Graduate Student", label: "Graduate Student" },
+    { value: "Recent Graduate", label: "Recent Graduate" },
+    { value: "Working Professional", label: "Working Professional" },
+    { value: "Career Changer", label: "Career Changer" },
+    { value: "Other", label: "Other" },
+  ];
 
-  // Helper function to get placeholder text for conditional fields
-  const getConditionalFieldPlaceholder = () => {
-    switch (userType) {
-      case 'High School Student':
-        return 'Select the major you want to study';
-      case 'College Student':
-        return 'Select your current major';
-      case 'Professional':
-        return 'Select your current career';
-      case 'Unemployed':
-        return 'Select the career you want to pursue';
-      default:
-        return '';
-    }
-  };
+  const countryOptions = [
+    { value: "United States", label: "United States" },
+    { value: "Canada", label: "Canada" },
+    { value: "United Kingdom", label: "United Kingdom" },
+    { value: "Australia", label: "Australia" },
+    { value: "Germany", label: "Germany" },
+    { value: "France", label: "France" },
+    { value: "Netherlands", label: "Netherlands" },
+    { value: "Sweden", label: "Sweden" },
+    { value: "Denmark", label: "Denmark" },
+    { value: "Norway", label: "Norway" },
+    { value: "Finland", label: "Finland" },
+    { value: "Switzerland", label: "Switzerland" },
+    { value: "Austria", label: "Austria" },
+    { value: "Belgium", label: "Belgium" },
+    { value: "Ireland", label: "Ireland" },
+    { value: "New Zealand", label: "New Zealand" },
+    { value: "Singapore", label: "Singapore" },
+    { value: "Japan", label: "Japan" },
+    { value: "South Korea", label: "South Korea" },
+    { value: "Hong Kong", label: "Hong Kong" },
+    { value: "Other", label: "Other" },
+  ];
 
-  // Get options based on user type
-  const getConditionalFieldOptions = () => {
-    if (userType === 'High School Student' || userType === 'College Student') {
-      return majors?.map(major => ({ id: major.id, name: major.title })) || [];
-    } else if (userType === 'Professional' || userType === 'Unemployed') {
-      return careers?.map(career => ({ id: career.id, name: career.title })) || [];
-    }
-    return [];
-  };
+  const hearAboutUsOptions = [
+    { value: "Social Media", label: "Social Media" },
+    { value: "Search Engine", label: "Search Engine" },
+    { value: "Friend/Colleague", label: "Friend/Colleague" },
+    { value: "University/School", label: "University/School" },
+    { value: "Professional Network", label: "Professional Network" },
+    { value: "Email Newsletter", label: "Email Newsletter" },
+    { value: "Advertisement", label: "Advertisement" },
+    { value: "Other", label: "Other" },
+  ];
+
+  // Format data for FormField components
+  const formattedCareers = careers.map(career => ({ value: career.id, label: career.title }));
+  const formattedMajors = majors.map(major => ({ value: major.id, label: major.title }));
+  const formattedSchools = schools.map(school => ({ value: school.id, label: school.name }));
+  const formattedCompanies = companies.map(company => ({ value: company.id, label: company.name }));
+
+  const watchStudentOrProfessional = form.watch("student_or_professional");
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Register for Event</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
-              
-              <FormField
-                control={control}
-                name="email"
-                label="Email Address"
-                type="text"
-                placeholder="Enter your email address"
-                required={true}
-              />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="first_name"
+            label="First Name"
+            type="text"
+            placeholder="Enter your first name"
+            required
+          />
+          
+          <FormField
+            control={form.control}
+            name="last_name"
+            label="Last Name"
+            type="text"
+            placeholder="Enter your last name"
+            required
+          />
+        </div>
 
-              <FormField
-                control={control}
-                name="first_name"
-                label="First Name"
-                type="text"
-                placeholder="Enter your first name"
-                required={true}
-              />
+        <FormField
+          control={form.control}
+          name="email"
+          label="Email"
+          type="email"
+          placeholder="Enter your email address"
+          required
+        />
 
-              <FormField
-                control={control}
-                name="last_name"
-                label="Last Name"
-                type="text"
-                placeholder="Enter your last name"
-                required={true}
-              />
-            </div>
+        <FormField
+          control={form.control}
+          name="student_or_professional"
+          label="Current Status"
+          type="select"
+          placeholder="Select your current status"
+          options={studentOrProfessionalOptions}
+          required
+        />
 
-            {/* Status Selection Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Current Status</h3>
-              
-              <FormField
-                control={control}
-                name="user_type"
-                label="What is your current status?"
-                type="select"
-                options={USER_TYPE_OPTIONS}
-                placeholder="Select your current status"
-                required={true}
-              />
-            </div>
-
-            {/* Conditional Academic/Career Section */}
-            {userType && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {userType === 'High School Student' || userType === 'College Student' 
-                    ? 'Academic Information' 
-                    : 'Career Information'}
-                </h3>
-                
-                {(userType === 'High School Student' || userType === 'College Student') && (
-                  <FormField
-                    control={control}
-                    name="academic_major_id"
-                    label={getConditionalFieldLabel()}
-                    type="select"
-                    options={getConditionalFieldOptions()}
-                    placeholder={getConditionalFieldPlaceholder()}
-                    required={true}
-                  />
-                )}
-
-                {(userType === 'Professional' || userType === 'Unemployed') && (
-                  <FormField
-                    control={control}
-                    name="position"
-                    label={getConditionalFieldLabel()}
-                    type="select"
-                    options={getConditionalFieldOptions()}
-                    placeholder={getConditionalFieldPlaceholder()}
-                    required={true}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Geographic Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Location</h3>
-              
-              <FormField
-                control={control}
-                name="country"
-                label="Country"
-                type="select"
-                options={COUNTRY_OPTIONS}
-                placeholder="Select your country"
-                required={true}
-              />
-            </div>
-
-            {/* Discovery Method Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">How did you find us?</h3>
-              
-              <FormField
-                control={control}
-                name="where_did_you_hear_about_us"
-                label="Where did you hear about us?"
-                type="select"
-                options={HEARD_ABOUT_US_OPTIONS}
-                placeholder="Select how you heard about us"
-                required={true}
-              />
-            </div>
+        {(watchStudentOrProfessional?.includes("Student") || watchStudentOrProfessional === "Recent Graduate") && (
+          <>
+            <FormField
+              control={form.control}
+              name="current academic field/position"
+              label="Academic Field/Major"
+              type="select"
+              placeholder="Select your academic field"
+              options={formattedMajors}
+              required
+            />
             
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-2 pt-6 border-t">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Registering...' : 'Register'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+            <FormField
+              control={form.control}
+              name="current school/company"
+              label="Current School"
+              type="select"
+              placeholder="Select your school"
+              options={formattedSchools}
+            />
+          </>
+        )}
+
+        {watchStudentOrProfessional === "Working Professional" && (
+          <>
+            <FormField
+              control={form.control}
+              name="current academic field/position"
+              label="Current Position/Role"
+              type="select"
+              placeholder="Select your career field"
+              options={formattedCareers}
+              required
+            />
+            
+            <FormField
+              control={form.control}
+              name="current school/company"
+              label="Current Company"
+              type="select"
+              placeholder="Select your company"
+              options={formattedCompanies}
+            />
+          </>
+        )}
+
+        {(watchStudentOrProfessional === "Career Changer" || watchStudentOrProfessional === "Other") && (
+          <FormField
+            control={form.control}
+            name="current academic field/position"
+            label="Current Field/Position"
+            type="text"
+            placeholder="Describe your current situation"
+            required
+          />
+        )}
+
+        <FormField
+          control={form.control}
+          name="country"
+          label="Country"
+          type="select"
+          placeholder="Select your country"
+          options={countryOptions}
+          required
+        />
+
+        <FormField
+          control={form.control}
+          name="where did you hear about us"
+          label="How did you hear about us?"
+          type="select"
+          placeholder="Select how you heard about us"
+          options={hearAboutUsOptions}
+          required
+        />
+
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? "Registering..." : "Register for Event"}
+        </Button>
+      </form>
+    </Form>
   );
 }

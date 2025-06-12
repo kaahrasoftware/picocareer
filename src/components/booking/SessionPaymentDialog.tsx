@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Coins, CreditCard, User, Calendar, Clock } from "lucide-react";
+import { Coins, CreditCard, User, Calendar, Clock, AlertCircle, CheckCircle } from "lucide-react";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -35,7 +35,10 @@ export function SessionPaymentDialog({
   sessionDetails 
 }: SessionPaymentDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { balance, isLoading } = useWalletBalance();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [processingStep, setProcessingStep] = useState<'payment' | 'booking' | 'complete' | null>(null);
+  const { balance, isLoading, refreshBalance } = useWalletBalance();
   const navigate = useNavigate();
 
   const hasSufficientFunds = balance >= SESSION_COST;
@@ -44,13 +47,23 @@ export function SessionPaymentDialog({
     if (!hasSufficientFunds) return;
 
     setIsProcessing(true);
+    setError(null);
+    setSuccess(false);
+    setProcessingStep('payment');
+    
     try {
-      console.log('Confirming payment for session...');
-      // The booking process now handles both booking and token deduction
+      console.log('Starting payment and booking process...');
       await onConfirmPayment();
-      onClose();
-    } catch (error) {
-      console.error('Payment confirmation failed:', error);
+      
+      setProcessingStep('complete');
+      setSuccess(true);
+      
+      // Refresh wallet balance to show updated amount
+      refreshBalance();
+    } catch (error: any) {
+      console.error('Payment and booking failed:', error);
+      setError(error.message || 'Payment and booking failed. Please try again.');
+      setProcessingStep(null);
     } finally {
       setIsProcessing(false);
     }
@@ -61,9 +74,31 @@ export function SessionPaymentDialog({
     onClose();
   };
 
+  const handleClose = () => {
+    if (!isProcessing) {
+      setError(null);
+      setSuccess(false);
+      setProcessingStep(null);
+      onClose();
+    }
+  };
+
+  const getProcessingMessage = () => {
+    switch (processingStep) {
+      case 'payment':
+        return 'Processing payment...';
+      case 'booking':
+        return 'Booking session...';
+      case 'complete':
+        return 'Payment Complete!';
+      default:
+        return 'Processing...';
+    }
+  };
+
   if (isLoading) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <div className="flex items-center justify-center p-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -74,7 +109,7 @@ export function SessionPaymentDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -87,6 +122,51 @@ export function SessionPaymentDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Success State */}
+          {success && (
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="font-medium text-green-800">Session Booked Successfully!</p>
+                    <p className="text-sm text-green-600">25 tokens deducted. Check your email for confirmation details.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-red-800">Payment Failed</p>
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Processing State */}
+          {isProcessing && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <div>
+                    <p className="font-medium text-blue-800">{getProcessingMessage()}</p>
+                    <p className="text-sm text-blue-600">Please wait while we process your request...</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Session Details */}
           <Card>
             <CardContent className="p-4">
@@ -137,11 +217,11 @@ export function SessionPaymentDialog({
             {hasSufficientFunds ? (
               <Button 
                 onClick={handleConfirmPayment} 
-                disabled={isProcessing}
+                disabled={isProcessing || success}
                 className="w-full gap-2"
               >
                 <Coins className="h-4 w-4" />
-                {isProcessing ? "Processing..." : `Confirm & Pay ${SESSION_COST} Tokens`}
+                {isProcessing ? getProcessingMessage() : success ? "Payment Complete!" : `Confirm & Pay ${SESSION_COST} Tokens`}
               </Button>
             ) : (
               <Card className="border-orange-200 bg-orange-50">
@@ -159,8 +239,13 @@ export function SessionPaymentDialog({
               </Card>
             )}
             
-            <Button variant="outline" onClick={onClose} className="w-full">
-              Cancel
+            <Button 
+              variant="outline" 
+              onClick={handleClose} 
+              disabled={isProcessing}
+              className="w-full"
+            >
+              {success ? "Close" : "Cancel"}
             </Button>
           </div>
         </div>
