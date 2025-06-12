@@ -105,7 +105,7 @@ const documentFields: FormFieldProps[] = [
     name: "document_type",
     label: "Document Type",
     type: "select",
-    options: DOCUMENT_TYPES,
+    options: DOCUMENT_TYPES.map(type => ({ id: type.value, name: type.label })),
     dependsOn: "resource_type",
     required: true,
   },
@@ -180,19 +180,3 @@ export const getFeedFormFields = (resourceType: string): FormFieldProps[] => {
 
   return [...baseFields, ...specificFields];
 };
-
-// Example usage
-const majors = [
-  { id: 1, title: "Computer Science" },
-  { id: 2, title: "Mathematics" },
-  { id: 3, title: "Physics" },
-];
-
-const schools = [
-  { id: 1, name: "University of California, Berkeley" },
-  { id: 2, name: "Stanford University" },
-  { id: 3, name: "Harvard University" },
-];
-
-const formattedMajors = majors.map(major => ({ value: major.id.toString(), label: major.title }));
-const formattedSchools = schools.map(school => ({ value: school.id.toString(), label: school.name }));
