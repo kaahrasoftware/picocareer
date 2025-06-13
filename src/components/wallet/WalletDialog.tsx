@@ -1,53 +1,62 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarIcon, CreditCard, TrendingUp, Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { 
+  Wallet, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Calendar,
+  Filter,
+  Search,
+  Download,
+  ArrowUpRight,
+  ArrowDownRight,
+  RefreshCw
+} from "lucide-react";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 interface WalletDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
-  const { session } = useAuthSession();
-  const { wallet, balance, isLoading } = useWalletBalance();
-  
-  // Filter states
-  const [dateFilter, setDateFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+interface Transaction {
+  id: string;
+  amount: number;
+  transaction_type: 'credit' | 'debit' | 'refund';
+  transaction_status: 'completed' | 'pending' | 'failed';
+  category: string;
+  description: string;
+  created_at: string;
+  reference_id?: string;
+  metadata?: any;
+}
 
-  // Get date range based on filter
-  const getDateRange = () => {
-    const now = new Date();
-    switch (dateFilter) {
-      case "today":
-        return { start: startOfDay(now), end: endOfDay(now) };
-      case "week":
-        return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
-      case "month":
-        return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
-      default:
-        return { start: null, end: null };
-    }
-  };
+export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
+  const { wallet, balance, isLoading: walletLoading } = useWalletBalance();
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<string>("all");
 
   // Fetch transactions
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery({
-    queryKey: ['wallet-transactions', wallet?.id, dateFilter, typeFilter, categoryFilter, searchQuery],
+    queryKey: ['token-transactions', wallet?.id, selectedFilter, dateRange],
     queryFn: async () => {
       if (!wallet?.id) return [];
       
@@ -58,382 +67,416 @@ export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
         .order('created_at', { ascending: false });
 
       // Apply filters
-      if (typeFilter !== 'all') {
-        query = query.eq('transaction_type', typeFilter);
-      }
-      
-      if (categoryFilter !== 'all') {
-        query = query.eq('category', categoryFilter);
-      }
-
-      const { start, end } = getDateRange();
-      if (start && end) {
-        query = query.gte('created_at', start.toISOString())
-                   .lte('created_at', end.toISOString());
+      if (selectedFilter !== "all") {
+        if (selectedFilter === "income") {
+          query = query.eq('transaction_type', 'credit');
+        } else if (selectedFilter === "expense") {
+          query = query.eq('transaction_type', 'debit');
+        } else if (selectedFilter === "refund") {
+          query = query.eq('transaction_type', 'refund');
+        } else {
+          query = query.eq('category', selectedFilter);
+        }
       }
 
-      if (searchQuery) {
-        query = query.ilike('description', `%${searchQuery}%`);
+      // Apply date range filter
+      if (dateRange !== "all") {
+        const now = new Date();
+        let startDate: Date;
+
+        switch (dateRange) {
+          case "today":
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+          case "week":
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case "month":
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case "year":
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+          default:
+            startDate = new Date(0);
+        }
+
+        query = query.gte('created_at', startDate.toISOString());
       }
 
-      const { data, error } = await query.limit(50);
-      
+      const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      return data as Transaction[];
     },
-    enabled: !!wallet?.id && isOpen
+    enabled: !!wallet?.id
   });
+
+  // Filter transactions by search query
+  const filteredTransactions = transactions.filter(transaction =>
+    transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Calculate analytics
   const analytics = {
-    totalSpent: transactions
-      .filter(t => t.transaction_type === 'debit')
+    totalIncome: transactions
+      .filter(t => t.transaction_type === 'credit' && t.transaction_status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0),
-    totalEarned: transactions
-      .filter(t => t.transaction_type === 'credit' || t.transaction_type === 'refund')
+    totalExpenses: transactions
+      .filter(t => t.transaction_type === 'debit' && t.transaction_status === 'completed')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0),
+    totalRefunds: transactions
+      .filter(t => t.transaction_type === 'refund' && t.transaction_status === 'completed')
       .reduce((sum, t) => sum + t.amount, 0),
     transactionCount: transactions.length,
-    avgTransaction: transactions.length > 0 
-      ? transactions.reduce((sum, t) => sum + t.amount, 0) / transactions.length 
+    averageTransaction: transactions.length > 0 
+      ? transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0) / transactions.length 
       : 0
   };
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'credit':
-        return <ArrowDownLeft className="h-4 w-4 text-green-600" />;
+        return <ArrowDownRight className="h-4 w-4 text-green-600" />;
       case 'debit':
         return <ArrowUpRight className="h-4 w-4 text-red-600" />;
       case 'refund':
         return <RefreshCw className="h-4 w-4 text-blue-600" />;
       default:
-        return <CreditCard className="h-4 w-4 text-gray-600" />;
+        return <DollarSign className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const getTransactionColor = (type: string) => {
-    switch (type) {
-      case 'credit':
-      case 'refund':
-        return 'text-green-600';
-      case 'debit':
-        return 'text-red-600';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
       default:
-        return 'text-gray-600';
+        return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      completed: "default",
-      pending: "secondary",
-      failed: "destructive",
-      cancelled: "outline"
-    };
-    
-    return (
-      <Badge variant={variants[status] || "outline"} className="text-xs">
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  if (!session?.user) {
-    return null;
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-4xl h-[90vh] overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="h-5 w-5" />
             My Wallet
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+        <ScrollArea className="flex-1 pr-4">
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="transactions">Transactions</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
-            {/* Balance Display */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Current Balance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center space-y-2">
-                  <div className="text-4xl font-bold text-primary">
-                    {isLoading ? "..." : balance}
+            <TabsContent value="overview" className="space-y-6">
+              {/* Balance Card */}
+              <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Current Balance
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-primary">
+                    {walletLoading ? "Loading..." : `${balance} tokens`}
                   </div>
-                  <div className="text-muted-foreground">tokens</div>
-                  <div className="text-sm text-muted-foreground">
-                    Estimated value: ${((balance || 0) * 0.1).toFixed(2)}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    +{analytics.totalEarned}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Earned</div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Available for purchases and sessions
+                  </p>
                 </CardContent>
               </Card>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">+{analytics.totalIncome}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
+                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">-{analytics.totalExpenses}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Transactions</CardTitle>
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{analytics.transactionCount}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Transactions Preview */}
               <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-red-600">
-                    -{analytics.totalSpent}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Total Spent</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold">
-                    {analytics.transactionCount}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Transactions</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Transactions Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {transactions.slice(0, 5).map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-3">
-                        {getTransactionIcon(transaction.transaction_type)}
-                        <div>
-                          <div className="font-medium text-sm">
-                            {transaction.description || 'Transaction'}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-medium ${getTransactionColor(transaction.transaction_type)}`}>
-                          {(transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund') ? '+' : '-'}
-                          {transaction.amount}
-                        </div>
-                        {getStatusBadge(transaction.transaction_status)}
-                      </div>
-                    </div>
-                  ))}
-                  {transactions.length === 0 && !transactionsLoading && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No transactions found
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="transactions" className="space-y-4">
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Select value={dateFilter} onValueChange={setDateFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Date range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">Last 7 days</SelectItem>
-                  <SelectItem value="month">Last 30 days</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Transaction type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  <SelectItem value="credit">Credits</SelectItem>
-                  <SelectItem value="debit">Debits</SelectItem>
-                  <SelectItem value="refund">Refunds</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
-                  <SelectItem value="purchase">Purchases</SelectItem>
-                  <SelectItem value="session">Sessions</SelectItem>
-                  <SelectItem value="content">Content</SelectItem>
-                  <SelectItem value="refund">Refunds</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Input
-                placeholder="Search transactions..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Transaction List */}
-            <Card>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
-                  <div className="p-6 space-y-4">
-                    {transactionsLoading ? (
-                      <div className="text-center py-8">Loading transactions...</div>
-                    ) : transactions.length > 0 ? (
-                      transactions.map((transaction) => (
-                        <div key={transaction.id} className="flex items-center justify-between py-3 border-b last:border-0">
-                          <div className="flex items-center gap-4">
+                <CardHeader>
+                  <CardTitle>Recent Transactions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {filteredTransactions.slice(0, 5).length > 0 ? (
+                    <div className="space-y-3">
+                      {filteredTransactions.slice(0, 5).map((transaction) => (
+                        <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
                             {getTransactionIcon(transaction.transaction_type)}
-                            <div className="flex-1">
-                              <div className="font-medium">
-                                {transaction.description || 'Transaction'}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')} • 
-                                Category: {transaction.category} •
-                                Type: {transaction.transaction_type}
-                              </div>
-                              {transaction.metadata && Object.keys(transaction.metadata).length > 0 && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  Additional info: {JSON.stringify(transaction.metadata)}
-                                </div>
-                              )}
+                            <div>
+                              <p className="font-medium">{transaction.description}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(transaction.created_at), 'MMM dd, yyyy')}
+                              </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className={`text-lg font-semibold ${getTransactionColor(transaction.transaction_type)}`}>
-                              {(transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund') ? '+' : '-'}
-                              {transaction.amount}
+                            <div className={`font-medium ${transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                              {transaction.transaction_type === 'credit' ? '+' : '-'}{Math.abs(transaction.amount)} tokens
                             </div>
-                            {getStatusBadge(transaction.transaction_status)}
+                            <Badge className={getStatusColor(transaction.transaction_status)}>
+                              {transaction.transaction_status}
+                            </Badge>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No transactions found matching your criteria
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-4">
-            {/* Analytics Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Earned
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    +{analytics.totalEarned}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    ${(analytics.totalEarned * 0.1).toFixed(2)} value
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">No transactions yet</p>
+                  )}
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Spent
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
-                    -{analytics.totalSpent}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    ${(analytics.totalSpent * 0.1).toFixed(2)} value
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Net Balance
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${analytics.totalEarned >= analytics.totalSpent ? 'text-green-600' : 'text-red-600'}`}>
-                    {analytics.totalEarned >= analytics.totalSpent ? '+' : '-'}
-                    {Math.abs(analytics.totalEarned - analytics.totalSpent)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Current balance: {balance}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Avg Transaction
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {analytics.avgTransaction.toFixed(1)}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    From {analytics.transactionCount} transactions
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Usage Tips */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Usage Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm text-muted-foreground">
-                  • You've made {analytics.transactionCount} transactions so far
+            <TabsContent value="transactions" className="space-y-4">
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search transactions..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  • Your current balance can cover approximately {Math.floor((balance || 0) / (analytics.avgTransaction || 1))} more average transactions
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  • Total token value: ${((balance || 0) * 0.1).toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                
+                <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="income">Income</SelectItem>
+                    <SelectItem value="expense">Expenses</SelectItem>
+                    <SelectItem value="refund">Refunds</SelectItem>
+                    <SelectItem value="purchase">Purchases</SelectItem>
+                    <SelectItem value="session">Sessions</SelectItem>
+                    <SelectItem value="content">Content</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={dateRange} onValueChange={setDateRange}>
+                  <SelectTrigger className="w-full sm:w-[140px]">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Date range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                    <SelectItem value="year">This Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Transactions List */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Transaction History</CardTitle>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {transactionsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="animate-pulse flex items-center justify-between p-3 border rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                            <div>
+                              <div className="w-32 h-4 bg-gray-200 rounded mb-2"></div>
+                              <div className="w-24 h-3 bg-gray-200 rounded"></div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="w-20 h-4 bg-gray-200 rounded mb-2"></div>
+                            <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : filteredTransactions.length > 0 ? (
+                    <div className="space-y-3">
+                      {filteredTransactions.map((transaction) => (
+                        <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            {getTransactionIcon(transaction.transaction_type)}
+                            <div>
+                              <p className="font-medium">{transaction.description}</p>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <span>{format(new Date(transaction.created_at), 'MMM dd, yyyy HH:mm')}</span>
+                                <span>•</span>
+                                <span className="capitalize">{transaction.category}</span>
+                                {transaction.reference_id && (
+                                  <>
+                                    <span>•</span>
+                                    <span>ID: {transaction.reference_id.slice(-8)}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`font-medium ${transaction.transaction_type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                              {transaction.transaction_type === 'credit' ? '+' : '-'}{Math.abs(transaction.amount)} tokens
+                            </div>
+                            <Badge className={getStatusColor(transaction.transaction_status)}>
+                              {transaction.transaction_status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No transactions found</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              {/* Analytics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">+{analytics.totalIncome}</div>
+                    <p className="text-xs text-muted-foreground">All time earnings</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                    <TrendingDown className="h-4 w-4 text-red-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">-{analytics.totalExpenses}</div>
+                    <p className="text-xs text-muted-foreground">All time spending</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
+                    <DollarSign className="h-4 w-4 text-blue-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {analytics.totalIncome - analytics.totalExpenses}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Income - expenses</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Transaction</CardTitle>
+                    <Calendar className="h-4 w-4 text-purple-600" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {analytics.averageTransaction.toFixed(1)}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Per transaction</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Category Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Spending by Category</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {transactions.length > 0 ? (
+                    <div className="space-y-4">
+                      {Object.entries(
+                        transactions
+                          .filter(t => t.transaction_type === 'debit' && t.transaction_status === 'completed')
+                          .reduce((acc, t) => {
+                            acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
+                            return acc;
+                          }, {} as Record<string, number>)
+                      )
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([category, amount]) => {
+                          const percentage = analytics.totalExpenses > 0 
+                            ? (amount / analytics.totalExpenses) * 100 
+                            : 0;
+                          
+                          return (
+                            <div key={category} className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                                <span className="capitalize font-medium">{category}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-medium">{amount} tokens</div>
+                                <div className="text-sm text-muted-foreground">{percentage.toFixed(1)}%</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">No spending data available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
