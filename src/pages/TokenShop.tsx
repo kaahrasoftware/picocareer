@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +10,7 @@ import { useEffect, useState } from "react";
 import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
 import { TokenShopFilters } from "@/components/token-shop/TokenShopFilters";
 import { PaymentMethodDialog } from "@/components/token-shop/PaymentMethodDialog";
-import { WalletOverview } from "@/components/token-shop/WalletOverview";
+import { HorizontalWalletOverview } from "@/components/token-shop/HorizontalWalletOverview";
 import { ModernTokenShopHero } from "@/components/token-shop/ModernTokenShopHero";
 import { ModernTokenPackageCard } from "@/components/token-shop/ModernTokenPackageCard";
 import { motion } from "framer-motion";
@@ -188,33 +187,41 @@ export default function TokenShop() {
         <div className="container mx-auto py-8 space-y-8">
           <ModernTokenShopHero />
           
-          <div className="grid lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-1">
-              <Card>
-                <CardContent className="p-6">
-                  <Skeleton className="h-32 w-full" />
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="lg:col-span-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="w-full">
-                    <CardHeader>
-                      <Skeleton className="h-8 w-3/4 mb-2" />
-                      <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-16 w-full" />
-                    </CardContent>
-                    <CardFooter>
-                      <Skeleton className="h-10 w-full" />
-                    </CardFooter>
-                  </Card>
-                ))}
+          {/* Horizontal Wallet Skeleton */}
+          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="p-6">
+              <div className="animate-pulse flex items-center space-x-8">
+                <Skeleton className="h-16 w-48" />
+                <div className="flex space-x-8 flex-1">
+                  <Skeleton className="h-12 w-32" />
+                  <Skeleton className="h-12 w-32" />
+                  <Skeleton className="h-12 w-32" />
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+          
+          {/* Filters Skeleton */}
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="w-full">
+                <CardHeader>
+                  <Skeleton className="h-8 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-16 w-full" />
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
@@ -267,11 +274,13 @@ export default function TokenShop() {
         {/* Hero Section */}
         <ModernTokenShopHero />
         
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Sidebar with Wallet and Filters */}
-          <div className="lg:col-span-1 space-y-6">
-            <WalletOverview />
+        {/* Horizontal Wallet Overview */}
+        <HorizontalWalletOverview />
+        
+        {/* Filters Section */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className="lg:w-80">
             <TokenShopFilters 
               filters={filters}
               onFiltersChange={setFilters}
@@ -280,7 +289,7 @@ export default function TokenShop() {
           </div>
           
           {/* Packages Section */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="flex-1 space-y-6">
             <TokenShopHeader 
               totalPackages={filteredPackages?.length || 0}
               viewMode={viewMode}
@@ -292,7 +301,7 @@ export default function TokenShop() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
               >
                 {filteredPackages.map((pkg, index) => (
                   <ModernTokenPackageCard
