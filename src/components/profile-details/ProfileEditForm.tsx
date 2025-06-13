@@ -1,115 +1,137 @@
 
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PersonalInfoSection } from "./form-sections/PersonalInfoSection";
+import { BioSection } from "./form-sections/BioSection";
+import { LocationSection } from "./form-sections/LocationSection";
+import { EducationSection } from "./form-sections/EducationSection";
+import { ProfessionalSection } from "./form-sections/ProfessionalSection";
+import { SkillsSection } from "./form-sections/SkillsSection";
+import { LinksSection } from "./form-sections/LinksSection";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
-import { FormFields, ProfileFormProps } from "./types/form-types";
-import { useQuery } from "@tanstack/react-query";
-import { PersonalSection } from "./sections/PersonalSection";
-import { BioSection } from "./sections/BioSection";
-import { SkillsSection } from "./sections/SkillsSection";
-import { LinksSection } from "./sections/LinksSection";
-import { LocationSection } from "./sections/LocationSection";
-import { ProfessionalSection } from "./sections/ProfessionalSection";
-import { EducationSection } from "./sections/EducationSection";
-import { useAllSchools, useAllMajors } from "@/hooks/useAllReferenceData";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Separator } from "@/components/ui/separator";
+import { Profile } from "@/types/database/profile";
 
-export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormProps) {
+type Degree = "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD";
+
+interface FormData {
+  first_name: string;
+  last_name: string;
+  bio: string;
+  location: string;
+  school_id: string;
+  academic_major_id: string;
+  position: string;
+  company_id: string;
+  years_of_experience: number;
+  highest_degree: Degree;
+  languages: string[];
+  skills: string[];
+  fields_of_interest: string[];
+  X_url: string;
+  linkedin_url: string;
+  github_url: string;
+  website_url: string;
+}
+
+export function ProfileEditForm({ onClose }: { onClose: () => void }) {
+  const { session } = useAuthSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [localProfile, setLocalProfile] = useState(profile);
-  const isMentee = profile.user_type === 'mentee';
-  
-  const { data: allSchoolsData } = useAllSchools();
-  const { data: allMajorsData } = useAllMajors();
-  
-  const allSchools = Array.isArray(allSchoolsData) ? allSchoolsData : [];
-  const allMajors = Array.isArray(allMajorsData) ? allMajorsData : [];
-  
-  const { data: companies = [] } = useQuery({
-    queryKey: ['companies'],
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile', session?.user?.id],
     queryFn: async () => {
+      if (!session?.user?.id) return null;
+      
       const { data, error } = await supabase
-        .from('companies')
-        .select('id, name')
-        .eq('status', 'Approved')
-        .order('name');
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
       
       if (error) throw error;
-      return data;
-    }
+      return data as Profile;
+    },
+    enabled: !!session?.user?.id,
   });
 
-  const { register, handleSubmit, formState: { isSubmitting }, watch, setValue } = useForm<FormFields>({
+  const form = useForm<FormData>({
     defaultValues: {
-      first_name: profile.first_name || "",
-      last_name: profile.last_name || "",
-      bio: profile.bio || "",
-      years_of_experience: profile.years_of_experience || 0,
-      location: profile.location || "",
-      skills: profile.skills?.join(", ") || "",
-      tools_used: profile.tools_used?.join(", ") || "",
-      keywords: profile.keywords?.join(", ") || "",
-      fields_of_interest: profile.fields_of_interest?.join(", ") || "",
-      linkedin_url: profile.linkedin_url || "",
-      github_url: profile.github_url || "",
-      website_url: profile.website_url || "",
-      position: profile.position || "",
-      company_id: profile.company_id || "",
-      school_id: profile.school_id || "",
-      academic_major_id: profile.academic_major_id || "",
-      highest_degree: (profile.highest_degree as "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD") || "No Degree",
-    }
+      first_name: "",
+      last_name: "",
+      bio: "",
+      location: "",
+      school_id: "",
+      academic_major_id: "",
+      position: "",
+      company_id: "",
+      years_of_experience: 0,
+      highest_degree: "No Degree",
+      languages: [],
+      skills: [],
+      fields_of_interest: [],
+      X_url: "",
+      linkedin_url: "",
+      github_url: "",
+      website_url: "",
+    },
   });
 
-  const handleFieldChange = (fieldName: keyof FormFields, value: any) => {
-    setLocalProfile(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-    setValue(fieldName, value);
-  };
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
+        bio: profile.bio || "",
+        location: profile.location || "",
+        school_id: profile.school_id || "",
+        academic_major_id: profile.academic_major_id || "",
+        position: profile.position || "",
+        company_id: profile.company_id || "",
+        years_of_experience: profile.years_of_experience || 0,
+        highest_degree: (profile.highest_degree as Degree) || "No Degree",
+        languages: profile.languages || [],
+        skills: profile.skills || [],
+        fields_of_interest: profile.fields_of_interest || [],
+        X_url: profile.X_url || "",
+        linkedin_url: profile.linkedin_url || "",
+        github_url: profile.github_url || "",
+        website_url: profile.website_url || "",
+      });
+    }
+  }, [profile, form]);
 
-  const onSubmit = async (data: FormFields) => {
+  const onSubmit = async (data: FormData) => {
+    if (!session?.user?.id) return;
+
+    setIsSubmitting(true);
     try {
-      const formattedData = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        bio: data.bio,
-        location: data.location,
-        school_id: data.school_id || null,
-        academic_major_id: data.academic_major_id || null,
-        position: data.position || null,
-        company_id: data.company_id || null,
-        years_of_experience: data.years_of_experience,
-        highest_degree: data.highest_degree,
-        skills: data.skills ? data.skills.split(",").map(s => s.trim()) : [],
-        tools_used: data.tools_used ? data.tools_used.split(",").map(t => t.trim()) : [],
-        keywords: data.keywords ? data.keywords.split(",").map(k => k.trim()) : [],
-        fields_of_interest: data.fields_of_interest ? data.fields_of_interest.split(",").map(f => f.trim()) : [],
-        linkedin_url: data.linkedin_url || null,
-        github_url: data.github_url || null,
-        website_url: data.website_url || null,
+      const updateData = {
+        ...data,
+        highest_degree: data.highest_degree as "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD",
       };
 
       const { error } = await supabase
         .from('profiles')
-        .update(formattedData)
-        .eq('id', profile.id);
+        .update(updateData)
+        .eq('id', session.user.id);
 
       if (error) throw error;
 
-      await queryClient.invalidateQueries({ queryKey: ['profile', profile.id] });
-      await queryClient.invalidateQueries({ queryKey: ['profile-admin-edit', profile.id] });
-      
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
-      
-      onSuccess();
+
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      onClose();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -117,83 +139,50 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileFormPro
         description: "Failed to update profile",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
-      <PersonalSection 
-        register={register}
-        handleFieldChange={handleFieldChange}
-        schoolId={localProfile.school_id}
-      />
-      
-      <LocationSection
-        register={register}
-        handleFieldChange={handleFieldChange}
-      />
-      
-      <BioSection 
-        register={register}
-        handleFieldChange={handleFieldChange}
-      />
-
-      {!isMentee && (
-        <>
-          <ProfessionalSection
-            register={register}
-            handleFieldChange={handleFieldChange}
-            companies={companies}
-            position={localProfile.position}
-            companyId={localProfile.company_id}
-            yearsOfExperience={localProfile.years_of_experience || 0}
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Edit Profile</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <PersonalInfoSection form={form} />
+          <Separator />
+          <BioSection form={form} />
+          <Separator />
+          <LocationSection form={form} />
+          <Separator />
+          <EducationSection 
+            form={form} 
+            currentDegree={form.watch("highest_degree") as Degree}
+            onDegreeChange={(degree: Degree) => form.setValue("highest_degree", degree)}
           />
+          <Separator />
+          <ProfessionalSection form={form} />
+          <Separator />
+          <SkillsSection form={form} />
+          <Separator />
+          <LinksSection form={form} />
           
-          <EducationSection
-            register={register}
-            handleFieldChange={handleFieldChange}
-            schools={allSchools}
-            majors={allMajors}
-            schoolId={localProfile.school_id}
-            academicMajorId={localProfile.academic_major_id}
-            highestDegree={localProfile.highest_degree as "High School" | "No Degree" | "Associate" | "Bachelor" | "Master" | "PhD" | "MD"}
-          />
-          
-          <SkillsSection
-            register={register}
-            handleFieldChange={handleFieldChange}
-            skills={watch('skills')}
-            tools={watch('tools_used')}
-            keywords={watch('keywords')}
-            fieldsOfInterest={watch('fields_of_interest')}
-          />
-          
-          <LinksSection
-            register={register}
-            handleFieldChange={handleFieldChange}
-            linkedinUrl={watch('linkedin_url')}
-            githubUrl={watch('github_url')}
-            websiteUrl={watch('website_url')}
-          />
-        </>
-      )}
-
-      <div className="flex justify-end gap-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Saving..." : "Save Changes"}
-        </Button>
-      </div>
-    </form>
+          <div className="flex justify-end gap-3 pt-6">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

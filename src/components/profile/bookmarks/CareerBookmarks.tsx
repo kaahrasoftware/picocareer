@@ -37,16 +37,7 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
         .from('user_bookmarks')
         .select(`
           id,
-          content_id,
-          careers (
-            id,
-            title,
-            description,
-            salary_range,
-            image_url,
-            industry,
-            profiles_count
-          )
+          content_id
         `)
         .eq('profile_id', session.user.id)
         .eq('content_type', 'career')
@@ -54,16 +45,32 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
 
       if (error) throw error;
 
-      const careers: CareerProfile[] = (data || []).map(bookmark => ({
-        id: bookmark.careers?.id || bookmark.content_id,
-        title: bookmark.careers?.title || 'Unknown Career',
-        description: bookmark.careers?.description || '',
-        salary_range: bookmark.careers?.salary_range || '',
-        image_url: bookmark.careers?.image_url || '',
-        industry: bookmark.careers?.industry || '',
-        profiles_count: bookmark.careers?.profiles_count || 0,
-        bookmark_id: bookmark.id
-      }));
+      // Get career details separately
+      const careerIds = data?.map(bookmark => bookmark.content_id) || [];
+      if (careerIds.length === 0) {
+        return { data: [], count: count || 0 };
+      }
+
+      const { data: careersData, error: careersError } = await supabase
+        .from('careers')
+        .select('*')
+        .in('id', careerIds);
+
+      if (careersError) throw careersError;
+
+      const careers: CareerProfile[] = (data || []).map(bookmark => {
+        const career = careersData?.find(c => c.id === bookmark.content_id);
+        return {
+          id: career?.id || bookmark.content_id,
+          title: career?.title || 'Unknown Career',
+          description: career?.description || '',
+          salary_range: career?.salary_range || '',
+          image_url: career?.image_url || '',
+          industry: career?.industry || '',
+          profiles_count: career?.profiles_count || 0,
+          bookmark_id: bookmark.id
+        };
+      });
 
       return { data: careers, count: count || 0 };
     },
