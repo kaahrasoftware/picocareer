@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,28 +45,13 @@ export default function TokenShop() {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<TokenPackage | null>(null);
 
-  // Call all hooks at the top level
+  // Get current session
   const { data: session } = useQuery({
     queryKey: ['auth-session'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session;
     }
-  });
-
-  const { data: profile } = useQuery({
-    queryKey: ['profile', session?.user?.id],
-    queryFn: async () => {
-      if (!session?.user?.id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!session?.user?.id
   });
 
   // Updated to fetch from database with proper error handling
@@ -78,7 +64,7 @@ export default function TokenShop() {
         .from('token_packages')
         .select('*')
         .eq('is_active', true)
-        .order('token_amount', { ascending: true }); // Order by token_amount instead of sort_order
+        .order('token_amount', { ascending: true });
       
       if (error) {
         console.error('Error fetching token packages:', error);
@@ -111,18 +97,6 @@ export default function TokenShop() {
       });
     }
   }, [error]);
-
-  // Redirect non-admin users
-  useEffect(() => {
-    if (profile && profile.user_type !== 'admin') {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can access the Token Shop.",
-        variant: "destructive",
-      });
-      navigate("/");
-    }
-  }, [profile, navigate]);
 
   const handlePurchase = async (priceId: string) => {
     const selectedPackage = tokenPackages?.find(pkg => pkg.default_price === priceId);
@@ -205,16 +179,6 @@ export default function TokenShop() {
         return 0;
     }
   });
-
-  // Don't render anything while checking user type
-  if (!profile) {
-    return null;
-  }
-
-  // Only render for admin users
-  if (profile.user_type !== 'admin') {
-    return null;
-  }
 
   if (isLoading) {
     return (

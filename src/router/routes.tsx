@@ -1,4 +1,3 @@
-
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -145,7 +144,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "token-shop",
-        element: <TokenShop />,
+        element: (
+          <ProtectedRoute>
+            <TokenShop />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "email-confirmation",
