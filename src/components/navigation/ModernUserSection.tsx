@@ -5,6 +5,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useMarkNotificationRead } from "@/hooks/useMarkNotificationRead";
 import { NotificationPanel } from "./NotificationPanel";
 import { UserMenu } from "./UserMenu";
+import { WalletButton } from "@/components/wallet/WalletButton";
 import { useBreakpoints } from "@/hooks/useBreakpoints";
 
 export function ModernUserSection() {
@@ -32,7 +33,10 @@ export function ModernUserSection() {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
+      {/* Wallet Button */}
+      <WalletButton showBalance={!isMobile} />
+
       {/* Notifications */}
       <NotificationPanel
         notifications={notifications}
