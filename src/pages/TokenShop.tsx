@@ -10,9 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
 import { TokenShopFilters } from "@/components/token-shop/TokenShopFilters";
-import { TokenPackageCard } from "@/components/token-shop/TokenPackageCard";
-import { TokenShopHero } from "@/components/token-shop/TokenShopHero";
 import { PaymentMethodDialog } from "@/components/token-shop/PaymentMethodDialog";
+import { WalletOverview } from "@/components/token-shop/WalletOverview";
+import { ModernTokenShopHero } from "@/components/token-shop/ModernTokenShopHero";
+import { ModernTokenPackageCard } from "@/components/token-shop/ModernTokenPackageCard";
+import { motion } from "framer-motion";
 
 interface TokenPackage {
   id: string;
@@ -182,24 +184,37 @@ export default function TokenShop() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        <div className="container mx-auto py-8">
-          <TokenShopHero />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="w-full">
-                <CardHeader>
-                  <Skeleton className="h-8 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-16 w-full" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="container mx-auto py-8 space-y-8">
+          <ModernTokenShopHero />
+          
+          <div className="grid lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-1">
+              <Card>
+                <CardContent className="p-6">
+                  <Skeleton className="h-32 w-full" />
                 </CardContent>
-                <CardFooter>
-                  <Skeleton className="h-10 w-full" />
-                </CardFooter>
               </Card>
-            ))}
+            </div>
+            
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="w-full">
+                    <CardHeader>
+                      <Skeleton className="h-8 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-16 w-full" />
+                    </CardContent>
+                    <CardFooter>
+                      <Skeleton className="h-10 w-full" />
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -208,9 +223,9 @@ export default function TokenShop() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="container mx-auto py-8">
-          <TokenShopHero />
+          <ModernTokenShopHero />
           <div className="text-center py-12">
             <div className="text-muted-foreground text-lg mb-4">
               Failed to load token packages
@@ -247,63 +262,68 @@ export default function TokenShop() {
   const mostPopular = getMostPopularPackage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container mx-auto py-8">
-        <TokenShopHero />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Hero Section */}
+        <ModernTokenShopHero />
         
-        <div className="mt-12">
-          <TokenShopHeader 
-            totalPackages={filteredPackages?.length || 0}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Sidebar with Wallet and Filters */}
+          <div className="lg:col-span-1 space-y-6">
+            <WalletOverview />
+            <TokenShopFilters 
+              filters={filters}
+              onFiltersChange={setFilters}
+              packages={tokenPackages || []}
+            />
+          </div>
           
-          <div className="flex flex-col lg:flex-row gap-8 mt-6">
-            <div className="lg:w-1/4">
-              <TokenShopFilters 
-                filters={filters}
-                onFiltersChange={setFilters}
-                packages={tokenPackages || []}
-              />
-            </div>
+          {/* Packages Section */}
+          <div className="lg:col-span-3 space-y-6">
+            <TokenShopHeader 
+              totalPackages={filteredPackages?.length || 0}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
             
-            <div className="lg:w-3/4">
-              {filteredPackages && filteredPackages.length > 0 ? (
-                <div className={viewMode === 'grid' 
-                  ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-                  : "space-y-4"
-                }>
-                  {filteredPackages.map((pkg) => (
-                    <TokenPackageCard
-                      key={pkg.id}
-                      package={pkg}
-                      onPurchase={handlePurchase}
-                      isBestValue={bestValue?.id === pkg.id}
-                      isMostPopular={mostPopular?.id === pkg.id}
-                      viewMode={viewMode}
-                    />
-                  ))}
+            {filteredPackages && filteredPackages.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {filteredPackages.map((pkg, index) => (
+                  <ModernTokenPackageCard
+                    key={pkg.id}
+                    package={pkg}
+                    onPurchase={handlePurchase}
+                    isBestValue={bestValue?.id === pkg.id}
+                    isMostPopular={mostPopular?.id === pkg.id}
+                    index={index}
+                  />
+                ))}
+              </motion.div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-muted-foreground text-lg">
+                  No token packages found matching your criteria.
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="text-muted-foreground text-lg">
-                    No token packages found matching your criteria.
-                  </div>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => setFilters({
-                      priceRange: [0, 100],
-                      tokenRange: [0, 500],
-                      sortBy: 'price-asc',
-                      searchQuery: ''
-                    })}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              )}
-            </div>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => setFilters({
+                    priceRange: [0, 100],
+                    tokenRange: [0, 500],
+                    sortBy: 'price-asc',
+                    searchQuery: ''
+                  })}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
