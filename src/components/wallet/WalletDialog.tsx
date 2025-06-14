@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WalletOverview } from "./WalletOverview";
+import { WalletOverview } from "../token-shop/WalletOverview";
 import { EnhancedTransactionHistory } from "./EnhancedTransactionHistory";
 import { TokenShopHeader } from "../token-shop/TokenShopHeader";
 import { ModernTokenPackageCard } from "../token-shop/ModernTokenPackageCard";
