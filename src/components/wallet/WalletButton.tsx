@@ -12,6 +12,18 @@ interface WalletButtonProps {
   showBalance?: boolean;
 }
 
+const formatTokenBalance = (balance: number): string => {
+  if (balance < 1000) {
+    return balance.toString();
+  } else if (balance < 1000000) {
+    return Math.floor(balance / 1000) + 'K+';
+  } else if (balance < 1000000000) {
+    return Math.floor(balance / 1000000) + 'M+';
+  } else {
+    return Math.floor(balance / 1000000000) + 'B+';
+  }
+};
+
 export function WalletButton({ className, showBalance = true }: WalletButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { balance, isLoading } = useWalletBalance();
@@ -31,7 +43,7 @@ export function WalletButton({ className, showBalance = true }: WalletButtonProp
             variant="secondary" 
             className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 text-xs bg-primary text-primary-foreground"
           >
-            {balance > 99 ? '99+' : balance}
+            {formatTokenBalance(balance)}
           </Badge>
         )}
       </Button>
