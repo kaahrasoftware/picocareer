@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WalletOverview } from "./WalletOverview";
+import { WalletOverview } from "../token-shop/WalletOverview";
 import { EnhancedTransactionHistory } from "./EnhancedTransactionHistory";
 import { WalletAnalytics } from "./WalletAnalytics";
 import { EarnUseTokensTab } from "./EarnUseTokensTab";
