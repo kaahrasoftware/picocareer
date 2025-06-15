@@ -24,7 +24,8 @@ export function MentorMenteesDialog({ isOpen, onClose, mentorId }: MentorMentees
       const { data } = await supabase
         .from('mentor_sessions')
         .select(`
-          mentee:mentee_id (
+          mentee_id,
+          mentee:profiles!mentor_sessions_mentee_id_fkey (
             id,
             full_name,
             avatar_url,

@@ -1,128 +1,127 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { useTokenAnalytics } from "@/hooks/useTokenAnalytics";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface WalletAnalyticsProps {
-  walletId: string;
-}
+export function WalletAnalytics() {
+  const { analytics, isLoading, error } = useTokenAnalytics();
 
-export function WalletAnalytics({ walletId }: WalletAnalyticsProps) {
-  return (
-    <div className="space-y-6">
-      {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Earnings</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">+127</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <Skeleton className="h-48 w-full" />
           </CardContent>
         </Card>
-
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Spending</CardTitle>
-            <DollarSign className="h-4 w-4 text-red-600" />
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-48" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">-89</div>
-            <p className="text-xs text-muted-foreground">
-              -5% from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Days</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">23</div>
-            <p className="text-xs text-muted-foreground">
-              This month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Growth</CardTitle>
-            <BarChart3 className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">+38</div>
-            <p className="text-xs text-muted-foreground">
-              This month
-            </p>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-2 w-full" />
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
 
-      {/* Token Usage Breakdown */}
+  if (error || !analytics) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-48">
+          <p className="text-muted-foreground">
+            {error ? "Failed to load analytics" : "No transaction data available"}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { usageData, totalSpent, transactionCount } = analytics;
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Token Usage Breakdown</CardTitle>
+          <CardTitle>Token Usage Distribution</CardTitle>
+          <CardDescription>
+            Total spent: {totalSpent} tokens across {transactionCount} transactions
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Mentorship Sessions</span>
-              <span className="text-sm text-muted-foreground">45% (89 tokens)</span>
+          {usageData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={usageData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="amount"
+                >
+                  {usageData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [`${value} tokens`, 'Amount']} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-muted-foreground">
+              No spending data available
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Premium Content</span>
-              <span className="text-sm text-muted-foreground">30% (59 tokens)</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-green-600 h-2 rounded-full" style={{ width: '30%' }}></div>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">AI Assessments</span>
-              <span className="text-sm text-muted-foreground">25% (49 tokens)</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '25%' }}></div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Earning Sources */}
       <Card>
         <CardHeader>
-          <CardTitle>Token Earning Sources</CardTitle>
+          <CardTitle>Usage Breakdown</CardTitle>
+          <CardDescription>Token spending by category</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Daily Logins</span>
-              <span className="text-sm text-green-600">+115 tokens</span>
+          {usageData.length > 0 ? (
+            <div className="space-y-4">
+              {usageData.map((item, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm font-medium">{item.category}</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {item.amount} tokens ({item.percentage}%)
+                    </div>
+                  </div>
+                  <Progress value={item.percentage} className="h-2" />
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Event Participation</span>
-              <span className="text-sm text-green-600">+75 tokens</span>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-muted-foreground">
+              No usage data available
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Referrals</span>
-              <span className="text-sm text-green-600">+45 tokens</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Bonuses</span>
-              <span className="text-sm text-green-600">+25 tokens</span>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

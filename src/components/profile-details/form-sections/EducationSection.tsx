@@ -3,23 +3,22 @@ import { Major } from "@/types/database/majors";
 import { School } from "@/types/database/schools";
 import { DegreeSelect } from "./education/DegreeSelect";
 import { SearchableSelect } from "@/components/common/SearchableSelect";
+import { UseFormReturn } from "react-hook-form";
 
 interface EducationSectionProps {
-  highestDegree: string;
-  academicMajorId: string;
-  schoolId: string;
-  handleSelectChange: (name: string, value: string) => void;
-  majors: Pick<Major, 'id' | 'title'>[];
-  schools: Pick<School, 'id' | 'name'>[];
+  form: UseFormReturn<any>;
+  currentDegree: string;
+  onDegreeChange: (degree: string) => void;
+  majors?: Pick<Major, 'id' | 'title'>[];
+  schools?: Pick<School, 'id' | 'name'>[];
 }
 
 export function EducationSection({
-  highestDegree,
-  academicMajorId,
-  schoolId,
-  handleSelectChange,
-  majors,
-  schools,
+  form,
+  currentDegree,
+  onDegreeChange,
+  majors = [],
+  schools = [],
 }: EducationSectionProps) {
   const majorOptions = majors.map(major => ({
     value: major.id,
@@ -36,16 +35,16 @@ export function EducationSection({
       <h3 className="text-lg font-semibold">Education</h3>
       <div className="space-y-4">
         <DegreeSelect 
-          value={highestDegree}
-          handleSelectChange={handleSelectChange}
+          value={currentDegree}
+          handleSelectChange={(name, value) => onDegreeChange(value)}
         />
 
         <div>
           <label className="text-sm font-medium">Academic Major</label>
           <SearchableSelect
             options={majorOptions}
-            value={academicMajorId}
-            onValueChange={(value) => handleSelectChange('academic_major_id', value)}
+            value={form.watch("academic_major_id")}
+            onValueChange={(value) => form.setValue('academic_major_id', value)}
             placeholder="Select Academic Major"
             searchPlaceholder="Search majors..."
             emptyMessage="No majors found."
@@ -56,8 +55,8 @@ export function EducationSection({
           <label className="text-sm font-medium">School</label>
           <SearchableSelect
             options={schoolOptions}
-            value={schoolId}
-            onValueChange={(value) => handleSelectChange('school_id', value)}
+            value={form.watch("school_id")}
+            onValueChange={(value) => form.setValue('school_id', value)}
             placeholder="Select School"
             searchPlaceholder="Search schools..."
             emptyMessage="No schools found."

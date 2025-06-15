@@ -1,19 +1,18 @@
+
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
 
 interface LocationSectionProps {
-  location: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  form: UseFormReturn<any>;
 }
 
-export function LocationSection({ location, handleInputChange }: LocationSectionProps) {
+export function LocationSection({ form }: LocationSectionProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Location</h3>
       <div>
         <Input
-          name="location"
-          value={location}
-          onChange={handleInputChange}
+          {...form.register("location")}
           className="mt-1"
           placeholder="City, Country"
         />

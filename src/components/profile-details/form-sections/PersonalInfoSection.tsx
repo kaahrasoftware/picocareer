@@ -1,12 +1,12 @@
+
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
 
 interface PersonalInfoSectionProps {
-  firstName: string;
-  lastName: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  form: UseFormReturn<any>;
 }
 
-export function PersonalInfoSection({ firstName, lastName, handleInputChange }: PersonalInfoSectionProps) {
+export function PersonalInfoSection({ form }: PersonalInfoSectionProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Personal Information</h3>
@@ -14,9 +14,7 @@ export function PersonalInfoSection({ firstName, lastName, handleInputChange }: 
         <div>
           <label className="text-sm font-medium">First Name</label>
           <Input
-            name="first_name"
-            value={firstName}
-            onChange={handleInputChange}
+            {...form.register("first_name")}
             className="mt-1"
             placeholder="Your first name"
           />
@@ -24,9 +22,7 @@ export function PersonalInfoSection({ firstName, lastName, handleInputChange }: 
         <div>
           <label className="text-sm font-medium">Last Name</label>
           <Input
-            name="last_name"
-            value={lastName}
-            onChange={handleInputChange}
+            {...form.register("last_name")}
             className="mt-1"
             placeholder="Your last name"
           />

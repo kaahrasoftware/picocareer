@@ -1,29 +1,19 @@
+
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
 
 interface SkillsSectionProps {
-  skills: string;
-  tools: string;
-  keywords: string;
-  fieldsOfInterest: string;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  form: UseFormReturn<any>;
 }
 
-export function SkillsSection({
-  skills,
-  tools,
-  keywords,
-  fieldsOfInterest,
-  handleInputChange,
-}: SkillsSectionProps) {
+export function SkillsSection({ form }: SkillsSectionProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Skills & Expertise</h3>
       <div>
         <label className="text-sm font-medium">Skills (comma-separated)</label>
         <Input
-          name="skills"
-          value={skills}
-          onChange={handleInputChange}
+          {...form.register("skills")}
           className="mt-1"
           placeholder="React, TypeScript, Node.js"
         />
@@ -32,9 +22,7 @@ export function SkillsSection({
       <div>
         <label className="text-sm font-medium">Tools (comma-separated)</label>
         <Input
-          name="tools_used"
-          value={tools}
-          onChange={handleInputChange}
+          {...form.register("tools_used")}
           className="mt-1"
           placeholder="VS Code, Git, Docker"
         />
@@ -43,9 +31,7 @@ export function SkillsSection({
       <div>
         <label className="text-sm font-medium">Keywords (comma-separated)</label>
         <Input
-          name="keywords"
-          value={keywords}
-          onChange={handleInputChange}
+          {...form.register("keywords")}
           className="mt-1"
           placeholder="web development, backend, frontend"
         />
@@ -54,9 +40,7 @@ export function SkillsSection({
       <div>
         <label className="text-sm font-medium">Fields of Interest (comma-separated)</label>
         <Input
-          name="fields_of_interest"
-          value={fieldsOfInterest}
-          onChange={handleInputChange}
+          {...form.register("fields_of_interest")}
           className="mt-1"
           placeholder="AI, Machine Learning, Web Development"
         />

@@ -1,6 +1,7 @@
 
 import { SearchableSelect } from "@/components/common/SearchableSelect";
 import { Input } from "@/components/ui/input";
+import { UseFormReturn } from "react-hook-form";
 
 interface Company {
   id: string;
@@ -8,21 +9,13 @@ interface Company {
 }
 
 interface ProfessionalSectionProps {
-  position: string;
-  companyId: string;
-  yearsOfExperience: number;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSelectChange: (name: string, value: string) => void;
-  companies: Company[];
+  form: UseFormReturn<any>;
+  companies?: Company[];
 }
 
 export function ProfessionalSection({
-  position,
-  companyId,
-  yearsOfExperience,
-  handleInputChange,
-  handleSelectChange,
-  companies,
+  form,
+  companies = [],
 }: ProfessionalSectionProps) {
   const companyOptions = companies.map(company => ({
     value: company.id,
@@ -36,8 +29,7 @@ export function ProfessionalSection({
       <div>
         <label className="text-sm font-medium">Position</label>
         <Input
-          value={position}
-          onChange={(e) => handleSelectChange("position", e.target.value)}
+          {...form.register("position")}
           placeholder="Enter your position"
           className="mt-1"
         />
@@ -47,8 +39,8 @@ export function ProfessionalSection({
         <label className="text-sm font-medium">Company</label>
         <SearchableSelect
           options={companyOptions}
-          value={companyId}
-          onValueChange={(value) => handleSelectChange("company_id", value)}
+          value={form.watch("company_id")}
+          onValueChange={(value) => form.setValue("company_id", value)}
           placeholder="Select Company"
           searchPlaceholder="Search companies..."
           emptyMessage="No companies found."
@@ -58,10 +50,8 @@ export function ProfessionalSection({
       <div>
         <label className="text-sm font-medium">Years of Experience</label>
         <Input
-          name="years_of_experience"
+          {...form.register("years_of_experience")}
           type="number"
-          value={yearsOfExperience}
-          onChange={handleInputChange}
           className="mt-1"
           min="0"
         />
