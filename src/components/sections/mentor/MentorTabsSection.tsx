@@ -7,7 +7,7 @@ import { useMentorStats } from "@/hooks/useMentorStats";
 import { Heart, Users, Star, Target, Award, Lightbulb, GraduationCap, Sparkles, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export const MentorTabsSection = () => {
+export function MentorTabsSection(/* ...props */) {
   const { data: stats, isLoading } = useMentorStats();
   const [activeTab, setActiveTab] = useState("join");
 
@@ -243,11 +243,30 @@ export const MentorTabsSection = () => {
                     asChild
                     size="lg"
                     variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 font-semibold py-4 px-8 backdrop-blur-sm transition-all duration-300 transform hover:-translate-y-1"
+                    className="
+                      w-full sm:w-auto
+                      bg-gradient-to-r from-blue-500 via-green-400 to-blue-600
+                      text-white font-bold text-lg py-6 px-8
+                      shadow-xl hover:shadow-2xl
+                      hover:scale-105 transition-all duration-300
+                      relative overflow-hidden
+                      border-none
+                      focus:ring-4 focus:ring-blue-300
+                      group
+                    "
                   >
-                    <Link to="/mentors" className="flex items-center justify-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Meet Our Mentors
+                    <Link to="/mentor" className="flex items-center justify-center gap-3 focus:outline-none">
+                      <span className="relative flex items-center">
+                        <Users
+                          className="h-6 w-6 drop-shadow-md animate-pulse"
+                          style={{
+                            filter: "drop-shadow(0 0 8px rgba(34,197,94,0.85))"
+                          }}
+                        />
+                      </span>
+                      <span>
+                        Meet Our Mentors
+                      </span>
                     </Link>
                   </Button>
                 </div>
@@ -329,3 +348,5 @@ export const MentorTabsSection = () => {
     </section>
   );
 };
+
+export default MentorTabsSection;
