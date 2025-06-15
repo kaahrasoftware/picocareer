@@ -90,7 +90,7 @@ export const MentorCallToActionSection = () => {
                 bg-gradient-to-r from-blue-500 via-green-400 to-blue-600
                 text-white font-bold text-lg py-6 px-8
                 shadow-xl hover:shadow-2xl
-                transition-all duration-300 transform hover:scale-105
+                hover:scale-105 transition-all duration-300
                 relative overflow-hidden
                 border-none
                 focus:ring-4 focus:ring-blue-300
@@ -102,7 +102,7 @@ export const MentorCallToActionSection = () => {
                   <Users
                     className="h-6 w-6 drop-shadow-md animate-pulse"
                     style={{
-                      filter: "drop-shadow(0 0 6px rgba(34,197,94,0.7))"
+                      filter: "drop-shadow(0 0 8px rgba(34,197,94,0.85))"
                     }}
                   />
                 </span>
