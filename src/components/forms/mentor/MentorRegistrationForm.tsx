@@ -12,12 +12,13 @@ import { EducationSection } from "./sections/EducationSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialSection } from "./sections/SocialSection";
 import { processFormDataForSubmission } from "./utils/formDataProcessing";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import type { FormValues } from "./types";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useFormDebug } from "@/hooks/mentor/useFormDebug";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: FormValues) => Promise<void>;
@@ -76,6 +77,33 @@ export function MentorRegistrationForm({
   // Add form debugging
   useFormDebug(form);
 
+  // Process referral reward after successful mentor registration
+  const processReferralReward = async (userId: string) => {
+    const referralCode = localStorage.getItem('referralCode');
+    if (!referralCode) return;
+
+    try {
+      console.log('Processing referral reward for mentor:', userId, 'with code:', referralCode);
+      
+      const { data, error } = await supabase.rpc('process_referral_reward', {
+        p_referred_id: userId,
+        p_referral_code: referralCode
+      });
+
+      if (error) {
+        console.error('Error processing referral reward:', error);
+        return;
+      }
+
+      if (data?.success) {
+        console.log('Referral reward processed successfully for mentor:', data);
+        localStorage.removeItem('referralCode');
+      }
+    } catch (error) {
+      console.error('Error in referral processing for mentor:', error);
+    }
+  };
+
   // Handle submission with form data processing
   const handleSubmit = async (data: FormValues) => {
     console.log('Form submission initiated with data:', { 
@@ -102,6 +130,12 @@ export function MentorRegistrationForm({
       
       setSubmissionProgress("Uploading profile information...");
       await onSubmit(processedData);
+      
+      // Process referral reward if user is logged in (existing user becoming mentor)
+      if (session?.user?.id) {
+        await processReferralReward(session.user.id);
+      }
+      
       setSubmissionProgress(null);
     } catch (error: any) {
       console.error('Form submission error:', error);

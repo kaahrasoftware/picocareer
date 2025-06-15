@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Slides } from "@/components/Slides";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Users, Heart, Trophy, ArrowRight } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 export const HeroSection = () => {
   const { session } = useAuthSession();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isLoggedIn = !!session?.user;
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
@@ -21,6 +22,21 @@ export const HeroSection = () => {
       navigate('/mentor-registration');
     } else {
       setIsAuthDialogOpen(true);
+    }
+  };
+
+  const handleBecomeMenteeClick = () => {
+    if (isLoggedIn) {
+      // If user is already logged in, take them to mentor browsing
+      navigate('/mentor');
+    } else {
+      // Check if there's a referral code, if so redirect to signup, otherwise show auth dialog
+      const referralCode = searchParams.get('ref') || localStorage.getItem('referralCode');
+      if (referralCode) {
+        navigate('/auth?tab=signup');
+      } else {
+        setIsAuthDialogOpen(true);
+      }
     }
   };
 
@@ -108,7 +124,7 @@ export const HeroSection = () => {
                   </Button>
                 ) : (
                   <Button
-                    onClick={handleBecomeMentorClick}
+                    onClick={handleBecomeMenteeClick}
                     size="lg"
                     className="bg-[#00A6D4] hover:bg-[#0095c1] text-white font-medium px-8 py-6 h-auto text-lg transition-colors"
                   >

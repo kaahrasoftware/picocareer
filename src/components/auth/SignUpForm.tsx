@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
 
-export function SignUpForm() {
+interface SignUpFormProps {
+  referralCode?: string | null;
+}
+
+export function SignUpForm({ referralCode }: SignUpFormProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +29,39 @@ export function SignUpForm() {
       ...prev,
       [e.target.name]: e.target.value
     }));
+  };
+
+  const processReferralReward = async (userId: string) => {
+    if (!referralCode) return;
+
+    try {
+      console.log('Processing referral reward for user:', userId, 'with code:', referralCode);
+      
+      const { data, error } = await supabase.rpc('process_referral_reward', {
+        p_referred_id: userId,
+        p_referral_code: referralCode
+      });
+
+      if (error) {
+        console.error('Error processing referral reward:', error);
+        return;
+      }
+
+      if (data?.success) {
+        console.log('Referral reward processed successfully:', data);
+        toast({
+          title: "Referral processed!",
+          description: "Your friend has been rewarded for referring you. Welcome to PicoCareer!",
+        });
+        
+        // Clear the referral code from localStorage
+        localStorage.removeItem('referralCode');
+      } else {
+        console.log('Referral reward not processed:', data?.message);
+      }
+    } catch (error) {
+      console.error('Error in referral processing:', error);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -70,7 +108,7 @@ export function SignUpForm() {
       }
 
       // Proceed with signup
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
         options: {
@@ -92,6 +130,11 @@ export function SignUpForm() {
           return;
         }
         throw signUpError;
+      }
+
+      // Process referral reward if user signed up and we have their ID
+      if (authData.user?.id && referralCode) {
+        await processReferralReward(authData.user.id);
       }
 
       toast({
@@ -179,6 +222,18 @@ export function SignUpForm() {
           minLength={6}
         />
       </div>
+
+      {referralCode && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">
+            🎁 Referral Code: <span className="font-mono font-semibold">{referralCode}</span>
+          </p>
+          <p className="text-xs text-green-600 mt-1">
+            Your friend will receive tokens when you complete registration!
+          </p>
+        </div>
+      )}
+
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
       </Button>

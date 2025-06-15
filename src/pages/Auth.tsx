@@ -13,16 +13,31 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Gift } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Auth() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  // Check for referral code from localStorage or URL
+  useEffect(() => {
+    const storedReferralCode = localStorage.getItem('referralCode');
+    const urlReferralCode = searchParams.get('ref');
+    
+    if (urlReferralCode) {
+      localStorage.setItem('referralCode', urlReferralCode);
+      setReferralCode(urlReferralCode);
+    } else if (storedReferralCode) {
+      setReferralCode(storedReferralCode);
+    }
+  }, [searchParams]);
 
   // Define the query function outside conditional rendering
   const fetchMentors = async () => {
@@ -177,6 +192,15 @@ export default function Auth() {
                 </p>
               </div>
 
+              {referralCode && (
+                <Alert className="border-green-200 bg-green-50">
+                  <Gift className="h-4 w-4" />
+                  <AlertDescription className="text-green-800">
+                    🎉 You've been referred by a friend! Complete your registration to help them earn tokens!
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <Tabs defaultValue={tabParam === 'signup' ? 'signup' : 'signin'} className="space-y-4 lg:space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -186,7 +210,7 @@ export default function Auth() {
                   <SignInForm />
                 </TabsContent>
                 <TabsContent value="signup">
-                  <SignUpForm />
+                  <SignUpForm referralCode={referralCode} />
                 </TabsContent>
               </Tabs>
             </Card>
