@@ -5,6 +5,7 @@ import { WalletOverview } from "../token-shop/WalletOverview";
 import { EnhancedTransactionHistory } from "./EnhancedTransactionHistory";
 import { WalletAnalytics } from "./WalletAnalytics";
 import { EarnUseTokensTab } from "./EarnUseTokensTab";
+import { ReferralsTab } from "./ReferralsTab";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
 
 interface WalletDialogProps {
@@ -23,10 +24,11 @@ export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
         </DialogHeader>
         
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="earn-use">Earn & Use</TabsTrigger>
           </TabsList>
           
@@ -39,7 +41,11 @@ export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
           </TabsContent>
           
           <TabsContent value="analytics" className="mt-6">
-            {wallet && <WalletAnalytics walletId={wallet.id} />}
+            <WalletAnalytics />
+          </TabsContent>
+          
+          <TabsContent value="referrals" className="mt-6">
+            <ReferralsTab />
           </TabsContent>
           
           <TabsContent value="earn-use" className="mt-6">

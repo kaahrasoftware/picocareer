@@ -1,11 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { useTokenAnalytics } from "@/hooks/useTokenAnalytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function WalletAnalytics() {
+interface WalletAnalyticsProps {
+  walletId?: string;
+}
+
+export function WalletAnalytics({ walletId }: WalletAnalyticsProps) {
   const { analytics, isLoading, error } = useTokenAnalytics();
 
   if (isLoading) {

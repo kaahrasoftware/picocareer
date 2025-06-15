@@ -1,8 +1,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Gift, UserPlus, Calendar, Users, GraduationCap, BookOpen, Star } from "lucide-react";
 
-export function EarnUseTokensTab() {
+interface EarnUseTokensTabProps {
+  onNavigateToReferrals?: () => void;
+}
+
+export function EarnUseTokensTab({ onNavigateToReferrals }: EarnUseTokensTabProps) {
   const earnMethods = [
     {
       icon: Gift,
@@ -16,7 +21,8 @@ export function EarnUseTokensTab() {
       title: "Referrals",
       description: "Invite friends who successfully register",
       tokens: "15 tokens each",
-      color: "text-blue-600"
+      color: "text-blue-600",
+      action: onNavigateToReferrals ? "View Referrals" : undefined
     },
     {
       icon: Calendar,
@@ -72,15 +78,27 @@ export function EarnUseTokensTab() {
             {earnMethods.map((method) => {
               const Icon = method.icon;
               return (
-                <div key={method.title} className="flex items-start space-x-3 p-4 rounded-lg border bg-white/50">
-                  <Icon className={`h-6 w-6 mt-1 ${method.color}`} />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{method.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{method.description}</p>
-                    <p className={`text-sm font-semibold mt-2 ${method.color}`}>
-                      {method.tokens}
-                    </p>
+                <div key={method.title} className="flex flex-col items-start space-y-3 p-4 rounded-lg border bg-white/50">
+                  <div className="flex items-center gap-3 w-full">
+                    <Icon className={`h-6 w-6 ${method.color}`} />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{method.title}</h3>
+                      <p className="text-sm text-gray-600">{method.description}</p>
+                      <p className={`text-sm font-semibold mt-1 ${method.color}`}>
+                        {method.tokens}
+                      </p>
+                    </div>
                   </div>
+                  {method.action && onNavigateToReferrals && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onNavigateToReferrals}
+                      className="w-full"
+                    >
+                      {method.action}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -124,6 +142,7 @@ export function EarnUseTokensTab() {
             <p className="text-sm text-gray-600">
               Log in daily and attend events regularly to maximize your token earnings. 
               Use tokens strategically for the most valuable experiences like mentorship sessions and AI assessments.
+              Don't forget to share your referral link with friends for easy bonus tokens!
             </p>
           </div>
         </CardContent>

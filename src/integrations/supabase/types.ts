@@ -3590,6 +3590,103 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          profile_id: string
+          referral_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          profile_id: string
+          referral_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          profile_id?: string
+          referral_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_rewards: {
+        Row: {
+          awarded_at: string
+          id: string
+          referral_id: string
+          referred_id: string
+          referrer_id: string
+          reward_amount: number
+          reward_type: string
+          transaction_id: string | null
+        }
+        Insert: {
+          awarded_at?: string
+          id?: string
+          referral_id: string
+          referred_id: string
+          referrer_id: string
+          reward_amount?: number
+          reward_type?: string
+          transaction_id?: string | null
+        }
+        Update: {
+          awarded_at?: string
+          id?: string
+          referral_id?: string
+          referred_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          reward_type?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_rewards_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "user_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_rewards_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "token_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scholarships: {
         Row: {
           academic_requirements: Json | null
@@ -4199,6 +4296,51 @@ export type Database = {
           },
         ]
       }
+      user_referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          registration_completed_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+          registration_completed_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+          registration_completed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string
@@ -4588,6 +4730,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      generate_referral_code: {
+        Args: { p_profile_id: string }
+        Returns: string
+      }
       get_hub_recommendations: {
         Args: { p_hub_id: string }
         Returns: {
@@ -4673,6 +4819,10 @@ export type Database = {
       migrate_reminder_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      process_referral_reward: {
+        Args: { p_referred_id: string; p_referral_code: string }
+        Returns: Json
       }
       refresh_all_hub_metrics: {
         Args: Record<PropertyKey, never>
