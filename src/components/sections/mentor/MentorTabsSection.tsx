@@ -1,3 +1,5 @@
+
+// If the component is not yet defined or exported correctly, update the file like this:
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Users, Sparkles } from "lucide-react";
@@ -6,7 +8,7 @@ import { useMentorStats } from "@/hooks/useMentorStats";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 
-export const MentorCallToActionSection = () => {
+export const MentorTabsSection = () => {
   const { data: stats, isLoading } = useMentorStats();
   const { session } = useAuthSession();
   const navigate = useNavigate();
@@ -80,7 +82,7 @@ export const MentorCallToActionSection = () => {
               Start Your Mentoring Journey
             </Button>
             
-            {/* Meet Our Mentors - styled as white with dark blue writing */}
+            {/* "Meet Our Mentors" Button - matches above button's design */}
             <Button
               asChild
               size="lg"
@@ -125,3 +127,4 @@ export const MentorCallToActionSection = () => {
     </section>
   );
 };
+
