@@ -4807,6 +4807,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      manual_process_referral: {
+        Args: { p_referrer_email: string; p_referred_email: string }
+        Returns: Json
+      }
       manually_update_majors_profiles_count: {
         Args: Record<PropertyKey, never>
         Returns: undefined

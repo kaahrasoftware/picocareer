@@ -24,7 +24,7 @@ const Index = () => {
       // Check for referral code in URL
       const referralCode = searchParams.get('ref');
       if (referralCode) {
-        console.log('Referral code detected:', referralCode);
+        console.log('Referral code detected in URL:', referralCode);
         
         // Store referral code in localStorage for persistence
         localStorage.setItem('referralCode', referralCode);
@@ -37,6 +37,10 @@ const Index = () => {
         } else {
           // User is already logged in, show a message
           toast.info('You\'re already registered! Referral codes are for new users only.');
+          // Clean up the URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('ref');
+          window.history.replaceState({}, '', newUrl.toString());
         }
       }
     } catch (error) {

@@ -74,7 +74,9 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         return;
       }
 
-      // Proceed with signup - store referral code in user metadata temporarily
+      console.log('Starting signup process with referral code:', referralCode);
+
+      // Proceed with signup - store referral code in user metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -89,6 +91,7 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
 
       if (signUpError) {
         setIsLoading(false);
+        console.error('Signup error:', signUpError);
         if (signUpError.message.includes("Password")) {
           toast({
             title: "Invalid password",
@@ -100,8 +103,14 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         throw signUpError;
       }
 
+      console.log('Signup successful:', {
+        userId: authData.user?.id,
+        referralCode: referralCode,
+        userMetadata: authData.user?.user_metadata
+      });
+
       // The referral processing will now happen automatically via the database trigger
-      // when the profile is created with the referral_code column
+      // when the profile is created with the referral_code from user metadata
 
       toast({
         title: "Check your email",

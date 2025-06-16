@@ -32,9 +32,16 @@ export default function Auth() {
     const urlReferralCode = searchParams.get('ref');
     
     if (urlReferralCode) {
+      console.log('Setting referral code from URL:', urlReferralCode);
       localStorage.setItem('referralCode', urlReferralCode);
       setReferralCode(urlReferralCode);
+      
+      // Clean up the URL to remove the ref parameter
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('ref');
+      window.history.replaceState({}, '', newUrl.toString());
     } else if (storedReferralCode) {
+      console.log('Using stored referral code:', storedReferralCode);
       setReferralCode(storedReferralCode);
     }
   }, [searchParams]);

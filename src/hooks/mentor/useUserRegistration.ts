@@ -9,6 +9,11 @@ export function useUserRegistration() {
     });
 
     try {
+      // Get referral code from localStorage if available
+      const referralCode = localStorage.getItem('referralCode');
+      
+      console.log('Mentor registration with referral code:', referralCode);
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -16,7 +21,8 @@ export function useUserRegistration() {
           data: {
             first_name: data.first_name,
             last_name: data.last_name,
-            user_type: 'mentor'
+            user_type: 'mentor',
+            referral_code: referralCode || null
           }
         }
       });
@@ -38,7 +44,16 @@ export function useUserRegistration() {
         throw new Error("Failed to create user account. No response from authentication service.");
       }
 
-      console.log('User signed up successfully:', authData.user.id);
+      console.log('User signed up successfully:', {
+        userId: authData.user.id,
+        referralCode: referralCode,
+        userMetadata: authData.user.user_metadata
+      });
+      
+      // Clear referral code from localStorage after successful signup
+      if (referralCode) {
+        localStorage.removeItem('referralCode');
+      }
       
       return authData.user;
     } catch (error) {
