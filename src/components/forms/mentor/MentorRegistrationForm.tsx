@@ -18,7 +18,6 @@ import { AlertCircle } from "lucide-react";
 import type { FormValues } from "./types";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useFormDebug } from "@/hooks/mentor/useFormDebug";
-import { supabase } from "@/integrations/supabase/client";
 
 interface MentorRegistrationFormProps {
   onSubmit: (data: FormValues) => Promise<void>;
@@ -27,13 +26,6 @@ interface MentorRegistrationFormProps {
   companies?: any[];
   schools?: any[];
   majors?: any[];
-}
-
-interface ReferralResponse {
-  success: boolean;
-  message?: string;
-  reward_amount?: number;
-  referrer_id?: string;
 }
 
 export function MentorRegistrationForm({
@@ -58,7 +50,7 @@ export function MentorRegistrationForm({
       password: "",
       avatar_url: "",
       bio: "",
-      years_of_experience: "0", // Changed to string to match schema transformation
+      years_of_experience: "0",
       position: "",
       company_id: "",
       school_id: "",
@@ -83,63 +75,6 @@ export function MentorRegistrationForm({
 
   // Add form debugging
   useFormDebug(form);
-
-  // Process referral reward after successful mentor registration
-  const processReferralReward = async (userId: string, retryCount = 0): Promise<void> => {
-    const referralCode = localStorage.getItem('referralCode');
-    if (!referralCode) return;
-
-    try {
-      console.log('Processing referral reward for mentor:', userId, 'with code:', referralCode, 'attempt:', retryCount + 1);
-      
-      // Add delay to ensure profile is fully created
-      if (retryCount === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-      }
-      
-      const { data, error } = await supabase.rpc('process_referral_reward', {
-        p_referred_id: userId,
-        p_referral_code: referralCode
-      });
-
-      if (error) {
-        console.error('Error processing referral reward:', error);
-        
-        // Retry once if it's a timing issue
-        if (retryCount === 0 && error.message.includes('not found')) {
-          console.log('Retrying referral processing for mentor...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          return processReferralReward(userId, retryCount + 1);
-        }
-        return;
-      }
-
-      const response = data as ReferralResponse;
-      
-      if (response?.success) {
-        console.log('Referral reward processed successfully for mentor:', response);
-        localStorage.removeItem('referralCode');
-      } else {
-        console.log('Referral reward not processed for mentor:', response?.message);
-        
-        // Retry once for any failure on first attempt
-        if (retryCount === 0) {
-          console.log('Retrying referral processing for mentor due to failure...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          return processReferralReward(userId, retryCount + 1);
-        }
-      }
-    } catch (error) {
-      console.error('Error in referral processing for mentor:', error);
-      
-      // Retry once for any error on first attempt
-      if (retryCount === 0) {
-        console.log('Retrying referral processing for mentor due to error...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        return processReferralReward(userId, retryCount + 1);
-      }
-    }
-  };
 
   // Handle submission with form data processing
   const handleSubmit = async (data: FormValues) => {
@@ -168,12 +103,8 @@ export function MentorRegistrationForm({
       setSubmissionProgress("Uploading profile information...");
       await onSubmit(processedData);
       
-      // Process referral reward if user is logged in (existing user becoming mentor)
-      if (session?.user?.id) {
-        processReferralReward(session.user.id).catch(error => {
-          console.error('Failed to process referral reward for mentor:', error);
-        });
-      }
+      // The referral processing will now happen automatically via the database trigger
+      // when the profile is updated with the mentor user_type
       
       setSubmissionProgress(null);
     } catch (error: any) {

@@ -12,13 +12,6 @@ interface SignUpFormProps {
   referralCode?: string | null;
 }
 
-interface ReferralResponse {
-  success: boolean;
-  message?: string;
-  reward_amount?: number;
-  referrer_id?: string;
-}
-
 export function SignUpForm({ referralCode }: SignUpFormProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -36,67 +29,6 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
       ...prev,
       [e.target.name]: e.target.value
     }));
-  };
-
-  const processReferralReward = async (userId: string, retryCount = 0): Promise<void> => {
-    if (!referralCode) return;
-
-    try {
-      console.log('Processing referral reward for user:', userId, 'with code:', referralCode, 'attempt:', retryCount + 1);
-      
-      // Add a small delay to ensure profile is created
-      if (retryCount === 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
-
-      const { data, error } = await supabase.rpc('process_referral_reward', {
-        p_referred_id: userId,
-        p_referral_code: referralCode
-      });
-
-      if (error) {
-        console.error('Error processing referral reward:', error);
-        
-        // Retry once if it's a timing issue
-        if (retryCount === 0 && error.message.includes('not found')) {
-          console.log('Retrying referral processing...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          return processReferralReward(userId, retryCount + 1);
-        }
-        return;
-      }
-
-      const response = data as ReferralResponse;
-      
-      if (response?.success) {
-        console.log('Referral reward processed successfully:', response);
-        toast({
-          title: "Referral processed!",
-          description: "Your friend has been rewarded for referring you. Welcome to PicoCareer!",
-        });
-        
-        // Clear the referral code from localStorage
-        localStorage.removeItem('referralCode');
-      } else {
-        console.log('Referral reward not processed:', response?.message);
-        
-        // Retry once for any failure on first attempt
-        if (retryCount === 0) {
-          console.log('Retrying referral processing due to failure...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          return processReferralReward(userId, retryCount + 1);
-        }
-      }
-    } catch (error) {
-      console.error('Error in referral processing:', error);
-      
-      // Retry once for any error on first attempt
-      if (retryCount === 0) {
-        console.log('Retrying referral processing due to error...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return processReferralReward(userId, retryCount + 1);
-      }
-    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -142,7 +74,7 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         return;
       }
 
-      // Proceed with signup
+      // Proceed with signup - store referral code in user metadata temporarily
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -150,7 +82,7 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            referral_code: referralCode || null, // Store referral code in user metadata
+            referral_code: referralCode || null,
           },
         },
       });
@@ -168,18 +100,16 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         throw signUpError;
       }
 
-      // Process referral reward if user signed up and we have their ID
-      if (authData.user?.id && referralCode) {
-        // Process referral reward asynchronously to not block the signup flow
-        processReferralReward(authData.user.id).catch(error => {
-          console.error('Failed to process referral reward:', error);
-        });
-      }
+      // The referral processing will now happen automatically via the database trigger
+      // when the profile is created with the referral_code column
 
       toast({
         title: "Check your email",
         description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
       });
+      
+      // Clear the referral code from localStorage since it's now handled by the database
+      localStorage.removeItem('referralCode');
       
       navigate("/");
     } catch (error: any) {

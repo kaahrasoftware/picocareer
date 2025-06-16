@@ -3440,6 +3440,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position: string | null
+          referral_code: string | null
           school_id: string | null
           skills: string[] | null
           student_nonstudent:
@@ -3491,6 +3492,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position?: string | null
+          referral_code?: string | null
           school_id?: string | null
           skills?: string[] | null
           student_nonstudent?:
@@ -3542,6 +3544,7 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position?: string | null
+          referral_code?: string | null
           school_id?: string | null
           skills?: string[] | null
           student_nonstudent?:
