@@ -3,10 +3,15 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addDays, addHours, setHours, setMinutes, startOfDay, addMinutes, isBefore } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format, addDays, isBefore } from "date-fns";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { useToast } from "@/hooks/use-toast";
+import { useAvailableDates } from "@/hooks/useAvailableDates";
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { useMentorTimezone } from "@/hooks/useMentorTimezone";
+import { TimeSlotsGrid } from "@/components/booking/TimeSlotsGrid";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Clock } from "lucide-react";
 
 interface RescheduleDialogProps {
   isOpen: boolean;
@@ -26,33 +31,42 @@ export function RescheduleDialog({
   mentorId
 }: RescheduleDialogProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(currentScheduledTime);
-  const [selectedTime, setSelectedTime] = useState<string>(format(currentScheduledTime, "HH:mm"));
+  const [selectedTime, setSelectedTime] = useState<string | undefined>();
   const { rescheduleSession, isLoading } = useSessionManagement();
   const { toast } = useToast();
 
-  // Calculate available time slots based on duration
-  const generateTimeSlots = () => {
-    const slots = [];
-    const startTime = startOfDay(new Date());
-    startTime.setHours(9, 0, 0, 0); // Start at 9 AM
-    const endTime = startOfDay(new Date());
-    endTime.setHours(20, 0, 0, 0); // End at 8 PM
-
-    let current = startTime;
-    while (isBefore(current, endTime)) {
-      slots.push(format(current, "HH:mm"));
-      current = addMinutes(current, 30); // 30-minute intervals
-    }
-
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
+  // Get mentor's available dates
+  const availableDates = useAvailableDates(mentorId || '');
+  
+  // Get mentor's timezone
+  const { data: mentorTimezone, isLoading: isLoadingTimezone } = useMentorTimezone(mentorId);
+  
+  // Get available time slots for selected date
+  const { 
+    timeSlots: availableTimeSlots, 
+    isLoading: isLoadingTimeSlots,
+    error: timeSlotsError
+  } = useAvailableTimeSlots(
+    selectedDate, 
+    mentorId || '', 
+    duration,
+    mentorTimezone || 'UTC'
+  );
 
   const handleReschedule = async () => {
+    if (!selectedTime || !selectedDate) {
+      toast({
+        title: "Missing information",
+        description: "Please select both a date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const [hours, minutes] = selectedTime.split(':').map(Number);
-      const newDateTime = setHours(setMinutes(selectedDate, minutes), hours);
+      const newDateTime = new Date(selectedDate);
+      newDateTime.setHours(hours, minutes, 0, 0);
 
       if (isBefore(newDateTime, new Date())) {
         toast({
@@ -74,50 +88,100 @@ export function RescheduleDialog({
     }
   };
 
+  // Filter available dates to only show dates that have availability
+  const isDateAvailable = (date: Date) => {
+    if (isBefore(date, addDays(new Date(), 1))) return false;
+    return availableDates.some(availableDate => {
+      const dateOnly = new Date(date);
+      dateOnly.setHours(0, 0, 0, 0);
+      const availableDateOnly = new Date(availableDate);
+      availableDateOnly.setHours(0, 0, 0, 0);
+      return dateOnly.getTime() === availableDateOnly.getTime();
+    });
+  };
+
+  const hasAvailableSlots = availableTimeSlots && availableTimeSlots.length > 0;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Reschedule Session</DialogTitle>
           <DialogDescription>
-            Choose a new date and time for your session.
+            Choose a new date and time from your mentor's available schedule.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Session Info */}
+          <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              Session duration: {duration} minutes
+            </span>
+          </div>
+
+          {/* Date Selection */}
           <div className="space-y-2">
-            <label htmlFor="date" className="block text-sm font-medium">
-              Date
+            <label className="block text-sm font-medium">
+              Select Date
             </label>
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              disabled={(date) => isBefore(date, new Date()) || date < addDays(new Date(), 1)}
+              onSelect={(date) => {
+                if (date) {
+                  setSelectedDate(date);
+                  setSelectedTime(undefined); // Reset time selection when date changes
+                }
+              }}
+              disabled={(date) => !isDateAvailable(date)}
               initialFocus
+              className="rounded-md border"
             />
           </div>
 
+          {/* Time Selection */}
           <div className="space-y-2">
-            <label htmlFor="time" className="block text-sm font-medium">
-              Time
+            <label className="block text-sm font-medium">
+              Available Time Slots
             </label>
-            <Select defaultValue={selectedTime} onValueChange={setSelectedTime}>
-              <SelectTrigger id="time">
-                <SelectValue placeholder="Select a time" />
-              </SelectTrigger>
-              <SelectContent>
-                {timeSlots.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            Session duration: {duration} minutes
+            
+            {isLoadingTimeSlots || isLoadingTimezone ? (
+              <div className="flex items-center justify-center p-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <span className="ml-2 text-sm text-muted-foreground">Loading available times...</span>
+              </div>
+            ) : timeSlotsError ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Error loading available times. Please try again.
+                </AlertDescription>
+              </Alert>
+            ) : !hasAvailableSlots ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No available time slots for this date. Please select a different date.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <TimeSlotsGrid
+                  title=""
+                  timeSlots={availableTimeSlots}
+                  selectedTime={selectedTime}
+                  onTimeSelect={setSelectedTime}
+                  mentorTimezone={mentorTimezone || 'UTC'}
+                  date={selectedDate}
+                  isLoading={false}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Times shown in mentor's timezone ({mentorTimezone || 'UTC'})
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -125,8 +189,11 @@ export function RescheduleDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleReschedule} disabled={isLoading}>
-            {isLoading ? "Rescheduling..." : "Reschedule"}
+          <Button 
+            onClick={handleReschedule} 
+            disabled={isLoading || !selectedTime || !hasAvailableSlots}
+          >
+            {isLoading ? "Rescheduling..." : "Reschedule Session"}
           </Button>
         </DialogFooter>
       </DialogContent>
