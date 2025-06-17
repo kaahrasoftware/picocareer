@@ -4707,6 +4707,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_duplicate_availability_slots: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cleaned_count: number
+          mentor_id: string
+          mentor_email: string
+        }[]
+      }
       confirm_hub_membership: {
         Args: { _hub_id: string }
         Returns: Json
@@ -4855,6 +4863,16 @@ export type Database = {
       migrate_reminder_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      monitor_availability_duplicates: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          profile_id: string
+          mentor_email: string
+          duplicate_count: number
+          sample_start_time: string
+          sample_end_time: string
+        }[]
       }
       process_daily_login_reward: {
         Args: { p_profile_id: string }
