@@ -38,6 +38,11 @@ export function useAuthState() {
               // Clear queries when user signs out
               queryClient.clear();
               authRetryCount.current = 0;
+              
+              // Redirect to auth page after logout
+              setTimeout(() => {
+                window.location.href = '/auth';
+              }, 100);
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               // Set session state immediately to update UI
               setSession(currentSession);
@@ -52,6 +57,13 @@ export function useAuthState() {
                   queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
                   queryClient.invalidateQueries({ queryKey: ['user-profile'] });
                 }, 0);
+              }
+              
+              // Redirect to home page with refresh after successful login
+              if (event === 'SIGNED_IN') {
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 100);
               }
             }
           }
@@ -119,6 +131,8 @@ export function useAuthState() {
         title: "Signed out successfully",
         description: "You have been signed out of your account."
       });
+      
+      // The redirect to /auth will be handled by the auth state change listener
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({

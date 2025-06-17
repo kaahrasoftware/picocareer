@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Major } from "@/types/database/majors";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +128,6 @@ export function MajorsDataTable({
             <TableRow>
               <TableHead className="w-[300px]">Title</TableHead>
               <TableHead>Featured</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Updated At</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -138,7 +136,7 @@ export function MajorsDataTable({
           <TableBody>
             {majors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   No majors found.
                 </TableCell>
               </TableRow>
@@ -159,13 +157,6 @@ export function MajorsDataTable({
                         }`}
                       />
                     </Button>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={major.status === "Approved" ? "default" : "outline"}
-                    >
-                      {major.status}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     {new Date(major.created_at).toLocaleDateString()}
