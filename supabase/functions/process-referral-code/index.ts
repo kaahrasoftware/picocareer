@@ -29,7 +29,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
     if (userError || !user) {
-      console.log('No authenticated user found');
+      console.log('No authenticated user found:', userError);
       return new Response(
         JSON.stringify({ success: false, message: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -39,13 +39,16 @@ serve(async (req) => {
     const { referralCode } = await req.json();
     
     if (!referralCode) {
+      console.log('No referral code provided');
       return new Response(
         JSON.stringify({ success: false, message: 'Referral code is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Processing referral code ${referralCode} for user ${user.id}`);
+    // Clean and normalize the referral code
+    const cleanReferralCode = referralCode.toString().trim().toUpperCase();
+    console.log(`Processing referral code "${cleanReferralCode}" for user ${user.id}`);
 
     // Check if user already has a referral record
     const { data: existingReferral, error: checkError } = await supabaseClient
@@ -65,16 +68,17 @@ serve(async (req) => {
     if (existingReferral) {
       console.log('User already has a referral record');
       return new Response(
-        JSON.stringify({ success: false, message: 'User already has been referred' }),
+        JSON.stringify({ success: false, message: 'You have already been referred by someone' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Find the referrer by referral code
+    // Find the referrer by referral code (case-insensitive search)
+    console.log(`Looking up referral code: "${cleanReferralCode}"`);
     const { data: referralCodeRecord, error: codeError } = await supabaseClient
       .from('referral_codes')
-      .select('profile_id')
-      .eq('referral_code', referralCode)
+      .select('profile_id, referral_code')
+      .eq('referral_code', cleanReferralCode)
       .eq('is_active', true)
       .maybeSingle();
 
@@ -87,45 +91,72 @@ serve(async (req) => {
     }
 
     if (!referralCodeRecord) {
-      console.log('Invalid or inactive referral code:', referralCode);
+      console.log(`Invalid or inactive referral code: "${cleanReferralCode}"`);
+      
+      // Debug: Let's check what referral codes exist
+      const { data: allCodes, error: debugError } = await supabaseClient
+        .from('referral_codes')
+        .select('referral_code, is_active')
+        .eq('is_active', true);
+      
+      console.log('Available active referral codes:', allCodes);
+      
       return new Response(
-        JSON.stringify({ success: false, message: 'Invalid referral code' }),
+        JSON.stringify({ success: false, message: 'Invalid or inactive referral code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const referrerId = referralCodeRecord.profile_id;
+    console.log(`Found referrer: ${referrerId} for code: ${referralCodeRecord.referral_code}`);
 
     // Prevent self-referral
     if (referrerId === user.id) {
       console.log('Self-referral attempt blocked');
       return new Response(
-        JSON.stringify({ success: false, message: 'Cannot refer yourself' }),
+        JSON.stringify({ success: false, message: 'You cannot refer yourself' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Process the referral using the database function
+    console.log(`Calling process_referral_reward for user ${user.id} with code ${cleanReferralCode}`);
     const { data: result, error: processError } = await supabaseClient
       .rpc('process_referral_reward', {
         p_referred_id: user.id,
-        p_referral_code: referralCode
+        p_referral_code: cleanReferralCode
       });
 
     if (processError) {
       console.error('Error processing referral reward:', processError);
       return new Response(
-        JSON.stringify({ success: false, message: 'Error processing referral reward' }),
+        JSON.stringify({ 
+          success: false, 
+          message: 'Error processing referral reward',
+          details: processError.message 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log('Referral processing result:', result);
 
+    // Check if the result indicates success
+    if (result && typeof result === 'object' && result.success === false) {
+      console.log('Referral processing failed:', result.message);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: result.message || 'Failed to process referral'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Referral processed successfully',
+        message: 'Referral processed successfully! Both you and your friend have earned 15 tokens.',
         result: result
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -134,7 +165,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in process-referral-code function:', error);
     return new Response(
-      JSON.stringify({ success: false, message: 'Internal server error' }),
+      JSON.stringify({ 
+        success: false, 
+        message: 'Internal server error',
+        details: error.message 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

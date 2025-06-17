@@ -9,13 +9,15 @@ export function useReferralProcessor() {
   const processReferralCode = async (referralCode: string) => {
     if (!referralCode) return { success: false, message: 'No referral code provided' };
 
+    // Clean and normalize the referral code
+    const cleanCode = referralCode.trim().toUpperCase();
     setIsProcessing(true);
     
     try {
-      console.log('Processing referral code:', referralCode);
+      console.log('Processing referral code:', cleanCode);
       
       const { data, error } = await supabase.functions.invoke('process-referral-code', {
-        body: { referralCode }
+        body: { referralCode: cleanCode }
       });
 
       if (error) {
@@ -23,9 +25,11 @@ export function useReferralProcessor() {
         throw error;
       }
 
+      console.log('Function response:', data);
+
       if (data?.success) {
         console.log('Referral processed successfully:', data);
-        toast.success('🎉 Referral processed! Your friend has earned tokens!');
+        toast.success('🎉 Referral processed! You and your friend have both earned 15 tokens!');
         
         // Clear referral code from localStorage
         localStorage.removeItem('referralCode');
@@ -33,8 +37,9 @@ export function useReferralProcessor() {
         return { success: true, message: 'Referral processed successfully' };
       } else {
         console.log('Referral processing failed:', data?.message);
-        toast.error(data?.message || 'Failed to process referral');
-        return { success: false, message: data?.message || 'Failed to process referral' };
+        const errorMessage = data?.message || 'Failed to process referral';
+        toast.error(errorMessage);
+        return { success: false, message: errorMessage };
       }
     } catch (error: any) {
       console.error('Error processing referral:', error);
