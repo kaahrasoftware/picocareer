@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AuthContextType {
   session: Session | null;
@@ -27,6 +28,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const authState = useAuthState();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Log auth state changes for debugging
   useEffect(() => {
@@ -43,6 +46,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [authState.session, authState.loading, authState.error]);
 
+  // Handle navigation after successful authentication
+  useEffect(() => {
+    if (!authState.loading && authState.session?.user) {
+      // If user just signed in and is on auth page, redirect to home
+      if (location.pathname === '/auth') {
+        console.log('User authenticated, redirecting from auth page to home');
+        navigate('/', { replace: true });
+      }
+    } else if (!authState.loading && !authState.session && location.pathname !== '/auth') {
+      // Only redirect to auth if user is trying to access protected routes
+      const protectedRoutes = ['/profile', '/dashboard', '/token-shop', '/mentor-registration'];
+      if (protectedRoutes.includes(location.pathname)) {
+        console.log('User not authenticated, redirecting to auth page');
+        navigate('/auth', { replace: true });
+      }
+    }
+  }, [authState.session, authState.loading, location.pathname, navigate]);
+
   // Handle session expiration and proactive refresh
   useEffect(() => {
     const checkSessionExpiry = () => {
@@ -54,7 +75,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const timeUntilExpiry = expiryTime.getTime() - now.getTime();
           
           // If session will expire in less than 10 minutes, refresh it
-          // This is more aggressive than before (changed from 5 to 10 minutes)
           if (timeUntilExpiry < 10 * 60 * 1000 && timeUntilExpiry > 0) {
             console.log('Session about to expire, refreshing token');
             // This will trigger a token refresh through Supabase's autoRefreshToken
@@ -64,7 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     };
     
-    // Check session expiry every 30 seconds (increased from every minute)
+    // Check session expiry every 30 seconds
     const interval = setInterval(checkSessionExpiry, 30 * 1000);
     
     return () => clearInterval(interval);

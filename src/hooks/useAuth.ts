@@ -4,15 +4,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthError } from "@supabase/supabase-js";
 import { useAuth as useAuthContext } from "@/context/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 
 export function useAuth() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { session, user, signOut } = useAuthContext();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const signIn = async (email: string, password: string) => {
     if (isLoading) return; // Prevent multiple concurrent sign-in attempts
@@ -21,7 +17,7 @@ export function useAuth() {
     console.log('Attempting sign in for:', email);
 
     try {
-      // Use direct auth operation for better reliability
+      // Use direct auth operation - let the auth state listener handle the rest
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.toLowerCase().trim(),
         password,
@@ -29,26 +25,13 @@ export function useAuth() {
 
       if (error) throw error;
 
-      // First ensure the session is properly stored
-      if (data.session) {
-        await supabase.auth.setSession(data.session);
-        
-        // Then invalidate queries to refresh data
-        queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-        
-        console.log('Sign in successful, navigating to home');
-        
-        // Show success toast after a small delay to ensure UI has updated
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-        
-        // Navigate to home after successful login
-        navigate('/');
-      }
+      console.log('Sign in successful, auth state listener will handle the rest');
+      
+      // Show success toast
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
 
       return data;
     } catch (error) {
