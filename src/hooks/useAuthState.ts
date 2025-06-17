@@ -20,6 +20,7 @@ export function useAuthState() {
   const isInitialized = useRef(false);
   const authChangeSubscription = useRef<{ unsubscribe: () => void } | null>(null);
   const authRetryCount = useRef(0);
+  const hasRedirectedAfterLogin = useRef(false);
   const MAX_AUTH_RETRIES = 3;
   const { processLoginReward } = useLoginReward();
 
@@ -40,7 +41,13 @@ export function useAuthState() {
               // Clear queries when user signs out
               queryClient.clear();
               authRetryCount.current = 0;
-            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              hasRedirectedAfterLogin.current = false;
+              
+              // Redirect to auth page after sign out
+              setTimeout(() => {
+                window.location.href = '/auth';
+              }, 100);
+            } else if (event === 'SIGNED_IN') {
               // Set session state immediately to update UI
               setSession(currentSession);
               setUser(currentSession?.user ?? null);
@@ -55,12 +62,33 @@ export function useAuthState() {
                   queryClient.invalidateQueries({ queryKey: ['user-profile'] });
                 }, 0);
 
-                // Process daily login reward only on actual sign in (not token refresh)
-                if (event === 'SIGNED_IN') {
+                // Process daily login reward
+                setTimeout(() => {
+                  processLoginReward(currentSession.user.id);
+                }, 1000);
+
+                // Only redirect if this is a fresh login and we haven't already redirected
+                if (!hasRedirectedAfterLogin.current && window.location.pathname === '/auth') {
+                  console.log('Fresh login detected, redirecting to home page');
+                  hasRedirectedAfterLogin.current = true;
                   setTimeout(() => {
-                    processLoginReward(currentSession.user.id);
-                  }, 1000); // Small delay to ensure wallet queries are invalidated first
+                    window.location.href = '/';
+                  }, 500); // Small delay to ensure state is updated
                 }
+              }
+            } else if (event === 'TOKEN_REFRESHED') {
+              // Set session state for token refresh but don't redirect
+              setSession(currentSession);
+              setUser(currentSession?.user ?? null);
+              authRetryCount.current = 0;
+              
+              // Invalidate queries for token refresh
+              if (currentSession?.user?.id) {
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+                }, 0);
               }
             }
           }
@@ -86,6 +114,8 @@ export function useAuthState() {
           console.log('Initial session found');
           setSession(sessionData.session);
           setUser(sessionData.session.user);
+          // Mark that we already have a session to prevent unnecessary redirects
+          hasRedirectedAfterLogin.current = true;
         }
       } catch (err) {
         console.error('Unexpected error during auth setup:', err);
@@ -107,7 +137,7 @@ export function useAuthState() {
   const signOut = async () => {
     try {
       console.log('Signing out...');
-      setLoading(true); // Set loading state to true while signing out
+      setLoading(true);
       
       // Use simpler direct call for sign out instead of throttled version
       const { error } = await supabase.auth.signOut({
@@ -119,6 +149,7 @@ export function useAuthState() {
       // Ensure we clear states immediately to update UI
       setSession(null);
       setUser(null);
+      hasRedirectedAfterLogin.current = false;
       
       // Clear query cache to prevent stale data from previous session
       queryClient.clear();

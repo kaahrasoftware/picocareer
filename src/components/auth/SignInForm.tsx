@@ -39,7 +39,7 @@ export function SignInForm() {
     try {
       console.log('Submitting sign in form');
       await signIn(formData.email, formData.password);
-      // Navigation is now handled in the useAuth hook
+      // The useAuth hook now handles navigation with page refresh
     } catch (err) {
       // Error handling is already done in the useAuth hook
       console.error("Authentication error caught in SignInForm:", err);
