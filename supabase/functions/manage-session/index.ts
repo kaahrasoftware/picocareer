@@ -52,8 +52,7 @@ serve(async (req) => {
         meeting_link,
         mentee_phone_number,
         mentee_telegram_username,
-        availability_slot_id,
-        booked_session_id: mentor_availability!inner(booked_session_id)
+        availability_slot_id
       `)
       .eq('id', sessionId)
       .single();
