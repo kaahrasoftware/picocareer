@@ -39,11 +39,7 @@ interface FormData {
   website_url: string;
 }
 
-interface ProfileEditFormProps {
-  onClose: () => void;
-}
-
-export function ProfileEditForm({ onClose }: ProfileEditFormProps) {
+export function ProfileEditForm({ onClose }: { onClose: () => void }) {
   const { session } = useAuthSession();
   const { toast } = useToast();
   const queryClient = useQueryClient();
