@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DialogTitle } from "@/components/ui/dialog";
 import { ProfileAvatar } from "./ProfileAvatar";
@@ -13,6 +14,7 @@ interface Profile {
   academic_major: string | null;
   school_name: string | null;
   position: string | null;
+  career_title: string | null;
   company_name: string | null;
   skills: string[] | null;
 }
@@ -41,8 +43,8 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
   }
 
   // Determine primary and secondary display text
-  const primaryText = profile.position || profile.academic_major || "No position/major set";
-  const secondaryText = profile.position 
+  const primaryText = profile.career_title || profile.academic_major || "No position/major set";
+  const secondaryText = profile.career_title 
     ? profile.company_name || "No company set"
     : profile.school_name || "No school set";
 

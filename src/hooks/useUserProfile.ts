@@ -15,7 +15,8 @@ export function useUserProfile(session: Session | null) {
           *,
           companies:company_id(name),
           schools:school_id(name),
-          majors:academic_major_id(title)
+          majors:academic_major_id(title),
+          careers:position(title)
         `)
         .eq('id', session.user.id)
         .single();
@@ -31,6 +32,7 @@ export function useUserProfile(session: Session | null) {
         company_name: data.companies?.name || null,
         school_name: data.schools?.name || null,
         academic_major: data.majors?.title || null,
+        career_title: data.careers?.title || null,
       };
     },
     enabled: !!session?.user?.id,
