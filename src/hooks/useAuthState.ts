@@ -19,6 +19,7 @@ export function useAuthState() {
   const isInitialized = useRef(false);
   const authChangeSubscription = useRef<{ unsubscribe: () => void } | null>(null);
   const authRetryCount = useRef(0);
+  const hasRedirectedOnLogin = useRef(false);
   const MAX_AUTH_RETRIES = 3;
 
   useEffect(() => {
@@ -27,51 +28,7 @@ export function useAuthState() {
 
     const setupAuthListener = async () => {
       try {
-        // First set up auth state change listener
-        const { data } = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            console.log('Auth state changed:', event);
-            
-            if (event === 'SIGNED_OUT') {
-              setSession(null);
-              setUser(null);
-              // Clear queries when user signs out
-              queryClient.clear();
-              authRetryCount.current = 0;
-              
-              // Redirect to auth page after logout
-              setTimeout(() => {
-                window.location.href = '/auth';
-              }, 100);
-            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              // Set session state immediately to update UI
-              setSession(currentSession);
-              setUser(currentSession?.user ?? null);
-              authRetryCount.current = 0;
-              
-              // Invalidate queries to refresh data after sign in
-              if (currentSession?.user?.id) {
-                // Use setTimeout to avoid potential auth deadlocks
-                setTimeout(() => {
-                  queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
-                  queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
-                  queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-                }, 0);
-              }
-              
-              // Redirect to home page with refresh after successful login
-              if (event === 'SIGNED_IN') {
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 100);
-              }
-            }
-          }
-        );
-
-        authChangeSubscription.current = data.subscription;
-
-        // Then check for existing session
+        // First check for existing session
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -89,7 +46,61 @@ export function useAuthState() {
           console.log('Initial session found');
           setSession(sessionData.session);
           setUser(sessionData.session.user);
+          // Don't redirect here - this is just restoring existing session
         }
+
+        // Then set up auth state change listener
+        const { data } = supabase.auth.onAuthStateChange(
+          (event, currentSession) => {
+            console.log('Auth state changed:', event, 'hasRedirectedOnLogin:', hasRedirectedOnLogin.current);
+            
+            if (event === 'SIGNED_OUT') {
+              setSession(null);
+              setUser(null);
+              queryClient.clear();
+              authRetryCount.current = 0;
+              hasRedirectedOnLogin.current = false;
+              
+              // Redirect to auth page after logout
+              console.log('Redirecting to auth page after logout');
+              setTimeout(() => {
+                window.location.href = '/auth';
+              }, 100);
+            } else if (event === 'SIGNED_IN') {
+              // Set session state immediately to update UI
+              setSession(currentSession);
+              setUser(currentSession?.user ?? null);
+              authRetryCount.current = 0;
+              
+              // Only redirect on fresh login, not when restoring session
+              if (!hasRedirectedOnLogin.current && currentSession?.user?.id) {
+                hasRedirectedOnLogin.current = true;
+                console.log('Fresh login detected, redirecting to home');
+                
+                // Use setTimeout to avoid auth callback conflicts
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 100);
+              }
+              
+              // Invalidate queries to refresh data after sign in
+              if (currentSession?.user?.id) {
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
+                  queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+                }, 0);
+              }
+            } else if (event === 'TOKEN_REFRESHED') {
+              // Update session state but don't redirect
+              setSession(currentSession);
+              setUser(currentSession?.user ?? null);
+              authRetryCount.current = 0;
+            }
+          }
+        );
+
+        authChangeSubscription.current = data.subscription;
       } catch (err) {
         console.error('Unexpected error during auth setup:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
@@ -110,18 +121,18 @@ export function useAuthState() {
   const signOut = async () => {
     try {
       console.log('Signing out...');
-      setLoading(true); // Set loading state to true while signing out
+      setLoading(true);
       
-      // Use simpler direct call for sign out instead of throttled version
       const { error } = await supabase.auth.signOut({
         scope: 'local'
       });
       
       if (error) throw error;
       
-      // Ensure we clear states immediately to update UI
+      // Clear states immediately to update UI
       setSession(null);
       setUser(null);
+      hasRedirectedOnLogin.current = false;
       
       // Clear query cache to prevent stale data from previous session
       queryClient.clear();

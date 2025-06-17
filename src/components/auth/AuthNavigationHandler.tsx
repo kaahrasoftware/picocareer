@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 /**
@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 export function AuthNavigationHandler() {
   const { session, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Don't do anything while auth is still loading
@@ -19,19 +20,24 @@ export function AuthNavigationHandler() {
     const isAuthPage = currentPath === '/auth';
     const isAuthenticated = !!session?.user;
 
-    // If user is on auth page but is already authenticated, redirect to home
-    // The redirect will be handled by useAuthState with a page refresh
-    if (isAuthPage && isAuthenticated) {
-      // Let useAuthState handle the redirect with page refresh
+    console.log('AuthNavigationHandler:', { currentPath, isAuthPage, isAuthenticated, loading });
+
+    // If user is not authenticated and not on auth page, redirect to auth
+    // But don't redirect if they're already being redirected by useAuthState
+    if (!isAuthenticated && !isAuthPage) {
+      console.log('User not authenticated, redirecting to auth page');
+      navigate('/auth', { replace: true });
       return;
     }
 
-    // If user is not authenticated and not on auth page, redirect to auth
-    if (!isAuthenticated && !isAuthPage) {
-      window.location.href = '/auth';
+    // If user is authenticated and on auth page, redirect to home
+    // But use navigate instead of window.location to avoid refresh loops
+    if (isAuthenticated && isAuthPage) {
+      console.log('User authenticated on auth page, redirecting to home');
+      navigate('/', { replace: true });
       return;
     }
-  }, [session, loading, location.pathname]);
+  }, [session, loading, location.pathname, navigate]);
 
   return null;
 }
