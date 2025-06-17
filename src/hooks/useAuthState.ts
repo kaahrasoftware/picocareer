@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase, throttledAuthOperation } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useLoginReward } from './useLoginReward';
 
 /**
  * Primary hook to manage authentication state
@@ -20,6 +21,7 @@ export function useAuthState() {
   const authChangeSubscription = useRef<{ unsubscribe: () => void } | null>(null);
   const authRetryCount = useRef(0);
   const MAX_AUTH_RETRIES = 3;
+  const { processLoginReward } = useLoginReward();
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -52,6 +54,13 @@ export function useAuthState() {
                   queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
                   queryClient.invalidateQueries({ queryKey: ['user-profile'] });
                 }, 0);
+
+                // Process daily login reward only on actual sign in (not token refresh)
+                if (event === 'SIGNED_IN') {
+                  setTimeout(() => {
+                    processLoginReward(currentSession.user.id);
+                  }, 1000); // Small delay to ensure wallet queries are invalidated first
+                }
               }
             }
           }
@@ -93,7 +102,7 @@ export function useAuthState() {
         authChangeSubscription.current.unsubscribe();
       }
     };
-  }, [toast, queryClient]);
+  }, [toast, queryClient, processLoginReward]);
 
   const signOut = async () => {
     try {
