@@ -3440,7 +3440,6 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position: string | null
-          referral_code: string | null
           school_id: string | null
           skills: string[] | null
           student_nonstudent:
@@ -3492,7 +3491,6 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position?: string | null
-          referral_code?: string | null
           school_id?: string | null
           skills?: string[] | null
           student_nonstudent?:
@@ -3544,7 +3542,6 @@ export type Database = {
             | Database["public"]["Enums"]["onboarding_status"]
             | null
           position?: string | null
-          referral_code?: string | null
           school_id?: string | null
           skills?: string[] | null
           student_nonstudent?:
@@ -3589,41 +3586,6 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      referral_codes: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          profile_id: string
-          referral_code: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          profile_id: string
-          referral_code: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          profile_id?: string
-          referral_code?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "referral_codes_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -4698,10 +4660,6 @@ export type Database = {
         }
         Returns: Json
       }
-      debug_referral_status: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
       deduct_tokens: {
         Args: {
           p_wallet_id: string
@@ -4736,10 +4694,6 @@ export type Database = {
       generate_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      generate_referral_code: {
-        Args: { p_profile_id: string }
-        Returns: string
       }
       get_hub_recommendations: {
         Args: { p_hub_id: string }
@@ -4810,10 +4764,6 @@ export type Database = {
           _details?: Json
         }
         Returns: undefined
-      }
-      manual_process_referral: {
-        Args: { p_referrer_email: string; p_referred_email: string }
-        Returns: Json
       }
       manually_update_majors_profiles_count: {
         Args: Record<PropertyKey, never>

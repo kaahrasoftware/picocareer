@@ -7,16 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
-import { useReferralProcessor } from "@/hooks/useReferralProcessor";
 
-interface SignUpFormProps {
-  referralCode?: string | null;
-}
-
-export function SignUpForm({ referralCode }: SignUpFormProps) {
+export function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { processReferralCode } = useReferralProcessor();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -78,7 +72,7 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
 
       console.log('Starting signup process');
 
-      // Proceed with simplified signup - no referral code in metadata
+      // Proceed with signup
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -105,21 +99,6 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
       }
 
       console.log('Signup successful:', authData.user?.id);
-
-      // If we have a referral code and user signup was successful, process it
-      if (referralCode && authData.user) {
-        console.log('Processing referral code after successful signup');
-        
-        // Small delay to ensure user is fully created
-        setTimeout(async () => {
-          try {
-            await processReferralCode(referralCode);
-          } catch (error) {
-            console.error('Referral processing failed, but signup was successful:', error);
-            // Don't block signup if referral processing fails
-          }
-        }, 2000);
-      }
 
       toast({
         title: "Check your email",
@@ -206,17 +185,6 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
           minLength={6}
         />
       </div>
-
-      {referralCode && (
-        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">
-            🎁 Referral Code: <span className="font-mono font-semibold">{referralCode}</span>
-          </p>
-          <p className="text-xs text-green-600 mt-1">
-            Your friend will receive tokens when you complete registration!
-          </p>
-        </div>
-      )}
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Creating account..." : "Create Account"}
