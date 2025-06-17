@@ -99,7 +99,7 @@ BEGIN
 END;
 $$;
 
--- Create the prevention trigger with improved logic for rescheduling
+-- Create the prevention trigger with simplified logic
 CREATE OR REPLACE FUNCTION prevent_duplicate_availability()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -107,40 +107,41 @@ AS $$
 BEGIN
   -- Skip duplicate prevention during rescheduling operations
   -- (when we're updating an existing slot with a booked_session_id)
-  IF TG_OP = 'UPDATE' AND OLD.booked_session_id IS NOT NULL AND NEW.booked_session_id IS NOT NULL THEN
+  IF TG_OP = 'UPDATE' AND NEW.booked_session_id IS NOT NULL THEN
     RETURN NEW;
   END IF;
 
-  -- Check for existing non-recurring slot (only for unbooked slots)
-  IF COALESCE(NEW.recurring, false) = false AND NEW.booked_session_id IS NULL THEN
-    IF EXISTS (
-      SELECT 1 FROM mentor_availability
-      WHERE profile_id = NEW.profile_id
-        AND start_date_time = NEW.start_date_time
-        AND end_date_time = NEW.end_date_time
-        AND COALESCE(recurring, false) = false
-        AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
-        AND booked_session_id IS NULL
-    ) THEN
-      RAISE EXCEPTION 'Duplicate non-recurring availability slot already exists for this time period';
+  -- Only prevent duplicates for INSERT operations of unbooked slots
+  IF TG_OP = 'INSERT' AND NEW.booked_session_id IS NULL THEN
+    -- Check for existing non-recurring slot
+    IF COALESCE(NEW.recurring, false) = false THEN
+      IF EXISTS (
+        SELECT 1 FROM mentor_availability
+        WHERE profile_id = NEW.profile_id
+          AND start_date_time = NEW.start_date_time
+          AND end_date_time = NEW.end_date_time
+          AND COALESCE(recurring, false) = false
+          AND booked_session_id IS NULL
+      ) THEN
+        RAISE EXCEPTION 'Duplicate non-recurring availability slot already exists for this time period';
+      END IF;
     END IF;
-  END IF;
-  
-  -- Check for existing recurring slot (only for unbooked slots)
-  IF COALESCE(NEW.recurring, false) = true AND NEW.booked_session_id IS NULL THEN
-    IF EXISTS (
-      SELECT 1 FROM mentor_availability
-      WHERE profile_id = NEW.profile_id
-        AND day_of_week = NEW.day_of_week
-        AND EXTRACT(hour FROM start_date_time) = EXTRACT(hour FROM NEW.start_date_time)
-        AND EXTRACT(minute FROM start_date_time) = EXTRACT(minute FROM NEW.start_date_time)
-        AND EXTRACT(hour FROM end_date_time) = EXTRACT(hour FROM NEW.end_date_time)
-        AND EXTRACT(minute FROM end_date_time) = EXTRACT(minute FROM NEW.end_date_time)
-        AND COALESCE(recurring, false) = true
-        AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
-        AND booked_session_id IS NULL
-    ) THEN
-      RAISE EXCEPTION 'Duplicate recurring availability slot already exists for this time period';
+    
+    -- Check for existing recurring slot
+    IF COALESCE(NEW.recurring, false) = true THEN
+      IF EXISTS (
+        SELECT 1 FROM mentor_availability
+        WHERE profile_id = NEW.profile_id
+          AND day_of_week = NEW.day_of_week
+          AND EXTRACT(hour FROM start_date_time) = EXTRACT(hour FROM NEW.start_date_time)
+          AND EXTRACT(minute FROM start_date_time) = EXTRACT(minute FROM NEW.start_date_time)
+          AND EXTRACT(hour FROM end_date_time) = EXTRACT(hour FROM NEW.end_date_time)
+          AND EXTRACT(minute FROM end_date_time) = EXTRACT(minute FROM NEW.end_date_time)
+          AND COALESCE(recurring, false) = true
+          AND booked_session_id IS NULL
+      ) THEN
+        RAISE EXCEPTION 'Duplicate recurring availability slot already exists for this time period';
+      END IF;
     END IF;
   END IF;
   
