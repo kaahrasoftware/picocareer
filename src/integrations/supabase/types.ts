@@ -4890,6 +4890,10 @@ export type Database = {
         }
         Returns: Json
       }
+      reschedule_session: {
+        Args: { p_session_id: string; p_new_time: string }
+        Returns: Json
+      }
       schedule_notification: {
         Args: { p_notifications: Json[]; p_scheduled_for: string }
         Returns: undefined

@@ -83,8 +83,13 @@ export function RescheduleDialog({
       });
 
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error rescheduling session:", error);
+      toast({
+        title: "Rescheduling failed",
+        description: error.message || "An error occurred while rescheduling the session.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -117,7 +122,7 @@ export function RescheduleDialog({
           <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              Session duration: {duration} minutes
+              Current time: {format(currentScheduledTime, 'PPp')} • Duration: {duration} minutes
             </span>
           </div>
 
