@@ -9,10 +9,13 @@ interface SchoolFormDialogProps {
   onClose: () => void;
   school?: School;
   onSuccess: () => void;
+  open?: boolean; // Add this for compatibility
+  mode?: string; // Add this for compatibility
 }
 
-export function SchoolFormDialog({ isOpen, onClose, school, onSuccess }: SchoolFormDialogProps) {
+export function SchoolFormDialog({ isOpen, open, onClose, school, onSuccess }: SchoolFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dialogOpen = isOpen || open || false;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -25,7 +28,7 @@ export function SchoolFormDialog({ isOpen, onClose, school, onSuccess }: SchoolF
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{school ? 'Edit School' : 'Add School'}</DialogTitle>

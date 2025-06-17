@@ -5,7 +5,7 @@ export type FormFields = {
   title: string;
   content: string;
   hub_id: string;
-  category: "general" | "academic" | "event" | "announcement";
+  category: "general" | "event" | "news" | "alert";
   scheduled_for: string;
   expires_at: string;
   target_audience: string[];

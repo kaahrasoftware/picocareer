@@ -4,7 +4,7 @@ import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
 import type { Profile } from "@/types/database/profiles";
 
 interface UserProfileDetailsDialogProps {
-  profile: Profile & {
+  profile?: Profile & {
     company_name?: string | null;
     school_name?: string | null;
     academic_major?: string | null;
@@ -12,11 +12,34 @@ interface UserProfileDetailsDialogProps {
   };
   isOpen: boolean;
   onClose: () => void;
+  userId?: string; // Add this for compatibility
+  open?: boolean; // Add this for compatibility
+  onOpenChange?: (open: boolean) => void; // Add this for compatibility
 }
 
-export function UserProfileDetailsDialog({ profile, isOpen, onClose }: UserProfileDetailsDialogProps) {
+export function UserProfileDetailsDialog({ 
+  profile, 
+  isOpen, 
+  open, 
+  onClose, 
+  onOpenChange 
+}: UserProfileDetailsDialogProps) {
+  const dialogOpen = isOpen || open || false;
+  
+  const handleOpenChange = (newOpen: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    } else if (!newOpen) {
+      onClose();
+    }
+  };
+
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>User Profile Details</DialogTitle>

@@ -9,10 +9,12 @@ interface MajorFormDialogProps {
   onClose: () => void;
   major?: Major;
   onSuccess: () => void;
+  open?: boolean; // Add this for compatibility
 }
 
-export function MajorFormDialog({ isOpen, onClose, major, onSuccess }: MajorFormDialogProps) {
+export function MajorFormDialog({ isOpen, open, onClose, major, onSuccess }: MajorFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dialogOpen = isOpen || open || false;
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -25,7 +27,7 @@ export function MajorFormDialog({ isOpen, onClose, major, onSuccess }: MajorForm
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{major ? 'Edit Major' : 'Add Major'}</DialogTitle>

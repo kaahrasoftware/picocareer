@@ -7,10 +7,29 @@ interface ScholarshipDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   scholarship?: ScholarshipDetails;
+  scholarshipId?: string; // Add this for compatibility
+  open?: boolean; // Add this for compatibility
+  onOpenChange?: (open: boolean) => void; // Add this for compatibility
+  onScholarshipUpdated?: () => void; // Add this for compatibility
 }
 
-export function ScholarshipDetailsDialog({ isOpen, onClose, scholarship }: ScholarshipDetailsDialogProps) {
+export function ScholarshipDetailsDialog({ 
+  isOpen, 
+  open, 
+  onClose, 
+  onOpenChange,
+  scholarship 
+}: ScholarshipDetailsDialogProps) {
   const [selectedScholarship, setSelectedScholarship] = useState<ScholarshipDetails | null>(null);
+  const dialogOpen = isOpen || open || false;
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    } else if (!newOpen) {
+      onClose();
+    }
+  };
 
   const handleScholarshipUpdate = (updatedScholarship: any) => {
     // Ensure currency is included
@@ -23,7 +42,7 @@ export function ScholarshipDetailsDialog({ isOpen, onClose, scholarship }: Schol
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Scholarship Details</DialogTitle>
