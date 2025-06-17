@@ -13,38 +13,16 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Gift } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect } from "react";
 
 export default function Auth() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const [referralCode, setReferralCode] = useState<string | null>(null);
-
-  // Check for referral code from localStorage or URL
-  useEffect(() => {
-    const storedReferralCode = localStorage.getItem('referralCode');
-    const urlReferralCode = searchParams.get('ref');
-    
-    if (urlReferralCode) {
-      console.log('Setting referral code from URL:', urlReferralCode);
-      localStorage.setItem('referralCode', urlReferralCode);
-      setReferralCode(urlReferralCode);
-      
-      // Clean up the URL to remove the ref parameter
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('ref');
-      window.history.replaceState({}, '', newUrl.toString());
-    } else if (storedReferralCode) {
-      console.log('Using stored referral code:', storedReferralCode);
-      setReferralCode(storedReferralCode);
-    }
-  }, [searchParams]);
 
   // Define the query function outside conditional rendering
   const fetchMentors = async () => {
@@ -199,15 +177,6 @@ export default function Auth() {
                 </p>
               </div>
 
-              {referralCode && (
-                <Alert className="border-green-200 bg-green-50">
-                  <Gift className="h-4 w-4" />
-                  <AlertDescription className="text-green-800">
-                    🎉 You've been referred by a friend! Complete your registration to help them earn tokens!
-                  </AlertDescription>
-                </Alert>
-              )}
-
               <Tabs defaultValue={tabParam === 'signup' ? 'signup' : 'signin'} className="space-y-4 lg:space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -217,7 +186,7 @@ export default function Auth() {
                   <SignInForm />
                 </TabsContent>
                 <TabsContent value="signup">
-                  <SignUpForm referralCode={referralCode} />
+                  <SignUpForm />
                 </TabsContent>
               </Tabs>
             </Card>
