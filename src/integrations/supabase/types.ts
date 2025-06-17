@@ -4856,6 +4856,10 @@ export type Database = {
         Args: { p_referred_id: string; p_referral_code: string }
         Returns: Json
       }
+      process_welcome_reward: {
+        Args: { p_profile_id: string }
+        Returns: Json
+      }
       refresh_all_hub_metrics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
