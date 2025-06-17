@@ -24,7 +24,7 @@ interface Rating {
   created_at: string;
   from_profile: {
     full_name: string;
-  }
+  } | null;
 }
 
 export function MentorRatingsDialog({ isOpen, onClose, mentorId }: MentorRatingDialogProps) {
@@ -38,7 +38,7 @@ export function MentorRatingsDialog({ isOpen, onClose, mentorId }: MentorRatingD
           rating,
           notes,
           created_at,
-          from_profile:from_profile_id (
+          from_profile:profiles!session_feedback_from_profile_id_fkey (
             full_name
           )
         `)
@@ -72,7 +72,7 @@ export function MentorRatingsDialog({ isOpen, onClose, mentorId }: MentorRatingD
                         <span className="ml-1 font-medium">{rating.rating}</span>
                       </div>
                       <span className="text-sm text-muted-foreground">
-                        by {rating.from_profile.full_name}
+                        by {rating.from_profile?.full_name || 'Anonymous'}
                       </span>
                     </div>
                     <div className="text-sm text-muted-foreground">
