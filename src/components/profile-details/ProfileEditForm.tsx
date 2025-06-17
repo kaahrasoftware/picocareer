@@ -6,9 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 interface ProfileEditFormProps {
   profile: any;
   onClose: () => void;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
-export function ProfileEditForm({ profile, onClose }: ProfileEditFormProps) {
+export function ProfileEditForm({ profile, onClose, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,7 +23,12 @@ export function ProfileEditForm({ profile, onClose }: ProfileEditFormProps) {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
-      onClose();
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -33,13 +40,21 @@ export function ProfileEditForm({ profile, onClose }: ProfileEditFormProps) {
     }
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="text-center p-8 text-muted-foreground">
         Profile editing functionality is available on the main profile page.
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={handleCancel}>
           Cancel
         </Button>
         <Button onClick={handleSave} disabled={isLoading}>

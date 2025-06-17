@@ -22,15 +22,9 @@ export const AuthNavigationHandler: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [session, loading, location.pathname]);
 
-  // Handle navigation after successful authentication
+  // Handle navigation for protected routes (login redirect is now handled in useAuthState)
   useEffect(() => {
-    if (!loading && session?.user) {
-      // If user just signed in and is on auth page, redirect to home with page refresh
-      if (location.pathname === '/auth') {
-        console.log('User authenticated, redirecting from auth page to home with page refresh');
-        window.location.href = '/';
-      }
-    } else if (!loading && !session && location.pathname !== '/auth') {
+    if (!loading && !session && location.pathname !== '/auth') {
       // Only redirect to auth if user is trying to access protected routes
       const protectedRoutes = ['/profile', '/dashboard', '/token-shop', '/mentor-registration'];
       if (protectedRoutes.includes(location.pathname)) {

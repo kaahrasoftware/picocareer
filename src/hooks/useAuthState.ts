@@ -48,6 +48,15 @@ export function useAuthState() {
               setUser(currentSession?.user ?? null);
               setError(null);
               
+              // Check if user is coming from auth page and redirect to home with refresh
+              if (window.location.pathname === '/auth') {
+                console.log('User signed in from auth page, redirecting to home with page refresh');
+                // Use setTimeout to ensure state updates complete first
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 100);
+              }
+              
               // Process queries and rewards after state update
               if (currentSession?.user?.id) {
                 // Use setTimeout to ensure state updates complete first
@@ -57,7 +66,7 @@ export function useAuthState() {
                   queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
                   queryClient.invalidateQueries({ queryKey: ['user-profile'] });
                   queryClient.invalidateQueries({ queryKey: ['wallet', currentSession.user.id] });
-                }, 100);
+                }, 200);
 
                 // Process daily login reward
                 setTimeout(() => {

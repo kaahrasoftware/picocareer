@@ -1,189 +1,83 @@
 
-import { useForm, Controller } from "react-hook-form";
-import { Form } from "@/components/ui/form";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/forms/FormField";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-
-interface FormFields {
-  title: string;
-  content: string;
-  category: string;
-  cover_image_url?: string;
-  expires_at?: string;
-  scheduled_for?: string;
-}
 
 interface AnnouncementFormProps {
   hubId: string;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  onSuccess: () => void;
+  onCancel: () => void;
+  existingAnnouncement?: any;
 }
 
-export function AnnouncementForm({ 
-  hubId, 
-  onSuccess, 
-  onCancel 
-}: AnnouncementFormProps) {
+export function AnnouncementForm({ hubId, onSuccess, onCancel, existingAnnouncement }: AnnouncementFormProps) {
   const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-
-  const form = useForm<FormFields>({
-    defaultValues: {
-      title: "",
-      content: "",
-      category: "general",
-      cover_image_url: "",
-      expires_at: "",
-      scheduled_for: ""
-    }
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: existingAnnouncement?.title || "",
+    content: existingAnnouncement?.content || "",
+    category: existingAnnouncement?.category || "general",
   });
 
-  const onSubmit = async (data: FormFields) => {
-    if (!profile?.id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to create announcements.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      console.log('Would create announcement:', {
-        ...data,
-        hub_id: hubId,
-        created_by: profile.id
-      });
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
-        title: "Success",
-        description: "Announcement created successfully.",
+        title: existingAnnouncement ? "Announcement updated" : "Announcement created",
+        description: `The announcement has been successfully ${existingAnnouncement ? "updated" : "created"}.`,
       });
-
-      if (onSuccess) onSuccess();
+      
+      onSuccess();
     } catch (error) {
-      console.error('Error creating announcement:', error);
       toast({
         title: "Error",
-        description: "Failed to create announcement. Please try again.",
-        variant: "destructive"
+        description: "There was an error saving the announcement. Please try again.",
+        variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Controller
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormField
-              name="title"
-              field={field}
-              label="Title"
-              type="text"
-              placeholder="Enter announcement title"
-              required
-            />
-          )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          required
         />
+      </div>
 
-        <Controller
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormField
-              name="content"
-              field={field}
-              label="Content"
-              type="textarea"
-              placeholder="Enter announcement content"
-              required
-            />
-          )}
+      <div className="space-y-2">
+        <Label htmlFor="content">Content</Label>
+        <Textarea
+          id="content"
+          value={formData.content}
+          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+          rows={4}
+          required
         />
+      </div>
 
-        <Controller
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormField
-              name="category"
-              field={field}
-              label="Category"
-              type="select"
-              options={[
-                { value: "general", label: "General" },
-                { value: "urgent", label: "Urgent" },
-                { value: "event", label: "Event" },
-                { value: "update", label: "Update" }
-              ]}
-              required
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="cover_image_url"
-          render={({ field }) => (
-            <FormField
-              name="cover_image_url"
-              field={field}
-              label="Cover Image"
-              type="image"
-              bucket="hub-images"
-              accept="image/*"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="scheduled_for"
-          render={({ field }) => (
-            <FormField
-              name="scheduled_for"
-              field={field}
-              label="Schedule For"
-              type="text"
-              placeholder="YYYY-MM-DD HH:MM (optional)"
-              description="Leave empty to publish immediately"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="expires_at"
-          render={({ field }) => (
-            <FormField
-              name="expires_at"
-              field={field}
-              label="Expires At"
-              type="text"
-              placeholder="YYYY-MM-DD HH:MM (optional)"
-              description="Leave empty for no expiration"
-            />
-          )}
-        />
-
-        <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit">
-            {form.formState.isSubmitting ? "Creating..." : "Create Announcement"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : existingAnnouncement ? "Update" : "Create"}
+        </Button>
+      </div>
+    </form>
   );
 }
