@@ -121,6 +121,9 @@ export function MajorCard(props: MajorCardProps) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           featured: false,
+          status: 'Approved',
+          author_id: undefined,
+          token_cost: 0,
           learning_objectives: props.learning_objectives || [],
           common_courses: props.common_courses || [],
           interdisciplinary_connections: props.interdisciplinary_connections || [],
@@ -142,7 +145,8 @@ export function MajorCard(props: MajorCardProps) {
           stress_level: props.stress_level || null,
           dropout_rates: props.dropout_rates || null,
           majors_to_consider_switching_to: props.majors_to_consider_switching_to || [],
-          profiles_count: props.profiles_count,
+          profiles_count: props.profiles_count || 0,
+          category: [],
         }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}

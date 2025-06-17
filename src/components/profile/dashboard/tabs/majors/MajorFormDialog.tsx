@@ -24,7 +24,7 @@ export function MajorFormDialog({ open, onClose, onSuccess, major }: MajorFormDi
     title: "",
     description: "",
     featured: false,
-    status: "Pending" as const,
+    status: "Pending" as "Pending" | "Approved" | "Rejected",
     token_cost: 0,
   });
 

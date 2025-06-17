@@ -32,4 +32,5 @@ export interface Major {
   interdisciplinary_connections?: string[];
   common_courses?: string[];
   learning_objectives?: string[];
+  career_major_relations?: any[];
 }

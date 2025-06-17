@@ -134,6 +134,9 @@ export function useAuthState() {
         title: "Signed out successfully",
         description: "You have been signed out of your account."
       });
+
+      // Redirect to auth page after successful logout
+      window.location.href = '/auth';
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({
