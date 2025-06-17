@@ -43,6 +43,7 @@ export interface OpportunityAnalytics {
   bookmarks_count: number;
   created_at: string;
   updated_at: string;
+  applications_count?: number;
 }
 
 // Alias applications_count to checked_out_count for backward compatibility

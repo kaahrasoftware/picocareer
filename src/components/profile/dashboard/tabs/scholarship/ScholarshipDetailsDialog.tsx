@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -48,6 +47,9 @@ export function ScholarshipDetailsDialog({
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedScholarship, setEditedScholarship] = useState<ScholarshipDetails | null>(null);
+  const [editingScholarship, setEditingScholarship] = useState<ScholarshipDetails | null>(null);
+  const [selectedScholarship, setSelectedScholarship] = useState<ScholarshipDetails | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open && scholarshipId) {
@@ -131,6 +133,25 @@ export function ScholarshipDetailsDialog({
   const handleCancel = () => {
     setEditedScholarship(scholarship);
     setIsEditing(false);
+  };
+
+  const handleEdit = (scholarship: any) => {
+    const normalizedScholarship: ScholarshipDetails = {
+      ...scholarship,
+      currency: scholarship.currency || "USD", // Add default currency
+    };
+    
+    setEditingScholarship(normalizedScholarship);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleView = (scholarship: any) => {
+    const normalizedScholarship: ScholarshipDetails = {
+      ...scholarship,
+      currency: scholarship.currency || "USD", // Add default currency
+    };
+    
+    setSelectedScholarship(normalizedScholarship);
   };
 
   const formatDate = (dateStr: string | null) => {

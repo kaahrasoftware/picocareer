@@ -40,4 +40,6 @@ export interface ProfileEditFormProps {
     career_title?: string | null;
   };
   onClose: () => void;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }

@@ -1,233 +1,188 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Major } from "@/types/database/majors";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
-const formSchema = z.object({
-  title: z.string().min(2, {
-    message: "Major title must be at least 2 characters.",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Major } from "@/types/database/majors";
+
+const majorSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
   featured: z.boolean().default(false),
-  learning_objectives: z.string().optional(),
-  common_courses: z.string().optional(),
-  interdisciplinary_connections: z.string().optional(),
-  job_prospects: z.string().optional(),
-  certifications_to_consider: z.string().optional(),
-  degree_levels: z.string().optional(),
-  affiliated_programs: z.string().optional(),
-  gpa_expectations: z.string().optional(),
-  transferable_skills: z.string().optional(),
-  tools_knowledge: z.string().optional(),
+  learning_objectives: z.array(z.string()).default([]),
+  common_courses: z.array(z.string()).default([]),
+  interdisciplinary_connections: z.array(z.string()).default([]),
+  certifications_to_consider: z.array(z.string()).default([]),
+  degree_levels: z.array(z.string()).default([]),
+  affiliated_programs: z.array(z.string()).default([]),
+  gpa_expectations: z.number().nullable().optional(),
+  transferable_skills: z.array(z.string()).default([]),
+  tools_knowledge: z.array(z.string()).default([]),
   potential_salary: z.string().optional(),
   passion_for_subject: z.string().optional(),
-  skill_match: z.string().optional(),
-  professional_associations: z.string().optional(),
+  skill_match: z.array(z.string()).default([]),
+  professional_associations: z.array(z.string()).default([]),
   global_applicability: z.string().optional(),
-  common_difficulties: z.string().optional(),
-  career_opportunities: z.string().optional(),
+  common_difficulties: z.array(z.string()).default([]),
+  career_opportunities: z.array(z.string()).default([]),
   intensity: z.string().optional(),
   stress_level: z.string().optional(),
   dropout_rates: z.string().optional(),
-  majors_to_consider_switching_to: z.string().optional(),
+  majors_to_consider_switching_to: z.array(z.string()).default([]),
+  job_prospects: z.string().optional(),
+  status: z.enum(["Approved", "Pending", "Rejected"]).default("Approved"),
 });
 
-type FormFields = z.infer<typeof formSchema>;
+type MajorFormData = z.infer<typeof majorSchema>;
 
 interface MajorFormDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
   major?: Major;
+  onSuccess: () => void;
 }
 
-export function MajorFormDialog({ open, onClose, onSuccess, major }: MajorFormDialogProps) {
+export function MajorFormDialog({ isOpen, onClose, major, onSuccess }: MajorFormDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<FormFields>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<MajorFormData>({
+    resolver: zodResolver(majorSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      featured: false,
-      learning_objectives: "",
-      common_courses: "",
-      interdisciplinary_connections: "",
-      job_prospects: "",
-      certifications_to_consider: "",
-      degree_levels: "",
-      affiliated_programs: "",
-      gpa_expectations: "",
-      transferable_skills: "",
-      tools_knowledge: "",
-      potential_salary: "",
-      passion_for_subject: "",
-      skill_match: "",
-      professional_associations: "",
-      global_applicability: "",
-      common_difficulties: "",
-      career_opportunities: "",
-      intensity: "",
-      stress_level: "",
-      dropout_rates: "",
-      majors_to_consider_switching_to: "",
+      title: major?.title || "",
+      description: major?.description || "",
+      featured: major?.featured || false,
+      learning_objectives: major?.learning_objectives || [],
+      common_courses: major?.common_courses || [],
+      interdisciplinary_connections: major?.interdisciplinary_connections || [],
+      certifications_to_consider: major?.certifications_to_consider || [],
+      degree_levels: major?.degree_levels || [],
+      affiliated_programs: major?.affiliated_programs || [],
+      gpa_expectations: major?.gpa_expectations || null,
+      transferable_skills: major?.transferable_skills || [],
+      tools_knowledge: major?.tools_knowledge || [],
+      potential_salary: major?.potential_salary || "",
+      passion_for_subject: major?.passion_for_subject || "",
+      skill_match: major?.skill_match || [],
+      professional_associations: major?.professional_associations || [],
+      global_applicability: major?.global_applicability || "",
+      common_difficulties: major?.common_difficulties || [],
+      career_opportunities: major?.career_opportunities || [],
+      intensity: major?.intensity || "",
+      stress_level: major?.stress_level || "",
+      dropout_rates: major?.dropout_rates || "",
+      majors_to_consider_switching_to: major?.majors_to_consider_switching_to || [],
+      job_prospects: major?.job_prospects || "",
+      status: (major?.status as "Approved" | "Pending" | "Rejected") || "Approved",
     },
   });
 
-  useEffect(() => {
-    if (major) {
-      form.reset({
-        title: major.title,
-        description: major.description,
-        featured: major.featured || false,
-        learning_objectives: major.learning_objectives ? major.learning_objectives.join(', ') : '',
-        common_courses: major.common_courses ? major.common_courses.join(', ') : '',
-        interdisciplinary_connections: major.interdisciplinary_connections ? major.interdisciplinary_connections.join(', ') : '',
-        job_prospects: major.job_prospects || '',
-        certifications_to_consider: major.certifications_to_consider ? major.certifications_to_consider.join(', ') : '',
-        degree_levels: major.degree_levels ? major.degree_levels.join(', ') : '',
-        affiliated_programs: major.affiliated_programs ? major.affiliated_programs.join(', ') : '',
-        gpa_expectations: major.gpa_expectations ? major.gpa_expectations.toString() : '',
-        transferable_skills: major.transferable_skills ? major.transferable_skills.join(', ') : '',
-        tools_knowledge: major.tools_knowledge ? major.tools_knowledge.join(', ') : '',
-        potential_salary: major.potential_salary || '',
-        passion_for_subject: major.passion_for_subject || '',
-        skill_match: major.skill_match ? major.skill_match.join(', ') : '',
-        professional_associations: major.professional_associations ? major.professional_associations.join(', ') : '',
-        global_applicability: major.global_applicability || '',
-        common_difficulties: major.common_difficulties ? major.common_difficulties.join(', ') : '',
-        career_opportunities: major.career_opportunities ? major.career_opportunities.join(', ') : '',
-        intensity: major.intensity || '',
-        stress_level: major.stress_level || '',
-        dropout_rates: major.dropout_rates || '',
-        majors_to_consider_switching_to: major.majors_to_consider_switching_to ? major.majors_to_consider_switching_to.join(', ') : '',
-      });
-    }
-  }, [major, form]);
-
-  const onSubmit = async (data: FormFields) => {
+  const onSubmit = async (data: MajorFormData) => {
     try {
-      console.log("Submitting major form with data:", data);
+      setIsSubmitting(true);
 
-      // Convert string arrays properly
-      const processedData = {
-        title: data.title,
-        description: data.description,
-        featured: data.featured,
-        learning_objectives: data.learning_objectives ? data.learning_objectives.split(',').map(s => s.trim()).filter(Boolean) : [],
-        common_courses: data.common_courses ? data.common_courses.split(',').map(s => s.trim()).filter(Boolean) : [],
-        interdisciplinary_connections: data.interdisciplinary_connections ? data.interdisciplinary_connections.split(',').map(s => s.trim()).filter(Boolean) : [],
-        certifications_to_consider: data.certifications_to_consider ? data.certifications_to_consider.split(',').map(s => s.trim()).filter(Boolean) : [],
-        degree_levels: data.degree_levels ? data.degree_levels.split(',').map(s => s.trim()).filter(Boolean) : [],
-        affiliated_programs: data.affiliated_programs ? data.affiliated_programs.split(',').map(s => s.trim()).filter(Boolean) : [],
-        transferable_skills: data.transferable_skills ? data.transferable_skills.split(',').map(s => s.trim()).filter(Boolean) : [],
-        tools_knowledge: data.tools_knowledge ? data.tools_knowledge.split(',').map(s => s.trim()).filter(Boolean) : [],
-        career_opportunities: data.career_opportunities ? data.career_opportunities.split(',').map(s => s.trim()).filter(Boolean) : [],
-        common_difficulties: data.common_difficulties ? data.common_difficulties.split(',').map(s => s.trim()).filter(Boolean) : [],
-        majors_to_consider_switching_to: data.majors_to_consider_switching_to ? data.majors_to_consider_switching_to.split(',').map(s => s.trim()).filter(Boolean) : [],
-        professional_associations: data.professional_associations ? data.professional_associations.split(',').map(s => s.trim()).filter(Boolean) : [],
-        skill_match: data.skill_match ? data.skill_match.split(',').map(s => s.trim()).filter(Boolean) : [],
-        job_prospects: data.job_prospects || null,
-        gpa_expectations: data.gpa_expectations || null,
-        potential_salary: data.potential_salary || null,
-        passion_for_subject: data.passion_for_subject || null,
-        global_applicability: data.global_applicability || null,
-        intensity: data.intensity || null,
-        stress_level: data.stress_level || null,
-        dropout_rates: data.dropout_rates || null,
-        status: "Approved" as const
+      const majorData = {
+        ...data,
+        gpa_expectations: data.gpa_expectations ? Number(data.gpa_expectations) : null,
+        updated_at: new Date().toISOString(),
       };
 
-      console.log("Processed data for submission:", processedData);
-
       if (major) {
-        console.log("Updating existing major:", major.id);
         const { error } = await supabase
           .from('majors')
-          .update({
-            ...processedData,
-            updated_at: new Date().toISOString()
-          })
+          .update(majorData)
           .eq('id', major.id);
 
         if (error) throw error;
       } else {
-        console.log("Creating new major");
         const { error } = await supabase
           .from('majors')
-          .insert([processedData]);
+          .insert([majorData]);
 
-        if (error) {
-          console.error("Supabase error:", error);
-          throw error;
-        }
+        if (error) throw error;
       }
 
       toast({
         title: "Success",
-        description: `Major ${major ? 'updated' : 'created'} successfully.`
+        description: `Major ${major ? 'updated' : 'created'} successfully`,
       });
 
-      if (onSuccess) onSuccess();
+      onSuccess();
+      onClose();
     } catch (error) {
       console.error('Error saving major:', error);
       toast({
         title: "Error",
         description: "Failed to save major. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{major ? "Edit Major" : "Create New Major"}</DialogTitle>
-          <DialogDescription>
-            {major ? "Edit the fields below to update the major." : "Enter the details for the new major."}
-          </DialogDescription>
+          <DialogTitle>{major ? 'Edit Major' : 'Create New Major'}</DialogTitle>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Major Title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter major title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Approved">Approved</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="description"
@@ -235,353 +190,73 @@ export function MajorFormDialog({ open, onClose, onSuccess, major }: MajorFormDi
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Major Description" {...field} />
+                    <Textarea
+                      placeholder="Enter major description"
+                      className="min-h-[100px]"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="featured"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-md border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Featured</FormLabel>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="featured"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Featured</FormLabel>
+                      <FormDescription>
+                        Mark this major as featured
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gpa_expectations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>GPA Expectations</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="4"
+                        placeholder="3.5"
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                      />
+                    </FormControl>
                     <FormDescription>
-                      Should this major be featured?
+                      Expected GPA for this major (0.0 - 4.0)
                     </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="learning_objectives"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Learning Objectives</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter learning objectives, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="common_courses"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Common Courses</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter common courses, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="interdisciplinary_connections"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Interdisciplinary Connections</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter interdisciplinary connections, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="job_prospects"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Job Prospects</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter job prospects" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="certifications_to_consider"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Certifications to Consider</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter certifications, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="degree_levels"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Degree Levels</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter degree levels, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="affiliated_programs"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Affiliated Programs</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter affiliated programs, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="gpa_expectations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>GPA Expectations</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter GPA expectations"
-                      type="number"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="transferable_skills"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Transferable Skills</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter transferable skills, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="tools_knowledge"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tools & Knowledge</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter tools and knowledge, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="potential_salary"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Potential Salary</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter potential salary" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="passion_for_subject"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Passion for Subject</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter passion level" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="skill_match"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Skill Match</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter skill matches, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="professional_associations"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Professional Associations</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter professional associations, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="global_applicability"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Global Applicability</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter global applicability" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="common_difficulties"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Common Difficulties</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter common difficulties, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="career_opportunities"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Career Opportunities</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter career opportunities, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="intensity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Intensity</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter intensity level" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="stress_level"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stress Level</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter stress level" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dropout_rates"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dropout Rates</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter dropout rates" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="majors_to_consider_switching_to"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Majors to Consider Switching To</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter majors to consider switching to, separated by commas"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <Button type="submit">
-                {major ? "Update Major" : "Create Major"}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancel
               </Button>
-            </DialogFooter>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (major ? 'Update Major' : 'Create Major')}
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
