@@ -22,9 +22,9 @@ export const AuthNavigationHandler: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [session, loading, location.pathname]);
 
-  // Handle navigation for protected routes (login redirect is now handled in useAuthState)
+  // Handle navigation for protected routes only
   useEffect(() => {
-    if (!loading && !session && location.pathname !== '/auth') {
+    if (!loading && !session) {
       // Only redirect to auth if user is trying to access protected routes
       const protectedRoutes = ['/profile', '/dashboard', '/token-shop', '/mentor-registration'];
       if (protectedRoutes.includes(location.pathname)) {

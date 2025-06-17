@@ -42,20 +42,17 @@ export function useAuthState() {
               // Clear queries when user signs out
               queryClient.clear();
             } else if (event === 'SIGNED_IN') {
-              console.log('User signed in, updating state and processing rewards');
+              console.log('User signed in, updating state and redirecting to home');
               // Set session state immediately to update UI
               setSession(currentSession);
               setUser(currentSession?.user ?? null);
               setError(null);
               
-              // Check if user is coming from auth page and redirect to home with refresh
-              if (window.location.pathname === '/auth') {
-                console.log('User signed in from auth page, redirecting to home with page refresh');
-                // Use setTimeout to ensure state updates complete first
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 100);
-              }
+              // Always redirect to home page after successful login with page refresh
+              console.log('Redirecting to home page after successful login');
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 100);
               
               // Process queries and rewards after state update
               if (currentSession?.user?.id) {
@@ -145,7 +142,9 @@ export function useAuthState() {
       });
 
       // Redirect to auth page after successful logout
-      window.location.href = '/auth';
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 100);
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({

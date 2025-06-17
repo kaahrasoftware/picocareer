@@ -7,6 +7,7 @@ export type OpportunityType =
   | "competition" 
   | "volunteer" 
   | "event" 
+  | "scholarship"
   | "other";
 
 export interface OpportunityAnalytics {
