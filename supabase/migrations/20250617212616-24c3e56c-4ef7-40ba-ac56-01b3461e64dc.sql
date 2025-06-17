@@ -15,6 +15,7 @@ DECLARE
   v_slot_data RECORD;
   v_booking_start_time TIME;
   v_booking_end_time TIME;
+  v_old_slot_id UUID;
 BEGIN
   -- Get the session details
   SELECT * INTO v_session
@@ -96,117 +97,92 @@ BEGIN
 
   -- Start transaction
   BEGIN
-    -- First, release the old availability slot
-    -- Find the existing availability slot that's booked with this session
-    WITH old_slot AS (
-      SELECT id FROM mentor_availability 
-      WHERE booked_session_id = p_session_id
-    )
-    UPDATE mentor_availability
-    SET is_available = true, 
-        booked_session_id = NULL
-    FROM old_slot
-    WHERE mentor_availability.id = old_slot.id;
+    -- Get the old availability slot that's currently booked with this session
+    SELECT id INTO v_old_slot_id
+    FROM mentor_availability 
+    WHERE booked_session_id = p_session_id;
 
-    -- Handle booking new recurring availability differently
+    -- Release the old availability slot by marking it as available
+    IF v_old_slot_id IS NOT NULL THEN
+      UPDATE mentor_availability
+      SET is_available = true, 
+          booked_session_id = NULL
+      WHERE id = v_old_slot_id;
+    END IF;
+
+    -- Handle booking the new slot based on its type
     IF v_slot_data.recurring THEN
-      -- For recurring slots, create a new one-time slot that's marked as booked
-      INSERT INTO mentor_availability (
-        profile_id,
-        start_date_time,
-        end_date_time,
-        is_available,
-        recurring,
-        day_of_week,
-        booked_session_id,
-        timezone_offset,
-        reference_timezone,
-        dst_aware
-      ) VALUES (
-        v_session.mentor_id,
-        p_new_time,
-        v_new_end_time,
-        false,
-        false,
-        v_slot_data.day_of_week,
-        p_session_id,
-        v_slot_data.timezone_offset,
-        v_slot_data.reference_timezone,
-        v_slot_data.dst_aware
-      );
+      -- For recurring slots, simply mark this slot as booked for this session
+      -- No need to create new slots - just update the booked_session_id
+      UPDATE mentor_availability
+      SET booked_session_id = p_session_id
+      WHERE id = v_availability_id;
     ELSE
-      -- For one-time slots, handle splitting if needed
-      -- Create pre-session slot if there's time before
-      IF p_new_time > v_slot_data.start_date_time THEN
-        INSERT INTO mentor_availability (
-          profile_id,
-          start_date_time,
-          end_date_time,
-          is_available,
-          recurring,
-          timezone_offset,
-          reference_timezone,
-          dst_aware
-        ) VALUES (
-          v_session.mentor_id,
-          v_slot_data.start_date_time,
-          p_new_time,
-          true,
-          false,
-          v_slot_data.timezone_offset,
-          v_slot_data.reference_timezone,
-          v_slot_data.dst_aware
-        );
+      -- For one-time slots, check if the session exactly matches the slot time
+      IF v_slot_data.start_date_time = p_new_time AND v_slot_data.end_date_time = v_new_end_time THEN
+        -- Perfect match - just mark as booked
+        UPDATE mentor_availability
+        SET is_available = false,
+            booked_session_id = p_session_id
+        WHERE id = v_availability_id;
+      ELSE
+        -- Session doesn't fill the entire slot - need to split
+        -- Only create slots if there's remaining time before or after
+        
+        -- Create pre-session slot if there's time before
+        IF p_new_time > v_slot_data.start_date_time THEN
+          INSERT INTO mentor_availability (
+            profile_id,
+            start_date_time,
+            end_date_time,
+            is_available,
+            recurring,
+            timezone_offset,
+            reference_timezone,
+            dst_aware
+          ) VALUES (
+            v_session.mentor_id,
+            v_slot_data.start_date_time,
+            p_new_time,
+            true,
+            false,
+            v_slot_data.timezone_offset,
+            v_slot_data.reference_timezone,
+            v_slot_data.dst_aware
+          );
+        END IF;
+
+        -- Create post-session slot if there's time after
+        IF v_new_end_time < v_slot_data.end_date_time THEN
+          INSERT INTO mentor_availability (
+            profile_id,
+            start_date_time,
+            end_date_time,
+            is_available,
+            recurring,
+            timezone_offset,
+            reference_timezone,
+            dst_aware
+          ) VALUES (
+            v_session.mentor_id,
+            v_new_end_time,
+            v_slot_data.end_date_time,
+            true,
+            false,
+            v_slot_data.timezone_offset,
+            v_slot_data.reference_timezone,
+            v_slot_data.dst_aware
+          );
+        END IF;
+
+        -- Update the original slot to be the booked session slot
+        UPDATE mentor_availability
+        SET start_date_time = p_new_time,
+            end_date_time = v_new_end_time,
+            is_available = false,
+            booked_session_id = p_session_id
+        WHERE id = v_availability_id;
       END IF;
-
-      -- Create post-session slot if there's time after
-      IF v_new_end_time < v_slot_data.end_date_time THEN
-        INSERT INTO mentor_availability (
-          profile_id,
-          start_date_time,
-          end_date_time,
-          is_available,
-          recurring,
-          timezone_offset,
-          reference_timezone,
-          dst_aware
-        ) VALUES (
-          v_session.mentor_id,
-          v_new_end_time,
-          v_slot_data.end_date_time,
-          true,
-          false,
-          v_slot_data.timezone_offset,
-          v_slot_data.reference_timezone,
-          v_slot_data.dst_aware
-        );
-      END IF;
-
-      -- Create the booked slot
-      INSERT INTO mentor_availability (
-        profile_id,
-        start_date_time,
-        end_date_time,
-        is_available,
-        recurring,
-        booked_session_id,
-        timezone_offset,
-        reference_timezone,
-        dst_aware
-      ) VALUES (
-        v_session.mentor_id,
-        p_new_time,
-        v_new_end_time,
-        false,
-        false,
-        p_session_id,
-        v_slot_data.timezone_offset,
-        v_slot_data.reference_timezone,
-        v_slot_data.dst_aware
-      );
-
-      -- Delete the original availability slot
-      DELETE FROM mentor_availability WHERE id = v_availability_id;
     END IF;
 
     -- Update the session with the new scheduled time
@@ -218,7 +194,9 @@ BEGIN
     RETURN jsonb_build_object(
       'success', true,
       'session_id', p_session_id,
-      'new_time', p_new_time
+      'new_time', p_new_time,
+      'old_slot_released', v_old_slot_id IS NOT NULL,
+      'new_slot_type', CASE WHEN v_slot_data.recurring THEN 'recurring' ELSE 'one_time' END
     );
   EXCEPTION
     WHEN OTHERS THEN

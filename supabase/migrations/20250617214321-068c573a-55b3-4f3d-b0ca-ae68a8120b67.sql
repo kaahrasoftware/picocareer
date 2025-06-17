@@ -1,5 +1,4 @@
 
-
 -- First, let's see what duplicates exist
 SELECT 
   profile_id,
@@ -100,14 +99,20 @@ BEGIN
 END;
 $$;
 
--- Create the prevention trigger
+-- Create the prevention trigger with improved logic for rescheduling
 CREATE OR REPLACE FUNCTION prevent_duplicate_availability()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  -- Check for existing non-recurring slot
-  IF COALESCE(NEW.recurring, false) = false THEN
+  -- Skip duplicate prevention during rescheduling operations
+  -- (when we're updating an existing slot with a booked_session_id)
+  IF TG_OP = 'UPDATE' AND OLD.booked_session_id IS NOT NULL AND NEW.booked_session_id IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Check for existing non-recurring slot (only for unbooked slots)
+  IF COALESCE(NEW.recurring, false) = false AND NEW.booked_session_id IS NULL THEN
     IF EXISTS (
       SELECT 1 FROM mentor_availability
       WHERE profile_id = NEW.profile_id
@@ -116,14 +121,13 @@ BEGIN
         AND COALESCE(recurring, false) = false
         AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
         AND booked_session_id IS NULL
-        AND NEW.booked_session_id IS NULL
     ) THEN
       RAISE EXCEPTION 'Duplicate non-recurring availability slot already exists for this time period';
     END IF;
   END IF;
   
-  -- Check for existing recurring slot
-  IF COALESCE(NEW.recurring, false) = true THEN
+  -- Check for existing recurring slot (only for unbooked slots)
+  IF COALESCE(NEW.recurring, false) = true AND NEW.booked_session_id IS NULL THEN
     IF EXISTS (
       SELECT 1 FROM mentor_availability
       WHERE profile_id = NEW.profile_id
@@ -135,7 +139,6 @@ BEGIN
         AND COALESCE(recurring, false) = true
         AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid)
         AND booked_session_id IS NULL
-        AND NEW.booked_session_id IS NULL
     ) THEN
       RAISE EXCEPTION 'Duplicate recurring availability slot already exists for this time period';
     END IF;
@@ -178,4 +181,3 @@ BEGIN
   ORDER BY duplicate_count DESC;
 END;
 $$;
-
