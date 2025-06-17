@@ -4672,7 +4672,11 @@ export type Database = {
         Returns: number
       }
       cancel_session: {
-        Args: { p_session_id: string; p_reason?: string }
+        Args: {
+          p_session_id: string
+          p_reason?: string
+          p_cancelled_by_user_id?: string
+        }
         Returns: Json
       }
       check_and_insert_major: {

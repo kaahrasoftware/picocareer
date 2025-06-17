@@ -1,5 +1,9 @@
 
--- Create the cancel_session function for managing session cancellations
+-- Drop all existing cancel_session functions to resolve overloading conflict
+DROP FUNCTION IF EXISTS cancel_session(UUID, TEXT);
+DROP FUNCTION IF EXISTS cancel_session(UUID, TEXT, UUID);
+
+-- Create the correct cancel_session function with refund logic
 CREATE OR REPLACE FUNCTION cancel_session(
   p_session_id UUID,
   p_reason TEXT DEFAULT 'Cancelled by user',

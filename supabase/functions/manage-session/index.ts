@@ -208,14 +208,14 @@ serve(async (req) => {
         );
       }
 
-      // Execute cancellation logic
-      const result = await cancelSession(supabase, session, reason || "Cancelled by user");
+      // Execute cancellation logic with the userId parameter
+      const result = await cancelSession(supabase, session, reason || "Cancelled by user", userId);
       return new Response(
         JSON.stringify(result),
         {
           status: result.success ? 200 : 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+        }
       );
     }
 
@@ -302,14 +302,15 @@ async function rescheduleSession(supabase, session, newTime) {
 /**
  * Cancel a session and release the availability slot
  */
-async function cancelSession(supabase, session, reason) {
+async function cancelSession(supabase, session, reason, cancelledByUserId) {
   try {
-    // Begin database transaction
+    // Call the database function with the cancelling user ID
     const { data: result, error } = await supabase.rpc(
       "cancel_session",
       {
         p_session_id: session.id,
-        p_reason: reason
+        p_reason: reason,
+        p_cancelled_by_user_id: cancelledByUserId
       }
     );
 
@@ -319,11 +320,15 @@ async function cancelSession(supabase, session, reason) {
     }
 
     // Create notifications for the cancellation
+    const refundMessage = result.refund_issued 
+      ? ` A refund of ${result.refund_amount} tokens has been issued.`
+      : '';
+    
     await createNotifications(
       supabase,
       [session.mentor_id, session.mentee_id],
       "Session Cancelled",
-      `Your session scheduled for ${new Date(session.scheduled_at).toLocaleString()} has been cancelled. Reason: ${reason}`,
+      `Your session scheduled for ${new Date(session.scheduled_at).toLocaleString()} has been cancelled. Reason: ${reason}${refundMessage}`,
       "session_cancelled",
       `/profile?tab=calendar`
     );
