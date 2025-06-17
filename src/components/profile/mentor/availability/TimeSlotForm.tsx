@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -10,9 +11,10 @@ interface TimeSlotFormProps {
   selectedDate: Date;
   profileId: string;
   onSuccess: () => void;
+  onShowUnavailable?: () => void;
 }
 
-export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFormProps) {
+export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavailable }: TimeSlotFormProps) {
   const [selectedStartTime, setSelectedStartTime] = useState<string>();
   const [selectedEndTime, setSelectedEndTime] = useState<string>();
   const [isRecurring, setIsRecurring] = useState(false);
@@ -97,7 +99,7 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
-      // Check for overlapping slots
+      // Check for overlapping slots (client-side check for better UX)
       const hasOverlap = await checkForOverlap(startDateTime, endDateTime);
 
       if (hasOverlap) {
@@ -125,7 +127,20 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
           timezone_offset: timezoneOffset
         });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate error from our trigger
+        if (error.message.includes('Duplicate') && error.message.includes('availability slot')) {
+          toast({
+            title: "Duplicate time slot",
+            description: "A similar availability slot already exists. Please choose a different time.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        setIsSubmitting(false);
+        return;
+      }
 
       toast({
         title: "Success",
@@ -167,22 +182,35 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess }: TimeSlotFor
     <div className="space-y-4">
       <TimeSlotInputs
         timeSlots={timeSlots}
+        selectedDate={selectedDate}
         selectedStartTime={selectedStartTime}
         selectedEndTime={selectedEndTime}
         isRecurring={isRecurring}
         userTimezone={userTimezone || 'Not set'}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
-        onRecurringChange={setIsRecurring}
+        onRecurringChange={() => setIsRecurring(!isRecurring)}
       />
 
-      <Button 
-        onClick={handleSaveAvailability}
-        disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
-        className="w-full"
-      >
-        {isSubmitting ? "Saving..." : "Save Availability"}
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          onClick={handleSaveAvailability}
+          disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
+          className="flex-1"
+        >
+          {isSubmitting ? "Saving..." : "Save Availability"}
+        </Button>
+        
+        {onShowUnavailable && (
+          <Button 
+            variant="outline"
+            onClick={onShowUnavailable}
+            className="flex-1"
+          >
+            Mark Unavailable
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

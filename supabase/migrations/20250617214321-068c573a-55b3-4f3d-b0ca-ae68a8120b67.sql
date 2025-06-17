@@ -1,4 +1,5 @@
 
+
 -- First, let's see what duplicates exist
 SELECT 
   profile_id,
@@ -177,3 +178,4 @@ BEGIN
   ORDER BY duplicate_count DESC;
 END;
 $$;
+
