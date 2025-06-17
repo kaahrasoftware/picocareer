@@ -39,7 +39,7 @@ export interface ProfileEditFormProps {
     academic_major?: string | null;
     career_title?: string | null;
   };
-  onClose: () => void;
+  onClose?: () => void; // Made optional
   onCancel?: () => void;
   onSuccess?: () => void;
 }

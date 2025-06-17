@@ -45,7 +45,7 @@ const majorSchema = z.object({
 type MajorFormData = z.infer<typeof majorSchema>;
 
 interface MajorFormDialogProps {
-  isOpen: boolean;
+  isOpen: boolean; // Changed from 'open' to 'isOpen'
   onClose: () => void;
   major?: Major;
   onSuccess: () => void;
@@ -91,8 +91,31 @@ export function MajorFormDialog({ isOpen, onClose, major, onSuccess }: MajorForm
       setIsSubmitting(true);
 
       const majorData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        featured: data.featured,
+        learning_objectives: data.learning_objectives,
+        common_courses: data.common_courses,
+        interdisciplinary_connections: data.interdisciplinary_connections,
+        certifications_to_consider: data.certifications_to_consider,
+        degree_levels: data.degree_levels,
+        affiliated_programs: data.affiliated_programs,
         gpa_expectations: data.gpa_expectations ? Number(data.gpa_expectations) : null,
+        transferable_skills: data.transferable_skills,
+        tools_knowledge: data.tools_knowledge,
+        potential_salary: data.potential_salary,
+        passion_for_subject: data.passion_for_subject,
+        skill_match: data.skill_match,
+        professional_associations: data.professional_associations,
+        global_applicability: data.global_applicability,
+        common_difficulties: data.common_difficulties,
+        career_opportunities: data.career_opportunities,
+        intensity: data.intensity,
+        stress_level: data.stress_level,
+        dropout_rates: data.dropout_rates,
+        majors_to_consider_switching_to: data.majors_to_consider_switching_to,
+        job_prospects: data.job_prospects,
+        status: data.status,
         updated_at: new Date().toISOString(),
       };
 
