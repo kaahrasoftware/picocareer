@@ -15,6 +15,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== REFERRAL CODE PROCESSING START ===');
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -29,14 +31,17 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
     if (userError || !user) {
-      console.log('No authenticated user found:', userError);
+      console.log('Authentication failed:', userError);
       return new Response(
         JSON.stringify({ success: false, message: 'Authentication required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const { referralCode } = await req.json();
+    console.log('Authenticated user:', user.id);
+
+    const requestBody = await req.json();
+    const { referralCode } = requestBody;
     
     if (!referralCode) {
       console.log('No referral code provided');
@@ -46,11 +51,12 @@ serve(async (req) => {
       );
     }
 
-    // Clean and normalize the referral code - ensure it's uppercase and trimmed
+    // Clean and normalize the referral code
     const cleanReferralCode = referralCode.toString().trim().toUpperCase();
     console.log(`Processing referral code "${cleanReferralCode}" for user ${user.id}`);
 
     // Check if user already has a referral record
+    console.log('Checking for existing referral...');
     const { data: existingReferral, error: checkError } = await supabaseClient
       .from('user_referrals')
       .select('id')
@@ -73,17 +79,24 @@ serve(async (req) => {
       );
     }
 
-    // Find the referrer by referral code with better error handling
-    console.log(`Looking up referral code: "${cleanReferralCode}"`);
-    
-    // First, let's check what referral codes exist for debugging
+    // Debug: Check what referral codes exist
+    console.log('Fetching all active referral codes for debugging...');
     const { data: allCodes, error: debugError } = await supabaseClient
       .from('referral_codes')
       .select('referral_code, is_active, profile_id')
       .eq('is_active', true);
     
-    console.log('Available active referral codes:', allCodes?.map(c => ({ code: c.referral_code, profile_id: c.profile_id })));
+    if (debugError) {
+      console.error('Error fetching debug codes:', debugError);
+    } else {
+      console.log('Available active referral codes:', allCodes?.map(c => ({ 
+        code: c.referral_code, 
+        profile_id: c.profile_id 
+      })));
+    }
     
+    // Find the referrer by referral code
+    console.log(`Looking up referral code: "${cleanReferralCode}"`);
     const { data: referralCodeRecord, error: codeError } = await supabaseClient
       .from('referral_codes')
       .select('profile_id, referral_code')
@@ -155,6 +168,7 @@ serve(async (req) => {
       );
     }
 
+    console.log('=== REFERRAL CODE PROCESSING SUCCESS ===');
     return new Response(
       JSON.stringify({
         success: true,
@@ -165,7 +179,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error('=== REFERRAL CODE PROCESSING ERROR ===');
     console.error('Error in process-referral-code function:', error);
+    
     return new Response(
       JSON.stringify({ 
         success: false, 

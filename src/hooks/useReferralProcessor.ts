@@ -22,7 +22,16 @@ export function useReferralProcessor() {
 
       if (error) {
         console.error('Supabase function error:', error);
-        toast.error('Failed to process referral code. Please try again.');
+        
+        // Handle specific error types
+        if (error.message?.includes('FunctionsHttpError')) {
+          toast.error('Server error processing referral code. Please try again.');
+        } else if (error.message?.includes('FunctionsFetchError')) {
+          toast.error('Network error. Please check your connection and try again.');
+        } else {
+          toast.error('Failed to process referral code. Please try again.');
+        }
+        
         return { success: false, message: error.message || 'Failed to process referral code' };
       }
 
@@ -47,6 +56,8 @@ export function useReferralProcessor() {
           toast.error('This referral code is invalid or has expired. Please check the code and try again.');
         } else if (errorMessage.includes('cannot refer yourself')) {
           toast.error('You cannot use your own referral code.');
+        } else if (errorMessage.includes('Authentication required')) {
+          toast.error('Please log in to use a referral code.');
         } else {
           toast.error(errorMessage);
         }
@@ -56,7 +67,16 @@ export function useReferralProcessor() {
     } catch (error: any) {
       console.error('Error processing referral:', error);
       const errorMessage = error.message || 'Failed to process referral code';
-      toast.error('An unexpected error occurred. Please try again.');
+      
+      // Handle network and timeout errors
+      if (errorMessage.includes('fetch')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else if (errorMessage.includes('timeout')) {
+        toast.error('Request timed out. Please try again.');
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
+      }
+      
       return { success: false, message: errorMessage };
     } finally {
       setIsProcessing(false);
