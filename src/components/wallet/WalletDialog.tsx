@@ -7,6 +7,7 @@ import { WalletAnalytics } from "./WalletAnalytics";
 import { EarnUseTokensTab } from "./EarnUseTokensTab";
 import { ReferralsTab } from "./ReferralsTab";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface WalletDialogProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface WalletDialogProps {
 
 export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
   const { wallet } = useWalletBalance();
+  const { session } = useAuthSession();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -37,7 +39,7 @@ export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
           </TabsContent>
           
           <TabsContent value="transactions" className="mt-6">
-            {wallet && <EnhancedTransactionHistory walletId={wallet.id} />}
+            {session?.user?.id && <EnhancedTransactionHistory profileId={session.user.id} />}
           </TabsContent>
           
           <TabsContent value="analytics" className="mt-6">
