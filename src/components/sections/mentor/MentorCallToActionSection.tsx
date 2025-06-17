@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GraduationCap, Users, Sparkles } from "lucide-react";
@@ -80,35 +81,16 @@ export const MentorCallToActionSection = () => {
               Start Your Mentoring Journey
             </Button>
             
-            {/* Redesigned "Meet Our Mentors" Button */}
+            {/* Updated "Meet Our Mentors" Button to match "Start Mentoring Today" style */}
             <Button
               asChild
               size="lg"
-              variant="outline"
-              className={`
-                w-full sm:w-auto
-                bg-gradient-to-r from-blue-500 via-green-400 to-blue-600
-                text-white font-bold text-lg py-6 px-8
-                shadow-xl hover:shadow-2xl
-                hover:scale-105 transition-all duration-300
-                relative overflow-hidden
-                border-none
-                focus:ring-4 focus:ring-blue-300
-                group
-              `}
+              variant="secondary"
+              className="w-full sm:w-auto bg-white hover:bg-gray-100 text-picocareer-dark font-semibold text-lg py-6 px-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
             >
               <Link to="/mentor" className="flex items-center justify-center gap-3 focus:outline-none">
-                <span className="relative flex items-center">
-                  <Users
-                    className="h-6 w-6 drop-shadow-md animate-pulse"
-                    style={{
-                      filter: "drop-shadow(0 0 8px rgba(34,197,94,0.85))"
-                    }}
-                  />
-                </span>
-                <span>
-                  Meet Our Mentors
-                </span>
+                <Users className="h-6 w-6 group-hover:rotate-12 transition-transform duration-300" />
+                Meet Our Mentors
               </Link>
             </Button>
           </div>
