@@ -4671,6 +4671,10 @@ export type Database = {
         Args: { _hub_id: string }
         Returns: number
       }
+      cancel_session: {
+        Args: { p_session_id: string; p_reason?: string }
+        Returns: Json
+      }
       check_and_insert_major: {
         Args: { major_data: Json }
         Returns: Json
