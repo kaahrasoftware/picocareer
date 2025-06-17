@@ -35,25 +35,63 @@ export function EnhancedTransactionHistory({ profileId }: EnhancedTransactionHis
     searchQuery: ''
   });
 
-  const { data: walletData } = useQuery({
+  const { data: walletData, isLoading: walletLoading, error: walletError } = useQuery({
     queryKey: ['wallet', profileId],
     queryFn: async () => {
+      console.log('Fetching wallet for profile:', profileId);
+      
+      if (!profileId) {
+        throw new Error('Profile ID is required');
+      }
+
       const { data, error } = await supabase
         .from('wallets')
-        .select('id')
+        .select('id, balance')
         .eq('profile_id', profileId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching wallet:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.log('No wallet found, creating one...');
+        // Create wallet if it doesn't exist
+        const { data: newWallet, error: createError } = await supabase
+          .from('wallets')
+          .insert({
+            profile_id: profileId,
+            balance: 0
+          })
+          .select('id, balance')
+          .single();
+
+        if (createError) {
+          console.error('Error creating wallet:', createError);
+          throw createError;
+        }
+
+        console.log('Created new wallet:', newWallet);
+        return newWallet;
+      }
+
+      console.log('Found wallet:', data);
       return data;
     },
-    enabled: !!profileId
+    enabled: !!profileId,
+    retry: 1
   });
 
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactions = [], isLoading: transactionsLoading, error: transactionsError } = useQuery({
     queryKey: ['transactions', walletData?.id, filters],
     queryFn: async () => {
-      if (!walletData?.id) return [];
+      if (!walletData?.id) {
+        console.log('No wallet ID available for transactions query');
+        return [];
+      }
+
+      console.log('Fetching transactions for wallet:', walletData.id);
 
       let query = supabase
         .from('token_transactions')
@@ -82,10 +120,17 @@ export function EnhancedTransactionHistory({ profileId }: EnhancedTransactionHis
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error fetching transactions:', error);
+        throw error;
+      }
+
+      console.log('Fetched transactions:', data?.length || 0);
       return data as Transaction[];
     },
-    enabled: !!walletData?.id
+    enabled: !!walletData?.id,
+    retry: 1
   });
 
   const handleFiltersChange = (newFilters: typeof filters) => {
@@ -129,11 +174,42 @@ export function EnhancedTransactionHistory({ profileId }: EnhancedTransactionHis
     }
   };
 
+  // Show loading state
+  const isLoading = walletLoading || transactionsLoading;
+  
+  // Show error state
+  if (walletError || transactionsError) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center h-48">
+          <p className="text-red-600 mb-2">Error loading wallet data</p>
+          <p className="text-sm text-muted-foreground">
+            {walletError?.message || transactionsError?.message || 'Unknown error occurred'}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex items-center justify-center h-48">
+            <p className="text-muted-foreground">Loading wallet information...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show wallet not found state
   if (!walletData) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center h-48">
-          <p className="text-muted-foreground">Loading wallet information...</p>
+          <p className="text-muted-foreground">No wallet found. Please try refreshing the page.</p>
         </CardContent>
       </Card>
     );
@@ -158,17 +234,13 @@ export function EnhancedTransactionHistory({ profileId }: EnhancedTransactionHis
           <CardTitle>Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-16 bg-muted rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : transactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No transactions found with the current filters.
+              {isLoading ? (
+                "Loading transactions..."
+              ) : (
+                "No transactions found. Your transaction history will appear here once you start using tokens."
+              )}
             </div>
           ) : (
             <div className="space-y-4">
