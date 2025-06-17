@@ -17,7 +17,8 @@ serve(async (req) => {
   try {
     console.log('=== REFERRAL CODE PROCESSING START ===');
     
-    const supabaseClient = createClient(
+    // Create client with user's auth for user operations
+    const userClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
@@ -27,8 +28,14 @@ serve(async (req) => {
       }
     );
 
-    // Get the user from the request
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    // Create service client for admin operations (bypassing RLS)
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get the user from the request using user client
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
     
     if (userError || !user) {
       console.log('Authentication failed:', userError);
@@ -55,9 +62,9 @@ serve(async (req) => {
     const cleanReferralCode = referralCode.toString().trim().toUpperCase();
     console.log(`Processing referral code "${cleanReferralCode}" for user ${user.id}`);
 
-    // Check if user already has a referral record
+    // Check if user already has a referral record using user client
     console.log('Checking for existing referral...');
-    const { data: existingReferral, error: checkError } = await supabaseClient
+    const { data: existingReferral, error: checkError } = await userClient
       .from('user_referrals')
       .select('id')
       .eq('referred_id', user.id)
@@ -79,9 +86,9 @@ serve(async (req) => {
       );
     }
 
-    // Debug: Check what referral codes exist
+    // Debug: Check what referral codes exist using service client (bypasses RLS)
     console.log('Fetching all active referral codes for debugging...');
-    const { data: allCodes, error: debugError } = await supabaseClient
+    const { data: allCodes, error: debugError } = await serviceClient
       .from('referral_codes')
       .select('referral_code, is_active, profile_id')
       .eq('is_active', true);
@@ -95,9 +102,9 @@ serve(async (req) => {
       })));
     }
     
-    // Find the referrer by referral code
+    // Find the referrer by referral code using service client
     console.log(`Looking up referral code: "${cleanReferralCode}"`);
-    const { data: referralCodeRecord, error: codeError } = await supabaseClient
+    const { data: referralCodeRecord, error: codeError } = await serviceClient
       .from('referral_codes')
       .select('profile_id, referral_code')
       .eq('referral_code', cleanReferralCode)
@@ -134,9 +141,9 @@ serve(async (req) => {
       );
     }
 
-    // Process the referral using the database function
+    // Process the referral using the database function with service client
     console.log(`Calling process_referral_reward for user ${user.id} with code ${cleanReferralCode}`);
-    const { data: result, error: processError } = await supabaseClient
+    const { data: result, error: processError } = await serviceClient
       .rpc('process_referral_reward', {
         p_referred_id: user.id,
         p_referral_code: cleanReferralCode
