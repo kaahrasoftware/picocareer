@@ -14,7 +14,7 @@ import { UsersTab } from "./UsersTab";
 import { AppSettingsTab } from "./AppSettingsTab";
 import { AcademicResourcesTab } from "./AcademicResourcesTab";
 import { ContentResourcesTab } from "./ContentResourcesTab";
-import { EventManagementTab } from "./events/EventManagementTab";
+import { EventManagementTab } from "./EventManagementTab";
 import { SessionManagementTab } from "./sessions/SessionManagementTab";
 
 export function DashboardTab() {

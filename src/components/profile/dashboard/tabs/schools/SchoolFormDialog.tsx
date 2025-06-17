@@ -9,8 +9,8 @@ interface SchoolFormDialogProps {
   onClose: () => void;
   school?: School;
   onSuccess: () => void;
-  open?: boolean; // Add this for compatibility
-  mode?: string; // Add this for compatibility
+  open?: boolean;
+  mode?: string;
 }
 
 export function SchoolFormDialog({ isOpen, open, onClose, school, onSuccess }: SchoolFormDialogProps) {

@@ -9,7 +9,7 @@ interface MajorFormDialogProps {
   onClose: () => void;
   major?: Major;
   onSuccess: () => void;
-  open?: boolean; // Add this for compatibility
+  open?: boolean;
 }
 
 export function MajorFormDialog({ isOpen, open, onClose, major, onSuccess }: MajorFormDialogProps) {

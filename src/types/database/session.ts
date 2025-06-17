@@ -1,6 +1,8 @@
+
 export interface SessionParticipant {
   id: string;
   full_name: string;
+  avatar_url?: string | null;
 }
 
 export interface SessionType {
@@ -17,7 +19,7 @@ export interface MentorSession {
   mentee: SessionParticipant;
   session_type: SessionType;
   meeting_link?: string | null;
-  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram';
+  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call';
   attendance_confirmed?: boolean;
   availability_slot_id?: string | null;
 }

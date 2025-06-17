@@ -7,10 +7,10 @@ interface ScholarshipDetailsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   scholarship?: ScholarshipDetails;
-  scholarshipId?: string; // Add this for compatibility
-  open?: boolean; // Add this for compatibility
-  onOpenChange?: (open: boolean) => void; // Add this for compatibility
-  onScholarshipUpdated?: () => void; // Add this for compatibility
+  scholarshipId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onScholarshipUpdated?: () => void;
 }
 
 export function ScholarshipDetailsDialog({ 

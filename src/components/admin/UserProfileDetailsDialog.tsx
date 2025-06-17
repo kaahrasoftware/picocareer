@@ -12,9 +12,9 @@ interface UserProfileDetailsDialogProps {
   };
   isOpen: boolean;
   onClose: () => void;
-  userId?: string; // Add this for compatibility
-  open?: boolean; // Add this for compatibility
-  onOpenChange?: (open: boolean) => void; // Add this for compatibility
+  userId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function UserProfileDetailsDialog({ 
