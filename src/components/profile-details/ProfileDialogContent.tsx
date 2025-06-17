@@ -20,7 +20,6 @@ interface ProfileDialogContentProps {
   isMentor: boolean;
   handleBookSession: () => void;
   onShare: () => void;
-  onClose?: () => void;
 }
 
 export function ProfileDialogContent({
@@ -32,7 +31,6 @@ export function ProfileDialogContent({
   isMentor,
   handleBookSession,
   onShare,
-  onClose,
 }: ProfileDialogContentProps) {
   const navigate = useNavigate();
 
@@ -81,7 +79,8 @@ export function ProfileDialogContent({
         <div className="mt-4">
           <ProfileEditForm 
             profile={profile} 
-            onClose={() => setIsEditing(false)}
+            onCancel={() => setIsEditing(false)}
+            onSuccess={() => setIsEditing(false)}
           />
         </div>
       ) : (

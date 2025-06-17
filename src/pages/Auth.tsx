@@ -5,7 +5,7 @@ import { SignUpForm } from "@/components/auth/SignUpForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +20,7 @@ import { useEffect } from "react";
 
 export default function Auth() {
   const { session, loading } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
 
@@ -60,18 +61,23 @@ export default function Auth() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
   
-  // Show loading state if auth is still loading
+  // Redirect authenticated users away from auth page after loading completes
+  useEffect(() => {
+    if (!loading && session?.user) {
+      navigate('/');
+    }
+  }, [session, loading, navigate]);
+
+  // If still loading, don't render the full page yet
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
     </div>;
   }
   
-  // Don't render if we have a session (AuthContext will handle redirect)
+  // Don't render if we have a session (will be redirected by useEffect)
   if (session?.user) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-    </div>;
+    return null;
   }
 
   return (

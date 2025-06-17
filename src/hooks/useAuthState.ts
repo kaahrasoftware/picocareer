@@ -1,10 +1,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, throttledAuthOperation } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLoginReward } from './useLoginReward';
 
 /**
  * Primary hook to manage authentication state
@@ -19,7 +18,8 @@ export function useAuthState() {
   const queryClient = useQueryClient();
   const isInitialized = useRef(false);
   const authChangeSubscription = useRef<{ unsubscribe: () => void } | null>(null);
-  const { processLoginReward } = useLoginReward();
+  const authRetryCount = useRef(0);
+  const MAX_AUTH_RETRIES = 3;
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -27,65 +27,39 @@ export function useAuthState() {
 
     const setupAuthListener = async () => {
       try {
-        console.log('Setting up auth listener...');
-        
         // First set up auth state change listener
         const { data } = supabase.auth.onAuthStateChange(
-          async (event, currentSession) => {
-            console.log('Auth state changed:', event, currentSession?.user?.id);
+          (event, currentSession) => {
+            console.log('Auth state changed:', event);
             
             if (event === 'SIGNED_OUT') {
-              console.log('User signed out, clearing state');
               setSession(null);
               setUser(null);
-              setError(null);
               // Clear queries when user signs out
               queryClient.clear();
-            } else if (event === 'SIGNED_IN') {
-              console.log('User signed in, updating state and redirecting to home');
+              authRetryCount.current = 0;
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               // Set session state immediately to update UI
               setSession(currentSession);
               setUser(currentSession?.user ?? null);
-              setError(null);
+              authRetryCount.current = 0;
               
-              // Always redirect to home page after successful login with page refresh
-              console.log('Redirecting to home page after successful login');
-              setTimeout(() => {
-                window.location.href = '/';
-              }, 100);
-              
-              // Process queries and rewards after state update
+              // Invalidate queries to refresh data after sign in
               if (currentSession?.user?.id) {
-                // Use setTimeout to ensure state updates complete first
+                // Use setTimeout to avoid potential auth deadlocks
                 setTimeout(() => {
-                  console.log('Invalidating queries after sign in');
                   queryClient.invalidateQueries({ queryKey: ['profile', currentSession.user.id] });
                   queryClient.invalidateQueries({ queryKey: ['notifications', currentSession.user.id] });
                   queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-                  queryClient.invalidateQueries({ queryKey: ['wallet', currentSession.user.id] });
-                }, 200);
-
-                // Process daily login reward
-                setTimeout(() => {
-                  processLoginReward(currentSession.user.id);
-                }, 1000);
+                }, 0);
               }
-            } else if (event === 'TOKEN_REFRESHED') {
-              console.log('Token refreshed, updating session');
-              setSession(currentSession);
-              setUser(currentSession?.user ?? null);
-              setError(null);
             }
-            
-            // Mark as not loading after any auth event
-            setLoading(false);
           }
         );
 
         authChangeSubscription.current = data.subscription;
 
         // Then check for existing session
-        console.log('Checking for existing session...');
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -100,12 +74,9 @@ export function useAuthState() {
             });
           }
         } else if (sessionData?.session) {
-          console.log('Initial session found, setting state');
+          console.log('Initial session found');
           setSession(sessionData.session);
           setUser(sessionData.session.user);
-          setError(null);
-        } else {
-          console.log('No initial session found');
         }
       } catch (err) {
         console.error('Unexpected error during auth setup:', err);
@@ -122,29 +93,32 @@ export function useAuthState() {
         authChangeSubscription.current.unsubscribe();
       }
     };
-  }, [toast, queryClient, processLoginReward]);
+  }, [toast, queryClient]);
 
   const signOut = async () => {
     try {
       console.log('Signing out...');
-      setLoading(true);
+      setLoading(true); // Set loading state to true while signing out
       
+      // Use simpler direct call for sign out instead of throttled version
       const { error } = await supabase.auth.signOut({
         scope: 'local'
       });
       
       if (error) throw error;
       
-      // State will be cleared by the auth state change listener
+      // Ensure we clear states immediately to update UI
+      setSession(null);
+      setUser(null);
+      
+      // Clear query cache to prevent stale data from previous session
+      queryClient.clear();
+      
+      // Show success toast after state updates
       toast({
         title: "Signed out successfully",
         description: "You have been signed out of your account."
       });
-
-      // Redirect to auth page after successful logout
-      setTimeout(() => {
-        window.location.href = '/auth';
-      }, 100);
     } catch (error: any) {
       console.error('Error signing out:', error);
       toast({

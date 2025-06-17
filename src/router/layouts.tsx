@@ -8,8 +8,6 @@ import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { GuideProvider } from "@/context/GuideContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { AuthNavigationHandler } from "@/components/auth/AuthNavigationHandler";
 import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 import { GuideButton } from "@/components/guide/GuideButton";
 import { usePageLoading } from "@/hooks/usePageLoading";
@@ -36,27 +34,23 @@ export function MainLayout({ children }: LayoutProps) {
   const noopCloseMobileMenu = () => {};
 
   return (
-    <AuthProvider>
-      <AuthNavigationHandler>
-        <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
-          <GuideProvider>
-            <div className="min-h-screen flex flex-col">
-              <ScrollToTop />
-              <LoadingBar isLoading={isLoading} progress={progress} />
-              <MenuSidebar />
-              <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
-                {children || <Outlet />}
-              </main>
-              <Footer />
-              <GoToTopButton />
-              {session && isMentor && <FloatingActionButton />}
-              <WelcomeDialog />
-              <GuideButton floating={true} />
-            </div>
-          </GuideProvider>
-        </MobileMenuProvider>
-      </AuthNavigationHandler>
-    </AuthProvider>
+    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+      <GuideProvider>
+        <div className="min-h-screen flex flex-col">
+          <ScrollToTop />
+          <LoadingBar isLoading={isLoading} progress={progress} />
+          <MenuSidebar />
+          <main className={`pt-16 flex-grow relative ${mounted ? 'animate-fade-in' : ''}`}>
+            {children || <Outlet />}
+          </main>
+          <Footer />
+          <GoToTopButton />
+          {session && isMentor && <FloatingActionButton />}
+          <WelcomeDialog />
+          <GuideButton floating={true} />
+        </div>
+      </GuideProvider>
+    </MobileMenuProvider>
   );
 }
 
@@ -72,19 +66,15 @@ export function AuthLayout({ children }: LayoutProps) {
   const noopCloseMobileMenu = () => {};
 
   return (
-    <AuthProvider>
-      <AuthNavigationHandler>
-        <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
-          <div className="min-h-screen flex flex-col">
-            <ScrollToTop />
-            <LoadingBar isLoading={isLoading} progress={progress} />
-            <MenuSidebar />
-            <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
-              {children || <Outlet />}
-            </main>
-          </div>
-        </MobileMenuProvider>
-      </AuthNavigationHandler>
-    </AuthProvider>
+    <MobileMenuProvider closeMobileMenu={noopCloseMobileMenu} isOpen={false}>
+      <div className="min-h-screen flex flex-col">
+        <ScrollToTop />
+        <LoadingBar isLoading={isLoading} progress={progress} />
+        <MenuSidebar />
+        <main className={`pt-16 flex-grow ${mounted ? 'animate-fade-in' : ''}`}>
+          {children || <Outlet />}
+        </main>
+      </div>
+    </MobileMenuProvider>
   );
 }

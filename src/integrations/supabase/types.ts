@@ -4228,38 +4228,6 @@ export type Database = {
           },
         ]
       }
-      user_login_rewards: {
-        Row: {
-          created_at: string
-          id: string
-          profile_id: string
-          reward_date: string
-          tokens_awarded: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          profile_id: string
-          reward_date: string
-          tokens_awarded?: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          profile_id?: string
-          reward_date?: string
-          tokens_awarded?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_login_rewards_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_oauth_tokens: {
         Row: {
           access_token: string
@@ -4847,10 +4815,6 @@ export type Database = {
       migrate_reminder_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      process_daily_login_reward: {
-        Args: { p_profile_id: string }
-        Returns: Json
       }
       process_referral_reward: {
         Args: { p_referred_id: string; p_referral_code: string }
