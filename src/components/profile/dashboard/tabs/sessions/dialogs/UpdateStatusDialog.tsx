@@ -92,17 +92,17 @@ export function UpdateStatusDialog({
           profile_id: sessionData.mentor_id,
           title: `Session ${targetStatus}`,
           message: `Your session with ${sessionData.mentee.full_name} has been marked as ${targetStatus}${reason ? `: "${reason}"` : ""}.`,
-          type: "session_update",
+          type: "session_update" as const,
           action_url: "/profile?tab=calendar",
-          category: "general"
+          category: "general" as const
         },
         {
           profile_id: sessionData.mentee_id,
           title: `Session ${targetStatus}`,
           message: `Your session with ${sessionData.mentor.full_name} has been marked as ${targetStatus}${reason ? `: "${reason}"` : ""}.`,
-          type: "session_update",
+          type: "session_update" as const,
           action_url: "/profile?tab=calendar",
-          category: "general"
+          category: "general" as const
         }
       ];
       

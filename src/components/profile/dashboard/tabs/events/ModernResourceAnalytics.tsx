@@ -55,6 +55,20 @@ interface BrowserData {
   percentage: number;
 }
 
+// Safe metadata extraction helper
+const getMetadataValue = (metadata: any, key: string, defaultValue: string = 'unknown'): string => {
+  if (!metadata || typeof metadata !== 'object') return defaultValue;
+  const value = metadata[key];
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null) {
+    // If it's an object, try to extract meaningful string representation
+    if (value.name) return String(value.name);
+    if (value.type) return String(value.type);
+    return defaultValue;
+  }
+  return value ? String(value) : defaultValue;
+};
+
 export function ModernResourceAnalytics() {
   const { data: analyticsData, isLoading } = useQuery({
     queryKey: ['event-resource-analytics'],
@@ -80,16 +94,16 @@ export function ModernResourceAnalytics() {
 
       if (error) throw error;
 
-      // Process the data for charts
+      // Process the data with safe metadata extraction
       const processed = data?.map(item => {
-        const metadata = typeof item.metadata === 'object' && item.metadata !== null ? item.metadata as any : {};
+        const metadata = item.metadata || {};
         return {
           ...item,
-          source: metadata.source || 'unknown',
-          resource_type: item.event_resources?.resource_type || metadata.resource_type || 'unknown',
-          resource_title: item.event_resources?.title || metadata.resource_title || 'Unknown Resource',
-          device_type: metadata.device_type || 'desktop',
-          browser: metadata.browser || 'unknown'
+          source: getMetadataValue(metadata, 'source'),
+          resource_type: item.event_resources?.resource_type || getMetadataValue(metadata, 'resource_type'),
+          resource_title: item.event_resources?.title || getMetadataValue(metadata, 'resource_title', 'Unknown Resource'),
+          device_type: getMetadataValue(metadata, 'device_type', 'desktop'),
+          browser: getMetadataValue(metadata, 'browser')
         };
       }) || [];
 
@@ -204,7 +218,7 @@ export function ModernResourceAnalytics() {
   // Calculate average session time (mock data for now)
   const averageSessionTime = 240; // 4 minutes
 
-  // Process device and browser data
+  // Process device and browser data with safe string extraction
   const deviceMap = new Map<string, number>();
   const browserMap = new Map<string, number>();
 
@@ -230,7 +244,7 @@ export function ModernResourceAnalytics() {
     percentage: totalInteractions > 0 ? (count / totalInteractions) * 100 : 0
   }));
 
-  // Convert analytics data to UserActivity format
+  // Convert analytics data to UserActivity format with safe metadata
   const userActivities: UserActivity[] = analyticsData?.map(item => ({
     id: item.id,
     profile_id: item.profile_id,
