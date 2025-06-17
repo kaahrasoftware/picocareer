@@ -46,7 +46,7 @@ serve(async (req) => {
       );
     }
 
-    // Clean and normalize the referral code
+    // Clean and normalize the referral code - ensure it's uppercase and trimmed
     const cleanReferralCode = referralCode.toString().trim().toUpperCase();
     console.log(`Processing referral code "${cleanReferralCode}" for user ${user.id}`);
 
@@ -73,8 +73,17 @@ serve(async (req) => {
       );
     }
 
-    // Find the referrer by referral code (case-insensitive search)
+    // Find the referrer by referral code with better error handling
     console.log(`Looking up referral code: "${cleanReferralCode}"`);
+    
+    // First, let's check what referral codes exist for debugging
+    const { data: allCodes, error: debugError } = await supabaseClient
+      .from('referral_codes')
+      .select('referral_code, is_active, profile_id')
+      .eq('is_active', true);
+    
+    console.log('Available active referral codes:', allCodes?.map(c => ({ code: c.referral_code, profile_id: c.profile_id })));
+    
     const { data: referralCodeRecord, error: codeError } = await supabaseClient
       .from('referral_codes')
       .select('profile_id, referral_code')
@@ -92,14 +101,7 @@ serve(async (req) => {
 
     if (!referralCodeRecord) {
       console.log(`Invalid or inactive referral code: "${cleanReferralCode}"`);
-      
-      // Debug: Let's check what referral codes exist
-      const { data: allCodes, error: debugError } = await supabaseClient
-        .from('referral_codes')
-        .select('referral_code, is_active')
-        .eq('is_active', true);
-      
-      console.log('Available active referral codes:', allCodes);
+      console.log('Available codes for comparison:', allCodes?.map(c => c.referral_code).join(', '));
       
       return new Response(
         JSON.stringify({ success: false, message: 'Invalid or inactive referral code' }),
