@@ -27,7 +27,7 @@ export function MajorFormDialog({ isOpen, open, onClose, major, onSuccess }: Maj
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={(newOpen) => !newOpen && onClose()}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{major ? 'Edit Major' : 'Add Major'}</DialogTitle>

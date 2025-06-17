@@ -28,7 +28,7 @@ export function SchoolFormDialog({ isOpen, open, onClose, school, onSuccess }: S
   };
 
   return (
-    <Dialog open={dialogOpen} onOpenChange={onClose}>
+    <Dialog open={dialogOpen} onOpenChange={(newOpen) => !newOpen && onClose()}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{school ? 'Edit School' : 'Add School'}</DialogTitle>
