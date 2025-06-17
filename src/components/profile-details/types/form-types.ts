@@ -31,3 +31,13 @@ export interface ProfileFormProps {
   onCancel: () => void;
   onSuccess: () => void;
 }
+
+export interface ProfileEditFormProps {
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career_title?: string | null;
+  };
+  onClose: () => void;
+}

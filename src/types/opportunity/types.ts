@@ -20,6 +20,7 @@ export interface Opportunity {
   tags: string[] | null;
   categories: string[] | null;
   featured: boolean | null;
+  cover_image_url?: string | null;
 }
 
 export interface OpportunityWithAuthor extends Opportunity {
@@ -28,6 +29,9 @@ export interface OpportunityWithAuthor extends Opportunity {
     full_name: string | null;
     avatar_url: string | null;
     email: string;
+  };
+  analytics?: OpportunityAnalytics & {
+    applications_count?: number;
   };
 }
 

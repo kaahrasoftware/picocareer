@@ -1,3 +1,4 @@
+
 export interface Major {
   id: string;
   title: string;
@@ -5,6 +6,7 @@ export interface Major {
   created_at: string;
   updated_at: string;
   featured: boolean | null;
+  status?: "Approved" | "Pending" | "Rejected";
   learning_objectives: string[] | null;
   common_courses: string[] | null;
   interdisciplinary_connections: string[] | null;

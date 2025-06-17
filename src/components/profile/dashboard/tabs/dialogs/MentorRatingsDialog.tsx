@@ -38,7 +38,7 @@ export function MentorRatingsDialog({ isOpen, onClose, mentorId }: MentorRatingD
           rating,
           notes,
           created_at,
-          from_profile:from_profile_id (
+          from_profile:profiles!from_profile_id (
             full_name
           )
         `)

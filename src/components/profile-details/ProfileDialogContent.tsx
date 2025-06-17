@@ -79,8 +79,7 @@ export function ProfileDialogContent({
         <div className="mt-4">
           <ProfileEditForm 
             profile={profile} 
-            onCancel={() => setIsEditing(false)}
-            onSuccess={() => setIsEditing(false)}
+            onClose={() => setIsEditing(false)}
           />
         </div>
       ) : (
