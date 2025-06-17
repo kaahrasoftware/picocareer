@@ -6,7 +6,7 @@ export interface School {
   country: string;
   state: string;
   city: string;
-  location: string; // Added missing location property
+  location: string;
   website: string;
   email: string;
   phone: string;
@@ -29,7 +29,7 @@ export interface School {
   programs_offered: string[];
   notable_alumni: string[];
   rankings: any;
-  ranking: string | null; // Added missing ranking property
+  ranking: string | null;
   admissions_requirements: string[];
   financial_aid_available: boolean;
   scholarship_opportunities: string[];
@@ -68,14 +68,14 @@ export interface School {
   summer_programs_available: boolean;
   continuing_education_programs: boolean;
   professional_development_programs: boolean;
-  student_faculty_ratio: string | null; // Added missing student_faculty_ratio property
-  undergraduate_application_url: string | null; // Added missing URL properties
+  student_faculty_ratio: string | null;
+  undergraduate_application_url: string | null;
   graduate_application_url: string | null;
   international_students_url: string | null;
   financial_aid_url: string | null;
   created_at: string;
   updated_at: string;
-  status: "Approved" | "Pending" | "Rejected";
+  status: SchoolStatus;
   author_id: string;
   featured?: boolean;
   featured_priority?: number;
@@ -87,6 +87,8 @@ export interface School {
   financial_aid_page_url?: string;
   campus_map_url?: string;
 }
+
+export type SchoolStatus = "Approved" | "Pending" | "Rejected";
 
 export type SchoolType = 
   | "Public University"

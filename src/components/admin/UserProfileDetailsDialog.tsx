@@ -1,17 +1,15 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProfileEditForm } from "@/components/profile-details/ProfileEditForm";
-
-interface ExtendedProfile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  // Add other profile properties as needed
-}
+import type { Profile } from "@/types/database/profiles";
 
 interface UserProfileDetailsDialogProps {
-  profile: ExtendedProfile;
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career_title?: string | null;
+  };
   isOpen: boolean;
   onClose: () => void;
 }

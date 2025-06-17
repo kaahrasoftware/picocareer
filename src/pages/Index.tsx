@@ -2,6 +2,7 @@
 import { HeroSection } from "@/components/sections/HeroSection";
 import { StatisticsSection } from "@/components/sections/StatisticsSection";
 import { MentorTabsSection } from "@/components/sections/mentor/MentorTabsSection";
+import { PartnershipsCTASection } from "@/components/sections/PartnershipsCTASection";
 import { FeaturedContentTabsSection } from "@/components/sections/FeaturedContentTabsSection";
 import { ResourcesHighlightSection } from "@/components/sections/ResourcesHighlightSection";
 import { useEffect, useState } from "react";
@@ -39,6 +40,7 @@ const Index = () => {
             </section>
             <ResourcesHighlightSection />
             <MentorTabsSection />
+            <PartnershipsCTASection />
             <FeaturedContentTabsSection />
           </div>
         </div>
