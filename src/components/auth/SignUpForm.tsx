@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
+import { useReferralProcessor } from "@/hooks/useReferralProcessor";
 
 interface SignUpFormProps {
   referralCode?: string | null;
@@ -15,6 +16,7 @@ interface SignUpFormProps {
 export function SignUpForm({ referralCode }: SignUpFormProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { processReferralCode } = useReferralProcessor();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -46,7 +48,7 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
     setIsLoading(true);
 
     try {
-      // First, check if email already exists using maybeSingle() instead of single()
+      // First, check if email already exists
       const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -74,9 +76,9 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         return;
       }
 
-      console.log('Starting signup process with referral code:', referralCode);
+      console.log('Starting signup process');
 
-      // Proceed with signup - store referral code in user metadata
+      // Proceed with simplified signup - no referral code in metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email.toLowerCase(),
         password: formData.password,
@@ -84,7 +86,6 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            referral_code: referralCode || null,
           },
         },
       });
@@ -103,22 +104,27 @@ export function SignUpForm({ referralCode }: SignUpFormProps) {
         throw signUpError;
       }
 
-      console.log('Signup successful:', {
-        userId: authData.user?.id,
-        referralCode: referralCode,
-        userMetadata: authData.user?.user_metadata
-      });
+      console.log('Signup successful:', authData.user?.id);
 
-      // The referral processing will now happen automatically via the database trigger
-      // when the profile is created with the referral_code from user metadata
+      // If we have a referral code and user signup was successful, process it
+      if (referralCode && authData.user) {
+        console.log('Processing referral code after successful signup');
+        
+        // Small delay to ensure user is fully created
+        setTimeout(async () => {
+          try {
+            await processReferralCode(referralCode);
+          } catch (error) {
+            console.error('Referral processing failed, but signup was successful:', error);
+            // Don't block signup if referral processing fails
+          }
+        }, 2000);
+      }
 
       toast({
         title: "Check your email",
         description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
       });
-      
-      // Clear the referral code from localStorage since it's now handled by the database
-      localStorage.removeItem('referralCode');
       
       navigate("/");
     } catch (error: any) {
