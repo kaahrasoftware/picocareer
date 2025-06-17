@@ -10,6 +10,7 @@ import { WelcomeDialog } from "@/components/guide/WelcomeDialog";
 import { Slides } from "@/components/Slides";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { ReferralDebugPanel } from "@/components/debug/ReferralDebugPanel";
 
 const Index = () => {
   const { session } = useAuthSession();
@@ -72,6 +73,9 @@ const Index = () => {
       </div>
       
       <WelcomeDialog />
+      
+      {/* Debug panel for development */}
+      {process.env.NODE_ENV !== 'production' && <ReferralDebugPanel />}
     </div>
   );
 };

@@ -4698,6 +4698,10 @@ export type Database = {
         }
         Returns: Json
       }
+      debug_referral_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       deduct_tokens: {
         Args: {
           p_wallet_id: string
