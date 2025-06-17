@@ -3,18 +3,29 @@ import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowUpRight, ArrowDownLeft, RefreshCw, Plus, Minus, Gift } from "lucide-react";
-import { format } from "date-fns";
 import { TransactionFilters } from "./TransactionFilters";
 import { TransactionSummary } from "./TransactionSummary";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { format } from "date-fns";
+import { ArrowUpCircle, ArrowDownCircle, RefreshCw } from "lucide-react";
 
 interface EnhancedTransactionHistoryProps {
-  walletId: string;
+  profileId: string;
 }
 
-export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHistoryProps) {
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  transaction_type: string;
+  transaction_status: string;
+  category: string;
+  created_at: string;
+  metadata?: any;
+}
+
+export function EnhancedTransactionHistory({ profileId }: EnhancedTransactionHistoryProps) {
   const [filters, setFilters] = useState({
     category: 'all',
     transactionType: 'all',
@@ -24,16 +35,30 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
     searchQuery: ''
   });
 
-  const { data: transactions, isLoading } = useQuery({
-    queryKey: ['enhanced-transactions', walletId, filters],
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet', profileId],
     queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq('profile_id', profileId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId
+  });
+
+  const { data: transactions = [], isLoading } = useQuery({
+    queryKey: ['transactions', walletData?.id, filters],
+    queryFn: async () => {
+      if (!walletData?.id) return [];
+
       let query = supabase
         .from('token_transactions')
-        .select(`
-          *,
-          wallets!inner(profile_id)
-        `)
-        .eq('wallet_id', walletId)
+        .select('*')
+        .eq('wallet_id', walletData.id)
         .order('created_at', { ascending: false });
 
       // Apply filters
@@ -58,58 +83,13 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data as Transaction[];
     },
-    enabled: !!walletId
+    enabled: !!walletData?.id
   });
 
-  const getTransactionIcon = (type: string, category: string) => {
-    switch (type) {
-      case 'credit':
-        return <ArrowDownLeft className="h-4 w-4 text-green-600" />;
-      case 'debit':
-        return <ArrowUpRight className="h-4 w-4 text-red-600" />;
-      case 'refund':
-        return <RefreshCw className="h-4 w-4 text-blue-600" />;
-      case 'adjustment':
-        return <Plus className="h-4 w-4 text-yellow-600" />;
-      case 'bonus':
-        return <Gift className="h-4 w-4 text-purple-600" />;
-      default:
-        return <Minus className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-      completed: "default",
-      pending: "secondary", 
-      failed: "destructive",
-      cancelled: "outline"
-    };
-    
-    return (
-      <Badge variant={variants[status] || "outline"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
-  };
-
-  const getCategoryBadge = (category: string) => {
-    const colors: Record<string, string> = {
-      purchase: "bg-green-100 text-green-800",
-      session: "bg-blue-100 text-blue-800",
-      content: "bg-purple-100 text-purple-800",
-      refund: "bg-yellow-100 text-yellow-800",
-      adjustment: "bg-gray-100 text-gray-800",
-      bonus: "bg-pink-100 text-pink-800"
-    };
-
-    return (
-      <Badge className={colors[category] || "bg-gray-100 text-gray-800"}>
-        {category.charAt(0).toUpperCase() + category.slice(1)}
-      </Badge>
-    );
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
   };
 
   const clearFilters = () => {
@@ -123,102 +103,109 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
     });
   };
 
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'credit':
+        return <ArrowUpCircle className="h-4 w-4 text-green-600" />;
+      case 'debit':
+        return <ArrowDownCircle className="h-4 w-4 text-red-600" />;
+      case 'refund':
+        return <RefreshCw className="h-4 w-4 text-blue-600" />;
+      default:
+        return <ArrowUpCircle className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (!walletData) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-48">
+          <p className="text-muted-foreground">Loading wallet information...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Transaction Summary */}
       <TransactionSummary 
-        walletId={walletId}
+        walletId={walletData.id}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
       />
-
-      {/* Filters */}
+      
       <TransactionFilters
         filters={filters}
-        onFiltersChange={setFilters}
+        onFiltersChange={handleFiltersChange}
         onClearFilters={clearFilters}
       />
 
-      {/* Transaction List */}
       <Card>
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px] pr-4">
+          {isLoading ? (
             <div className="space-y-4">
-              {isLoading ? (
-                // Loading skeleton
-                Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between border-b pb-4 animate-pulse">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-muted rounded-full"></div>
-                      <div>
-                        <div className="w-32 h-4 bg-muted rounded mb-1"></div>
-                        <div className="w-24 h-3 bg-muted rounded"></div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="w-16 h-4 bg-muted rounded mb-1"></div>
-                      <div className="w-12 h-3 bg-muted rounded"></div>
-                    </div>
-                  </div>
-                ))
-              ) : transactions && transactions.length > 0 ? (
-                transactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between border-b pb-4 last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-muted p-2">
-                        {getTransactionIcon(transaction.transaction_type, transaction.category)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">
-                            {transaction.description || 
-                              (transaction.transaction_type === 'credit' ? 'Tokens Added' : 'Tokens Used')}
-                          </p>
-                          {getCategoryBadge(transaction.category)}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm text-muted-foreground">
-                            {format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')}
-                          </p>
-                          {getStatusBadge(transaction.transaction_status)}
-                        </div>
-                        {transaction.metadata && Object.keys(transaction.metadata).length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {JSON.stringify(transaction.metadata, null, 2)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className={`font-medium ${
-                        transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund' 
-                          ? 'text-green-600' 
-                          : 'text-red-600'
-                      }`}>
-                        {(transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund') ? '+' : '-'}
-                        {transaction.amount}
-                      </div>
-                      {transaction.reference_id && (
-                        <p className="text-xs text-muted-foreground">
-                          Ref: {transaction.reference_id.slice(0, 8)}...
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No transactions found matching your criteria
-                </p>
-              )}
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-16 bg-muted rounded"></div>
+                </div>
+              ))}
             </div>
-          </ScrollArea>
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No transactions found with the current filters.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {transactions.map((transaction) => (
+                <div key={transaction.id}>
+                  <div className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-lg transition-colors">
+                    <div className="flex items-center gap-3">
+                      {getTransactionIcon(transaction.transaction_type)}
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>{format(new Date(transaction.created_at), 'MMM d, yyyy HH:mm')}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {transaction.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-semibold ${
+                        transaction.transaction_type === 'credit' ? 'text-green-600' : 
+                        transaction.transaction_type === 'debit' ? 'text-red-600' : 'text-blue-600'
+                      }`}>
+                        {transaction.transaction_type === 'credit' ? '+' : 
+                         transaction.transaction_type === 'debit' ? '-' : ''}
+                        {transaction.amount} tokens
+                      </div>
+                      <Badge className={`text-xs ${getStatusColor(transaction.transaction_status)}`}>
+                        {transaction.transaction_status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <Separator className="last:hidden" />
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

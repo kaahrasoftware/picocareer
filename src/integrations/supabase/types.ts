@@ -3590,6 +3590,41 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          profile_id: string
+          referral_code: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          profile_id: string
+          referral_code: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          profile_id?: string
+          referral_code?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_rewards: {
         Row: {
           awarded_at: string

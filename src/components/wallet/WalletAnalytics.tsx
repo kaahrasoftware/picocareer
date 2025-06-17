@@ -6,10 +6,10 @@ import { useTokenAnalytics } from "@/hooks/useTokenAnalytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface WalletAnalyticsProps {
-  walletId?: string;
+  profileId: string;
 }
 
-export function WalletAnalytics({ walletId }: WalletAnalyticsProps) {
+export function WalletAnalytics({ profileId }: WalletAnalyticsProps) {
   const { analytics, isLoading, error } = useTokenAnalytics();
 
   if (isLoading) {

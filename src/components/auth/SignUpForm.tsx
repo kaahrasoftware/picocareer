@@ -1,17 +1,21 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Gift } from "lucide-react";
 
 export function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,6 +23,20 @@ export function SignUpForm() {
     firstName: '',
     lastName: '',
   });
+
+  // Check for referral code from URL
+  useEffect(() => {
+    const urlReferralCode = searchParams.get('ref');
+    if (urlReferralCode) {
+      console.log('Setting referral code from URL:', urlReferralCode);
+      setReferralCode(urlReferralCode);
+      
+      // Clean up the URL to remove the ref parameter
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('ref');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -70,10 +88,10 @@ export function SignUpForm() {
         return;
       }
 
-      console.log('Starting signup process');
+      console.log('Starting signup process with referral code:', referralCode);
 
-      // Proceed with signup
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Proceed with signup, including referral code in metadata
+      const signUpData: any = {
         email: formData.email.toLowerCase(),
         password: formData.password,
         options: {
@@ -82,7 +100,14 @@ export function SignUpForm() {
             last_name: formData.lastName,
           },
         },
-      });
+      };
+
+      // Add referral code to metadata if present
+      if (referralCode) {
+        signUpData.options.data.referral_code = referralCode;
+      }
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp(signUpData);
 
       if (signUpError) {
         setIsLoading(false);
@@ -120,77 +145,88 @@ export function SignUpForm() {
   };
 
   return (
-    <form onSubmit={handleSignUp} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      {referralCode && (
+        <Alert className="border-green-200 bg-green-50">
+          <Gift className="h-4 w-4" />
+          <AlertDescription className="text-green-800">
+            🎉 You've been referred by a friend! Complete your registration and you'll both get 15 tokens!
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSignUp} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="signup-firstName">First Name</Label>
+            <Input
+              id="signup-firstName"
+              name="firstName"
+              type="text"
+              placeholder="Enter your first name"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signup-lastName">Last Name</Label>
+            <Input
+              id="signup-lastName"
+              name="lastName"
+              type="text"
+              placeholder="Enter your last name"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+        </div>
         <div className="space-y-2">
-          <Label htmlFor="signup-firstName">First Name</Label>
+          <Label htmlFor="signup-email">Email</Label>
           <Input
-            id="signup-firstName"
-            name="firstName"
-            type="text"
-            placeholder="Enter your first name"
-            value={formData.firstName}
+            id="signup-email"
+            name="email"
+            type="email"
+            placeholder="Enter your email"
+            value={formData.email}
             onChange={handleInputChange}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="signup-lastName">Last Name</Label>
+          <Label htmlFor="signup-password">Password</Label>
           <Input
-            id="signup-lastName"
-            name="lastName"
-            type="text"
-            placeholder="Enter your last name"
-            value={formData.lastName}
+            id="signup-password"
+            name="password"
+            type="password"
+            placeholder="Create a password"
+            value={formData.password}
             onChange={handleInputChange}
             required
+            minLength={6}
           />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
-        <Input
-          id="signup-email"
-          name="email"
-          type="email"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
-        <Input
-          id="signup-password"
-          name="password"
-          type="password"
-          placeholder="Create a password"
-          value={formData.password}
-          onChange={handleInputChange}
-          required
-          minLength={6}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="signup-confirmPassword">Confirm Password</Label>
-        <Input
-          id="signup-confirmPassword"
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm your password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange}
-          required
-          minLength={6}
-        />
-      </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-confirmPassword">Confirm Password</Label>
+          <Input
+            id="signup-confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleInputChange}
+            required
+            minLength={6}
+          />
+        </div>
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Creating account..." : "Create Account"}
-      </Button>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Creating account..." : "Create Account"}
+        </Button>
 
-      <SocialSignIn />
-    </form>
+        <SocialSignIn />
+      </form>
+    </div>
   );
 }
