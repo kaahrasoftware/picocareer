@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Form } from "@/components/ui/form";
@@ -50,18 +51,28 @@ export function MenteeEssayForm({
       return;
     }
 
+    if (!data.prompt_id) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a prompt.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const formData = {
         mentee_id: menteeId,
-        prompt_id: data.prompt_id || '', // Make sure prompt_id is required
+        prompt_id: data.prompt_id,
         response_text: data.response_text || '',
         is_draft: data.is_draft || false,
         word_count: data.response_text?.split(' ').length || 0,
         version: 1
       };
 
+      // Use generic table insert since mentee_essays might not be in the exact schema
       const { data: essayData, error } = await supabase
-        .from('mentee_essays')
+        .from('mentee_essay_responses')
         .insert([formData])
         .select()
         .single();
@@ -90,6 +101,7 @@ export function MenteeEssayForm({
         <Controller
           control={form.control}
           name="prompt_id"
+          rules={{ required: "Prompt is required" }}
           render={({ field }) => (
             <FormField
               name="prompt_id"

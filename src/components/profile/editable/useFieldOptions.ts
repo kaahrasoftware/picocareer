@@ -40,8 +40,8 @@ export function useFieldOptions(fieldName: string) {
 
         return (data || []).map(item => ({
           id: item.id,
-          [titleField]: item[titleField]
-        })) as QueryResult[];
+          name: item[titleField] // Always use 'name' for consistency in the component
+        })) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];

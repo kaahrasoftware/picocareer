@@ -20,7 +20,8 @@ export function OpportunitiesManagementTab() {
           profiles!opportunities_author_id_fkey(
             id,
             full_name,
-            email
+            email,
+            avatar_url
           )
         `)
         .order('created_at', { ascending: false });
@@ -58,7 +59,6 @@ export function OpportunitiesManagementTab() {
         isError={isError}
         error={error}
         onEdit={handleEditOpportunity}
-        onDataChange={handleDataChange}
         onDelete={() => {}}
         onApprove={() => {}}
         onReject={() => {}}

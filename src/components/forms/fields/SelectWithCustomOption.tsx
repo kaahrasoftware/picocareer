@@ -24,7 +24,7 @@ interface SelectWithCustomOptionProps {
 }
 
 export function SelectWithCustomOption({
-  options,
+  options = [],
   value,
   onValueChange,
   placeholder = "Select an option...",
@@ -41,7 +41,7 @@ export function SelectWithCustomOption({
   const [isAdding, setIsAdding] = useState(false);
 
   const filteredOptions = useMemo(() => {
-    if (!search) return options;
+    if (!search || !Array.isArray(options)) return options || [];
     return options.filter(option => 
       option?.name?.toLowerCase().includes(search.toLowerCase())
     );
@@ -86,7 +86,7 @@ export function SelectWithCustomOption({
     }
   };
 
-  const selectedOption = options.find(option => option?.id === value);
+  const selectedOption = options?.find(option => option?.id === value);
 
   // If we're in "adding new" mode, show the input field
   if (isAddingNew) {
@@ -146,7 +146,7 @@ export function SelectWithCustomOption({
 
           {/* Options */}
           <div className="max-h-48 overflow-y-auto">
-            {filteredOptions.map((item) => {
+            {filteredOptions?.map((item) => {
               if (!item) return null;
               return (
                 <SelectItem key={item.id} value={item.id}>
@@ -155,7 +155,7 @@ export function SelectWithCustomOption({
               );
             })}
             
-            {filteredOptions.length === 0 && search && (
+            {filteredOptions?.length === 0 && search && (
               <div className="p-2 text-sm text-muted-foreground text-center">
                 No options found
               </div>

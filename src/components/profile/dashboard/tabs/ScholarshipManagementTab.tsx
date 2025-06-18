@@ -1,24 +1,25 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ScholarshipsDataTable } from "./ScholarshipsDataTable";
-import { ScholarshipFormDialog } from "./ScholarshipFormDialog";
-import { ScholarshipDetailsDialog } from "./ScholarshipDetailsDialog";
-import type { Scholarship } from "@/types/database/scholarships";
+import { ScholarshipsDataTable } from "./scholarship/ScholarshipsDataTable";
+import { ScholarshipFormDialog } from "./scholarship/ScholarshipFormDialog";
+import { ScholarshipDetailsDialog } from "./scholarship/ScholarshipDetailsDialog";
+import type { ScholarshipDetails } from "@/types/database/scholarships";
 
 export function ScholarshipManagementTab() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
+  const [selectedScholarship, setSelectedScholarship] = useState<ScholarshipDetails | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   
-  const handleEditScholarship = (scholarship: Scholarship) => {
+  const handleEditScholarship = (scholarship: ScholarshipDetails) => {
     setSelectedScholarship(scholarship);
     setIsEditDialogOpen(true);
   };
 
-  const handleViewScholarship = (scholarship: Scholarship) => {
+  const handleViewScholarship = (scholarship: ScholarshipDetails) => {
     setSelectedScholarship(scholarship);
     setIsDetailsDialogOpen(true);
   };
