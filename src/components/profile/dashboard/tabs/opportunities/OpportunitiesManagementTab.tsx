@@ -4,13 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { OpportunityWithAuthor } from "@/types/opportunity/types";
 import { OpportunitiesDataTable } from "./OpportunitiesDataTable";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export function OpportunitiesManagementTab() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityWithAuthor | null>(null);
 
+  const { data: opportunities = [], isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['admin-opportunities'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          *,
+          profiles!opportunities_author_id_fkey(
+            id,
+            full_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return data.map(opp => ({
+        ...opp,
+        author: opp.profiles
+      })) as OpportunityWithAuthor[];
+    }
+  });
+
   const handleEditOpportunity = (opportunityId: string) => {
-    // For now, we'll just log the ID since we need to fetch the full opportunity data
     console.log('Edit opportunity:', opportunityId);
+  };
+
+  const handleDataChange = () => {
+    refetch();
   };
 
   return (
@@ -23,7 +52,24 @@ export function OpportunitiesManagementTab() {
         </Button>
       </div>
       
-      <OpportunitiesDataTable onEdit={handleEditOpportunity} />
+      <OpportunitiesDataTable 
+        opportunities={opportunities}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        onEdit={handleEditOpportunity}
+        onDataChange={handleDataChange}
+        onDelete={() => {}}
+        onApprove={() => {}}
+        onReject={() => {}}
+        selectedStatuses={[]}
+        onStatusFilterChange={() => {}}
+        searchQuery=""
+        onSearchChange={() => {}}
+        sortField="created_at"
+        sortDirection="desc"
+        onSort={() => {}}
+      />
     </div>
   );
 }

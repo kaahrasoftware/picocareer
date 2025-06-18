@@ -1,4 +1,3 @@
-
 import { DataTable } from "@/components/ui/data-table";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +48,7 @@ export function UsersTab() {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [usersTabValue, setUsersTabValue] = useState<string>("overview");
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
 
   const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: ['dashboard-users', selectedUserType, selectedStatus, startDate, endDate],
@@ -313,11 +313,15 @@ export function UsersTab() {
         </TabsContent>
       </Tabs>
 
-      <UserProfileDetailsDialog 
-        userId={selectedUserId}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
+      {/* User Profile Details Dialog */}
+      {selectedUserId && (
+        <UserProfileDetailsDialog
+          userId={selectedUserId}
+          open={isUserDialogOpen}
+          onOpenChange={setIsUserDialogOpen}
+          onClose={() => setIsUserDialogOpen(false)}
+        />
+      )}
     </div>
   );
 }

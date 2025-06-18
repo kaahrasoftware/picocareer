@@ -60,7 +60,6 @@ export function SelectWithCustomOption({
     setIsSearching(true);
     
     try {
-      // For longer queries, fetch from database
       if (query.length >= 2) {
         const safeQuery = String(query).toLowerCase();
         
@@ -79,7 +78,13 @@ export function SelectWithCustomOption({
         
         if (error) {
           console.error('Search error:', error);
-          throw error;
+          // Fall back to local filtering on error
+          const filtered = options.filter(option => {
+            const searchValue = String(option[titleField] || '').toLowerCase();
+            return searchValue.includes(safeQuery);
+          });
+          setFilteredOptions(filtered);
+          return;
         }
         
         if (data && data.length > 0) {
@@ -87,7 +92,10 @@ export function SelectWithCustomOption({
           const combinedOptions = [...options];
           data.forEach((item: any) => {
             if (!combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push(item as QueryResult);
+              combinedOptions.push({
+                id: item.id,
+                [titleField]: item[titleField]
+              } as QueryResult);
             }
           });
           

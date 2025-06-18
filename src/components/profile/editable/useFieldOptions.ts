@@ -26,18 +26,26 @@ export function useFieldOptions(fieldName: string) {
       const table = tableMap[fieldName as FieldName];
       const titleField: TitleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
 
-      const { data, error } = await supabase
-        .from(table)
-        .select(`id, ${titleField}`)
-        .eq('status', 'Approved')
-        .order(titleField);
-      
-      if (error) {
-        console.error('Error fetching options:', error);
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select(`id, ${titleField}`)
+          .eq('status', 'Approved')
+          .order(titleField);
+        
+        if (error) {
+          console.error('Error fetching options:', error);
+          return [];
+        }
+
+        return (data || []).map(item => ({
+          id: item.id,
+          [titleField]: item[titleField]
+        })) as QueryResult[];
+      } catch (error) {
+        console.error('Error in useFieldOptions:', error);
         return [];
       }
-
-      return (data as QueryResult[]) || [];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });

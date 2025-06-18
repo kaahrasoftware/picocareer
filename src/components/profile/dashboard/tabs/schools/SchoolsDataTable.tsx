@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { School, SchoolStatus } from "@/types/database/schools";
 import {
@@ -36,6 +35,7 @@ import { SchoolDetailsDialog } from "./SchoolDetailsDialog";
 import { usePaginatedSchools, SortField, SortDirection } from "@/hooks/usePaginatedSchools";
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { PageSizeSelector } from "@/components/common/PageSizeSelector";
+import { useQuery } from "@tanstack/react-query";
 
 interface SchoolsDataTableProps {
   onEditSchool: (school: School) => void;
@@ -145,6 +145,46 @@ export function SchoolsDataTable({ onEditSchool, onDataChange }: SchoolsDataTabl
   // Calculate display range
   const startIndex = (page - 1) * pageSize + 1;
   const endIndex = Math.min(startIndex + schools.length - 1, totalSchools);
+
+  const { data: paginatedData, isLoading, error, refetch } = useQuery({
+    queryKey: ['admin-schools', page, pageSize, searchQuery, statusFilter, sortField, sortDirection],
+    queryFn: async () => {
+      let query = supabase
+        .from('schools')
+        .select('*', { count: 'exact' });
+
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`);
+      }
+
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      query = query
+        .order(sortField, { ascending: sortDirection === 'asc' })
+        .range(from, to);
+
+      const { data, error, count } = await query;
+      
+      if (error) throw error;
+
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize)
+      };
+    }
+  });
+
+  const handleDataChange = () => {
+    refetch();
+  };
 
   return (
     <div className="space-y-4">
