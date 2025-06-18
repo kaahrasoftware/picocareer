@@ -1,4 +1,3 @@
-
 import { useForm, Controller } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ export function AnnouncementForm({
       title: announcement?.title || "",
       content: announcement?.content || "",
       category: announcement?.category || "general",
-      is_pinned: announcement?.is_pinned || false
+      is_pinned: false
     }
   });
 

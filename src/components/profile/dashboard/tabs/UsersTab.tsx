@@ -16,10 +16,7 @@ interface UserProfile {
   last_name: string;
   avatar_url: string;
   created_at: string;
-  last_sign_in_at: string;
-  role: string;
-  is_mentor: boolean;
-  is_verified: boolean;
+  user_type: "admin" | "mentor" | "mentee" | "editor";
 }
 
 export function UsersTab() {
@@ -81,9 +78,7 @@ export function UsersTab() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {user.is_mentor && <Badge variant="secondary">Mentor</Badge>}
-                  {user.is_verified && <Badge variant="default">Verified</Badge>}
-                  <Badge variant="outline">{user.role || 'User'}</Badge>
+                  <Badge variant="outline">{user.user_type || 'User'}</Badge>
                 </div>
               </div>
             </CardHeader>
@@ -94,12 +89,6 @@ export function UsersTab() {
                     <Calendar className="h-4 w-4" />
                     Joined: {new Date(user.created_at).toLocaleDateString()}
                   </div>
-                  {user.last_sign_in_at && (
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
-                      Last active: {new Date(user.last_sign_in_at).toLocaleDateString()}
-                    </div>
-                  )}
                 </div>
                 <Button 
                   size="sm" 

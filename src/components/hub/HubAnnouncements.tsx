@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -123,7 +122,7 @@ export function HubAnnouncements({
               refetch();
             }} 
             onCancel={handleFormClose}
-            existingAnnouncement={editingAnnouncement || undefined}
+            announcement={editingAnnouncement || undefined}
           />
         </DialogContent>
       </Dialog>
