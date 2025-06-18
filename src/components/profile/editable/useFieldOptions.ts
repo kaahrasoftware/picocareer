@@ -42,20 +42,17 @@ export function useFieldOptions(fieldName: string) {
           return [];
         }
 
-        return data
-          .filter((item): item is Record<string, any> => item !== null && typeof item === 'object')
-          .map(item => {
-            if (!item || !item.id) {
-              return null;
-            }
-            
-            const titleValue = item[fieldConfig.titleField];
-            return {
-              id: item.id,
-              name: typeof titleValue === 'string' ? titleValue : ''
-            };
-          })
-          .filter((item): item is { id: string; name: string } => item !== null);
+        return data.map(item => {
+          if (!item || typeof item !== 'object' || !item.id) {
+            return null;
+          }
+          
+          const titleValue = item[fieldConfig.titleField as keyof typeof item];
+          return {
+            id: item.id,
+            name: typeof titleValue === 'string' ? titleValue : ''
+          };
+        }).filter((item): item is { id: string; name: string } => item !== null);
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];

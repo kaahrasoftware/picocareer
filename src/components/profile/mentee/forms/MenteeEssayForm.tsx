@@ -1,107 +1,163 @@
-import React, { useState } from 'react';
+
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField } from "@/components/forms/FormField";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { MenteeEssayResponse } from '@/types/profile/types';
+
+interface MenteeEssay {
+  id?: string;
+  prompt_id: string;
+  response_text: string;
+  is_draft: boolean;
+}
+
+interface FormFields {
+  prompt_id: string;
+  response_text: string;
+  is_draft: boolean;
+}
 
 interface MenteeEssayFormProps {
   menteeId: string;
-  essay?: MenteeEssayResponse;
-  onClose: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  existingEssay?: MenteeEssay;
 }
 
-export function MenteeEssayForm({ menteeId, essay, onClose }: MenteeEssayFormProps) {
-  const [title, setTitle] = useState(essay?.title || "");
-  const [content, setContent] = useState(essay?.content || "");
-  const [isSaving, setIsSaving] = useState(false);
+export function MenteeEssayForm({ 
+  menteeId, 
+  onSuccess, 
+  onCancel,
+  existingEssay
+}: MenteeEssayFormProps) {
   const { toast } = useToast();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<FormFields>({
+    defaultValues: {
+      prompt_id: existingEssay?.prompt_id || "",
+      response_text: existingEssay?.response_text || "",
+      is_draft: existingEssay?.is_draft ?? false
+    }
+  });
 
-    if (!title.trim() || !content.trim()) {
+  const onSubmit = async (data: FormFields) => {
+    if (!profile?.id) {
       toast({
-        title: "Error",
-        description: "Title and content cannot be empty.",
+        title: "Authentication Required",
+        description: "Please sign in to create essays.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsSaving(true);
-    try {
-      const essayData = {
-        mentee_id: menteeId,
-        title: title.trim(),
-        content: content.trim(),
-      };
-
-      let query = supabase.from('mentee_essays');
-      if (essay?.id) {
-        query = query.update(essayData).eq('id', essay.id);
-      } else {
-        query = query.insert(essayData);
-      }
-
-      const { data, error } = await query.select().single();
-
-      if (error) throw error;
-
+    if (!data.prompt_id) {
       toast({
-        title: "Success",
-        description: `Essay ${essay ? 'updated' : 'created'} successfully!`,
-      });
-      onClose();
-    } catch (error: any) {
-      console.error("Error saving essay:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save essay. Please try again.",
+        title: "Validation Error",
+        description: "Please select a prompt.",
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
+      return;
+    }
+
+    try {
+      const formData = {
+        mentee_id: menteeId,
+        prompt_id: data.prompt_id,
+        response_text: data.response_text || '',
+        is_draft: data.is_draft,
+        word_count: data.response_text?.split(' ').length || 0,
+        version: 1
+      };
+
+      const { data: essayData, error } = await supabase
+        .from('mentee_essay_responses')
+        .insert([formData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Essay created successfully.",
+      });
+
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error('Error with essay:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create essay. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{essay ? "Edit Essay" : "Add New Essay"}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Input
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Controller
+          control={form.control}
+          name="prompt_id"
+          rules={{ required: "Prompt is required" }}
+          render={({ field }) => (
+            <FormField
+              name="prompt_id"
+              field={field}
+              label="Prompt ID"
               type="text"
-              placeholder="Essay Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter prompt ID"
               required
             />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Essay Content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="response_text"
+          render={({ field }) => (
+            <FormField
+              name="response_text"
+              field={field}
+              label="Response Text"
+              type="textarea"
+              placeholder="Enter response text"
               required
-              className="min-h-[100px]"
             />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+          )}
+        />
+
+        <Controller
+          control={form.control}
+          name="is_draft"
+          render={({ field }) => (
+            <FormField
+              name="is_draft"
+              field={field}
+              label="Is Draft"
+              type="checkbox"
+            />
+          )}
+        />
+
+        <div className="flex justify-end gap-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          )}
+          <Button type="submit">
+            {form.formState.isSubmitting ? 'Creating...' : 'Create Essay'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

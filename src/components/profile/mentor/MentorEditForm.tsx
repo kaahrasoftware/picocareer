@@ -98,55 +98,57 @@ export function MentorEditForm({ profile, onSuccess, onCancel }: MentorEditFormP
     }
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = async () => {
+    if (!userProfile?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to update your profile.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      if (!userProfile?.id) {
+      // Delete existing session types
+      const { error: deleteError } = await supabase
+        .from('mentor_session_types')
+        .delete()
+        .eq('profile_id', profile.id);
+
+      if (deleteError) {
+        console.error('Error deleting existing session types:', deleteError);
         toast({
-          title: "Authentication Required",
-          description: "Please sign in to update your profile.",
+          title: "Error",
+          description: "Failed to update session types. Please try again.",
           variant: "destructive",
         });
         return;
       }
 
-      // Delete existing session types
-      await supabase
-        .from('mentor_session_types')
-        .delete()
-        .eq('profile_id', profile?.id);
-
-      // Insert new session types with proper enum conversion
+      // Insert new session types
       if (sessionTypes.length > 0) {
-        const sessionTypesToInsert = sessionTypes.map(sessionType => ({
-          profile_id: profile?.id,
+        const sessionTypesData = sessionTypes.map(sessionType => ({
+          profile_id: profile.id,
           type: sessionType.type,
           duration: sessionType.duration,
           price: sessionType.price,
           description: sessionType.description,
-          meeting_platform: sessionType.meeting_platform.map(platform => {
-            // Convert frontend enum values to database enum values
-            switch (platform) {
-              case "whatsapp":
-                return "WhatsApp";
-              case "google_meet":
-                return "Google Meet";
-              case "telegram":
-                return "Telegram";
-              case "phone_call":
-                return "Phone Call";
-              default:
-                return platform;
-            }
-          })
+          meeting_platform: convertPlatformToDb(sessionType.meeting_platform)
         }));
 
         const { error: sessionTypesError } = await supabase
           .from('mentor_session_types')
-          .insert(sessionTypesToInsert);
+          .upsert(sessionTypesData);
 
-        if (sessionTypesError) throw sessionTypesError;
+        if (sessionTypesError) {
+          console.error('Error upserting session types:', sessionTypesError);
+          toast({
+            title: "Error",
+            description: "Failed to update session types. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       toast({
@@ -208,7 +210,7 @@ export function MentorEditForm({ profile, onSuccess, onCancel }: MentorEditFormP
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <h3 className="text-xl font-semibold">Session Types</h3>
           <p className="text-sm text-muted-foreground">

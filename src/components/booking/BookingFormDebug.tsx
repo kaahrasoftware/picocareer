@@ -1,140 +1,225 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { useState, useEffect } from "react";
+import { MeetingPlatform } from "@/types/calendar";
+import { DateSelector } from "./DateSelector";
+import { TimeSlotSelector } from "./TimeSlotSelector";
+import { SessionTypeSelector } from "./SessionTypeSelector";
+import { SessionNote } from "./SessionNote";
+import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
+import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
+import { SessionPaymentDialogDebug } from "./SessionPaymentDialogDebug";
+import { useSessionTypes } from "@/hooks/useSessionTypes";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useSessionPaymentDebug } from "@/hooks/useSessionPaymentDebug";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { TimeSlotSelector } from "./TimeSlotSelector";
 
 interface BookingFormProps {
   mentorId: string;
-  onBookingComplete: () => void;
+  mentorName: string; // Add this prop to get mentor name
+  onFormChange: (formData: {
+    date?: Date;
+    selectedTime?: string;
+    sessionType?: string;
+    note: string;
+    meetingPlatform: MeetingPlatform;
+    menteePhoneNumber?: string;
+    menteeTelegramUsername?: string;
+  }) => void;
+  onSuccess: () => void;
 }
 
-export function BookingFormDebug({ mentorId, onBookingComplete }: BookingFormProps) {
-  const [selectedSessionType, setSelectedSessionType] = useState<{ id: string; type: string; duration: number; price: number } | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTime, setSelectedTime] = useState("");
-  const [notes, setNotes] = useState("");
-  const { toast } = useToast();
+export function BookingFormDebug({ mentorId, mentorName, onFormChange, onSuccess }: BookingFormProps) {
+  const [date, setDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  const [sessionType, setSessionType] = useState<string>();
+  const [note, setNote] = useState("");
+  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { getSetting } = useUserSettings(profile?.id || '');
-  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const { processPaymentAndBooking } = useSessionPaymentDebug();
+  const sessionTypes = useSessionTypes(mentorId, true);
+  
+  // Get available platforms from session types
+  const selectedSessionTypeData = sessionTypes.find(type => type.id === sessionType);
+  const availablePlatforms: MeetingPlatform[] = selectedSessionTypeData?.meeting_platform || ["Google Meet"];
+  
+  const formData = {
+    date,
+    selectedTime,
+    sessionType,
+    note,
+    meetingPlatform,
+    menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
+    menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
+  };
 
-  const sessionTypes = [
-    { id: "1", type: "30-Minute Session", duration: 30, price: 50 },
-    { id: "2", type: "60-Minute Session", duration: 60, price: 100 },
-    { id: "3", type: "90-Minute Session", duration: 90, price: 150 },
-  ];
+  useEffect(() => {
+    onFormChange(formData);
+  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Reset time selection when date changes
+  useEffect(() => {
+    setSelectedTime(undefined);
+  }, [date]);
 
-    if (!selectedSessionType) {
-      toast({
-        title: "Error",
-        description: "Please select a session type",
-        variant: "destructive",
-      });
+  const handleContinueToPayment = () => {
+    if (!date || !selectedTime || !sessionType) return;
+    console.log('🎯 Debug: Opening payment dialog with debug mode');
+    setShowPaymentDialog(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!profile?.full_name) {
+      console.error('❌ Debug: No profile or full name found');
       return;
     }
 
-    if (!selectedDate) {
-      toast({
-        title: "Error",
-        description: "Please select a date",
-        variant: "destructive",
-      });
-      return;
-    }
+    console.log('🚀 Debug: Starting payment with enhanced debug notification handling');
+    console.log('👤 Debug: Mentor Name:', mentorName);
+    console.log('👤 Debug: Mentee Name:', profile.full_name);
 
-    if (!selectedTime) {
-      toast({
-        title: "Error",
-        description: "Please select a time",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: `Booking Confirmed for ${format(selectedDate, 'PPP')} at ${selectedTime} ${userTimezone}`,
+    await processPaymentAndBooking({
+      mentorId,
+      mentorName, // Pass the mentor name to the payment handler
+      menteeName: profile.full_name,
+      formData,
+      onSuccess: () => {
+        console.log('✅ Debug: Payment and booking completed successfully');
+        setShowPaymentDialog(false);
+        onSuccess();
+      },
+      onError: (error) => {
+        console.error('❌ Debug: Booking error:', error);
+        // Keep dialog open so user can try again
+      }
     });
   };
 
+  const canProceedToPayment = date && selectedTime && sessionType;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <Label htmlFor="session-type" className="block text-sm font-medium mb-2">
-          Session Type
-        </Label>
-        <Select onValueChange={(value) => {
-          const session = sessionTypes.find(s => s.id === value);
-          setSelectedSessionType(session || null);
-        }}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a session type" />
-          </SelectTrigger>
-          <SelectContent>
-            {sessionTypes.map((session) => (
-              <SelectItem key={session.id} value={session.id}>
-                {session.type} - ${session.price}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="date" className="block text-sm font-medium mb-2">
-          Date
-        </Label>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          className="rounded-md border"
-        />
-      </div>
-
-      {selectedDate && selectedSessionType && (
-        <div>
-          <label className="block text-sm font-medium mb-2">Available Times</label>
-          <TimeSlotSelector
-            selectedDate={selectedDate}
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Left column - Calendar */}
+        <div className="bg-white/5 rounded-lg p-4">
+          <DateSelector
+            selectedDate={date}
+            onDateSelect={setDate}
             mentorId={mentorId}
-            selectedTime={selectedTime}
-            onTimeSelect={setSelectedTime}
-            selectedSessionType={selectedSessionType}
           />
         </div>
-      )}
 
-      <div>
-        <Label htmlFor="notes" className="block text-sm font-medium mb-2">
-          Notes
-        </Label>
-        <Textarea
-          id="notes"
-          placeholder="Any specific topics you'd like to cover?"
-          rows={3}
-          className="w-full rounded-md border"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
+        {/* Right column - Form elements */}
+        <div className="space-y-4">
+          {sessionTypes.length > 0 && (
+            <div className="bg-white/5 rounded-lg p-4">
+              <SessionTypeSelector
+                sessionTypes={sessionTypes}
+                onSessionTypeSelect={setSessionType}
+              />
+            </div>
+          )}
+
+          {date && sessionType && (
+            <div className="bg-white/5 rounded-lg p-4">
+              <TimeSlotSelector
+                date={date}
+                mentorId={mentorId}
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+                selectedSessionType={sessionTypes.find(type => type.id === sessionType)}
+              />
+            </div>
+          )}
+
+          {sessionType && availablePlatforms.length > 0 && (
+            <div className="bg-white/5 rounded-lg p-4">
+              <MeetingPlatformSelector
+                value={meetingPlatform}
+                onValueChange={setMeetingPlatform}
+                availablePlatforms={availablePlatforms}
+              />
+
+              {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
+                <div className="mt-4">
+                  <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              )}
+
+              {meetingPlatform === "Telegram" && (
+                <div className="mt-4">
+                  <Label htmlFor="telegramUsername">Telegram Username</Label>
+                  <Input
+                    id="telegramUsername"
+                    type="text"
+                    placeholder="@username"
+                    value={telegramUsername}
+                    onChange={(e) => {
+                      let username = e.target.value;
+                      if (!username.startsWith('@') && username !== '') {
+                        username = '@' + username;
+                      }
+                      setTelegramUsername(username);
+                    }}
+                    className="mt-1"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-white/5 rounded-lg p-4">
+            <SessionNote
+              note={note}
+              onNoteChange={setNote}
+            />
+          </div>
+
+          <Button
+            className="w-full"
+            disabled={!canProceedToPayment}
+            onClick={handleContinueToPayment}
+          >
+            Continue to Payment (25 Tokens) - Debug Mode
+          </Button>
+
+          {/* Request Availability Button */}
+          <RequestAvailabilityButton
+            mentorId={mentorId}
+            userId={session?.user?.id}
+            onRequestComplete={() => {
+              console.log('Availability request completed');
+            }}
+          />
+        </div>
       </div>
 
-      <Button onClick={handleSubmit}>Confirm Booking</Button>
-    </div>
+      {/* Payment Dialog */}
+      <SessionPaymentDialogDebug
+        isOpen={showPaymentDialog}
+        onClose={() => setShowPaymentDialog(false)}
+        onConfirmPayment={handleConfirmPayment}
+        sessionDetails={{
+          mentorName: mentorName,
+          date: date || new Date(),
+          time: selectedTime || "",
+          sessionType: sessionTypes.find(type => type.id === sessionType)?.type || ""
+        }}
+      />
+    </>
   );
 }

@@ -78,12 +78,10 @@ export function TimeSlotSelector({
       {availableSlots.map((slot) => (
         <TimeSlotButton
           key={slot.id}
-          time={format(parseISO(slot.start_date_time), 'HH:mm')}
-          available={slot.is_available}
+          slot={slot}
           isSelected={selectedTime === slot.start_date_time}
-          onSelect={() => onTimeSelect(slot.start_date_time)}
-          mentorTimezone={slot.reference_timezone || 'UTC'}
-          date={selectedDate}
+          onClick={() => onTimeSelect(slot.start_date_time)}
+          sessionDuration={selectedSessionType?.duration || 60}
         />
       ))}
     </div>

@@ -21,17 +21,11 @@ interface FormFields {
   live_demo_url: string;
 }
 
-interface MenteeProjectFormProps {
-  menteeId: string;
-  project?: MenteeProject;
-  onClose: () => void;
-}
-
-export function MenteeProjectForm({ menteeId, project, onClose }: MenteeProjectFormProps) {
+export function MenteeProjectForm() {
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
-  const { menteeId: paramMenteeId } = useParams<{ menteeId: string }>();
+  const { menteeId } = useParams<{ menteeId: string }>();
   const navigate = useNavigate();
 
   const form = useForm<FormFields>({
@@ -50,7 +44,7 @@ export function MenteeProjectForm({ menteeId, project, onClose }: MenteeProjectF
   });
 
   const onSubmit = async (data: FormFields) => {
-    if (!profile?.id || !paramMenteeId) {
+    if (!profile?.id || !menteeId) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to submit the form.",
@@ -61,7 +55,7 @@ export function MenteeProjectForm({ menteeId, project, onClose }: MenteeProjectF
 
     try {
       const formData = {
-        mentee_id: paramMenteeId,
+        mentee_id: menteeId,
         title: data.title || '', // Make sure title is required
         description: data.description || '',
         status: data.status || 'in_progress',
@@ -84,7 +78,7 @@ export function MenteeProjectForm({ menteeId, project, onClose }: MenteeProjectF
         description: "Project details submitted successfully!",
       });
 
-      navigate(`/profile/${paramMenteeId}`);
+      navigate(`/profile/${menteeId}`);
     } catch (error) {
       console.error("Form submission error:", error);
       toast({

@@ -13,13 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
-import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
-
-interface QueryResult {
-  id: string;
-  name?: string;
-  title?: string;
-}
+import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
@@ -86,7 +80,7 @@ export function SelectWithCustomOption({
           console.error('Search error:', error);
           // Fall back to local filtering on error
           const filtered = options.filter(option => {
-            const searchValue = String(option[titleField as keyof QueryResult] || '').toLowerCase();
+            const searchValue = String(option[titleField] || '').toLowerCase();
             return searchValue.includes(safeQuery);
           });
           setFilteredOptions(filtered);
@@ -100,20 +94,17 @@ export function SelectWithCustomOption({
             if (item && item.id && !combinedOptions.some(existing => existing.id === item.id)) {
               const titleValue = item[titleField];
               if (titleValue) {
-                const newOption: QueryResult = { id: item.id };
-                if (titleField === 'name') {
-                  newOption.name = titleValue;
-                } else {
-                  newOption.title = titleValue;
-                }
-                combinedOptions.push(newOption);
+                combinedOptions.push({
+                  id: item.id,
+                  [titleField]: titleValue
+                } as QueryResult);
               }
             }
           });
           
           // Filter the combined results
           const filtered = combinedOptions.filter(option => {
-            const searchValue = String(option[titleField as keyof QueryResult] || '').toLowerCase();
+            const searchValue = String(option[titleField] || '').toLowerCase();
             return searchValue.includes(safeQuery);
           });
           
@@ -121,7 +112,7 @@ export function SelectWithCustomOption({
         } else {
           // If no results from API, filter local options
           const filtered = options.filter(option => {
-            const searchValue = String(option[titleField as keyof QueryResult] || '').toLowerCase();
+            const searchValue = String(option[titleField] || '').toLowerCase();
             return searchValue.includes(safeQuery);
           });
           setFilteredOptions(filtered);
@@ -131,7 +122,7 @@ export function SelectWithCustomOption({
       console.error(`Search error:`, error);
       // Fall back to local filtering on error
       const filtered = options.filter(option => {
-        const searchValue = String(option[titleField as keyof QueryResult] || '').toLowerCase();
+        const searchValue = String(option[titleField] || '').toLowerCase();
         return searchValue.includes(query.toLowerCase());
       });
       setFilteredOptions(filtered);
@@ -300,11 +291,9 @@ export function SelectWithCustomOption({
               filteredOptions.map((option) => {
                 if (!option || !option.id) return null;
                 
-                const displayValue = option[titleField as keyof QueryResult] || '';
-                
                 return (
                   <SelectItem key={option.id} value={option.id}>
-                    {displayValue}
+                    {option[titleField] || ''}
                   </SelectItem>
                 );
               })

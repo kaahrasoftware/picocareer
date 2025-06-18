@@ -25,7 +25,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminSessionsQuery } from '@/hooks/admin-sessions/useAdminSessionsQuery';
-import { useQuery } from '@tanstack/react-query';
 
 export function SessionManagementTab() {
   // State for filters and pagination
@@ -186,63 +185,6 @@ export function SessionManagementTab() {
       setIsSyncing(false);
     }
   };
-
-  // Fix the enum mapping issue by converting database values to frontend enum values
-  const convertMeetingPlatform = (platform: string): "whatsapp" | "google_meet" | "telegram" | "phone_call" => {
-    switch (platform) {
-      case "WhatsApp":
-        return "whatsapp";
-      case "Google Meet":
-        return "google_meet";
-      case "Telegram":
-        return "telegram";
-      case "Phone Call":
-        return "phone_call";
-      default:
-        return "google_meet";
-    }
-  };
-
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ['admin-sessions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          status,
-          scheduled_at,
-          notes,
-          meeting_link,
-          meeting_platform,
-          mentor:mentor_id (
-            id,
-            full_name,
-            avatar_url
-          ),
-          mentee:mentee_id (
-            id,
-            full_name,
-            avatar_url
-          ),
-          session_type:session_type_id (
-            id,
-            type,
-            duration,
-            price
-          )
-        `)
-        .order('scheduled_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Convert the meeting_platform values to match the expected enum
-      return (data || []).map(session => ({
-        ...session,
-        meeting_platform: convertMeetingPlatform(session.meeting_platform)
-      })) as MentorSession[];
-    }
-  });
 
   return (
     <div className="space-y-6">
