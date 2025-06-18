@@ -11,9 +11,9 @@ interface OpportunityWithAuthor {
   id: string;
   title: string;
   description: string;
-  organization: string;
+  company: string;
   location: string;
-  opportunity_type: string;
+  type: string;
   deadline: string;
   status: string;
   created_at: string;
@@ -65,11 +65,11 @@ export function OpportunitiesManagementTab() {
                 <div>
                   <CardTitle className="text-lg">{opportunity.title}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {opportunity.organization}
+                    {opportunity.company}
                   </p>
                 </div>
                 <Badge 
-                  variant={opportunity.status === 'Active' ? 'default' : 'secondary'}
+                  variant={opportunity.status === 'active' ? 'default' : 'secondary'}
                 >
                   {opportunity.status}
                 </Badge>
@@ -82,7 +82,7 @@ export function OpportunitiesManagementTab() {
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Building className="h-4 w-4" />
-                    {opportunity.opportunity_type}
+                    {opportunity.type}
                   </div>
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />

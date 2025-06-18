@@ -84,7 +84,7 @@ export function SelectWithCustomOption({
           const combinedOptions = [...options];
           data.forEach(item => {
             if (!combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push(item as any);
+              combinedOptions.push(item);
             }
           });
           

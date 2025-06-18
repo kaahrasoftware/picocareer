@@ -14,9 +14,10 @@ interface Scholarship {
   description: string;
   amount: number;
   deadline: string;
+  eligibility_criteria: string[];
   application_url: string;
   status: string;
-  provider_name: string;
+  provider: string;
   created_at: string;
   updated_at: string;
 }
@@ -70,11 +71,11 @@ export function ScholarshipManagementTab() {
                 <div>
                   <CardTitle className="text-lg">{scholarship.title}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {scholarship.provider_name}
+                    {scholarship.provider}
                   </p>
                 </div>
                 <Badge 
-                  variant={scholarship.status === 'Active' ? 'default' : 'secondary'}
+                  variant={scholarship.status === 'active' ? 'default' : 'secondary'}
                 >
                   {scholarship.status}
                 </Badge>
@@ -124,12 +125,13 @@ export function ScholarshipManagementTab() {
 
       {selectedScholarship && (
         <ScholarshipDetailsDialog
-          scholarship={selectedScholarship}
-          open={detailsDialogOpen}
-          onOpenChange={(open) => {
-            setDetailsDialogOpen(open);
-            if (!open) setSelectedScholarship(null);
+          scholarshipId={selectedScholarship.id}
+          isOpen={detailsDialogOpen}
+          onClose={() => {
+            setDetailsDialogOpen(false);
+            setSelectedScholarship(null);
           }}
+          onScholarshipUpdated={handleScholarshipUpdated}
         />
       )}
     </div>

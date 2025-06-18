@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ export function SessionManagementTab() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [sortBy, setSortBy] = useState<string>("scheduled_at");
-  const [sortDirection, setSortDirection<'asc' | 'desc'>>('desc');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   // State for session details dialog
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);

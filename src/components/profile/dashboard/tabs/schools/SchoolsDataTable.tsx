@@ -61,7 +61,7 @@ export function SchoolsDataTable({ onEditSchool, onDataChange }: SchoolsDataTabl
     page,
     setPage,
     totalPages,
-    mutate
+    refetch
   } = usePaginatedSchools({
     pageSize,
     sortField,
@@ -117,7 +117,7 @@ export function SchoolsDataTable({ onEditSchool, onDataChange }: SchoolsDataTabl
         title: "School deleted",
         description: `${selectedSchool.name} has been successfully deleted.`,
       });
-      mutate();
+      refetch();
       if (onDataChange) onDataChange();
     } catch (error) {
       console.error("Error deleting school:", error);

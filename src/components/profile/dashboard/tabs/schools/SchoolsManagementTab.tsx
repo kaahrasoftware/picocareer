@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,7 @@ export function SchoolsManagementTab() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <p className="text-sm">{school.description}</p>
                 
                 <div className="flex items-center gap-6 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
