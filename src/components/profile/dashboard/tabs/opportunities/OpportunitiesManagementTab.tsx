@@ -1,122 +1,43 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, MapPin, Calendar, Building } from "lucide-react";
-
-interface OpportunityWithAuthor {
-  id: string;
-  title: string;
-  description: string;
-  company: string;
-  location: string;
-  type: string;
-  deadline: string;
-  status: string;
-  created_at: string;
-  author_id: string;
-}
+import { Plus } from "lucide-react";
+import { OpportunityWithAuthor } from "@/types/opportunity/types";
+import { OpportunitiesDataTable } from "./OpportunitiesDataTable";
 
 export function OpportunitiesManagementTab() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityWithAuthor | null>(null);
 
-  const { data: opportunities, isLoading } = useQuery({
-    queryKey: ['admin-opportunities'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const handleEditOpportunity = (opportunityId: string) => {
-    const opportunity = opportunities?.find(opp => opp.id === opportunityId);
-    if (opportunity) {
-      setSelectedOpportunity(opportunity);
-    }
+  const handleEditOpportunity = (opportunity: OpportunityWithAuthor) => {
+    // Ensure analytics compatibility
+    const normalizedOpportunity: OpportunityWithAuthor = {
+      ...opportunity,
+      analytics: opportunity.analytics ? {
+        id: opportunity.analytics.id || '',
+        opportunity_id: opportunity.analytics.opportunity_id || opportunity.id,
+        views_count: opportunity.analytics.views_count || 0,
+        checked_out_count: opportunity.analytics.checked_out_count || 0,
+        bookmarks_count: opportunity.analytics.bookmarks_count || 0,
+        created_at: opportunity.analytics.created_at || new Date().toISOString(),
+        updated_at: opportunity.analytics.updated_at || new Date().toISOString(),
+        applications_count: opportunity.analytics.applications_count || 0,
+      } : undefined
+    };
+    
+    setSelectedOpportunity(normalizedOpportunity);
   };
-
-  if (isLoading) {
-    return <div>Loading opportunities...</div>;
-  }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Opportunities Management</h3>
+        <h2 className="text-2xl font-bold">Opportunities Management</h2>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Opportunity
         </Button>
       </div>
-
-      <div className="grid gap-6">
-        {opportunities?.map((opportunity) => (
-          <Card key={opportunity.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {opportunity.company}
-                  </p>
-                </div>
-                <Badge 
-                  variant={opportunity.status === 'active' ? 'default' : 'secondary'}
-                >
-                  {opportunity.status}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm">{opportunity.description}</p>
-                
-                <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Building className="h-4 w-4" />
-                    {opportunity.type}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {opportunity.location}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleEditOpportunity(opportunity.id)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      
+      <OpportunitiesDataTable onEdit={handleEditOpportunity} />
     </div>
   );
 }
