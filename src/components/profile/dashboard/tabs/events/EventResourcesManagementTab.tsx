@@ -41,10 +41,6 @@ export function EventResourcesManagementTab() {
   };
 
   const handleAddResource = () => {
-    if (selectedEventId === 'all') {
-      // Show a message or do nothing - button should be disabled
-      return;
-    }
     setShowCreateForm(true);
   };
 
@@ -85,8 +81,7 @@ export function EventResourcesManagementTab() {
             </SelectContent>
           </Select>
           <Button 
-            onClick={handleAddResource} 
-            disabled={selectedEventId === 'all'}
+            onClick={handleAddResource}
             className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -98,7 +93,7 @@ export function EventResourcesManagementTab() {
       {selectedEventId === 'all' && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            Select a specific event to add new resources. Resources are organized by event below.
+            You can add resources to any event or select a specific event to filter resources. Resources are organized by event below.
           </p>
         </div>
       )}
@@ -114,6 +109,10 @@ export function EventResourcesManagementTab() {
                 : "No resources found for the selected event"
               }
             </p>
+            <Button onClick={handleAddResource}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Resource
+            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -192,11 +191,14 @@ export function EventResourcesManagementTab() {
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Event Resource</DialogTitle>
+            <DialogTitle>
+              {selectedEventId === 'all' ? 'Add Event Resource' : `Add Resource to Event`}
+            </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
             <EventResourceForm
-              eventId={selectedEventId}
+              eventId={selectedEventId === 'all' ? undefined : selectedEventId}
+              events={events}
               onSuccess={handleFormSuccess}
               onCancel={handleFormCancel}
             />

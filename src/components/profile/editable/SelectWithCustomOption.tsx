@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Check, X } from 'lucide-react';
 import { useFieldOptions } from './useFieldOptions';
-import { FieldName, QueryResult } from './types';
+import { FieldName } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
