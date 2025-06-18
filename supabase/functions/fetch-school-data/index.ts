@@ -14,6 +14,26 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Function to clean and extract JSON from OpenAI response
+function extractJsonFromResponse(response: string): string {
+  console.log('Raw AI Response:', response);
+  
+  // Remove leading/trailing whitespace
+  let cleaned = response.trim();
+  
+  // Check if response is wrapped in markdown code blocks
+  const jsonBlockMatch = cleaned.match(/```(?:json)?\s*\n([\s\S]*?)\n\s*```/);
+  if (jsonBlockMatch) {
+    cleaned = jsonBlockMatch[1].trim();
+    console.log('Extracted JSON from code block:', cleaned);
+  }
+  
+  // Additional cleanup for any remaining backticks or markdown
+  cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  
+  return cleaned;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -72,7 +92,7 @@ You are a comprehensive school data researcher. Please provide detailed informat
   "average_salary_after_graduation": "Average starting salary (number)"
 }
 
-Please research and provide accurate, current information. For URLs, provide real, working URLs when possible. For images, suggest realistic image URLs that would be appropriate for the school.
+Please research and provide accurate, current information. For URLs, provide real, working URLs when possible. For images, suggest realistic image URLs that would be appropriate for the school. Return ONLY the JSON object without any markdown formatting or code blocks.
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -84,7 +104,7 @@ Please research and provide accurate, current information. For URLs, provide rea
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only.' },
+          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only, without any markdown formatting or code blocks.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
@@ -98,15 +118,23 @@ Please research and provide accurate, current information. For URLs, provide rea
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('AI Response:', aiResponse);
+    // Clean and extract JSON from the response
+    const cleanedResponse = extractJsonFromResponse(aiResponse);
 
-    // Parse the AI response
+    // Parse the cleaned JSON
     let schoolData;
     try {
-      schoolData = JSON.parse(aiResponse);
+      schoolData = JSON.parse(cleanedResponse);
+      console.log('Successfully parsed school data:', schoolData);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Invalid response format from AI');
+      console.error('Failed to parse cleaned response:', parseError);
+      console.error('Cleaned response was:', cleanedResponse);
+      throw new Error(`Invalid JSON format from AI: ${parseError.message}`);
+    }
+
+    // Validate that we have a valid object
+    if (!schoolData || typeof schoolData !== 'object') {
+      throw new Error('AI response is not a valid object');
     }
 
     // Get current school data for comparison
