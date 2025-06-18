@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Upload, FileText, Download, Eye, Edit, Trash2, Calendar } from 'lucide-react';
 import { EventResourceForm } from '@/components/event/EventResourceForm';
 import { useAllEventResources } from '@/hooks/useAllEventResources';
@@ -40,23 +39,6 @@ export function EventResourcesManagementTab() {
     }
   };
 
-  const handleAddResource = () => {
-    if (selectedEventId === 'all') {
-      // Show a message or do nothing - button should be disabled
-      return;
-    }
-    setShowCreateForm(true);
-  };
-
-  const handleFormSuccess = () => {
-    setShowCreateForm(false);
-    // Resources will be refetched automatically via react-query
-  };
-
-  const handleFormCancel = () => {
-    setShowCreateForm(false);
-  };
-
   if (isLoading) {
     return <div>Loading resources...</div>;
   }
@@ -84,12 +66,8 @@ export function EventResourcesManagementTab() {
               ))}
             </SelectContent>
           </Select>
-          <Button 
-            onClick={handleAddResource} 
-            disabled={selectedEventId === 'all'}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
+          <Button onClick={() => setShowCreateForm(true)} disabled={selectedEventId === 'all'}>
+            <Plus className="h-4 w-4 mr-2" />
             Add Resource
           </Button>
         </div>
@@ -189,20 +167,13 @@ export function EventResourcesManagementTab() {
         </div>
       )}
 
-      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Event Resource</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <EventResourceForm
-              eventId={selectedEventId}
-              onSuccess={handleFormSuccess}
-              onCancel={handleFormCancel}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {showCreateForm && selectedEventId !== 'all' && (
+        <EventResourceForm
+          eventId={selectedEventId}
+          onSuccess={() => setShowCreateForm(false)}
+          onCancel={() => setShowCreateForm(false)}
+        />
+      )}
     </div>
   );
 }

@@ -19,38 +19,25 @@ export function useFieldOptions(fieldName: FieldName) {
   return useQuery({
     queryKey: ['field-options', fieldName, tableName],
     queryFn: async (): Promise<QueryResult[]> => {
-      // Handle different table structures based on table name
+      let query = supabase.from(tableName).select('id, title, name, status');
+      
+      // Apply filters based on table
       if (tableName === 'careers' || tableName === 'majors') {
-        const { data, error } = await supabase
-          .from(tableName as any)
-          .select('id, title, status')
-          .eq('status', 'Approved');
-        
-        if (error) throw error;
-        
-        return (data || []).map(item => ({
-          id: item.id,
-          title: item.title,
-          name: item.title,
-          status: item.status
-        }));
+        query = query.select('id, title, status').eq('status', 'Approved');
       } else if (tableName === 'companies' || tableName === 'schools') {
-        const { data, error } = await supabase
-          .from(tableName as any)
-          .select('id, name, status')
-          .eq('status', 'Approved');
-        
-        if (error) throw error;
-        
-        return (data || []).map(item => ({
-          id: item.id,
-          title: item.name,
-          name: item.name,
-          status: item.status
-        }));
+        query = query.select('id, name, status').eq('status', 'Approved');
       }
       
-      return [];
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      return (data || []).map(item => ({
+        id: item.id,
+        title: item.title || item.name,
+        name: item.name || item.title,
+        status: item.status
+      }));
     },
     enabled: !!fieldName && !!tableName,
   });
