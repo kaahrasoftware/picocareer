@@ -27,8 +27,14 @@ export function SchoolFormDialog({ isOpen, open, onClose, school, onSuccess }: S
     }, 1000);
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={dialogOpen} onOpenChange={(newOpen) => !newOpen && onClose()}>
+    <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{school ? 'Edit School' : 'Add School'}</DialogTitle>

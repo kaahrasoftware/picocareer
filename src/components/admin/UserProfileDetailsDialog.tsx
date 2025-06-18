@@ -29,7 +29,8 @@ export function UserProfileDetailsDialog({
   const handleOpenChange = (newOpen: boolean) => {
     if (onOpenChange) {
       onOpenChange(newOpen);
-    } else if (!newOpen) {
+    }
+    if (!newOpen) {
       onClose();
     }
   };

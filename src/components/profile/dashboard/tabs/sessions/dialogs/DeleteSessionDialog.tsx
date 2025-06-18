@@ -166,23 +166,23 @@ export function DeleteSessionDialog({
         
       if (deleteError) throw deleteError;
       
-      // 4. Create notifications for both parties
+      // 4. Create notifications for both parties with correct types
       const notificationsToCreate = [
         {
           profile_id: sessionData.mentor_id,
           title: "Session Deleted",
           message: `Your session with ${sessionData.mentee.full_name} has been deleted by an administrator.`,
-          type: "session_update",
+          type: "session_update" as const,
           action_url: "/profile?tab=calendar",
-          category: "general"
+          category: "general" as const
         },
         {
           profile_id: sessionData.mentee_id,
           title: "Session Deleted",
           message: `Your session with ${sessionData.mentor.full_name} has been deleted by an administrator.`,
-          type: "session_update",
+          type: "session_update" as const,
           action_url: "/profile?tab=calendar",
-          category: "general"
+          category: "general" as const
         }
       ];
       
