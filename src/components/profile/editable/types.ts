@@ -4,10 +4,16 @@ export type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'posi
 export type TitleField = 'title' | 'name';
 export type Status = 'Pending' | 'Approved' | 'Rejected';
 
+export interface QueryResult {
+  id: string;
+  title?: string;
+  name?: string;
+}
+
 export interface InsertData {
   majors: {
     title: string;
-    description?: string;
+    description: string;
     status: Status;
   };
   schools: {
@@ -20,7 +26,7 @@ export interface InsertData {
   };
   careers: {
     title: string;
-    description?: string;
+    description: string;
     status: Status;
   };
 }

@@ -13,11 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
-import { TableName, FieldName, TitleField, InsertData, Status } from "./types";
+import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
 
 interface SelectWithCustomOptionProps {
   value: string;
-  options: Array<{ id: string; title?: string; name?: string; }>;
+  options: QueryResult[];
   placeholder: string;
   handleSelectChange: (name: string, value: string) => void;
   tableName: TableName;
@@ -39,7 +39,7 @@ export function SelectWithCustomOption({
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredOptions, setFilteredOptions] = useState(options);
+  const [filteredOptions, setFilteredOptions] = useState<QueryResult[]>(options);
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -77,14 +77,17 @@ export function SelectWithCustomOption({
         
         const { data, error } = await supabaseQuery;
         
-        if (error) throw error;
+        if (error) {
+          console.error('Search error:', error);
+          throw error;
+        }
         
         if (data && data.length > 0) {
           // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
-          data.forEach(item => {
+          data.forEach((item: any) => {
             if (!combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push(item);
+              combinedOptions.push(item as QueryResult);
             }
           });
           
@@ -103,13 +106,6 @@ export function SelectWithCustomOption({
           });
           setFilteredOptions(filtered);
         }
-      } else {
-        // For short queries just filter the local options
-        const filtered = options.filter(option => {
-          const searchValue = String(option[titleField] || '').toLowerCase();
-          return searchValue.includes(query.toLowerCase());
-        });
-        setFilteredOptions(filtered);
       }
     } catch (error) {
       console.error(`Search error:`, error);
@@ -163,18 +159,17 @@ export function SelectWithCustomOption({
         return;
       }
 
-      // Create new entry
-      const insertData: InsertData[typeof tableName] = {
-        status: 'Pending' as Status,
-        ...(tableName === 'majors' || tableName === 'careers' 
-          ? {
-              title: customValue,
-              description: `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`
-            }
-          : {
-              name: customValue
-            })
+      // Create new entry with proper typing
+      let insertData: any = {
+        status: 'Pending' as Status
       };
+
+      if (tableName === 'majors' || tableName === 'careers') {
+        insertData.title = customValue;
+        insertData.description = `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`;
+      } else {
+        insertData.name = customValue;
+      }
 
       const { data, error } = await supabase
         .from(tableName)

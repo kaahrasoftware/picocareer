@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FieldName, TableName, TitleField, QueryResult } from "./types";
@@ -6,8 +7,7 @@ const tableMap: Record<FieldName, TableName> = {
   academic_major_id: 'majors',
   school_id: 'schools',
   position: 'careers',
-  company_id: 'companies',
-  highest_degree: 'majors' // Added this line, though we won't query the table for degrees
+  company_id: 'companies'
 };
 
 export function useFieldOptions(fieldName: string) {
@@ -37,8 +37,7 @@ export function useFieldOptions(fieldName: string) {
         return [];
       }
 
-      // Type assertion to ensure the data matches QueryResult type
-      return (data as unknown as QueryResult[]) || [];
+      return (data as QueryResult[]) || [];
     },
     enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });

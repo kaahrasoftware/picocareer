@@ -6,6 +6,7 @@ import { FormField } from "@/components/forms/FormField";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { HubAnnouncement } from "@/types/database/hubs";
 
 interface FormFields {
   title: string;
@@ -20,12 +21,14 @@ interface AnnouncementFormProps {
   hubId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  existingAnnouncement?: HubAnnouncement;
 }
 
 export function AnnouncementForm({ 
   hubId, 
   onSuccess, 
-  onCancel 
+  onCancel,
+  existingAnnouncement
 }: AnnouncementFormProps) {
   const { toast } = useToast();
   const { session } = useAuthSession();
@@ -33,12 +36,12 @@ export function AnnouncementForm({
 
   const form = useForm<FormFields>({
     defaultValues: {
-      title: "",
-      content: "",
-      category: "general",
-      cover_image_url: "",
-      expires_at: "",
-      scheduled_for: ""
+      title: existingAnnouncement?.title || "",
+      content: existingAnnouncement?.content || "",
+      category: existingAnnouncement?.category || "general",
+      cover_image_url: existingAnnouncement?.cover_image_url || "",
+      expires_at: existingAnnouncement?.expires_at || "",
+      scheduled_for: existingAnnouncement?.scheduled_for || ""
     }
   });
 
@@ -53,7 +56,7 @@ export function AnnouncementForm({
     }
 
     try {
-      console.log('Would create announcement:', {
+      console.log(existingAnnouncement ? 'Would update announcement:' : 'Would create announcement:', {
         ...data,
         hub_id: hubId,
         created_by: profile.id
@@ -61,15 +64,15 @@ export function AnnouncementForm({
       
       toast({
         title: "Success",
-        description: "Announcement created successfully.",
+        description: `Announcement ${existingAnnouncement ? 'updated' : 'created'} successfully.`,
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error creating announcement:', error);
+      console.error('Error with announcement:', error);
       toast({
         title: "Error",
-        description: "Failed to create announcement. Please try again.",
+        description: `Failed to ${existingAnnouncement ? 'update' : 'create'} announcement. Please try again.`,
         variant: "destructive"
       });
     }
@@ -180,7 +183,7 @@ export function AnnouncementForm({
             </Button>
           )}
           <Button type="submit">
-            {form.formState.isSubmitting ? "Creating..." : "Create Announcement"}
+            {form.formState.isSubmitting ? `${existingAnnouncement ? 'Updating' : 'Creating'}...` : `${existingAnnouncement ? 'Update' : 'Create'} Announcement`}
           </Button>
         </div>
       </form>

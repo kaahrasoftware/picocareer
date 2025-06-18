@@ -10,6 +10,7 @@ export function SchoolsManagementTab() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const handleEditSchool = (school: School) => {
     setSelectedSchool(school);
@@ -22,9 +23,13 @@ export function SchoolsManagementTab() {
     setSelectedSchool(null);
   };
 
+  const handleSuccess = () => {
+    setRefreshKey(prev => prev + 1);
+    handleCloseDialog();
+  };
+
   const handleDataChange = () => {
-    // This function will be called when data changes in SchoolsDataTable
-    // It allows us to refresh data in parent components if needed
+    setRefreshKey(prev => prev + 1);
   };
 
   return (
@@ -38,6 +43,7 @@ export function SchoolsManagementTab() {
       </div>
       
       <SchoolsDataTable 
+        key={refreshKey}
         onEditSchool={handleEditSchool} 
         onDataChange={handleDataChange}
       />
@@ -47,6 +53,7 @@ export function SchoolsManagementTab() {
         <SchoolFormDialog 
           open={isAddDialogOpen} 
           onClose={handleCloseDialog} 
+          onSuccess={handleSuccess}
           mode="add" 
         />
       )}
@@ -56,6 +63,7 @@ export function SchoolsManagementTab() {
         <SchoolFormDialog 
           open={isEditDialogOpen} 
           onClose={handleCloseDialog} 
+          onSuccess={handleSuccess}
           mode="edit" 
           school={selectedSchool} 
         />
