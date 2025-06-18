@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
-import { SchoolSelector } from "./SchoolSelector";
+import { SimpleSchoolSelector } from "./SimpleSchoolSelector";
 import { SchoolDataPreview } from "./SchoolDataPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +15,14 @@ interface AISchoolData {
   success: boolean;
 }
 
+interface SimpleSchool {
+  id: string;
+  name: string;
+  location?: string;
+}
+
 export function SchoolUpdateTab() {
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<SimpleSchool | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [aiData, setAiData] = useState<AISchoolData | null>(null);
   const { toast } = useToast();
@@ -36,7 +42,7 @@ export function SchoolUpdateTab() {
       const { data, error } = await supabase.functions.invoke('fetch-school-data', {
         body: {
           schoolName: selectedSchool.name,
-          schoolId: selectedSchool.id
+          schoolId: selectedSchool.id.startsWith('manual-') ? null : selectedSchool.id
         }
       });
 
@@ -65,6 +71,16 @@ export function SchoolUpdateTab() {
 
   const handleUpdateSchool = async (fieldsToUpdate: Record<string, any>) => {
     if (!selectedSchool || !aiData) return;
+
+    // Don't try to update manually entered schools
+    if (selectedSchool.id.startsWith('manual-')) {
+      toast({
+        title: "Cannot Update",
+        description: "Manually entered schools cannot be updated. Please select an existing school from the database.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -116,7 +132,7 @@ export function SchoolUpdateTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Select School</label>
-              <SchoolSelector
+              <SimpleSchoolSelector
                 value={selectedSchool}
                 onValueChange={setSelectedSchool}
                 disabled={isLoading}
@@ -142,6 +158,14 @@ export function SchoolUpdateTab() {
               </Button>
             </div>
           </div>
+
+          {selectedSchool?.id.startsWith('manual-') && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> You've entered a school manually. AI data fetching works best with schools from our database.
+              </p>
+            </div>
+          )}
 
           {aiData && (
             <div className="mt-6">

@@ -31,7 +31,8 @@ export function useFieldOptions(fieldName: string) {
           .from(fieldConfig.table as any)
           .select(`id, ${fieldConfig.titleField}`)
           .eq('status', 'Approved')
-          .order(fieldConfig.titleField);
+          .order(fieldConfig.titleField)
+          .limit(100); // Add limit for better performance
         
         if (error) {
           console.error('Error fetching options:', error);
@@ -40,13 +41,14 @@ export function useFieldOptions(fieldName: string) {
 
         return (data || []).map(item => ({
           id: item.id,
-          name: item[fieldConfig.titleField] // Always use 'name' for consistency in the component
+          name: item[fieldConfig.titleField] || 'Unknown' // Add fallback for missing titles
         })) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];
       }
     },
-    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)
+    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 }
