@@ -4,12 +4,14 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMobileMenu } from "@/context/MobileMenuContext";
 import { MegaMenu } from "./MegaMenu";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function MainNavigation() {
   const location = useLocation();
   const currentPath = location.pathname;
   const isMobile = useIsMobile();
   const { closeMobileMenu } = useMobileMenu();
+  const { isAdmin, isLoading } = useIsAdmin();
 
   const isActive = (path: string) => {
     if (path === "/" && currentPath !== "/") return false;
@@ -99,6 +101,85 @@ export function MainNavigation() {
     }
   ];
 
+  // Admin mega menu - only visible to admins
+  const adminItems = [
+    {
+      title: "Content Management",
+      items: [
+        { 
+          title: "Dashboard", 
+          href: "/dashboard",
+          description: "Admin dashboard and analytics"
+        },
+        { 
+          title: "Career Upload", 
+          href: "/career/upload",
+          description: "Add new career paths"
+        },
+        { 
+          title: "Event Upload", 
+          href: "/event/upload",
+          description: "Create new events"
+        },
+        { 
+          title: "Blog Upload", 
+          href: "/blog/upload",
+          description: "Publish new blog posts"
+        },
+        { 
+          title: "Major Upload", 
+          href: "/major/upload",
+          description: "Add academic majors"
+        }
+      ]
+    },
+    {
+      title: "Marketing Tools",
+      items: [
+        { 
+          title: "Email Campaigns", 
+          href: "/admin/email-campaigns",
+          description: "Manage email marketing campaigns"
+        },
+        { 
+          title: "Scholarships Add", 
+          href: "/scholarships/add",
+          description: "Add new scholarship opportunities"
+        },
+        { 
+          title: "Opportunities Create", 
+          href: "/opportunities/create",
+          description: "Create job and internship opportunities"
+        }
+      ]
+    },
+    {
+      title: "AI & Assessment",
+      items: [
+        { 
+          title: "Career Chat", 
+          href: "/career-chat",
+          description: "AI-powered career guidance"
+        },
+        { 
+          title: "Personality Test", 
+          href: "/personality-test",
+          description: "Career personality assessments"
+        }
+      ]
+    },
+    {
+      title: "Debug Tools",
+      items: [
+        { 
+          title: "Debug Token Deduction", 
+          href: "/debug/token-deduction",
+          description: "Token system debugging tools"
+        }
+      ]
+    }
+  ];
+
   if (isMobile) {
     return (
       <nav className="flex flex-col space-y-2">
@@ -162,6 +243,10 @@ export function MainNavigation() {
         <MegaMenu sections={resourceItems} trigger="Resources" />
         
         <MegaMenu sections={companyItems} trigger="Company" />
+        
+        {isAdmin && !isLoading && (
+          <MegaMenu sections={adminItems} trigger="Admin" />
+        )}
       </nav>
     );
   }
@@ -245,6 +330,12 @@ export function MainNavigation() {
         <li>
           <MegaMenu sections={companyItems} trigger="Company" />
         </li>
+        
+        {isAdmin && !isLoading && (
+          <li>
+            <MegaMenu sections={adminItems} trigger="Admin" />
+          </li>
+        )}
       </ul>
     </nav>
   );

@@ -1,8 +1,11 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ModernMegaMenu } from "./ModernMegaMenu";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function ModernNavigation() {
+  const { isAdmin, isLoading } = useIsAdmin();
   let location;
   try {
     location = useLocation();
@@ -99,6 +102,85 @@ export function ModernNavigation() {
     }
   ];
 
+  // Admin mega menu - only visible to admins
+  const adminItems = [
+    {
+      title: "Content Management",
+      items: [
+        { 
+          title: "Dashboard", 
+          href: "/dashboard",
+          description: "Admin dashboard and analytics"
+        },
+        { 
+          title: "Career Upload", 
+          href: "/career/upload",
+          description: "Add new career paths"
+        },
+        { 
+          title: "Event Upload", 
+          href: "/event/upload",
+          description: "Create new events"
+        },
+        { 
+          title: "Blog Upload", 
+          href: "/blog/upload",
+          description: "Publish new blog posts"
+        },
+        { 
+          title: "Major Upload", 
+          href: "/major/upload",
+          description: "Add academic majors"
+        }
+      ]
+    },
+    {
+      title: "Marketing Tools",
+      items: [
+        { 
+          title: "Email Campaigns", 
+          href: "/admin/email-campaigns",
+          description: "Manage email marketing campaigns"
+        },
+        { 
+          title: "Scholarships Add", 
+          href: "/scholarships/add",
+          description: "Add new scholarship opportunities"
+        },
+        { 
+          title: "Opportunities Create", 
+          href: "/opportunities/create",
+          description: "Create job and internship opportunities"
+        }
+      ]
+    },
+    {
+      title: "AI & Assessment",
+      items: [
+        { 
+          title: "Career Chat", 
+          href: "/career-chat",
+          description: "AI-powered career guidance"
+        },
+        { 
+          title: "Personality Test", 
+          href: "/personality-test",
+          description: "Career personality assessments"
+        }
+      ]
+    },
+    {
+      title: "Debug Tools",
+      items: [
+        { 
+          title: "Debug Token Deduction", 
+          href: "/debug/token-deduction",
+          description: "Token system debugging tools"
+        }
+      ]
+    }
+  ];
+
   const navItems = [
     { 
       label: "Home", 
@@ -135,6 +217,12 @@ export function ModernNavigation() {
       sections: companyItems, 
       type: "mega" as const 
     },
+    // Conditionally add Admin menu for admins only
+    ...(isAdmin && !isLoading ? [{ 
+      label: "Admin", 
+      sections: adminItems, 
+      type: "mega" as const 
+    }] : [])
   ];
 
   return (
