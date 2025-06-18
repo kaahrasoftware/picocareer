@@ -88,7 +88,7 @@ export function OpportunitiesDataTable({
                   <div>
                     <CardTitle className="text-lg">{opportunity.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {opportunity.company || opportunity.author?.full_name || 'N/A'} | {opportunity.location || 'Remote'}
+                      {opportunity.company || 'N/A'} | {opportunity.location || 'Remote'}
                     </p>
                   </div>
                   <div className="flex gap-2">

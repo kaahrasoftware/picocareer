@@ -87,18 +87,15 @@ export function SelectWithCustomOption({
           return;
         }
         
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && data.length > 0) {
           // Combine with existing options, removing duplicates
           const combinedOptions = [...options];
           data.forEach((item: any) => {
-            if (item && item.id && !combinedOptions.some(existing => existing.id === item.id)) {
-              const titleValue = item[titleField];
-              if (titleValue) {
-                combinedOptions.push({
-                  id: item.id,
-                  [titleField]: titleValue
-                } as QueryResult);
-              }
+            if (!combinedOptions.some(existing => existing.id === item.id)) {
+              combinedOptions.push({
+                id: item.id,
+                [titleField]: item[titleField]
+              } as QueryResult);
             }
           });
           
@@ -247,7 +244,7 @@ export function SelectWithCustomOption({
   }
 
   // Ensure value exists in options before using it
-  const isValidValue = value && options.some(option => option && option.id === value);
+  const isValidValue = value && options.some(option => option.id === value);
 
   return (
     <div className="w-full">
@@ -288,15 +285,11 @@ export function SelectWithCustomOption({
             {isSearching ? (
               <div className="p-2 text-center text-muted-foreground">Searching...</div>
             ) : filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => {
-                if (!option || !option.id) return null;
-                
-                return (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option[titleField] || ''}
-                  </SelectItem>
-                );
-              })
+              filteredOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option[titleField] || ''}
+                </SelectItem>
+              ))
             ) : (
               <div className="p-2 text-center text-muted-foreground">No results found</div>
             )}

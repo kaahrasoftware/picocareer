@@ -1,25 +1,18 @@
 
 import { useState, useMemo } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { School } from "@/types/database/schools";
 import { cn } from "@/lib/utils";
 
-// Proper type for the partial school data used in the selector
-interface PartialSchool {
-  id: string;
-  name: string;
-  type: string;
-  location?: string | null;
-  status: string;
-}
-
 interface SchoolSelectorProps {
-  value?: PartialSchool | null;
-  onValueChange: (school: PartialSchool | null) => void;
+  value?: School | null;
+  onValueChange: (school: School | null) => void;
   disabled?: boolean;
 }
 
@@ -36,37 +29,24 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
         .eq('status', 'Approved')
         .order('name');
 
-      if (searchQuery && searchQuery.length >= 2) {
+      if (searchQuery) {
         query = query.ilike('name', `%${searchQuery}%`);
       }
 
-      const { data, error } = await query.limit(searchQuery ? 100 : 2500);
+      const { data, error } = await query.limit(50);
       
-      if (error) {
-        console.error('Error fetching schools:', error);
-        return [];
-      }
+      if (error) throw error;
       
-      return (data || []).map(school => ({
-        id: school.id,
-        name: school.name || '',
-        type: school.type || '',
-        location: school.location,
-        status: school.status || ''
-      })) as PartialSchool[];
+      return (data || []) as Pick<School, 'id' | 'name' | 'type' | 'location' | 'status'>[];
     }
   });
 
   const filteredSchools = useMemo(() => {
-    if (!searchQuery || searchQuery.length < 2) return schools;
+    if (!searchQuery) return schools;
     return schools.filter(school => 
-      school && school.name && school.name.toLowerCase().includes(searchQuery.toLowerCase())
+      school.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [schools, searchQuery]);
-
-  const formatLocation = (school: PartialSchool) => {
-    return school.location || 'Location not specified';
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -95,32 +75,29 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
             {isLoading ? "Loading schools..." : "No schools found."}
           </CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {filteredSchools.map((school) => {
-              if (!school || !school.id || !school.name) return null;
-              
-              return (
-                <CommandItem
-                  key={school.id}
-                  onSelect={() => {
-                    onValueChange(value?.id === school.id ? null : school);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value?.id === school.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium">{school.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {school.type} • {formatLocation(school)}
-                    </span>
-                  </div>
-                </CommandItem>
-              );
-            })}
+            {filteredSchools.map((school) => (
+              <CommandItem
+                key={school.id}
+                onSelect={() => {
+                  const fullSchool = school as School;
+                  onValueChange(value?.id === school.id ? null : fullSchool);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value?.id === school.id ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                <div className="flex flex-col">
+                  <span className="font-medium">{school.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {school.type} • {school.location}
+                  </span>
+                </div>
+              </CommandItem>
+            ))}
           </CommandGroup>
         </Command>
       </PopoverContent>
