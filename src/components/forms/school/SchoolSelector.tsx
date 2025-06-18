@@ -13,9 +13,7 @@ interface PartialSchool {
   id: string;
   name: string;
   type: string;
-  city?: string | null;
-  state?: string | null;
-  country?: string | null;
+  location?: string | null;
   status: string;
 }
 
@@ -34,35 +32,40 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
     queryFn: async () => {
       let query = supabase
         .from('schools')
-        .select('id, name, type, city, state, country, status')
+        .select('id, name, type, location, status')
         .eq('status', 'Approved')
         .order('name');
 
-      if (searchQuery) {
+      if (searchQuery && searchQuery.length >= 2) {
         query = query.ilike('name', `%${searchQuery}%`);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.limit(searchQuery ? 100 : 2500);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching schools:', error);
+        return [];
+      }
       
-      return (data || []) as PartialSchool[];
+      return (data || []).map(school => ({
+        id: school.id,
+        name: school.name || '',
+        type: school.type || '',
+        location: school.location,
+        status: school.status || ''
+      })) as PartialSchool[];
     }
   });
 
   const filteredSchools = useMemo(() => {
-    if (!searchQuery) return schools;
+    if (!searchQuery || searchQuery.length < 2) return schools;
     return schools.filter(school => 
       school && school.name && school.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [schools, searchQuery]);
 
   const formatLocation = (school: PartialSchool) => {
-    const parts = [];
-    if (school.city) parts.push(school.city);
-    if (school.state) parts.push(school.state);
-    if (school.country) parts.push(school.country);
-    return parts.length > 0 ? parts.join(', ') : 'Location not specified';
+    return school.location || 'Location not specified';
   };
 
   return (

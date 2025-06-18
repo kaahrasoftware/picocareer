@@ -47,11 +47,12 @@ export function useFieldOptions(fieldName: string) {
             return null;
           }
           
+          const titleValue = item[fieldConfig.titleField as keyof typeof item];
           return {
             id: item.id,
-            name: item[fieldConfig.titleField] || ''
+            name: typeof titleValue === 'string' ? titleValue : ''
           };
-        }).filter(Boolean) as Array<{ id: string; name: string }>;
+        }).filter((item): item is { id: string; name: string } => item !== null);
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];

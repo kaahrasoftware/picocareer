@@ -92,10 +92,13 @@ export function SelectWithCustomOption({
           const combinedOptions = [...options];
           data.forEach((item: any) => {
             if (item && item.id && !combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push({
-                id: item.id,
-                [titleField]: item[titleField]
-              } as QueryResult);
+              const titleValue = item[titleField];
+              if (titleValue) {
+                combinedOptions.push({
+                  id: item.id,
+                  [titleField]: titleValue
+                } as QueryResult);
+              }
             }
           });
           
