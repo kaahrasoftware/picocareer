@@ -14,6 +14,15 @@ const corsHeaders = {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Valid database fields for schools table
+const VALID_SCHOOL_FIELDS = [
+  'name', 'type', 'country', 'state', 'location', 'website', 'acceptance_rate',
+  'student_population', 'student_faculty_ratio', 'ranking', 'tuition_fees',
+  'cover_image_url', 'logo_url', 'undergraduate_application_url', 'graduate_application_url',
+  'admissions_page_url', 'international_students_url', 'financial_aid_url',
+  'virtual_tour_url', 'undergrad_programs_link', 'grad_programs_link'
+];
+
 // Function to clean and extract JSON from OpenAI response
 function extractJsonFromResponse(response: string): string {
   console.log('Raw AI Response:', response);
@@ -32,6 +41,45 @@ function extractJsonFromResponse(response: string): string {
   cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
   
   return cleaned;
+}
+
+// Function to filter and validate school data
+function filterSchoolData(data: any): any {
+  if (!data || typeof data !== 'object') {
+    return {};
+  }
+
+  const filteredData: any = {};
+  
+  // Only include valid fields
+  VALID_SCHOOL_FIELDS.forEach(field => {
+    if (data.hasOwnProperty(field) && data[field] !== null && data[field] !== undefined) {
+      filteredData[field] = data[field];
+    }
+  });
+
+  // Validate tuition_fees structure if present
+  if (filteredData.tuition_fees) {
+    const tuitionFees = filteredData.tuition_fees;
+    
+    // Ensure it's a proper JSONB structure
+    if (typeof tuitionFees === 'object' && !Array.isArray(tuitionFees)) {
+      // Check if it has the expected structure
+      const hasValidStructure = 
+        tuitionFees.undergraduate && typeof tuitionFees.undergraduate === 'object' &&
+        tuitionFees.graduate && typeof tuitionFees.graduate === 'object';
+      
+      if (!hasValidStructure) {
+        console.log('Invalid tuition_fees structure, removing field');
+        delete filteredData.tuition_fees;
+      }
+    } else {
+      console.log('tuition_fees is not an object, removing field');
+      delete filteredData.tuition_fees;
+    }
+  }
+
+  return filteredData;
 }
 
 serve(async (req) => {
@@ -86,7 +134,27 @@ You are a comprehensive school data researcher. Please provide detailed informat
   "grad_programs_link": "Link to graduate programs page"
 }
 
-Please research and provide accurate, current information based on Carnegie Mellon University's data format. For URLs, provide real, working URLs when possible. For images, suggest realistic image URLs that would be appropriate for the school. For the state field, use the format "Full State Name - Abbreviation" (e.g., "Pennsylvania - PA"). For the type field, use one of the exact enum values listed above. Return ONLY the JSON object without any markdown formatting or code blocks.
+IMPORTANT REQUIREMENTS:
+1. The "tuition_fees" field MUST be a single JSONB object with nested "undergraduate" and "graduate" objects
+2. Each undergraduate/graduate object should have "in_state", "out_of_state", and "international" properties
+3. Do NOT create separate fields like "tuition_in_state", "tuition_out_of_state", etc.
+4. Use exact field names as shown above
+5. Return ONLY the JSON object without any markdown formatting or code blocks
+6. All tuition amounts should be numbers, not strings
+
+Example tuition_fees structure:
+"tuition_fees": {
+  "undergraduate": {
+    "in_state": 58000,
+    "out_of_state": 58000,
+    "international": 58000
+  },
+  "graduate": {
+    "in_state": 50000,
+    "out_of_state": 50000,
+    "international": 50000
+  }
+}
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -98,7 +166,7 @@ Please research and provide accurate, current information based on Carnegie Mell
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only, without any markdown formatting or code blocks. Use Carnegie Mellon University as your reference format for accuracy and completeness.' },
+          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only, without any markdown formatting or code blocks. Use Carnegie Mellon University as your reference format for accuracy and completeness. Ensure tuition_fees is properly structured as a JSONB object.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
@@ -116,19 +184,24 @@ Please research and provide accurate, current information based on Carnegie Mell
     const cleanedResponse = extractJsonFromResponse(aiResponse);
 
     // Parse the cleaned JSON
-    let schoolData;
+    let rawSchoolData;
     try {
-      schoolData = JSON.parse(cleanedResponse);
-      console.log('Successfully parsed school data:', schoolData);
+      rawSchoolData = JSON.parse(cleanedResponse);
+      console.log('Successfully parsed school data:', rawSchoolData);
     } catch (parseError) {
       console.error('Failed to parse cleaned response:', parseError);
       console.error('Cleaned response was:', cleanedResponse);
       throw new Error(`Invalid JSON format from AI: ${parseError.message}`);
     }
 
+    // Filter and validate the school data
+    const schoolData = filterSchoolData(rawSchoolData);
+    
+    console.log('Filtered school data:', schoolData);
+
     // Validate that we have a valid object
     if (!schoolData || typeof schoolData !== 'object') {
-      throw new Error('AI response is not a valid object');
+      throw new Error('AI response is not a valid object after filtering');
     }
 
     // Get current school data for comparison
