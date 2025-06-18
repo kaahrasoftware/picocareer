@@ -13,7 +13,9 @@ interface PartialSchool {
   id: string;
   name: string;
   type: string;
-  location?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
   status: string;
 }
 
@@ -33,16 +35,15 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
       try {
         let query = supabase
           .from('schools')
-          .select('id, name, type, location, status')
+          .select('id, name, type, city, state, country, status')
           .eq('status', 'Approved')
           .order('name');
 
         // If there's a search query, filter by it
-        if (searchQuery && searchQuery.length >= 2) {
+        if (searchQuery && searchQuery.length >= 1) {
           query = query.ilike('name', `%${searchQuery}%`);
         }
 
-        // Remove the limit to get all schools
         const { data, error } = await query;
         
         if (error) {
@@ -57,7 +58,9 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
             id: school.id,
             name: school.name || '',
             type: school.type || '',
-            location: school.location,
+            city: school.city,
+            state: school.state,
+            country: school.country,
             status: school.status || ''
           })) as PartialSchool[];
 
@@ -74,24 +77,22 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
     // Ensure schools is always an array
     const schoolsArray = Array.isArray(schools) ? schools : [];
     
-    // If no search query, return all schools (but limit for performance)
-    if (!searchQuery || searchQuery.length < 2) {
-      return schoolsArray.slice(0, 100); // Show first 100 for initial load
-    }
-    
-    // Filter by search query
+    // Show all schools now, no artificial limits
     return schoolsArray.filter(school => 
       school && 
       school.name && 
-      school.name.toLowerCase().includes(searchQuery.toLowerCase())
+      (searchQuery.length === 0 || 
+       school.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [schools, searchQuery]);
 
   const formatLocation = (school: PartialSchool) => {
-    return school.location || 'Location not specified';
+    const parts = [school.city, school.state, school.country].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'Location not specified';
   };
 
   const handleSelectSchool = (school: PartialSchool) => {
+    console.log('School selected:', school);
     onValueChange(value?.id === school.id ? null : school);
     setOpen(false);
     setSearchQuery(""); // Clear search after selection
@@ -121,7 +122,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
             onValueChange={setSearchQuery}
           />
           <CommandEmpty>
-            {isLoading ? "Loading schools..." : searchQuery.length < 2 ? "Type at least 2 characters to search" : "No schools found."}
+            {isLoading ? "Loading schools..." : "No schools found."}
           </CommandEmpty>
           <CommandList>
             <CommandGroup className="max-h-64 overflow-auto">
@@ -131,8 +132,11 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                 return (
                   <CommandItem
                     key={school.id}
-                    value={school.name}
-                    onSelect={() => handleSelectSchool(school)}
+                    value={school.id}
+                    onSelect={() => {
+                      console.log('CommandItem clicked:', school);
+                      handleSelectSchool(school);
+                    }}
                     className="cursor-pointer"
                   >
                     <Check
@@ -150,11 +154,6 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                   </CommandItem>
                 );
               })}
-              {searchQuery.length < 2 && schools.length > 100 && (
-                <CommandItem disabled className="text-center text-muted-foreground">
-                  Type to search through all {schools.length} schools
-                </CommandItem>
-              )}
             </CommandGroup>
           </CommandList>
         </Command>

@@ -24,14 +24,22 @@ export function BookingForm({ mentorId, onBookingComplete }: BookingFormProps) {
   const [selectedTime, setSelectedTime] = useState<string>("");
 
   const handleSessionTypeSelect = (typeId: string) => {
-    // This should be implemented based on how SessionTypeSelector works
-    // For now, create a mock session type
-    setSelectedSessionType({
-      id: typeId,
-      type: "Mock Session",
-      duration: 60,
-      price: 100
-    });
+    // Find the session type from the available options
+    const sessionTypes = [
+      { id: "consultation", type: "Consultation", duration: 30, price: 50 },
+      { id: "coaching", type: "Coaching Session", duration: 60, price: 100 },
+      { id: "review", type: "Portfolio Review", duration: 45, price: 75 }
+    ];
+    
+    const selectedType = sessionTypes.find(type => type.id === typeId);
+    if (selectedType) {
+      setSelectedSessionType({
+        id: selectedType.id,
+        type: selectedType.type,
+        duration: selectedType.duration,
+        price: selectedType.price
+      });
+    }
   };
 
   return (

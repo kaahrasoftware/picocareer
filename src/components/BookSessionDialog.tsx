@@ -8,7 +8,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { BookingForm } from "./booking/BookingForm";
-import { MeetingPlatform } from "@/types/calendar";
 
 interface BookSessionDialogProps {
   open: boolean;
@@ -21,19 +20,6 @@ interface BookSessionDialogProps {
 }
 
 export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDialogProps) {
-  const [formData, setFormData] = useState<{
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  }>({
-    note: "",
-    meetingPlatform: "Google Meet"
-  });
-
   if (!mentor) {
     return null;
   }
@@ -55,8 +41,7 @@ export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDia
         <div className="mt-4">
           <BookingForm
             mentorId={mentor.id}
-            onFormChange={setFormData}
-            onSuccess={handleSuccess}
+            onBookingComplete={handleSuccess}
           />
         </div>
       </DialogContent>

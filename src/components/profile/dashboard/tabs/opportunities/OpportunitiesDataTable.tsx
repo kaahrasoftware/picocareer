@@ -55,7 +55,7 @@ export function OpportunitiesDataTable() {
         status: item.status || '',
         company: null, // Set to null since we're not fetching company data
         author: null   // Set to null since we're not fetching author data
-      })) as OpportunityWithAuthor[];
+      }));
     }
   });
 

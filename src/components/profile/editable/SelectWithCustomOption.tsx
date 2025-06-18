@@ -4,7 +4,7 @@ import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -80,7 +80,9 @@ export function SelectWithCustomOption({
             return item !== null && 
                    typeof item === 'object' && 
                    'id' in item &&
-                   fieldConfig.titleField in item;
+                   fieldConfig.titleField in item &&
+                   item.id !== null &&
+                   item.id !== undefined;
           })
           .map(item => ({
             id: item.id,
