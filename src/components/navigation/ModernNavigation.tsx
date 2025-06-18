@@ -48,6 +48,11 @@ export function ModernNavigation() {
       title: "Learning Resources",
       items: [
         { 
+          title: "Resource Bank", 
+          href: "/resource-bank",
+          description: "Access all event resources in one place"
+        },
+        { 
           title: "Scholarships", 
           href: "/scholarships",
           description: "Financial aid opportunities"

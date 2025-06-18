@@ -1,312 +1,366 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { 
-  CalendarDays, 
-  RefreshCcw, 
-  Download, 
-  Filter, 
-  Search as SearchIcon,
-  SlidersHorizontal,
-  UserCheck
-} from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { SessionsDataTable } from './SessionsDataTable';
-import { SessionMetricCards } from './SessionMetricCards';
-import { SessionFeedbackDisplay } from './SessionFeedbackDisplay';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
-import { format } from 'date-fns';
-import { DateRange } from 'react-day-picker';
-import { Badge } from '@/components/ui/badge';
-import { useDebounce } from '@/hooks/useDebounce';
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { supabase } from '@/integrations/supabase/client';
-import { useAdminSessionsQuery } from '@/hooks/admin-sessions/useAdminSessionsQuery';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CalendarClock, Copy, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { UpdateStatusDialog } from "./dialogs/UpdateStatusDialog";
+import { DeleteSessionDialog } from "./dialogs/DeleteSessionDialog";
+import { MentorSession } from "@/types/database/session";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 export function SessionManagementTab() {
-  // State for filters and pagination
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [sortBy, setSortBy] = useState<string>("scheduled_at");
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  
-  // State for session details dialog
+  const [sortOrder, setSortOrder] = useState<string>("asc");
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  
-  // State for the sync operation
-  const [isSyncing, setIsSyncing] = useState(false);
-  
-  // Get session for authentication
-  const { session } = useAuthSession();
-
-  // Toast notification
+  const [selectedSessionDetails, setSelectedSessionDetails] = useState<string | null>(null);
+  const [targetStatus, setTargetStatus] = useState<string>("");
   const { toast } = useToast();
-  
-  // Fetch sessions data using our updated hook
-  const { 
-    data: sessionsData, 
-    isLoading, 
-    isError, 
-    error, 
-    refetch,
-    isRefetching
-  } = useAdminSessionsQuery({
-    statusFilter,
-    page,
-    pageSize,
-    startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
-    endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
-    searchTerm: debouncedSearchTerm,
-    sortBy,
-    sortDirection
-  });
 
-  // Handlers
-  const handleRefresh = useCallback(() => {
-    refetch();
-    toast({
-      title: "Data refreshed",
-      description: "Session data has been refreshed.",
-    });
-  }, [refetch, toast]);
+  // Get all sessions with proper enum mapping
+  const { data: allSessions = [], isLoading, refetch } = useQuery({
+    queryKey: ['all-sessions', statusFilter, searchTerm, sortBy, sortOrder],
+    queryFn: async () => {
+      let query = supabase
+        .from('mentor_sessions')
+        .select(`
+          id,
+          status,
+          scheduled_at,
+          notes,
+          meeting_link,
+          meeting_platform,
+          mentor:profiles!mentor_sessions_mentor_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          mentee:profiles!mentor_sessions_mentee_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          session_type:session_types(
+            type,
+            duration
+          )
+        `);
 
-  const handleViewFeedback = useCallback((sessionId: string) => {
-    setSelectedSessionId(sessionId);
-  }, []);
-
-  const handleExport = () => {
-    toast({
-      title: "Export started",
-      description: "Your session data is being prepared for download.",
-    });
-    // Implement export functionality here
-  };
-
-  const handleFilterChange = (status: string) => {
-    setStatusFilter(status);
-    setPage(1); // Reset to first page when filter changes
-  };
-
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-    setPage(1); // Reset to first page when date range changes
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setPage(1); // Reset to first page when search term changes
-  };
-
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      // Toggle sort direction if clicking the same column
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // Default to descending for a new column
-      setSortBy(column);
-      setSortDirection('desc');
-    }
-  };
-
-  // New function to run the one-time no-show sync
-  const handleRunNoShowSync = async () => {
-    if (!session?.access_token) {
-      toast({
-        title: "Authentication required",
-        description: "You must be logged in as an admin to perform this action.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSyncing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('one-time-no-show-sync', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error("Error syncing no-show sessions:", error);
-        toast({
-          title: "Sync failed",
-          description: error.message || "An error occurred while syncing no-show sessions.",
-          variant: "destructive",
-        });
-        return;
+      // Apply filters
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
       }
 
-      console.log("Sync result:", data);
+      if (searchTerm) {
+        query = query.or(`
+          mentor.full_name.ilike.%${searchTerm}%,
+          mentee.full_name.ilike.%${searchTerm}%,
+          notes.ilike.%${searchTerm}%
+        `);
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      // Map the platform enum values to match the expected format
+      const mappedData = data?.map(session => ({
+        ...session,
+        meeting_platform: mapPlatformEnum(session.meeting_platform)
+      })) || [];
+
+      return mappedData;
+    },
+  });
+
+  // Helper function to map platform enum values
+  const mapPlatformEnum = (platform: string | null): 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call' | null => {
+    if (!platform) return null;
+    
+    switch (platform) {
+      case 'Google Meet':
+        return 'google_meet';
+      case 'WhatsApp':
+        return 'whatsapp';
+      case 'Telegram':
+        return 'telegram';
+      case 'Phone Call':
+        return 'phone_call';
+      default:
+        return platform as 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call';
+    }
+  };
+
+  const handleStatusUpdate = (
+    sessionId: string,
+    sessionDetails: string,
+    status: string
+  ) => {
+    setSelectedSessionId(sessionId);
+    setSelectedSessionDetails(sessionDetails);
+    setTargetStatus(status);
+    setUpdateDialogOpen(true);
+  };
+
+  const handleSessionDelete = (sessionId: string, sessionDetails: string) => {
+    setSelectedSessionId(sessionId);
+    setSelectedSessionDetails(sessionDetails);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCopyLink = (link: string | null) => {
+    if (link) {
+      navigator.clipboard.writeText(link);
       toast({
-        title: "Sync completed",
-        description: `Updated ${data.message}`,
+        title: "Link copied",
+        description: "The meeting link has been copied to your clipboard.",
       });
-
-      // Refresh the data to show updated statuses
-      refetch();
-
-    } catch (err: any) {
-      console.error("Error in sync function:", err);
+    } else {
       toast({
-        title: "Sync error",
-        description: err.message || "An unexpected error occurred.",
+        title: "No link available",
+        description: "There is no meeting link available for this session.",
         variant: "destructive",
       });
-    } finally {
-      setIsSyncing(false);
     }
+  };
+
+  const handleUpdateSuccess = () => {
+    refetch();
+  };
+
+  const handleDeleteSuccess = () => {
+    refetch();
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4">
+      <div>
         <h2 className="text-2xl font-bold">Session Management</h2>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFilterDialogOpen(true)}
-          >
-            <Filter className="mr-2 h-4 w-4" />
-            Filters
-            {(dateRange || statusFilter !== "all") && (
-              <Badge variant="secondary" className="ml-2">
-                Active
-              </Badge>
+        <p className="text-muted-foreground">
+          Manage and monitor mentorship sessions
+        </p>
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <Input
+          type="search"
+          placeholder="Search sessions..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-auto"
+        />
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full md:w-auto">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="scheduled">Scheduled</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="no_show">No Show</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+          <label htmlFor="sort-by" className="text-sm font-medium">
+            Sort By:
+          </label>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Scheduled At" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="scheduled_at">Scheduled At</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Ascending" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Ascending</SelectItem>
+              <SelectItem value="desc">Descending</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <ScrollArea>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Session Details</TableHead>
+              <TableHead>Participants</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Scheduled At</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  Loading sessions...
+                </TableCell>
+              </TableRow>
+            ) : allSessions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center">
+                  No sessions found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              allSessions.map((session) => (
+                <TableRow key={session.id}>
+                  <TableCell>
+                    <p className="font-medium">{session.session_type?.type}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {session.notes || "No notes provided"}
+                    </p>
+                    {session.meeting_link && (
+                      <div className="mt-2 flex items-center space-x-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleCopyLink(session.meeting_link)}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy Link
+                        </Button>
+                        {session.meeting_platform && (
+                          <Badge variant="outline">
+                            {session.meeting_platform}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={session.mentor?.avatar_url || "/avatars/01.png"}
+                        alt={session.mentor?.full_name}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <p className="font-medium">{session.mentor?.full_name}</p>
+                        <p className="text-sm text-muted-foreground">Mentor</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3 mt-2">
+                      <img
+                        src={session.mentee?.avatar_url || "/avatars/02.png"}
+                        alt={session.mentee?.full_name}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <p className="font-medium">{session.mentee?.full_name}</p>
+                        <p className="text-sm text-muted-foreground">Mentee</p>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        session.status === "completed"
+                          ? "success"
+                          : session.status === "cancelled"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
+                      {session.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(session.scheduled_at), "MMM dd, yyyy hh:mm a")}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleStatusUpdate(
+                            session.id,
+                            `${session.session_type?.type} with ${session.mentor?.full_name} and ${session.mentee?.full_name} on ${format(new Date(session.scheduled_at), "MMM dd, yyyy hh:mm a")}`,
+                            session.status === "scheduled"
+                              ? "completed"
+                              : session.status === "completed"
+                              ? "cancelled"
+                              : "scheduled"
+                          )
+                        }
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Update Status
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleSessionDelete(
+                            session.id,
+                            `${session.session_type?.type} with ${session.mentor?.full_name} and ${session.mentee?.full_name} on ${format(new Date(session.scheduled_at), "MMM dd, yyyy hh:mm a")}`
+                          )
+                        }
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefetching}
-          >
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          
-          {/* New sync button for admin users */}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleRunNoShowSync}
-            disabled={isSyncing}
-          >
-            <UserCheck className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            {isSyncing ? "Syncing..." : "Sync No-Shows"}
-          </Button>
-        </div>
-      </div>
+          </TableBody>
+        </Table>
+      </ScrollArea>
 
-      <div className="rounded-lg border p-2">
-        <div className="flex items-center gap-2 p-2">
-          <SearchIcon className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by mentor or mentee name..."
-            className="h-9 w-[250px] lg:w-[300px]"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-      </div>
-
-      {/* Use the status counts directly from the API response */}
-      <SessionMetricCards 
-        stats={{
-          total: sessionsData?.statusCounts?.total || 0,
-          completed: sessionsData?.statusCounts?.completed || 0,
-          scheduled: sessionsData?.statusCounts?.scheduled || 0, 
-          cancelled: sessionsData?.statusCounts?.cancelled || 0,
-          noShow: sessionsData?.statusCounts?.no_show || 0
-        }} 
-        isLoading={isLoading} 
+      <UpdateStatusDialog
+        isOpen={updateDialogOpen}
+        onClose={() => setUpdateDialogOpen(false)}
+        sessionId={selectedSessionId || ""}
+        sessionDetails={selectedSessionDetails || ""}
+        targetStatus={targetStatus}
+        onSuccess={handleUpdateSuccess}
       />
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Sessions List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={statusFilter} onValueChange={handleFilterChange}>
-            <TabsList className="grid w-full grid-cols-5 mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="scheduled">Upcoming</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-              <TabsTrigger value="no_show">No-shows</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={statusFilter} className="mt-0">
-              <SessionsDataTable 
-                sessions={sessionsData?.sessions || []} 
-                isLoading={isLoading}
-                isError={isError}
-                error={error as Error}
-                page={page}
-                setPage={setPage}
-                totalPages={sessionsData?.totalPages || 1}
-                pageSize={pageSize}
-                setPageSize={setPageSize}
-                onViewFeedback={handleViewFeedback}
-                onSort={handleSort}
-                currentSortColumn={sortBy}
-                currentSortDirection={sortDirection}
-                onRefresh={handleRefresh}
-              />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Session Feedback Dialog */}
-      <Dialog open={!!selectedSessionId} onOpenChange={(open) => !open && setSelectedSessionId(null)}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Session Feedback</DialogTitle>
-          </DialogHeader>
-          {selectedSessionId && (
-            <SessionFeedbackDisplay sessionId={selectedSessionId} />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Filter Dialog */}
-      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filter Sessions</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Date Range</h3>
-              <DatePickerWithRange
-                date={dateRange}
-                onDateChange={handleDateRangeChange}
-              />
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DeleteSessionDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        sessionId={selectedSessionId || ""}
+        sessionDetails={selectedSessionDetails || ""}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -43,6 +44,7 @@ import Partnerships from "../pages/Partnerships";
 import Careers from "../pages/Careers";
 import Mentees from "../pages/Mentees";
 import TokenDeductionDebug from "../pages/TokenDeductionDebug";
+import ResourceBank from "../pages/ResourceBank";
 
 export const router = createBrowserRouter([
   {
@@ -101,6 +103,10 @@ export const router = createBrowserRouter([
       {
         path: "event",
         element: <Event />,
+      },
+      {
+        path: "resource-bank",
+        element: <ResourceBank />,
       },
       {
         path: "career/upload",
