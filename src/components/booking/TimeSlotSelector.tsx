@@ -1,11 +1,17 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { MentorSessionType } from "@/types/database/mentors";
+
+interface SessionType {
+  id: string;
+  type: string;
+  duration: number;
+  price: number;
+}
 
 interface TimeSlotSelectorProps {
-  selectedSessionType: MentorSessionType | null;
-  onSessionTypeSelect: (sessionType: MentorSessionType) => void;
+  selectedSessionType: SessionType | null;
+  onSessionTypeSelect: (sessionType: SessionType) => void;
   availableSlots: string[];
   selectedSlot: string | null;
   onSlotSelect: (slot: string) => void;

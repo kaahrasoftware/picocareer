@@ -7,23 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Edit, Trash2, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface SchoolData {
-  id: string;
-  name: string;
-  type: string;
-  location: string;
-  description: string;
-  website: string;
-  status: string;
-  student_population?: number;
-  acceptance_rate?: number;
-  created_at: string;
-}
+import { School } from "@/types/database/schools";
 
 interface SchoolsDataTableProps {
-  onEditSchool: (school: SchoolData) => void;
-  onViewSchool: (school: SchoolData) => void;
+  onEditSchool: (school: School) => void;
+  onViewSchool: (school: School) => void;
   onDataChange: () => void;
 }
 
@@ -57,7 +45,7 @@ export function SchoolsDataTable({
       
       if (error) throw error;
       
-      return (data || []) as SchoolData[];
+      return (data || []) as School[];
     }
   });
 
@@ -136,7 +124,7 @@ export function SchoolsDataTable({
                   <div>
                     <CardTitle className="text-lg">{school.name}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {school.location} | {school.type}
+                      {school.location || 'Location not specified'} | {school.type}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -165,9 +153,9 @@ export function SchoolsDataTable({
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm line-clamp-2">{school.description}</p>
                 <div className="mt-2 text-xs text-muted-foreground">
                   Status: {school.status} | Students: {school.student_population || 'N/A'}
+                  {school.acceptance_rate && ` | Acceptance Rate: ${Math.round(school.acceptance_rate * 100)}%`}
                 </div>
               </CardContent>
             </Card>

@@ -88,7 +88,7 @@ export function OpportunitiesDataTable({
                   <div>
                     <CardTitle className="text-lg">{opportunity.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {opportunity.company || 'N/A'} | {opportunity.location || 'Remote'}
+                      {opportunity.organization || 'N/A'} | {opportunity.location || 'Remote'}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -126,7 +126,7 @@ export function OpportunitiesDataTable({
               <CardContent>
                 <p className="text-sm line-clamp-2">{opportunity.description}</p>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  Status: {opportunity.status} | Category: {opportunity.category || 'General'}
+                  Status: {opportunity.status} | Type: {opportunity.opportunity_type || 'General'}
                 </div>
               </CardContent>
             </Card>

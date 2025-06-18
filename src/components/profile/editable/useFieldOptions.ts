@@ -3,13 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 type FieldName = 'academic_major_id' | 'school_id' | 'position' | 'company_id';
-type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 
-const tableMap: Record<FieldName, TableName> = {
-  academic_major_id: 'majors',
-  school_id: 'schools',
-  position: 'careers',
-  company_id: 'companies'
+const fieldToTableMap: Record<FieldName, { table: string; titleField: string }> = {
+  academic_major_id: { table: 'majors', titleField: 'title' },
+  school_id: { table: 'schools', titleField: 'name' },
+  position: { table: 'careers', titleField: 'title' },
+  company_id: { table: 'companies', titleField: 'name' }
 };
 
 export function useFieldOptions(fieldName: string) {
@@ -21,19 +20,18 @@ export function useFieldOptions(fieldName: string) {
         return null;
       }
 
-      if (!['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)) {
+      if (!(['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)) {
         return null;
       }
 
-      const table = tableMap[fieldName as FieldName];
-      const titleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
-
+      const fieldConfig = fieldToTableMap[fieldName as FieldName];
+      
       try {
         const { data, error } = await supabase
-          .from(table)
-          .select(`id, ${titleField}`)
+          .from(fieldConfig.table)
+          .select(`id, ${fieldConfig.titleField}`)
           .eq('status', 'Approved')
-          .order(titleField);
+          .order(fieldConfig.titleField);
         
         if (error) {
           console.error('Error fetching options:', error);
@@ -42,13 +40,13 @@ export function useFieldOptions(fieldName: string) {
 
         return (data || []).map(item => ({
           id: item.id,
-          name: item[titleField] // Always use 'name' for consistency in the component
+          name: item[fieldConfig.titleField] // Always use 'name' for consistency in the component
         })) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];
       }
     },
-    enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
+    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)
   });
 }
