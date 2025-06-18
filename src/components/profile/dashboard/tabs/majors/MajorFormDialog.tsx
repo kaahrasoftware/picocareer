@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import type { Major } from "@/types/database/majors";
 
 interface MajorFormDialogProps {
-  isOpen?: boolean;
-  open?: boolean;
+  isOpen: boolean;
   onClose: () => void;
   major?: Major;
   onSuccess: () => void;
+  open?: boolean;
 }
 
 export function MajorFormDialog({ isOpen, open, onClose, major, onSuccess }: MajorFormDialogProps) {
