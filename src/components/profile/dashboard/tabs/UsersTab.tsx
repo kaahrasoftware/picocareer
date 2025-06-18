@@ -32,10 +32,7 @@ export function UsersTab() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data?.map(user => ({
-        ...user,
-        user_type: user.user_type === 'editor' ? 'admin' : user.user_type
-      })) || [];
+      return data || [];
     },
   });
 

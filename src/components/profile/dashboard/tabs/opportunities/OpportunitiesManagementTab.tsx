@@ -32,10 +32,7 @@ export function OpportunitiesManagementTab() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data?.map(item => ({
-        ...item,
-        organization: item.organization || 'Unknown Organization'
-      })) || [];
+      return data || [];
     },
   });
 

@@ -257,10 +257,7 @@ export function SessionManagementTab() {
 
             <TabsContent value={statusFilter} className="mt-0">
               <SessionsDataTable 
-                sessions={sessionsData?.sessions?.map(session => ({
-                  ...session,
-                  meeting_platform: session.meeting_platform?.toLowerCase().replace(' ', '_') as any || 'google_meet'
-                })) || []} 
+                sessions={sessionsData?.sessions || []} 
                 isLoading={isLoading}
                 isError={isError}
                 error={error as Error}
