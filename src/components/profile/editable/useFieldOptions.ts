@@ -27,12 +27,24 @@ export function useFieldOptions(fieldName: string) {
       const fieldConfig = fieldToTableMap[fieldName as FieldName];
       
       try {
-        const { data, error } = await supabase
-          .from(fieldConfig.table as any)
-          .select(`id, ${fieldConfig.titleField}`)
-          .eq('status', 'Approved')
-          .order(fieldConfig.titleField)
-          .limit(100); // Add limit for better performance
+        let query;
+        if (fieldConfig.table === 'schools') {
+          query = supabase
+            .from(fieldConfig.table as any)
+            .select(`id, ${fieldConfig.titleField}`)
+            .eq('status', 'Approved')
+            .order(fieldConfig.titleField)
+            .limit(100);
+        } else {
+          query = supabase
+            .from(fieldConfig.table as any)
+            .select(`id, ${fieldConfig.titleField}`)
+            .eq('status', 'Approved')
+            .order(fieldConfig.titleField)
+            .limit(100);
+        }
+        
+        const { data, error } = await query;
         
         if (error) {
           console.error('Error fetching options:', error);
@@ -41,7 +53,7 @@ export function useFieldOptions(fieldName: string) {
 
         return (data || []).map(item => ({
           id: item.id,
-          name: item[fieldConfig.titleField] || 'Unknown' // Add fallback for missing titles
+          name: item[fieldConfig.titleField] || 'Unknown'
         })) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
