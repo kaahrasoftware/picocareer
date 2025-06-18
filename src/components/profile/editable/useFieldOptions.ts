@@ -1,7 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FieldName, TableName, TitleField, QueryResult } from "./types";
+
+type FieldName = 'academic_major_id' | 'school_id' | 'position' | 'company_id';
+type TableName = 'majors' | 'schools' | 'careers' | 'companies';
 
 const tableMap: Record<FieldName, TableName> = {
   academic_major_id: 'majors',
@@ -24,8 +26,7 @@ export function useFieldOptions(fieldName: string) {
       }
 
       const table = tableMap[fieldName as FieldName];
-      const titleField: TitleField = table === 'schools' ? 'name' : 
-                                    table === 'companies' ? 'name' : 'title';
+      const titleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
 
       try {
         const { data, error } = await supabase

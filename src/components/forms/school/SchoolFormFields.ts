@@ -85,7 +85,7 @@ export const schoolFormFields: FormFieldProps[] = [
     label: "Athletics Division",
     type: "select",
     options: [
-      { value: "", label: "Not Applicable" },
+      { value: "not_applicable", label: "Not Applicable" },
       { value: "Division I", label: "Division I" },
       { value: "Division II", label: "Division II" },
       { value: "Division III", label: "Division III" },

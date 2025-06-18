@@ -5,11 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { ScholarshipDetails } from "@/types/database/scholarships";
+
+interface ScholarshipData {
+  id: string;
+  title: string;
+  description: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  application_deadline?: string;
+  category?: string[];
+}
 
 interface ScholarshipsDataTableProps {
-  onEditScholarship: (scholarship: ScholarshipDetails) => void;
-  onViewScholarship: (scholarship: ScholarshipDetails) => void;
+  onEditScholarship: (scholarship: ScholarshipData) => void;
+  onViewScholarship: (scholarship: ScholarshipData) => void;
   onDataChange: () => void;
 }
 
@@ -28,16 +38,7 @@ export function ScholarshipsDataTable({
       
       if (error) throw error;
       
-      // Transform the data to match ScholarshipDetails interface
-      return (data || []).map(scholarship => ({
-        ...scholarship,
-        currency: scholarship.currency || 'USD',
-        application_deadline: scholarship.application_deadline || '',
-        contact_email: scholarship.contact_email || '',
-        contact_phone: scholarship.contact_phone || '',
-        tags: scholarship.tags || [],
-        requirements: scholarship.requirements || []
-      })) as ScholarshipDetails[];
+      return (data || []) as ScholarshipData[];
     }
   });
 
@@ -83,7 +84,7 @@ export function ScholarshipsDataTable({
                   <div>
                     <CardTitle className="text-lg">{scholarship.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Amount: {scholarship.amount} {scholarship.currency}
+                      Amount: ${scholarship.amount}
                     </p>
                   </div>
                   <div className="flex gap-2">

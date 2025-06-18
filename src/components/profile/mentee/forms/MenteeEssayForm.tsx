@@ -8,7 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { MenteeEssay } from "@/types/database/mentees";
+
+interface MenteeEssay {
+  id?: string;
+  prompt_id: string;
+  response_text: string;
+  is_draft: boolean;
+}
 
 interface FormFields {
   prompt_id: string;
@@ -71,7 +77,7 @@ export function MenteeEssayForm({
       };
 
       const { data: essayData, error } = await supabase
-        .from('mentee_essays')
+        .from('mentee_essay_responses')
         .insert([formData])
         .select()
         .single();

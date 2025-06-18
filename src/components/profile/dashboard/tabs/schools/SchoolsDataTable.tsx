@@ -7,11 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Edit, Trash2, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { School } from "@/types/database/schools";
+
+interface SchoolData {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  description: string;
+  website: string;
+  status: string;
+  student_population?: number;
+  acceptance_rate?: number;
+  created_at: string;
+}
 
 interface SchoolsDataTableProps {
-  onEditSchool: (school: School) => void;
-  onViewSchool: (school: School) => void;
+  onEditSchool: (school: SchoolData) => void;
+  onViewSchool: (school: SchoolData) => void;
   onDataChange: () => void;
 }
 
@@ -45,23 +57,7 @@ export function SchoolsDataTable({
       
       if (error) throw error;
       
-      // Transform the data to match School interface with required fields
-      return (data || []).map(school => ({
-        ...school,
-        city: school.city || '',
-        email: school.email || '',
-        phone: school.phone || '',
-        established_year: school.established_year || null,
-        // Add other required fields with defaults
-        country: school.country || 'United States',
-        type: school.type || 'University',
-        location: school.location || '',
-        description: school.description || '',
-        website: school.website || '',
-        status: school.status || 'Pending',
-        student_population: school.student_population || null,
-        acceptance_rate: school.acceptance_rate || null
-      })) as School[];
+      return (data || []) as SchoolData[];
     }
   });
 
