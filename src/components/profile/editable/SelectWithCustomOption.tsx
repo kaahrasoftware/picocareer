@@ -60,7 +60,7 @@ export function SelectWithCustomOption({
       }
 
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .insert(insertData)
         .select('id')
         .single();

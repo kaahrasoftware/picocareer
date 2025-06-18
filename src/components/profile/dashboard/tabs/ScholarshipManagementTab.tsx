@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ interface Scholarship {
 
 export function ScholarshipManagementTab() {
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const { data: scholarships, isLoading } = useQuery({
     queryKey: ['admin-scholarships'],
@@ -43,7 +45,7 @@ export function ScholarshipManagementTab() {
         category: item.categories || [],
         tags: item.tags || [],
         featured: item.featured || false,
-        provider_name: item.organization || '',
+        provider_name: item.application_url || '',
         amount: 0, // Default value since this field might not exist
         award_date: item.deadline
       })) || [];
@@ -52,6 +54,7 @@ export function ScholarshipManagementTab() {
 
   const handleViewDetails = (scholarship: Scholarship) => {
     setSelectedScholarship(scholarship);
+    setDetailsDialogOpen(true);
   };
 
   const handleScholarshipUpdated = () => {

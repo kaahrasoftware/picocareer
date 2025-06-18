@@ -91,7 +91,7 @@ export function EventManagementTab() {
             </TabsContent>
 
             <TabsContent value="resources" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
-              <EventResourcesManagementTab eventId={selectedEvent?.id || ""} />
+              <EventResourcesManagementTab />
             </TabsContent>
           </Tabs>
         </CardContent>

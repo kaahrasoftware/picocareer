@@ -11,7 +11,7 @@ interface OpportunityWithAuthor {
   id: string;
   title: string;
   description: string;
-  organization: string;
+  application_url: string;
   location: string;
   opportunity_type: string;
   deadline: string;
@@ -34,7 +34,7 @@ export function OpportunitiesManagementTab() {
       if (error) throw error;
       return data?.map(item => ({
         ...item,
-        organization: item.organization || 'Unknown Organization'
+        application_url: item.application_url || 'Unknown Organization'
       })) || [];
     },
   });
@@ -68,7 +68,7 @@ export function OpportunitiesManagementTab() {
                 <div>
                   <CardTitle className="text-lg">{opportunity.title}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {opportunity.organization}
+                    {opportunity.application_url}
                   </p>
                 </div>
                 <Badge 
