@@ -38,24 +38,15 @@ export function OpportunitiesDataTable() {
           description,
           deadline,
           created_at,
-          status
+          status,
+          company:company_id(name),
+          author:created_by(full_name)
         `)
         .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Transform the data to match the expected interface
-      return (data || []).map(item => ({
-        id: item.id,
-        title: item.title || '',
-        description: item.description || '',
-        deadline: item.deadline || '',
-        created_at: item.created_at || '',
-        status: item.status || '',
-        company: null, // Set to null since we're not fetching company data
-        author: null   // Set to null since we're not fetching author data
-      })) as OpportunityWithAuthor[];
+      return data as OpportunityWithAuthor[];
     }
   });
 
@@ -78,7 +69,7 @@ export function OpportunitiesDataTable() {
                         {opportunity.company.name}
                       </span>
                     )}
-                    <Badge variant={opportunity.status === 'Active' ? 'default' : 'secondary'}>
+                    <Badge variant={opportunity.status === 'active' ? 'default' : 'secondary'}>
                       {opportunity.status}
                     </Badge>
                   </div>
