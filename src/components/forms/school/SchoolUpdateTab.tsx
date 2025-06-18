@@ -9,6 +9,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { School } from "@/types/database/schools";
 
+// Partial school type for selector
+interface PartialSchool {
+  id: string;
+  name: string;
+  type: string;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  status: string;
+}
+
 interface AISchoolData {
   aiData: Partial<School>;
   currentData: School;
@@ -16,7 +27,7 @@ interface AISchoolData {
 }
 
 export function SchoolUpdateTab() {
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<PartialSchool | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [aiData, setAiData] = useState<AISchoolData | null>(null);
   const { toast } = useToast();

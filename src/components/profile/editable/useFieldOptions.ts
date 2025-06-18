@@ -38,10 +38,20 @@ export function useFieldOptions(fieldName: string) {
           return [];
         }
 
-        return (data || []).map(item => ({
-          id: item.id,
-          name: item[fieldConfig.titleField] // Always use 'name' for consistency in the component
-        })) as Array<{ id: string; name: string }>;
+        if (!data || !Array.isArray(data)) {
+          return [];
+        }
+
+        return data.map(item => {
+          if (!item || typeof item !== 'object' || !item.id) {
+            return null;
+          }
+          
+          return {
+            id: item.id,
+            name: item[fieldConfig.titleField] || ''
+          };
+        }).filter(Boolean) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];
