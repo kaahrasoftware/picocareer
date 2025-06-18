@@ -36,14 +36,14 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
 
       let query = supabase
         .from('schools')
-        .select('id, name, type, city, state, country, status')
+        .select('id, name, type, state, country, location, status')
         .eq('status', 'Approved')
         .order('name');
 
       // Search in school name
       query = query.ilike('name', `%${searchQuery}%`);
 
-      const { data, error } = await query.limit(100); // Increased limit for better search results
+      const { data, error } = await query.limit(100);
       
       if (error) {
         console.error('Error fetching schools:', error);
@@ -52,10 +52,11 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
       
       return (data || []).map(school => ({
         ...school,
-        // Handle null location by constructing from city, state, country
-        location: [school.city, school.state, school.country]
-          .filter(Boolean)
-          .join(', ') || 'Location not specified'
+        // Construct location from available fields, handling null values
+        location: school.location || 
+          [school.state, school.country]
+            .filter(Boolean)
+            .join(', ') || 'Location not specified'
       })) as School[];
     },
     enabled: searchQuery.length >= 2, // Only run query when we have enough characters
@@ -69,9 +70,10 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
   const getDisplayValue = () => {
     if (!value) return "Select school...";
     
-    const location = value.location || [value.city, value.state, value.country]
-      .filter(Boolean)
-      .join(', ') || '';
+    const location = value.location || 
+      [value.state, value.country]
+        .filter(Boolean)
+        .join(', ') || '';
     
     return `${value.name}${value.type ? ` (${value.type})` : ''}${location ? ` - ${location}` : ''}`;
   };
