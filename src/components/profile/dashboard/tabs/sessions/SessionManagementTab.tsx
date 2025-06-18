@@ -15,8 +15,8 @@ interface MentorSession {
   id: string;
   mentor_id: string;
   mentee_id: string;
-  session_start_time: string;
-  session_end_time: string;
+  start_date_time: string;
+  end_date_time: string;
   status: string;
   meeting_link?: string;
   session_notes?: string;
@@ -45,20 +45,20 @@ export function SessionManagementTab() {
           id,
           mentor_id,
           mentee_id,
-          session_start_time,
-          session_end_time,
+          start_date_time,
+          end_date_time,
           status,
           meeting_link,
           session_notes,
           mentee:mentee_id(full_name, email),
           mentor:mentor_id(full_name, email)
         `)
-        .gte('session_start_time', new Date().toISOString())
-        .order('session_start_time', { ascending: true })
+        .gte('start_date_time', new Date().toISOString())
+        .order('start_date_time', { ascending: true })
         .limit(20);
 
       if (error) throw error;
-      return data || [];
+      return data as MentorSession[] || [];
     }
   });
 
@@ -72,20 +72,20 @@ export function SessionManagementTab() {
           id,
           mentor_id,
           mentee_id,
-          session_start_time,
-          session_end_time,
+          start_date_time,
+          end_date_time,
           status,
           meeting_link,
           session_notes,
           mentee:mentee_id(full_name, email),
           mentor:mentor_id(full_name, email)
         `)
-        .lt('session_end_time', new Date().toISOString())
-        .order('session_start_time', { ascending: false })
+        .lt('end_date_time', new Date().toISOString())
+        .order('start_date_time', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      return data || [];
+      return data as MentorSession[] || [];
     }
   });
 
@@ -173,11 +173,11 @@ export function SessionManagementTab() {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {format(new Date(session.session_start_time), 'MMM d, yyyy')}
+            {format(new Date(session.start_date_time), 'MMM d, yyyy')}
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            {format(new Date(session.session_start_time), 'h:mm a')} - {format(new Date(session.session_end_time), 'h:mm a')}
+            {format(new Date(session.start_date_time), 'h:mm a')} - {format(new Date(session.end_date_time), 'h:mm a')}
           </div>
         </div>
         
