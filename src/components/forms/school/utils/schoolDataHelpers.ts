@@ -1,8 +1,19 @@
 
-import type { School } from "@/types/database/schools";
+/**
+ * Minimal interface for school search results that matches what we actually query from the database
+ */
+export interface SchoolSearchResult {
+  id: string;
+  name: string;
+  type?: string | null;
+  state?: string | null;
+  country?: string | null;
+  location?: string | null;
+  status?: string;
+}
 
 /**
- * Safely constructs a location string from school data, handling null values
+ * Safely constructs a location string from school search result data, handling null values
  */
 export function safeConstructLocation(school: {
   location?: string | null;
@@ -35,9 +46,9 @@ export function safeConstructLocation(school: {
 }
 
 /**
- * Safely transforms raw school data to ensure all fields are properly typed
+ * Safely transforms raw school data to ensure all fields are properly typed for search results
  */
-export function safeTransformSchoolData(rawSchool: any): School {
+export function safeTransformSchoolSearchResult(rawSchool: any): SchoolSearchResult {
   try {
     return {
       id: rawSchool.id || '',
@@ -47,9 +58,9 @@ export function safeTransformSchoolData(rawSchool: any): School {
       country: rawSchool.country || null,
       location: safeConstructLocation(rawSchool),
       status: rawSchool.status || 'Pending'
-    } as School;
+    };
   } catch (error) {
-    console.warn('Error transforming school data:', error, rawSchool);
+    console.warn('Error transforming school search result:', error, rawSchool);
     return {
       id: rawSchool?.id || '',
       name: 'Unknown School',
@@ -58,14 +69,14 @@ export function safeTransformSchoolData(rawSchool: any): School {
       country: null,
       location: 'Location not specified',
       status: 'Pending'
-    } as School;
+    };
   }
 }
 
 /**
- * Safely processes an array of school data, filtering out invalid entries
+ * Safely processes an array of school search result data, filtering out invalid entries
  */
-export function safeProcessSchoolArray(data: any[]): School[] {
+export function safeProcessSchoolSearchResults(data: any[]): SchoolSearchResult[] {
   if (!Array.isArray(data)) {
     console.warn('Expected array for school data, got:', typeof data);
     return [];
@@ -73,5 +84,5 @@ export function safeProcessSchoolArray(data: any[]): School[] {
 
   return data
     .filter(item => item && typeof item === 'object' && item.id)
-    .map(safeTransformSchoolData);
+    .map(safeTransformSchoolSearchResult);
 }

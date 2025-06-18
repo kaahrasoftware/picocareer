@@ -10,7 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { School } from "@/types/database/schools";
 import { cn } from "@/lib/utils";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
-import { safeProcessSchoolArray, safeConstructLocation } from "./utils/schoolDataHelpers";
+import { 
+  SchoolSearchResult, 
+  safeProcessSchoolSearchResults, 
+  safeConstructLocation 
+} from "./utils/schoolDataHelpers";
 
 interface SchoolSelectorProps {
   value?: School | null;
@@ -29,7 +33,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
 
   const { data: schools = [], isLoading, error } = useQuery({
     queryKey: ['schools-search', searchQuery],
-    queryFn: async () => {
+    queryFn: async (): Promise<SchoolSearchResult[]> => {
       // Only search if we have at least 2 characters
       if (!searchQuery || searchQuery.length < 2) {
         return [];
@@ -53,7 +57,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
         }
         
         // Use the safe processing function to handle null values
-        return safeProcessSchoolArray(data || []);
+        return safeProcessSchoolSearchResults(data || []);
       } catch (error) {
         console.error('School query failed:', error);
         throw error;
@@ -95,6 +99,107 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
     return "No schools found matching your search.";
   };
 
+  // Convert SchoolSearchResult to School when selecting
+  const handleSchoolSelect = (schoolResult: SchoolSearchResult) => {
+    try {
+      // Convert the minimal search result to a full School object for compatibility
+      const schoolForSelection: School = {
+        id: schoolResult.id,
+        name: schoolResult.name,
+        type: (schoolResult.type as any) || null,
+        state: schoolResult.state || '',
+        country: schoolResult.country || '',
+        city: '', // Not available in search results
+        location: schoolResult.location || safeConstructLocation(schoolResult),
+        status: (schoolResult.status as any) || 'Approved',
+        // Set default values for all other required fields
+        website: '',
+        email: '',
+        phone: '',
+        established_year: 0,
+        student_population: 0,
+        acceptance_rate: 0,
+        tuition_in_state: 0,
+        tuition_out_of_state: 0,
+        tuition_international: 0,
+        room_and_board: 0,
+        application_fee: 0,
+        application_deadline: '',
+        sat_range_low: 0,
+        sat_range_high: 0,
+        act_range_low: 0,
+        act_range_high: 0,
+        gpa_average: 0,
+        description: '',
+        campus_size: '',
+        programs_offered: [],
+        notable_alumni: [],
+        rankings: null,
+        ranking: null,
+        admissions_requirements: [],
+        financial_aid_available: false,
+        scholarship_opportunities: [],
+        campus_facilities: [],
+        student_organizations: [],
+        sports_programs: [],
+        research_opportunities: false,
+        internship_programs: false,
+        study_abroad_programs: false,
+        diversity_stats: null,
+        graduation_rate: 0,
+        employment_rate: 0,
+        average_salary_after_graduation: 0,
+        notable_programs: [],
+        campus_culture: '',
+        location_benefits: [],
+        housing_options: [],
+        dining_options: [],
+        transportation: [],
+        safety_measures: [],
+        sustainability_initiatives: [],
+        technology_resources: [],
+        library_resources: [],
+        health_services: [],
+        counseling_services: [],
+        career_services: [],
+        alumni_network_strength: '',
+        partnerships_with_industry: [],
+        accreditation: [],
+        special_programs: [],
+        language_programs: [],
+        online_programs_available: false,
+        part_time_programs_available: false,
+        evening_programs_available: false,
+        weekend_programs_available: false,
+        summer_programs_available: false,
+        continuing_education_programs: false,
+        professional_development_programs: false,
+        student_faculty_ratio: null,
+        undergraduate_application_url: null,
+        graduate_application_url: null,
+        international_students_url: null,
+        financial_aid_url: null,
+        created_at: '',
+        updated_at: '',
+        author_id: '',
+        featured: false,
+        featured_priority: 0,
+        cover_image_url: '',
+        logo_url: '',
+        virtual_tour_url: '',
+        application_portal_url: '',
+        admissions_page_url: '',
+        financial_aid_page_url: '',
+        campus_map_url: ''
+      };
+      
+      onValueChange(value?.id === schoolResult.id ? null : schoolForSelection);
+    } catch (error) {
+      console.error('Error selecting school:', error);
+      onValueChange(null);
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -131,7 +236,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                     <CommandItem
                       key={school.id}
                       onSelect={() => {
-                        onValueChange(value?.id === school.id ? null : school);
+                        handleSchoolSelect(school);
                         setOpen(false);
                       }}
                       className="cursor-pointer"
@@ -156,7 +261,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                     <CommandItem
                       key={school.id || `error-${Math.random()}`}
                       onSelect={() => {
-                        onValueChange(value?.id === school.id ? null : school);
+                        handleSchoolSelect(school);
                         setOpen(false);
                       }}
                       className="cursor-pointer"
