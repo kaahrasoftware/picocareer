@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { School } from "@/types/database/schools";
 import { cn } from "@/lib/utils";
 import { useDebouncedCallback } from "@/hooks/useDebounce";
+import { safeProcessSchoolArray, safeConstructLocation } from "./utils/schoolDataHelpers";
 
 interface SchoolSelectorProps {
   value?: School | null;
@@ -34,30 +35,29 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
         return [];
       }
 
-      let query = supabase
-        .from('schools')
-        .select('id, name, type, state, country, location, status')
-        .eq('status', 'Approved')
-        .order('name');
+      try {
+        let query = supabase
+          .from('schools')
+          .select('id, name, type, state, country, location, status')
+          .eq('status', 'Approved')
+          .order('name');
 
-      // Search in school name
-      query = query.ilike('name', `%${searchQuery}%`);
+        // Search in school name
+        query = query.ilike('name', `%${searchQuery}%`);
 
-      const { data, error } = await query.limit(100);
-      
-      if (error) {
-        console.error('Error fetching schools:', error);
+        const { data, error } = await query.limit(100);
+        
+        if (error) {
+          console.error('Error fetching schools:', error);
+          throw error;
+        }
+        
+        // Use the safe processing function to handle null values
+        return safeProcessSchoolArray(data || []);
+      } catch (error) {
+        console.error('School query failed:', error);
         throw error;
       }
-      
-      return (data || []).map(school => ({
-        ...school,
-        // Construct location from available fields, handling null values
-        location: school.location || 
-          [school.state, school.country]
-            .filter(Boolean)
-            .join(', ') || 'Location not specified'
-      })) as School[];
     },
     enabled: searchQuery.length >= 2, // Only run query when we have enough characters
     staleTime: 30000, // Cache results for 30 seconds
@@ -70,12 +70,13 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
   const getDisplayValue = () => {
     if (!value) return "Select school...";
     
-    const location = value.location || 
-      [value.state, value.country]
-        .filter(Boolean)
-        .join(', ') || '';
-    
-    return `${value.name}${value.type ? ` (${value.type})` : ''}${location ? ` - ${location}` : ''}`;
+    try {
+      const location = safeConstructLocation(value);
+      return `${value.name}${value.type ? ` (${value.type})` : ''}${location !== 'Location not specified' ? ` - ${location}` : ''}`;
+    } catch (error) {
+      console.warn('Error getting display value:', error);
+      return value.name || "Select school...";
+    }
   };
 
   const getEmptyMessage = () => {
@@ -123,29 +124,59 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
           </CommandEmpty>
           {searchQuery.length >= 2 && (
             <CommandGroup className="max-h-64 overflow-auto">
-              {schools.map((school) => (
-                <CommandItem
-                  key={school.id}
-                  onSelect={() => {
-                    onValueChange(value?.id === school.id ? null : school);
-                    setOpen(false);
-                  }}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value?.id === school.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-medium truncate">{school.name}</span>
-                    <span className="text-sm text-muted-foreground truncate">
-                      {school.type ? `${school.type} • ` : ''}{school.location || 'Location not specified'}
-                    </span>
-                  </div>
-                </CommandItem>
-              ))}
+              {schools.map((school) => {
+                try {
+                  const location = safeConstructLocation(school);
+                  return (
+                    <CommandItem
+                      key={school.id}
+                      onSelect={() => {
+                        onValueChange(value?.id === school.id ? null : school);
+                        setOpen(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value?.id === school.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-medium truncate">{school.name}</span>
+                        <span className="text-sm text-muted-foreground truncate">
+                          {school.type ? `${school.type} • ` : ''}{location}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                } catch (error) {
+                  console.warn('Error rendering school item:', error, school);
+                  return (
+                    <CommandItem
+                      key={school.id || `error-${Math.random()}`}
+                      onSelect={() => {
+                        onValueChange(value?.id === school.id ? null : school);
+                        setOpen(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value?.id === school.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-medium truncate">{school.name || 'Unknown School'}</span>
+                        <span className="text-sm text-muted-foreground truncate">
+                          School information unavailable
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                }
+              })}
             </CommandGroup>
           )}
         </Command>
