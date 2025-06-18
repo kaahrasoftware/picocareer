@@ -15,13 +15,15 @@ interface SchoolsDataTableProps {
   onDataChange: () => void;
 }
 
+type SchoolStatus = 'Approved' | 'Pending' | 'Rejected';
+
 export function SchoolsDataTable({
   onEditSchool,
   onViewSchool,
   onDataChange
 }: SchoolsDataTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState<SchoolStatus | 'all'>('all');
 
   const { data: schools = [], isLoading, error, refetch } = useQuery({
     queryKey: ['admin-schools', searchQuery, statusFilter],
@@ -42,7 +44,24 @@ export function SchoolsDataTable({
       const { data, error } = await query;
       
       if (error) throw error;
-      return data as School[];
+      
+      // Transform the data to match School interface with required fields
+      return (data || []).map(school => ({
+        ...school,
+        city: school.city || '',
+        email: school.email || '',
+        phone: school.phone || '',
+        established_year: school.established_year || null,
+        // Add other required fields with defaults
+        country: school.country || 'United States',
+        type: school.type || 'University',
+        location: school.location || '',
+        description: school.description || '',
+        website: school.website || '',
+        status: school.status || 'Pending',
+        student_population: school.student_population || null,
+        acceptance_rate: school.acceptance_rate || null
+      })) as School[];
     }
   });
 
@@ -68,7 +87,7 @@ export function SchoolsDataTable({
   };
 
   const handleStatusFilter = (value: string) => {
-    setStatusFilter(value);
+    setStatusFilter(value as SchoolStatus | 'all');
   };
 
   if (isLoading) {

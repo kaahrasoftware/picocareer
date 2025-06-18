@@ -27,7 +27,17 @@ export function ScholarshipsDataTable({
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as ScholarshipDetails[];
+      
+      // Transform the data to match ScholarshipDetails interface
+      return (data || []).map(scholarship => ({
+        ...scholarship,
+        currency: scholarship.currency || 'USD',
+        application_deadline: scholarship.application_deadline || '',
+        contact_email: scholarship.contact_email || '',
+        contact_phone: scholarship.contact_phone || '',
+        tags: scholarship.tags || [],
+        requirements: scholarship.requirements || []
+      })) as ScholarshipDetails[];
     }
   });
 

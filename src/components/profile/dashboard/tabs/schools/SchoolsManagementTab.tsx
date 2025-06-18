@@ -10,6 +10,7 @@ export function SchoolsManagementTab() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   
   const handleEditSchool = (school: School) => {
@@ -17,9 +18,15 @@ export function SchoolsManagementTab() {
     setIsEditDialogOpen(true);
   };
 
+  const handleViewSchool = (school: School) => {
+    setSelectedSchool(school);
+    setIsViewDialogOpen(true);
+  };
+
   const handleCloseDialog = () => {
     setIsAddDialogOpen(false);
     setIsEditDialogOpen(false);
+    setIsViewDialogOpen(false);
     setSelectedSchool(null);
   };
 
@@ -44,7 +51,8 @@ export function SchoolsManagementTab() {
       
       <SchoolsDataTable 
         key={refreshKey}
-        onEditSchool={handleEditSchool} 
+        onEditSchool={handleEditSchool}
+        onViewSchool={handleViewSchool}
         onDataChange={handleDataChange}
       />
 

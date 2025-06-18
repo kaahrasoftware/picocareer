@@ -37,7 +37,7 @@ export function MenteeEssayForm({
     defaultValues: {
       prompt_id: existingEssay?.prompt_id || "",
       response_text: existingEssay?.response_text || "",
-      is_draft: existingEssay?.is_draft || false
+      is_draft: existingEssay?.is_draft ?? false
     }
   });
 
@@ -65,14 +65,13 @@ export function MenteeEssayForm({
         mentee_id: menteeId,
         prompt_id: data.prompt_id,
         response_text: data.response_text || '',
-        is_draft: data.is_draft || false,
+        is_draft: data.is_draft,
         word_count: data.response_text?.split(' ').length || 0,
         version: 1
       };
 
-      // Use generic table insert since mentee_essays might not be in the exact schema
       const { data: essayData, error } = await supabase
-        .from('mentee_essay_responses')
+        .from('mentee_essays')
         .insert([formData])
         .select()
         .single();

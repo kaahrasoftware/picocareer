@@ -39,6 +39,18 @@ export function OpportunitiesManagementTab() {
     console.log('Edit opportunity:', opportunityId);
   };
 
+  const handleDeleteOpportunity = (opportunityId: string) => {
+    console.log('Delete opportunity:', opportunityId);
+  };
+
+  const handleApproveOpportunity = (opportunityId: string) => {
+    console.log('Approve opportunity:', opportunityId);
+  };
+
+  const handleRejectOpportunity = (opportunityId: string) => {
+    console.log('Reject opportunity:', opportunityId);
+  };
+
   const handleDataChange = () => {
     refetch();
   };
@@ -59,16 +71,9 @@ export function OpportunitiesManagementTab() {
         isError={isError}
         error={error}
         onEdit={handleEditOpportunity}
-        onDelete={() => {}}
-        onApprove={() => {}}
-        onReject={() => {}}
-        selectedStatuses={[]}
-        onStatusFilterChange={() => {}}
-        searchQuery=""
-        onSearchChange={() => {}}
-        sortField="created_at"
-        sortDirection="desc"
-        onSort={() => {}}
+        onDelete={handleDeleteOpportunity}
+        onApprove={handleApproveOpportunity}
+        onReject={handleRejectOpportunity}
       />
     </div>
   );

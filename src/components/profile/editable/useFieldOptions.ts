@@ -24,7 +24,8 @@ export function useFieldOptions(fieldName: string) {
       }
 
       const table = tableMap[fieldName as FieldName];
-      const titleField: TitleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
+      const titleField: TitleField = table === 'schools' ? 'name' : 
+                                    table === 'companies' ? 'name' : 'title';
 
       try {
         const { data, error } = await supabase
