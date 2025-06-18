@@ -10,11 +10,11 @@ interface UserProfileDetailsDialogProps {
     academic_major?: string | null;
     career_title?: string | null;
   };
-  isOpen: boolean;
-  onClose: () => void;
-  userId?: string;
+  isOpen?: boolean;
   open?: boolean;
+  onClose: () => void;
   onOpenChange?: (open: boolean) => void;
+  userId?: string;
 }
 
 export function UserProfileDetailsDialog({ 

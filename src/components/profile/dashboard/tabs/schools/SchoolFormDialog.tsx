@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { School } from "@/types/database/schools";
 
 interface SchoolFormDialogProps {
-  isOpen: boolean;
+  isOpen?: boolean;
+  open?: boolean;
   onClose: () => void;
   school?: School;
   onSuccess: () => void;
-  open?: boolean;
   mode?: string;
 }
 

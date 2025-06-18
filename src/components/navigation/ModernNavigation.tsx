@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ModernMegaMenu } from "./ModernMegaMenu";
@@ -47,6 +46,11 @@ export function ModernNavigation() {
     {
       title: "Learning Resources",
       items: [
+        { 
+          title: "Resource Bank", 
+          href: "/resource-bank",
+          description: "Access educational resources from all events"
+        },
         { 
           title: "Scholarships", 
           href: "/scholarships",
