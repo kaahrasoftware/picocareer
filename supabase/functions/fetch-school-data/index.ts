@@ -49,33 +49,31 @@ serve(async (req) => {
     console.log(`Fetching AI data for school: ${schoolName}`);
 
     const prompt = `
-You are a comprehensive school data researcher. Please provide detailed information about "${schoolName}" in JSON format with the following exact structure. If any information is not available, use null for the field:
+You are a comprehensive school data researcher. Please provide detailed information about "${schoolName}" in JSON format with the following exact structure. Use Carnegie Mellon University as a reference for data format and accuracy. If any information is not available, use null for the field:
 
 {
   "name": "Full official school name",
-  "type": "High School|College|University|Other",
-  "country": "Country name",
-  "state": "State/Province (if applicable)",
-  "city": "City name",
+  "type": "Public University|Private University|Community College|Technical School|Liberal Arts College|Research University|Online University|For-Profit College|Military Academy|Art School|Music School|Business School|Medical School|Law School|Other",
+  "country": "United States",
+  "state": "Full state name with abbreviation (e.g., 'Pennsylvania - PA')",
   "location": "Complete address or location description",
   "website": "Official website URL",
-  "email": "Official contact email",
-  "phone": "Official phone number",
-  "established_year": "Year established (number)",
+  "acceptance_rate": "Acceptance rate as decimal (e.g., 0.17 for 17%)",
   "student_population": "Total student count (number)",
-  "acceptance_rate": "Acceptance rate as decimal (e.g., 0.65 for 65%)",
-  "student_faculty_ratio": "Ratio like '15:1'",
-  "tuition_in_state": "Annual in-state tuition (number)",
-  "tuition_out_of_state": "Annual out-of-state tuition (number)",
-  "tuition_international": "Annual international tuition (number)",
-  "room_and_board": "Annual room and board cost (number)",
-  "application_fee": "Application fee amount (number)",
-  "application_deadline": "Application deadline description",
-  "sat_range_low": "Minimum SAT score (number)",
-  "sat_range_high": "Maximum SAT score (number)",
-  "act_range_low": "Minimum ACT score (number)",
-  "act_range_high": "Maximum ACT score (number)",
-  "gpa_average": "Average GPA of admitted students (decimal)",
+  "student_faculty_ratio": "Ratio like '10:1'",
+  "ranking": "School ranking description with source",
+  "tuition_fees": {
+    "undergraduate": {
+      "in_state": "Annual in-state undergraduate tuition (number or null)",
+      "out_of_state": "Annual out-of-state undergraduate tuition (number or null)",
+      "international": "Annual international undergraduate tuition (number or null)"
+    },
+    "graduate": {
+      "in_state": "Annual in-state graduate tuition (number or null)",
+      "out_of_state": "Annual out-of-state graduate tuition (number or null)",
+      "international": "Annual international graduate tuition (number or null)"
+    }
+  },
   "cover_image_url": "URL to a high-quality campus or school image",
   "logo_url": "URL to the official school logo",
   "undergraduate_application_url": "Undergraduate application URL",
@@ -84,15 +82,11 @@ You are a comprehensive school data researcher. Please provide detailed informat
   "international_students_url": "International students page URL",
   "financial_aid_url": "Financial aid page URL",
   "virtual_tour_url": "Virtual tour URL",
-  "ranking": "School ranking description",
-  "programs_offered": ["Array of programs offered"],
-  "notable_programs": ["Array of notable/flagship programs"],
-  "graduation_rate": "Graduation rate as decimal (e.g., 0.85 for 85%)",
-  "employment_rate": "Employment rate as decimal (e.g., 0.92 for 92%)",
-  "average_salary_after_graduation": "Average starting salary (number)"
+  "undergrad_programs_link": "Link to undergraduate programs page",
+  "grad_programs_link": "Link to graduate programs page"
 }
 
-Please research and provide accurate, current information. For URLs, provide real, working URLs when possible. For images, suggest realistic image URLs that would be appropriate for the school. Return ONLY the JSON object without any markdown formatting or code blocks.
+Please research and provide accurate, current information based on Carnegie Mellon University's data format. For URLs, provide real, working URLs when possible. For images, suggest realistic image URLs that would be appropriate for the school. For the state field, use the format "Full State Name - Abbreviation" (e.g., "Pennsylvania - PA"). For the type field, use one of the exact enum values listed above. Return ONLY the JSON object without any markdown formatting or code blocks.
 `;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -104,7 +98,7 @@ Please research and provide accurate, current information. For URLs, provide rea
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only, without any markdown formatting or code blocks.' },
+          { role: 'system', content: 'You are a comprehensive school data researcher. Always respond with valid JSON only, without any markdown formatting or code blocks. Use Carnegie Mellon University as your reference format for accuracy and completeness.' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.3,
