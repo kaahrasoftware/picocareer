@@ -6,43 +6,42 @@ import { FormField } from "@/components/forms/FormField";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { HubAnnouncement } from "@/types/database/hubs";
 
-interface FormFields {
+interface AnnouncementFormData {
   title: string;
   content: string;
   category: string;
-  cover_image_url?: string;
-  expires_at?: string;
-  scheduled_for?: string;
+  is_pinned: boolean;
 }
 
 interface AnnouncementFormProps {
   hubId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  announcement?: HubAnnouncement;
 }
 
 export function AnnouncementForm({ 
   hubId, 
   onSuccess, 
-  onCancel 
+  onCancel,
+  announcement
 }: AnnouncementFormProps) {
   const { toast } = useToast();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
 
-  const form = useForm<FormFields>({
+  const form = useForm<AnnouncementFormData>({
     defaultValues: {
-      title: "",
-      content: "",
-      category: "general",
-      cover_image_url: "",
-      expires_at: "",
-      scheduled_for: ""
+      title: announcement?.title || "",
+      content: announcement?.content || "",
+      category: announcement?.category || "general",
+      is_pinned: announcement?.is_pinned || false
     }
   });
 
-  const onSubmit = async (data: FormFields) => {
+  const onSubmit = async (data: AnnouncementFormData) => {
     if (!profile?.id) {
       toast({
         title: "Authentication Required",
@@ -53,23 +52,23 @@ export function AnnouncementForm({
     }
 
     try {
-      console.log('Would create announcement:', {
+      console.log('Would create/update announcement:', {
         ...data,
         hub_id: hubId,
-        created_by: profile.id
+        author_id: profile.id
       });
       
       toast({
         title: "Success",
-        description: "Announcement created successfully.",
+        description: announcement ? "Announcement updated successfully." : "Announcement created successfully.",
       });
 
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error('Error creating announcement:', error);
+      console.error('Error creating/updating announcement:', error);
       toast({
         title: "Error",
-        description: "Failed to create announcement. Please try again.",
+        description: "Failed to save announcement. Please try again.",
         variant: "destructive"
       });
     }
@@ -87,7 +86,6 @@ export function AnnouncementForm({
               field={field}
               label="Title"
               type="text"
-              placeholder="Enter announcement title"
               required
             />
           )}
@@ -102,7 +100,6 @@ export function AnnouncementForm({
               field={field}
               label="Content"
               type="textarea"
-              placeholder="Enter announcement content"
               required
             />
           )}
@@ -119,56 +116,11 @@ export function AnnouncementForm({
               type="select"
               options={[
                 { value: "general", label: "General" },
-                { value: "urgent", label: "Urgent" },
-                { value: "event", label: "Event" },
-                { value: "update", label: "Update" }
+                { value: "academic", label: "Academic" },
+                { value: "events", label: "Events" },
+                { value: "resources", label: "Resources" }
               ]}
               required
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="cover_image_url"
-          render={({ field }) => (
-            <FormField
-              name="cover_image_url"
-              field={field}
-              label="Cover Image"
-              type="image"
-              bucket="hub-images"
-              accept="image/*"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="scheduled_for"
-          render={({ field }) => (
-            <FormField
-              name="scheduled_for"
-              field={field}
-              label="Schedule For"
-              type="text"
-              placeholder="YYYY-MM-DD HH:MM (optional)"
-              description="Leave empty to publish immediately"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="expires_at"
-          render={({ field }) => (
-            <FormField
-              name="expires_at"
-              field={field}
-              label="Expires At"
-              type="text"
-              placeholder="YYYY-MM-DD HH:MM (optional)"
-              description="Leave empty for no expiration"
             />
           )}
         />
@@ -180,7 +132,7 @@ export function AnnouncementForm({
             </Button>
           )}
           <Button type="submit">
-            {form.formState.isSubmitting ? "Creating..." : "Create Announcement"}
+            {form.formState.isSubmitting ? "Saving..." : announcement ? "Update Announcement" : "Create Announcement"}
           </Button>
         </div>
       </form>
