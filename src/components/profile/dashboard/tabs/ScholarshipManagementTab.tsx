@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,35 +11,47 @@ interface Scholarship {
   id: string;
   title: string;
   description: string;
+  provider_name: string;
   amount: number;
   deadline: string;
-  application_url: string;
   status: string;
-  provider_name: string;
+  application_url: string;
+  category: string[];
+  tags: string[];
+  featured: boolean;
   created_at: string;
   updated_at: string;
+  author_id: string;
+  award_date?: string;
 }
 
 export function ScholarshipManagementTab() {
   const [selectedScholarship, setSelectedScholarship] = useState<Scholarship | null>(null);
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const { data: scholarships, isLoading } = useQuery({
     queryKey: ['admin-scholarships'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('scholarships')
+        .from('opportunities')
         .select('*')
+        .eq('opportunity_type', 'scholarship')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return data?.map(item => ({
+        ...item,
+        category: item.categories || [],
+        tags: item.tags || [],
+        featured: item.featured || false,
+        provider_name: item.organization || '',
+        amount: 0, // Default value since this field might not exist
+        award_date: item.deadline
+      })) || [];
     },
   });
 
   const handleViewDetails = (scholarship: Scholarship) => {
     setSelectedScholarship(scholarship);
-    setDetailsDialogOpen(true);
   };
 
   const handleScholarshipUpdated = () => {
