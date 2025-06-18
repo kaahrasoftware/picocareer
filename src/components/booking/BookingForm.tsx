@@ -39,7 +39,6 @@ export function BookingForm({ mentorId, onBookingComplete }: BookingFormProps) {
       <div>
         <label className="block text-sm font-medium mb-2">Session Type</label>
         <SessionTypeSelector
-          mentorId={mentorId}
           onSessionTypeSelect={handleSessionTypeSelect}
         />
       </div>

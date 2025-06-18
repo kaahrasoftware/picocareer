@@ -28,7 +28,7 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: schools = [], isLoading } = useQuery({
-    queryKey: ['schools-for-update', searchQuery],
+    queryKey: ['schools-for-selector', searchQuery],
     queryFn: async () => {
       try {
         let query = supabase
@@ -37,11 +37,13 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
           .eq('status', 'Approved')
           .order('name');
 
+        // If there's a search query, filter by it
         if (searchQuery && searchQuery.length >= 2) {
           query = query.ilike('name', `%${searchQuery}%`);
         }
 
-        const { data, error } = await query.limit(searchQuery ? 100 : 2500);
+        // Remove the limit to get all schools
+        const { data, error } = await query;
         
         if (error) {
           console.error('Error fetching schools:', error);
@@ -64,15 +66,20 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
         console.error('Query error:', error);
         return [];
       }
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const filteredSchools = useMemo(() => {
     // Ensure schools is always an array
     const schoolsArray = Array.isArray(schools) ? schools : [];
     
-    if (!searchQuery || searchQuery.length < 2) return schoolsArray;
+    // If no search query, return all schools (but limit for performance)
+    if (!searchQuery || searchQuery.length < 2) {
+      return schoolsArray.slice(0, 100); // Show first 100 for initial load
+    }
     
+    // Filter by search query
     return schoolsArray.filter(school => 
       school && 
       school.name && 
@@ -82,6 +89,12 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
 
   const formatLocation = (school: PartialSchool) => {
     return school.location || 'Location not specified';
+  };
+
+  const handleSelectSchool = (school: PartialSchool) => {
+    onValueChange(value?.id === school.id ? null : school);
+    setOpen(false);
+    setSearchQuery(""); // Clear search after selection
   };
 
   return (
@@ -100,15 +113,15 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
+      <PopoverContent className="w-full p-0" style={{ zIndex: 9999 }}>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder="Search schools..." 
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
           <CommandEmpty>
-            {isLoading ? "Loading schools..." : "No schools found."}
+            {isLoading ? "Loading schools..." : searchQuery.length < 2 ? "Type at least 2 characters to search" : "No schools found."}
           </CommandEmpty>
           <CommandList>
             <CommandGroup className="max-h-64 overflow-auto">
@@ -118,10 +131,9 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                 return (
                   <CommandItem
                     key={school.id}
-                    onSelect={() => {
-                      onValueChange(value?.id === school.id ? null : school);
-                      setOpen(false);
-                    }}
+                    value={school.name}
+                    onSelect={() => handleSelectSchool(school)}
+                    className="cursor-pointer"
                   >
                     <Check
                       className={cn(
@@ -138,6 +150,11 @@ export function SchoolSelector({ value, onValueChange, disabled }: SchoolSelecto
                   </CommandItem>
                 );
               })}
+              {searchQuery.length < 2 && schools.length > 100 && (
+                <CommandItem disabled className="text-center text-muted-foreground">
+                  Type to search through all {schools.length} schools
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
