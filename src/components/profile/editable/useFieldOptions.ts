@@ -19,43 +19,38 @@ export function useFieldOptions(fieldName: FieldName) {
   return useQuery({
     queryKey: ['field-options', fieldName, tableName],
     queryFn: async (): Promise<QueryResult[]> => {
-      try {
-        // Handle different table structures based on table name
-        if (tableName === 'careers' || tableName === 'majors') {
-          const { data, error } = await supabase
-            .from(tableName as any)
-            .select('id, title, status')
-            .eq('status', 'Approved');
-          
-          if (error) throw error;
-          
-          return (data || []).map(item => ({
-            id: item.id,
-            title: item.title,
-            name: item.title,
-            status: item.status
-          }));
-        } else if (tableName === 'companies' || tableName === 'schools') {
-          const { data, error } = await supabase
-            .from(tableName as any)
-            .select('id, name, status')
-            .eq('status', 'Approved');
-          
-          if (error) throw error;
-          
-          return (data || []).map(item => ({
-            id: item.id,
-            title: item.name,
-            name: item.name,
-            status: item.status
-          }));
-        }
+      // Handle different table structures based on table name
+      if (tableName === 'careers' || tableName === 'majors') {
+        const { data, error } = await supabase
+          .from(tableName as any)
+          .select('id, title, status')
+          .eq('status', 'Approved');
         
-        return [];
-      } catch (error) {
-        console.error('Error fetching field options:', error);
-        return [];
+        if (error) throw error;
+        
+        return (data || []).map(item => ({
+          id: item.id,
+          title: item.title,
+          name: item.title,
+          status: item.status
+        }));
+      } else if (tableName === 'companies' || tableName === 'schools') {
+        const { data, error } = await supabase
+          .from(tableName as any)
+          .select('id, name, status')
+          .eq('status', 'Approved');
+        
+        if (error) throw error;
+        
+        return (data || []).map(item => ({
+          id: item.id,
+          title: item.name,
+          name: item.name,
+          status: item.status
+        }));
       }
+      
+      return [];
     },
     enabled: !!fieldName && !!tableName,
   });

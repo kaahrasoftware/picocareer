@@ -1,133 +1,111 @@
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { useEssayPrompts, useMenteeDataMutations } from "@/hooks/useMenteeData";
+import type { MenteeEssayResponse, EssayPrompt } from "@/types/mentee-profile";
 
-const formSchema = z.object({
-  prompt_id: z.string().min(1, 'Please select a prompt'),
-  response_text: z.string().optional(),
+const essaySchema = z.object({
+  prompt_id: z.string().min(1, "Please select a prompt"),
+  response_text: z.string().min(1, "Essay response is required"),
   is_draft: z.boolean(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type EssayFormData = z.infer<typeof essaySchema>;
 
 interface MenteeEssayFormProps {
   menteeId: string;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  essay?: MenteeEssayResponse | null;
+  onClose: () => void;
 }
 
-export function MenteeEssayForm({ menteeId, onSuccess, onCancel }: MenteeEssayFormProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+export function MenteeEssayForm({ menteeId, essay, onClose }: MenteeEssayFormProps) {
+  const { data: prompts = [] } = useEssayPrompts();
+  const { addEssayResponse, updateEssayResponse } = useMenteeDataMutations();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [selectedPrompt, setSelectedPrompt] = useState<EssayPrompt | null>(null);
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<EssayFormData>({
+    resolver: zodResolver(essaySchema),
     defaultValues: {
-      prompt_id: '',
-      response_text: '',
-      is_draft: true,
+      prompt_id: essay?.prompt_id || "",
+      response_text: essay?.response_text || "",
+      is_draft: essay?.is_draft ?? true,
     },
   });
 
-  const { data: prompts } = useQuery({
-    queryKey: ['essay-prompts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('essay_prompts')
-        .select('*')
-        .eq('is_active', true)
-        .order('title');
+  const watchedText = form.watch("response_text");
+  const watchedPromptId = form.watch("prompt_id");
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  useEffect(() => {
+    const text = watchedText || "";
+    setWordCount(text.trim().split(/\s+/).filter(word => word.length > 0).length);
+  }, [watchedText]);
 
-  const createEssayMutation = useMutation({
-    mutationFn: async (data: FormData) => {
+  useEffect(() => {
+    const prompt = prompts.find(p => p.id === watchedPromptId);
+    setSelectedPrompt(prompt || null);
+  }, [watchedPromptId, prompts]);
+
+  const onSubmit = async (data: EssayFormData) => {
+    setIsSubmitting(true);
+    try {
       const essayData = {
+        ...data,
         mentee_id: menteeId,
-        prompt_id: data.prompt_id,
-        response_text: data.response_text || '',
-        is_draft: data.is_draft,
-        word_count: data.response_text ? data.response_text.split(/\s+/).length : 0,
-        version: 1,
+        word_count: wordCount,
+        version: essay ? essay.version + 1 : 1,
       };
 
-      const { data: result, error } = await supabase
-        .from('mentee_essay_responses')
-        .insert(essayData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mentee-essays', menteeId] });
-      toast({
-        title: 'Success',
-        description: 'Essay response saved successfully',
-      });
-      if (onSuccess) onSuccess();
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: 'Failed to save essay response',
-        variant: 'destructive',
-      });
-      console.error('Error saving essay:', error);
-    },
-  });
-
-  const onSubmit = (data: FormData) => {
-    createEssayMutation.mutate(data);
+      if (essay) {
+        await updateEssayResponse.mutateAsync({ id: essay.id, ...essayData });
+      } else {
+        await addEssayResponse.mutateAsync(essayData);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Error saving essay:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const watchedText = form.watch('response_text');
-  const wordCount = watchedText ? watchedText.split(/\s+/).filter(word => word.length > 0).length : 0;
+  const isOverWordLimit = selectedPrompt?.word_limit && wordCount > selectedPrompt.word_limit;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Add Essay Response</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{essay ? "Edit Essay Response" : "Write Essay Response"}</DialogTitle>
+        </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="prompt_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Essay Prompt *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!!essay}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select an essay prompt" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {prompts?.map((prompt) => (
+                      {prompts.map((prompt) => (
                         <SelectItem key={prompt.id} value={prompt.id}>
-                          <div>
-                            <div className="font-medium">{prompt.title}</div>
-                            <div className="text-sm text-muted-foreground truncate max-w-md">
-                              {prompt.prompt_text}
-                            </div>
-                          </div>
+                          {prompt.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -137,21 +115,41 @@ export function MenteeEssayForm({ menteeId, onSuccess, onCancel }: MenteeEssayFo
               )}
             />
 
+            {selectedPrompt && (
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-medium">{selectedPrompt.title}</h4>
+                  <Badge variant="outline">{selectedPrompt.category.replace('_', ' ')}</Badge>
+                  {selectedPrompt.word_limit && (
+                    <Badge variant="outline">{selectedPrompt.word_limit} words max</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{selectedPrompt.prompt_text}</p>
+              </div>
+            )}
+
             <FormField
               control={form.control}
               name="response_text"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Essay Response</FormLabel>
+                  <FormLabel>Your Response *</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Write your essay response here..."
-                      className="min-h-[200px]"
-                      {...field}
+                      {...field} 
+                      placeholder="Write your essay response here..." 
+                      rows={15}
+                      className="min-h-[300px]"
                     />
                   </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    Word count: {wordCount}
+                  <div className="flex justify-between items-center text-sm">
+                    <span className={`${isOverWordLimit ? 'text-red-500' : 'text-muted-foreground'}`}>
+                      Word count: {wordCount}
+                      {selectedPrompt?.word_limit && ` / ${selectedPrompt.word_limit}`}
+                    </span>
+                    {isOverWordLimit && (
+                      <span className="text-red-500">Over word limit!</span>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -166,7 +164,7 @@ export function MenteeEssayForm({ menteeId, onSuccess, onCancel }: MenteeEssayFo
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Save as Draft</FormLabel>
                     <div className="text-sm text-muted-foreground">
-                      Mark this response as a draft for future editing
+                      You can continue editing draft responses later
                     </div>
                   </div>
                   <FormControl>
@@ -179,19 +177,20 @@ export function MenteeEssayForm({ menteeId, onSuccess, onCancel }: MenteeEssayFo
               )}
             />
 
-            <div className="flex justify-end gap-4">
-              {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel}>
-                  Cancel
-                </Button>
-              )}
-              <Button type="submit" disabled={createEssayMutation.isPending}>
-                {createEssayMutation.isPending ? 'Saving...' : 'Save Essay'}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || (isOverWordLimit && !form.getValues('is_draft'))}
+              >
+                {isSubmitting ? "Saving..." : essay ? "Update Essay" : "Save Essay"}
               </Button>
             </div>
           </form>
         </Form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
