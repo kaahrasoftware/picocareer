@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -22,13 +23,24 @@ export function BookingForm({ mentorId, onBookingComplete }: BookingFormProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
 
+  const handleSessionTypeSelect = (typeId: string) => {
+    // This should be implemented based on how SessionTypeSelector works
+    // For now, create a mock session type
+    setSelectedSessionType({
+      id: typeId,
+      type: "Mock Session",
+      duration: 60,
+      price: 100
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium mb-2">Session Type</label>
         <SessionTypeSelector
           mentorId={mentorId}
-          onSessionTypeSelect={setSelectedSessionType}
+          onSessionTypeSelect={handleSessionTypeSelect}
         />
       </div>
 

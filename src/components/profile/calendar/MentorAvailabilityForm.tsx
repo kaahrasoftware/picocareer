@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,8 +35,8 @@ export function MentorAvailabilityForm() {
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              disabled={Date =>
-                Date < new Date()
+              disabled={(date) =>
+                date < new Date()
               }
               className={cn("w-full rounded-md border")}
             />
