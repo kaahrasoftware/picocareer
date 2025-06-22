@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
@@ -9,10 +9,12 @@ import { TemplateSettingsTab } from "@/components/admin/email-templates/Template
 import { useEmailCampaignAnalytics } from "@/hooks/useEmailCampaignAnalytics";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Mail, Settings, TrendingUp, Users, Send, Plus, BarChart } from "lucide-react";
+import { AlertCircle, RefreshCw, Plus, BarChart, Settings, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { ScholarshipScraperTab } from "@/components/admin/ScholarshipScraperTab";
+
 export default function AdminEmailCampaigns() {
   const {
     session,
@@ -22,7 +24,9 @@ export default function AdminEmailCampaigns() {
     data: profile,
     isLoading: profileLoading
   } = useUserProfile(session);
-  const [activeTab, setActiveTab] = useState("create-campaign");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || "create-campaign";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [campaignListKey, setCampaignListKey] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -30,6 +34,14 @@ export default function AdminEmailCampaigns() {
 
   // Get real analytics data
   const analytics = useEmailCampaignAnalytics(profile?.id || '');
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['create-campaign', 'dashboard', 'scholarship-scraper', 'template-settings'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Check session on load and periodically
   useEffect(() => {
@@ -111,24 +123,31 @@ export default function AdminEmailCampaigns() {
   if (profile.user_type !== "admin") {
     return <Navigate to="/" replace />;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="container py-6 space-y-8">
-        {authError && <Alert variant="destructive" className="mb-6">
+        {authError && (
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Authentication Warning</AlertTitle>
             <AlertDescription className="flex justify-between items-center">
               <span>{authError}</span>
               <Button variant="outline" size="sm" onClick={handleSessionRefresh} disabled={isRefreshing} className="whitespace-nowrap">
-                {isRefreshing ? <>
+                {isRefreshing ? (
+                  <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Refreshing...
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Refresh Session
-                  </>}
+                  </>
+                )}
               </Button>
             </AlertDescription>
-          </Alert>}
+          </Alert>
+        )}
 
         {/* Modern Header Section */}
         
@@ -144,6 +163,10 @@ export default function AdminEmailCampaigns() {
               <TabsTrigger value="dashboard" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <BarChart className="h-4 w-4" />
                 Campaign Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="scholarship-scraper" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Bot className="h-4 w-4" />
+                Scholarship Scraper
               </TabsTrigger>
               <TabsTrigger value="template-settings" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Settings className="h-4 w-4" />
@@ -169,9 +192,11 @@ export default function AdminEmailCampaigns() {
                       </p>
                     </div>
                   </div>
-                  {!sessionValid && <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+                  {!sessionValid && (
+                    <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
                       ⚠️ Session issue detected. Please refresh your session before creating campaigns.
-                    </div>}
+                    </div>
+                  )}
                 </div>
                 <div className="p-8">
                   <EmailCampaignForm adminId={profile.id} onCampaignCreated={handleCampaignCreated} />
@@ -205,6 +230,10 @@ export default function AdminEmailCampaigns() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="scholarship-scraper">
+            <ScholarshipScraperTab adminId={profile.id} sessionValid={sessionValid} />
+          </TabsContent>
+
           <TabsContent value="template-settings">
             <div className="max-w-6xl mx-auto">
               <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
@@ -231,5 +260,6 @@ export default function AdminEmailCampaigns() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 }
