@@ -35,6 +35,20 @@ interface ScholarshipData {
   source_url?: string;
 }
 
+// Helper function to extract JSON from markdown code blocks
+function extractJsonFromMarkdown(text: string): string {
+  // Remove markdown code block syntax if present
+  const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+  const match = text.match(codeBlockRegex);
+  
+  if (match) {
+    return match[1].trim();
+  }
+  
+  // If no code blocks found, return the original text trimmed
+  return text.trim();
+}
+
 // AI-enhanced data extraction using OpenAI
 async function enhanceScholarshipData(rawData: any): Promise<ScholarshipData | null> {
   if (!openAIApiKey) {
@@ -43,7 +57,7 @@ async function enhanceScholarshipData(rawData: any): Promise<ScholarshipData | n
   }
 
   const prompt = `
-Extract and standardize scholarship information from the following data. Return a JSON object with these exact fields:
+Extract and standardize scholarship information from the following data. Return ONLY a valid JSON object with these exact fields, no markdown formatting:
 
 {
   "title": "Clean scholarship title",
@@ -63,12 +77,7 @@ Extract and standardize scholarship information from the following data. Return 
   "tags": ["tag1", "tag2", "tag3"]
 }
 
-Focus especially on:
-- Extracting eligibility criteria for international students
-- Standardizing currency and amounts
-- Identifying citizenship requirements
-- Categorizing by field of study and scholarship type
-- Ensuring all dates are in YYYY-MM-DD format
+IMPORTANT: Return ONLY the JSON object. Do not include any markdown formatting, explanations, or code blocks.
 
 Raw data: ${JSON.stringify(rawData)}
 `;
@@ -85,7 +94,7 @@ Raw data: ${JSON.stringify(rawData)}
         messages: [
           { 
             role: 'system', 
-            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into the exact JSON format requested. Always return valid JSON.' 
+            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into valid JSON format. Always return only valid JSON without any markdown formatting or explanations.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -98,9 +107,36 @@ Raw data: ${JSON.stringify(rawData)}
     }
 
     const data = await response.json();
-    const extractedData = JSON.parse(data.choices[0].message.content);
-
-    return extractedData;
+    const rawContent = data.choices[0].message.content;
+    
+    console.log('OpenAI raw response:', rawContent);
+    
+    // Extract JSON from potential markdown formatting
+    const jsonContent = extractJsonFromMarkdown(rawContent);
+    
+    console.log('Extracted JSON content:', jsonContent);
+    
+    try {
+      const extractedData = JSON.parse(jsonContent);
+      return extractedData;
+    } catch (parseError) {
+      console.error('JSON parsing failed after extraction:', parseError);
+      console.error('Content that failed to parse:', jsonContent);
+      
+      // Try one more fallback - look for JSON object pattern
+      const jsonObjectMatch = jsonContent.match(/\{[\s\S]*\}/);
+      if (jsonObjectMatch) {
+        try {
+          const fallbackData = JSON.parse(jsonObjectMatch[0]);
+          console.log('Fallback parsing succeeded');
+          return fallbackData;
+        } catch (fallbackError) {
+          console.error('Fallback parsing also failed:', fallbackError);
+        }
+      }
+      
+      return null;
+    }
   } catch (error) {
     console.error('Error enhancing scholarship data with AI:', error);
     return null;
