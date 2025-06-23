@@ -29,7 +29,6 @@ interface ScholarshipData {
   featured?: boolean;
   cover_image_url?: string;
   views_count?: number;
-  bookmarks_count?: number;
   author_id?: string;
   source_url?: string;
 }
