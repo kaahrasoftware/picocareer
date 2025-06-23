@@ -1,28 +1,27 @@
 import { useState, useEffect } from "react";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { ScholarshipScraperTab } from "@/components/admin/ScholarshipScraperTab";
 import { useEmailCampaignAnalytics } from "@/hooks/useEmailCampaignAnalytics";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Mail, Settings, TrendingUp, Users, Send, Plus, BarChart } from "lucide-react";
+import { AlertCircle, RefreshCw, Plus, BarChart, Settings, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+
 export default function AdminEmailCampaigns() {
-  const {
-    session,
-    refreshSession
-  } = useAuthSession();
-  const {
-    data: profile,
-    isLoading: profileLoading
-  } = useUserProfile(session);
-  const [activeTab, setActiveTab] = useState("create-campaign");
+  const { session, refreshSession } = useAuthSession();
+  const { data: profile, isLoading: profileLoading } = useUserProfile(session);
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get('tab') || "create-campaign";
+  });
   const [campaignListKey, setCampaignListKey] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -111,27 +110,31 @@ export default function AdminEmailCampaigns() {
   if (profile.user_type !== "admin") {
     return <Navigate to="/" replace />;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       <div className="container py-6 space-y-8">
-        {authError && <Alert variant="destructive" className="mb-6">
+        {authError && (
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Authentication Warning</AlertTitle>
             <AlertDescription className="flex justify-between items-center">
               <span>{authError}</span>
               <Button variant="outline" size="sm" onClick={handleSessionRefresh} disabled={isRefreshing} className="whitespace-nowrap">
-                {isRefreshing ? <>
+                {isRefreshing ? (
+                  <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Refreshing...
-                  </> : <>
+                  </>
+                ) : (
+                  <>
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Refresh Session
-                  </>}
+                  </>
+                )}
               </Button>
             </AlertDescription>
-          </Alert>}
-
-        {/* Modern Header Section */}
-        
+          </Alert>
+        )}
 
         {/* Modern Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
@@ -148,6 +151,10 @@ export default function AdminEmailCampaigns() {
               <TabsTrigger value="template-settings" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Settings className="h-4 w-4" />
                 Template Studio
+              </TabsTrigger>
+              <TabsTrigger value="scholarship-scraper" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Database className="h-4 w-4" />
+                Scholarship Scraper
               </TabsTrigger>
             </TabsList>
           </div>
@@ -169,9 +176,11 @@ export default function AdminEmailCampaigns() {
                       </p>
                     </div>
                   </div>
-                  {!sessionValid && <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+                  {!sessionValid && (
+                    <div className="mt-3 text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
                       ⚠️ Session issue detected. Please refresh your session before creating campaigns.
-                    </div>}
+                    </div>
+                  )}
                 </div>
                 <div className="p-8">
                   <EmailCampaignForm adminId={profile.id} onCampaignCreated={handleCampaignCreated} />
@@ -229,7 +238,33 @@ export default function AdminEmailCampaigns() {
               </Card>
             </div>
           </TabsContent>
+
+          <TabsContent value="scholarship-scraper">
+            <div className="max-w-6xl mx-auto">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-10 via-green-10 to-purple-10 px-8 py-6 border-b border-gray-100/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Database className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        Scholarship Data Scraper
+                      </h2>
+                      <p className="text-muted-foreground mt-1">
+                        Automatically discover and import scholarships from multiple sources using AI enhancement
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8">
+                  <ScholarshipScraperTab adminId={profile.id} />
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 }

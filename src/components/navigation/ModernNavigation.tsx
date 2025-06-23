@@ -153,6 +153,11 @@ export function ModernNavigation() {
           description: "Manage email marketing campaigns"
         },
         { 
+          title: "Scholarship Scraper", 
+          href: "/admin/email-campaigns?tab=scholarship-scraper",
+          description: "Automated scholarship data collection"
+        },
+        { 
           title: "Scholarships Add", 
           href: "/scholarships/add",
           description: "Add new scholarship opportunities"

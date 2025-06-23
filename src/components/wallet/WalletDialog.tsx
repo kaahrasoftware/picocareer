@@ -1,6 +1,9 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { WalletOverview } from "../token-shop/WalletOverview";
 import { EnhancedTransactionHistory } from "./EnhancedTransactionHistory";
 import { WalletAnalytics } from "./WalletAnalytics";
@@ -17,12 +20,28 @@ interface WalletDialogProps {
 export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
   const { wallet } = useWalletBalance();
   const { session } = useAuthSession();
+  const navigate = useNavigate();
+
+  const handleBuyTokens = () => {
+    onClose();
+    navigate('/token-shop');
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Wallet</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Wallet</DialogTitle>
+            <Button 
+              onClick={handleBuyTokens}
+              className="flex items-center gap-2"
+              size="sm"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Buy Tokens
+            </Button>
+          </div>
         </DialogHeader>
         
         <Tabs defaultValue="overview" className="w-full">
