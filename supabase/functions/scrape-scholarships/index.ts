@@ -35,6 +35,33 @@ interface ScholarshipData {
   source_url?: string;
 }
 
+// Helper function to extract JSON from markdown code blocks
+function extractJsonFromMarkdown(text: string): string {
+  console.log('Raw OpenAI response:', text);
+  
+  // Try to extract JSON from markdown code blocks
+  const jsonBlockRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?```/i;
+  const match = text.match(jsonBlockRegex);
+  
+  if (match && match[1]) {
+    console.log('Extracted JSON from markdown:', match[1]);
+    return match[1].trim();
+  }
+  
+  // If no markdown blocks found, try to find JSON content directly
+  const jsonStartRegex = /\{[\s\S]*\}/;
+  const directMatch = text.match(jsonStartRegex);
+  
+  if (directMatch) {
+    console.log('Found direct JSON content:', directMatch[0]);
+    return directMatch[0].trim();
+  }
+  
+  // Return the original text if no JSON patterns found
+  console.log('No JSON patterns found, returning original text');
+  return text.trim();
+}
+
 // AI-enhanced data extraction using OpenAI
 async function enhanceScholarshipData(rawData: any): Promise<ScholarshipData | null> {
   if (!openAIApiKey) {
@@ -43,7 +70,7 @@ async function enhanceScholarshipData(rawData: any): Promise<ScholarshipData | n
   }
 
   const prompt = `
-Extract and standardize scholarship information from the following data. Return a JSON object with these exact fields:
+Extract and standardize scholarship information from the following data. Return ONLY a valid JSON object (without markdown formatting) with these exact fields:
 
 {
   "title": "Clean scholarship title",
@@ -62,6 +89,8 @@ Extract and standardize scholarship information from the following data. Return 
   "contact_phone": "phone number (if available)",
   "tags": ["tag1", "tag2", "tag3"]
 }
+
+IMPORTANT: Return ONLY the JSON object without any markdown formatting, explanations, or code blocks.
 
 Focus especially on:
 - Extracting eligibility criteria for international students
@@ -85,7 +114,7 @@ Raw data: ${JSON.stringify(rawData)}
         messages: [
           { 
             role: 'system', 
-            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into the exact JSON format requested. Always return valid JSON.' 
+            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into valid JSON format. Always return ONLY valid JSON without any markdown formatting or code blocks.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -98,9 +127,21 @@ Raw data: ${JSON.stringify(rawData)}
     }
 
     const data = await response.json();
-    const extractedData = JSON.parse(data.choices[0].message.content);
+    const rawContent = data.choices[0].message.content;
+    
+    // Extract JSON from potential markdown formatting
+    const jsonContent = extractJsonFromMarkdown(rawContent);
+    
+    try {
+      const extractedData = JSON.parse(jsonContent);
+      console.log('Successfully parsed scholarship data:', extractedData.title);
+      return extractedData;
+    } catch (parseError) {
+      console.error('JSON parsing failed after extraction. Content:', jsonContent);
+      console.error('Parse error:', parseError);
+      return null;
+    }
 
-    return extractedData;
   } catch (error) {
     console.error('Error enhancing scholarship data with AI:', error);
     return null;
