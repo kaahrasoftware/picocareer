@@ -24,7 +24,7 @@ export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDia
     return null;
   }
 
-  const handleClose = () => {
+  const handleSuccess = () => {
     onOpenChange(false);
   };
 
@@ -41,7 +41,7 @@ export function BookSessionDialog({ open, onOpenChange, mentor }: BookSessionDia
         <div className="mt-4">
           <BookingForm
             mentorId={mentor.id}
-            onClose={handleClose}
+            onBookingComplete={handleSuccess}
           />
         </div>
       </DialogContent>

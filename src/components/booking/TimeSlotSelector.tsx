@@ -1,86 +1,91 @@
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
-import { Skeleton } from "@/components/ui/skeleton";
-import { BookingSessionType } from "@/types/session";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { TimeSlotButton } from "./TimeSlotButton";
+import { Loader2 } from "lucide-react";
+import { format, parseISO, isSameDay } from "date-fns";
 
 interface TimeSlotSelectorProps {
-  date: Date;
+  selectedDate: Date;
   mentorId: string;
-  selectedTime?: string;
+  selectedTime: string;
   onTimeSelect: (time: string) => void;
-  selectedSessionType?: BookingSessionType;
+  selectedSessionType?: {
+    id: string;
+    type: string;
+    duration: number;
+    price: number;
+  };
 }
 
 export function TimeSlotSelector({
-  date,
+  selectedDate,
   mentorId,
   selectedTime,
   onTimeSelect,
   selectedSessionType
 }: TimeSlotSelectorProps) {
-  const sessionDuration = selectedSessionType?.duration || 60;
-  
-  const { timeSlots, isLoading, error } = useAvailableTimeSlots(
-    date,
-    mentorId,
-    sessionDuration
-  );
+  const { data: timeSlots = [], isLoading, error } = useQuery({
+    queryKey: ['available-time-slots', mentorId, format(selectedDate, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', mentorId)
+        .eq('is_available', true)
+        .is('booked_session_id', null)
+        .gte('start_date_time', format(selectedDate, 'yyyy-MM-dd'))
+        .lt('start_date_time', format(new Date(selectedDate.getTime() + 24 * 60 * 60 * 1000), 'yyyy-MM-dd'))
+        .order('start_date_time');
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!mentorId && !!selectedDate
+  });
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
+      <div className="flex items-center justify-center p-4">
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <p className="text-red-500">Error loading time slots. Please try again.</p>
+      <div className="text-center text-red-500 p-4">
+        Error loading time slots
       </div>
     );
   }
 
-  if (!timeSlots || timeSlots.length === 0) {
+  const availableSlots = timeSlots.filter(slot => {
+    const slotDate = parseISO(slot.start_date_time);
+    return isSameDay(slotDate, selectedDate);
+  });
+
+  if (availableSlots.length === 0) {
     return (
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <p className="text-muted-foreground">No available time slots for this date.</p>
+      <div className="text-center text-muted-foreground p-4">
+        No available time slots for this date
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {timeSlots.map((slot) => (
-          <Card
-            key={slot.time}
-            className={`cursor-pointer transition-colors ${
-              selectedTime === slot.time
-                ? 'bg-primary text-primary-foreground'
-                : slot.available 
-                ? 'hover:bg-muted'
-                : 'opacity-50 cursor-not-allowed'
-            }`}
-            onClick={() => slot.available && onTimeSelect(slot.time)}
-          >
-            <CardContent className="p-3 text-center">
-              <span className="text-sm font-medium">{slot.time}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <div className="grid grid-cols-3 gap-2">
+      {availableSlots.map((slot) => (
+        <TimeSlotButton
+          key={slot.id}
+          time={format(parseISO(slot.start_date_time), 'HH:mm')}
+          available={slot.is_available}
+          isSelected={selectedTime === slot.start_date_time}
+          onSelect={() => onTimeSelect(slot.start_date_time)}
+          mentorTimezone={slot.reference_timezone || 'UTC'}
+          date={selectedDate}
+        />
+      ))}
     </div>
   );
 }

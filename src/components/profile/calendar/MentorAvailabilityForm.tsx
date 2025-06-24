@@ -1,106 +1,60 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserSettings } from "@/hooks/useUserSettings";
 import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
-import { supabase } from "@/integrations/supabase/client";
 
-interface MentorAvailabilityFormProps {
-  onClose: () => void;
-  onSuccess: () => void;
-}
-
-export function MentorAvailabilityForm({ onClose, onSuccess }: MentorAvailabilityFormProps) {
+export function MentorAvailabilityForm() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userId, setUserId] = useState<string>('');
-
-  // Get user ID on component mount
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-    getUserId();
-  }, []);
-
-  const handleSubmit = async () => {
-    if (!selectedDate || !selectedTime) return;
-
-    setIsSubmitting(true);
-    try {
-      const startDateTime = new Date(selectedDate);
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      startDateTime.setHours(hours, minutes, 0, 0);
-      
-      const endDateTime = new Date(startDateTime);
-      endDateTime.setHours(endDateTime.getHours() + 1);
-
-      // Calculate timezone offset
-      const timezoneOffset = -startDateTime.getTimezoneOffset();
-
-      const { error } = await supabase
-        .from('mentor_availability')
-        .insert({
-          profile_id: userId,
-          start_date_time: startDateTime.toISOString(),
-          end_date_time: endDateTime.toISOString(),
-          reference_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          timezone_offset: timezoneOffset,
-          is_available: true,
-          recurring: false
-        });
-
-      if (error) throw error;
-      onSuccess();
-    } catch (error) {
-      console.error('Error setting availability:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const { toast } = useToast();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id || '');
+  const mentorId = profile?.id || '';
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-4">Set Your Availability</h3>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={setSelectedDate}
-          className="rounded-md border bg-card"
-          disabled={(date) => {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            return date < today;
-          }}
-        />
-      </div>
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-lg">Set Availability</CardTitle>
+          <CardDescription>Select a date to view and manage your available time slots.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="date" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed">
+              Date
+            </label>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              disabled={(date) =>
+                date < new Date()
+              }
+              className={cn("w-full rounded-md border")}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {selectedDate && (
-        <TimeSlotSelector
-          date={selectedDate}
-          mentorId={userId}
-          selectedTime={selectedTime}
-          onTimeSelect={setSelectedTime}
-          selectedSessionType={undefined}
-        />
+        <div>
+          <label className="block text-sm font-medium mb-2">Available Times</label>
+          <TimeSlotSelector
+            selectedDate={selectedDate}
+            mentorId={mentorId}
+            selectedTime={selectedTime}
+            onTimeSelect={setSelectedTime}
+          />
+        </div>
       )}
-
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={!selectedDate || !selectedTime || isSubmitting}
-        >
-          Save Availability
-        </Button>
-      </div>
     </div>
   );
 }

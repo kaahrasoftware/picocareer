@@ -1,31 +1,33 @@
 
-import { GraduationCap } from "lucide-react";
-import { ScholarshipScraperButton } from "./ScholarshipScraperButton";
+import { Button } from "@/components/ui/button";
+import { Plus, School } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuthState } from "@/hooks/useAuthState";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
-interface ScholarshipHeaderProps {
-  onScrapingComplete?: () => void;
-}
+export function ScholarshipHeader() {
+  const { user, session } = useAuthState();
+  const { data: profile } = useUserProfile(session);
 
-export function ScholarshipHeader({ onScrapingComplete }: ScholarshipHeaderProps) {
   return (
-    <div className="text-center space-y-4">
-      <div className="flex justify-center items-center gap-3 mb-4">
-        <div className="p-3 bg-blue-100 rounded-full">
-          <GraduationCap className="h-8 w-8 text-blue-600" />
-        </div>
-        <h1 className="text-4xl font-bold text-gray-900">
-          Scholarships & Funding
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <School className="h-8 w-8 text-blue-500" />
+          Scholarships
         </h1>
+        <p className="text-muted-foreground mt-1">
+          Find financial support opportunities for your education
+        </p>
       </div>
-      
-      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-        Discover scholarships, grants, and fellowships to fund your education journey. 
-        Find opportunities specifically designed for international students.
-      </p>
 
-      <div className="flex justify-center">
-        <ScholarshipScraperButton onScrapingComplete={onScrapingComplete} />
-      </div>
+      {user && profile?.user_type === 'admin' && (
+        <Button asChild>
+          <Link to="/scholarships/add">
+            <Plus className="h-4 w-4 mr-1" /> Add Scholarship
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

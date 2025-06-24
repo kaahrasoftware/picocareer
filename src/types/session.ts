@@ -1,6 +1,7 @@
+
 import { Control } from "react-hook-form";
 
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call" | "Zoom" | "Microsoft Teams";
+export type MeetingPlatform = "Google Meet" | "Zoom" | "Microsoft Teams" | "Telegram" | "WhatsApp" | "Phone Call";
 
 export interface SessionType {
   id: string;
@@ -15,21 +16,7 @@ export interface SessionType {
   telegram_username?: string;
   phone_number?: string;
   token_cost: number;
-  custom_type_name?: string;
-}
-
-// Simplified SessionType for booking components
-export interface BookingSessionType {
-  id: string;
-  type: SessionTypeEnum;
-  duration: number;
-  price: number;
-  description?: string;
-  meeting_platform: MeetingPlatform[];
-  telegram_username?: string;
-  phone_number?: string;
-  token_cost: number;
-  custom_type_name?: string;
+  custom_type_name?: string; // Field for custom type name
 }
 
 export type SessionTypeEnum =
@@ -62,8 +49,9 @@ export type SessionTypeEnum =
   | "Study Tips"
   | "Volunteer Opportunities"
   | "Know About my Academic Major"
-  | "Custom";
+  | "Custom"; // Custom type option
 
+// Add the SESSION_TYPE_OPTIONS export
 export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Know About my Career",
   "Resume/CV Review",
@@ -94,7 +82,7 @@ export const SESSION_TYPE_OPTIONS: SessionTypeEnum[] = [
   "Study Tips",
   "Volunteer Opportunities",
   "Know About my Academic Major",
-  "Custom"
+  "Custom" // Custom type option in array
 ];
 
 export interface SessionTypeFormData {
@@ -105,7 +93,7 @@ export interface SessionTypeFormData {
   meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;
-  custom_type_name?: string;
+  custom_type_name?: string; // Field for custom type name
 }
 
 export interface MentorSession {
@@ -143,14 +131,13 @@ export interface Availability {
 }
 
 export interface TimeSlotInputsProps {
-  timeSlots: string[];
-  selectedStartTime?: string;
-  selectedEndTime?: string;
+  timeSlots: any[];
+  selectedDate: Date;
+  selectedStartTime: string;
+  selectedEndTime: string;
   isRecurring: boolean;
   userTimezone: string;
-  selectedDate: Date;
   onStartTimeSelect: (time: string) => void;
   onEndTimeSelect: (time: string) => void;
-  onRecurringChange: (value: boolean) => void;
-  selectedDateRange?: any;
+  onRecurringChange: () => void;
 }

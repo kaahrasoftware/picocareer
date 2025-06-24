@@ -15,12 +15,11 @@ export interface MentorSession {
   scheduled_at: string;
   status: string;
   notes: string | null;
-  note?: string; // Added for compatibility
   mentor: SessionParticipant;
   mentee: SessionParticipant;
   session_type: SessionType;
   meeting_link?: string | null;
-  meeting_platform?: 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';
+  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call';
   attendance_confirmed?: boolean;
   availability_slot_id?: string | null;
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Plus, Edit, Trash2, ExternalLink, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -192,9 +191,12 @@ export function MenteeProjectsTab({ profile, isEditing }: MenteeProjectsTabProps
 
       {showForm && (
         <MenteeProjectForm
-          menteeId={profile.id}
+          menteeId={profile?.id || ''}
           project={editingProject}
-          onClose={handleFormClose}
+          onClose={() => {
+            setShowForm(false);
+            setEditingProject(undefined);
+          }}
         />
       )}
     </div>

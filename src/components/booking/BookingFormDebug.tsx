@@ -1,154 +1,140 @@
-import React, { useState } from 'react';
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
-import { BookingSessionType } from "@/types/session";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useUserSettings } from "@/hooks/useUserSettings";
+import { TimeSlotSelector } from "./TimeSlotSelector";
 
-interface BookingFormDebugProps {
+interface BookingFormProps {
   mentorId: string;
-  selectedSessionType?: BookingSessionType;
-  onClose: () => void;
+  onBookingComplete: () => void;
 }
 
-const bookingFormSchema = z.object({
-  date: z.date({
-    required_error: "A date is required.",
-  }),
-  time: z.string({
-    required_error: "A time slot is required.",
-  }),
-  notes: z.string().optional(),
-});
-
-export function BookingFormDebug({ mentorId, selectedSessionType, onClose }: BookingFormDebugProps) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+export function BookingFormDebug({ mentorId, onBookingComplete }: BookingFormProps) {
+  const [selectedSessionType, setSelectedSessionType] = useState<{ id: string; type: string; duration: number; price: number } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [notes, setNotes] = useState("");
   const { toast } = useToast();
+  const { session } = useAuthSession();
+  const { data: profile } = useUserProfile(session);
+  const { getSetting } = useUserSettings(profile?.id || '');
+  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const form = useForm<z.infer<typeof bookingFormSchema>>({
-    resolver: zodResolver(bookingFormSchema),
-    defaultValues: {
-      date: date,
-      time: "",
-      notes: "",
-    },
-  });
+  const sessionTypes = [
+    { id: "1", type: "30-Minute Session", duration: 30, price: 50 },
+    { id: "2", type: "60-Minute Session", duration: 60, price: 100 },
+    { id: "3", type: "90-Minute Session", duration: 90, price: 150 },
+  ];
 
-  function onSubmit(values: z.infer<typeof bookingFormSchema>) {
-    console.log(values)
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedSessionType) {
+      toast({
+        title: "Error",
+        description: "Please select a session type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedDate) {
+      toast({
+        title: "Error",
+        description: "Please select a date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedTime) {
+      toast({
+        title: "Error",
+        description: "Please select a time",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      ),
-    })
-  }
+      title: "Success",
+      description: `Booking Confirmed for ${format(selectedDate, 'PPP')} at ${selectedTime} ${userTimezone}`,
+    });
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date of session</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={setDate}
-                    disabled={(date) =>
-                      date > new Date()
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+    <div className="space-y-6">
+      <div>
+        <Label htmlFor="session-type" className="block text-sm font-medium mb-2">
+          Session Type
+        </Label>
+        <Select onValueChange={(value) => {
+          const session = sessionTypes.find(s => s.id === value);
+          setSelectedSessionType(session || null);
+        }}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a session type" />
+          </SelectTrigger>
+          <SelectContent>
+            {sessionTypes.map((session) => (
+              <SelectItem key={session.id} value={session.id}>
+                {session.type} - ${session.price}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="date" className="block text-sm font-medium mb-2">
+          Date
+        </Label>
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={setSelectedDate}
+          className="rounded-md border"
         />
-        {date && (
-          <FormField
-            control={form.control}
-            name="time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Time</FormLabel>
-                <FormControl>
-                  <TimeSlotSelector
-                    date={date}
-                    mentorId={mentorId}
-                    selectedTime={field.value}
-                    onTimeSelect={field.onChange}
-                    selectedSessionType={selectedSessionType}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+      </div>
+
+      {selectedDate && selectedSessionType && (
+        <div>
+          <label className="block text-sm font-medium mb-2">Available Times</label>
+          <TimeSlotSelector
+            selectedDate={selectedDate}
+            mentorId={mentorId}
+            selectedTime={selectedTime}
+            onTimeSelect={setSelectedTime}
+            selectedSessionType={selectedSessionType}
           />
-        )}
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Input placeholder="Write some notes for the mentor" {...field} />
-              </FormControl>
-              <FormDescription>
-                Any additional information you want to provide to the mentor.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+        </div>
+      )}
+
+      <div>
+        <Label htmlFor="notes" className="block text-sm font-medium mb-2">
+          Notes
+        </Label>
+        <Textarea
+          id="notes"
+          placeholder="Any specific topics you'd like to cover?"
+          rows={3}
+          className="w-full rounded-md border"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
-  )
+      </div>
+
+      <Button onClick={handleSubmit}>Confirm Booking</Button>
+    </div>
+  );
 }

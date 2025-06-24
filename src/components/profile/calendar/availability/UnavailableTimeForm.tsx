@@ -23,6 +23,7 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
   const { getSetting } = useUserSettings(profileId);
   const userTimezone = getSetting('timezone');
   
+  // Get current user session and profile to check if admin
   const { session } = useAuthSession();
   const { data: currentUserProfile } = useUserProfile(session);
   const isAdmin = currentUserProfile?.user_type === 'admin';
@@ -57,6 +58,7 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
       const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
+      // Calculate timezone offset in minutes for the specific start time
       const timezoneOffsetMinutes = getTimezoneOffset(startDateTime, userTimezone);
 
       console.log('Creating unavailability with:', {
@@ -66,6 +68,8 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
         isCurrentUser
       });
 
+      // If the current user is an admin and is managing someone else's availability,
+      // use the admin edge function instead of direct insert
       if (isAdmin && !isCurrentUser) {
         const { data, error } = await supabase.functions.invoke('admin-create-availability', {
           body: JSON.stringify({
@@ -83,6 +87,7 @@ export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: Unav
 
         if (error) throw error;
       } else {
+        // Regular insert for the user's own unavailability
         const { error } = await supabase
           .from('mentor_availability')
           .insert({

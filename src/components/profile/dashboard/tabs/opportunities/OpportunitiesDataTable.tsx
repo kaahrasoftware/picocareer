@@ -1,125 +1,126 @@
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { ExternalLink } from "lucide-react";
 
-interface Opportunity {
+interface OpportunityWithAuthor {
   id: string;
   title: string;
   description: string;
-  company?: { name: string } | null;
-  company_name?: string | null;
-  location: string;
-  type: string;
-  salary: string;
-  posted_date: string;
-  application_deadline: string;
-  url: string;
+  deadline: string;
+  created_at: string;
+  status: string;
+  company: {
+    name: string;
+  } | null;
+  author: {
+    full_name: string;
+  } | null;
 }
 
-interface OpportunitiesDataTableProps {
-  data: Opportunity[]
-}
+export function OpportunitiesDataTable() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
-export function OpportunitiesDataTable({ data }: OpportunitiesDataTableProps) {
-  const columns: ColumnDef<Opportunity>[] = [
-    {
-      accessorKey: "title",
-      header: "Title",
-    },
-    {
-      accessorKey: "company_name",
-      header: "Company",
-      cell: ({ row }) => {
-        const opportunity = row.original;
-        // Handle both company object and company_name string
-        const companyName = opportunity.company?.name || opportunity.company_name || "Not specified";
-        return <span className="font-medium">{companyName}</span>;
-      },
-    },
-    {
-      accessorKey: "location",
-      header: "Location",
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
-    },
-    {
-      accessorKey: "salary",
-      header: "Salary",
-    },
-    {
-      accessorKey: "posted_date",
-      header: "Posted Date",
-    },
-    {
-      accessorKey: "application_deadline",
-      header: "Application Deadline",
-    },
-  ]
+  const { data: opportunities = [], isLoading } = useQuery({
+    queryKey: ['opportunities', currentPage],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('opportunities')
+        .select(`
+          id,
+          title,
+          description,
+          deadline,
+          created_at,
+          status
+        `)
+        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
+        .order('created_at', { ascending: false });
 
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
+      if (error) throw error;
+      
+      // Transform the data to match the expected interface
+      return (data || []).map(item => ({
+        id: item.id,
+        title: item.title || '',
+        description: item.description || '',
+        deadline: item.deadline || '',
+        created_at: item.created_at || '',
+        status: item.status || '',
+        company: null, // Set to null since we're not fetching company data
+        author: null   // Set to null since we're not fetching author data
+      }));
+    }
+  });
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center p-8">Loading opportunities...</div>;
+  }
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        {opportunities.map((opportunity) => (
+          <Card key={opportunity.id}>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{opportunity.title}</CardTitle>
+                  <div className="flex items-center gap-2 mt-1">
+                    {opportunity.company?.name && (
+                      <span className="text-sm text-muted-foreground">
+                        {opportunity.company.name}
+                      </span>
+                    )}
+                    <Badge variant={opportunity.status === 'Active' ? 'default' : 'secondary'}>
+                      {opportunity.status}
+                    </Badge>
+                  </div>
+                </div>
+                <Button size="sm" variant="outline">
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  View
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                {opportunity.description?.substring(0, 200)}
+                {opportunity.description?.length > 200 ? '...' : ''}
+              </p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  Posted: {format(new Date(opportunity.created_at), 'MMM d, yyyy')}
+                </span>
+                {opportunity.deadline && (
+                  <span>
+                    Deadline: {format(new Date(opportunity.deadline), 'MMM d, yyyy')}
+                  </span>
+                )}
+              </div>
+              {opportunity.author?.full_name && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Posted by: {opportunity.author.full_name}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {opportunities.length === 0 && (
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            No opportunities found.
+          </CardContent>
+        </Card>
+      )}
     </div>
-  )
+  );
 }

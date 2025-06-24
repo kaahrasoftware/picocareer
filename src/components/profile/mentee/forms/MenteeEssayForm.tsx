@@ -1,116 +1,107 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { MenteeEssayResponse } from '@/types/profile/types';
 
-export interface MenteeEssayResponse {
-  id: string;
-  mentee_id: string;
-  prompt_id: string;
-  response_text?: string;
-  word_count?: number;
-  version: number;
-  is_draft: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MenteeEssayFormProps {
+interface MenteeEssayFormProps {
   menteeId: string;
   essay?: MenteeEssayResponse;
   onClose: () => void;
-  onSuccess?: () => void;
 }
 
-export function MenteeEssayForm({ menteeId, essay, onClose, onSuccess }: MenteeEssayFormProps) {
-  const [responseText, setResponseText] = useState(essay?.response_text || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function MenteeEssayForm({ menteeId, essay, onClose }: MenteeEssayFormProps) {
+  const [title, setTitle] = useState(essay?.title || "");
+  const [content, setContent] = useState(essay?.content || "");
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async () => {
-    if (!responseText.trim()) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!title.trim() || !content.trim()) {
       toast({
-        title: "Response required",
-        description: "Please write a response before saving.",
+        title: "Error",
+        description: "Title and content cannot be empty.",
         variant: "destructive",
       });
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSaving(true);
     try {
-      const wordCount = responseText.trim().split(/\s+/).length;
+      const essayData = {
+        mentee_id: menteeId,
+        title: title.trim(),
+        content: content.trim(),
+      };
 
-      if (essay) {
-        // Update existing essay
-        const { error } = await supabase
-          .from('mentee_essay_responses')
-          .update({
-            response_text: responseText,
-            word_count: wordCount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', essay.id);
-
-        if (error) throw error;
+      let query = supabase.from('mentee_essays');
+      if (essay?.id) {
+        query = query.update(essayData).eq('id', essay.id);
       } else {
-        // Create new essay - would need prompt_id from parent component
-        toast({
-          title: "Error",
-          description: "Cannot create new essay without prompt selection.",
-          variant: "destructive",
-        });
-        return;
+        query = query.insert(essayData);
       }
+
+      const { data, error } = await query.select().single();
+
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Essay response saved successfully.",
+        description: `Essay ${essay ? 'updated' : 'created'} successfully!`,
       });
-
-      onSuccess?.();
       onClose();
-    } catch (error) {
-      console.error('Error saving essay:', error);
+    } catch (error: any) {
+      console.error("Error saving essay:", error);
       toast({
         title: "Error",
-        description: "Failed to save essay response.",
+        description: error.message || "Failed to save essay. Please try again.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="response" className="block text-sm font-medium mb-2">
-          Essay Response
-        </label>
-        <Textarea
-          id="response"
-          value={responseText}
-          onChange={(e) => setResponseText(e.target.value)}
-          placeholder="Write your essay response here..."
-          rows={10}
-          className="w-full"
-        />
-        <p className="text-sm text-muted-foreground mt-1">
-          Word count: {responseText.trim().split(/\s+/).filter(word => word.length > 0).length}
-        </p>
-      </div>
-
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Save Response"}
-        </Button>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{essay ? "Edit Essay" : "Add New Essay"}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Input
+              type="text"
+              placeholder="Essay Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Textarea
+              placeholder="Essay Content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+              className="min-h-[100px]"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
