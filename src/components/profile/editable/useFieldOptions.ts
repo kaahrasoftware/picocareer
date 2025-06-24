@@ -1,14 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { FieldName, TableName, TitleField, QueryResult } from "./types";
 
-type FieldName = 'academic_major_id' | 'school_id' | 'position' | 'company_id';
-
-const fieldToTableMap: Record<FieldName, { table: string; titleField: string }> = {
-  academic_major_id: { table: 'majors', titleField: 'title' },
-  school_id: { table: 'schools', titleField: 'name' },
-  position: { table: 'careers', titleField: 'title' },
-  company_id: { table: 'companies', titleField: 'name' }
+const tableMap: Record<FieldName, TableName> = {
+  academic_major_id: 'majors',
+  school_id: 'schools',
+  position: 'careers',
+  company_id: 'companies'
 };
 
 export function useFieldOptions(fieldName: string) {
@@ -20,47 +19,26 @@ export function useFieldOptions(fieldName: string) {
         return null;
       }
 
-      if (!(['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)) {
+      if (!['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)) {
         return null;
       }
 
-      const fieldConfig = fieldToTableMap[fieldName as FieldName];
-      
-      try {
-        let query;
-        if (fieldConfig.table === 'schools') {
-          query = supabase
-            .from(fieldConfig.table as any)
-            .select(`id, ${fieldConfig.titleField}`)
-            .eq('status', 'Approved')
-            .order(fieldConfig.titleField)
-            .limit(100);
-        } else {
-          query = supabase
-            .from(fieldConfig.table as any)
-            .select(`id, ${fieldConfig.titleField}`)
-            .eq('status', 'Approved')
-            .order(fieldConfig.titleField)
-            .limit(100);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Error fetching options:', error);
-          return [];
-        }
+      const table = tableMap[fieldName as FieldName];
+      const titleField: TitleField = table === 'schools' || table === 'companies' ? 'name' : 'title';
 
-        return (data || []).map(item => ({
-          id: item.id,
-          name: item[fieldConfig.titleField] || 'Unknown'
-        })) as Array<{ id: string; name: string }>;
-      } catch (error) {
-        console.error('Error in useFieldOptions:', error);
+      const { data, error } = await supabase
+        .from(table)
+        .select(`id, ${titleField}`)
+        .eq('status', 'Approved')
+        .order(titleField);
+      
+      if (error) {
+        console.error('Error fetching options:', error);
         return [];
       }
+
+      return (data as QueryResult[]) || [];
     },
-    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName),
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    enabled: ['academic_major_id', 'school_id', 'position', 'company_id'].includes(fieldName)
   });
 }

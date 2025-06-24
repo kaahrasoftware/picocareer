@@ -1,99 +1,132 @@
-
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { format } from "date-fns";
+import { TimeSlotsGrid } from "./TimeSlotsGrid";
+import { SessionType } from "@/types/database/mentors";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-
-interface BookingSessionType {
-  id: string;
-  type: string;
-  duration: number;
-  price: number;
-  description?: string;
-  meeting_platform: string[];
-}
+import { useMentorTimezone } from "@/hooks/useMentorTimezone";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface TimeSlotSelectorProps {
-  date: Date;
+  date: Date | undefined;
   mentorId: string;
   selectedTime: string | undefined;
   onTimeSelect: (time: string) => void;
-  selectedSessionType: BookingSessionType | null;
+  selectedSessionType: SessionType | undefined;
+  title?: string;
 }
 
-export function TimeSlotSelector({
-  date,
+export function TimeSlotSelector({ 
+  date, 
   mentorId,
-  selectedTime,
+  selectedTime, 
   onTimeSelect,
-  selectedSessionType
+  selectedSessionType,
+  title = "Start Time"
 }: TimeSlotSelectorProps) {
-  const sessionDuration = selectedSessionType?.duration || 60;
-  
-  const { timeSlots, isLoading, error } = useAvailableTimeSlots(
-    date,
-    mentorId,
-    sessionDuration
+  if (!date) return null;
+
+  const { data: mentorTimezone, isLoading: isLoadingTimezone, error: timezoneError } = useMentorTimezone(mentorId);
+
+  const { 
+    timeSlots: availableTimeSlots, 
+    isLoading: isLoadingTimeSlots, 
+    error: timeSlotsError 
+  } = useAvailableTimeSlots(
+    date, 
+    mentorId, 
+    selectedSessionType?.duration || 60,
+    mentorTimezone || 'UTC'
   );
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const { data: dstTransitionInfo, isLoading: isLoadingDSTInfo } = useQuery({
+    queryKey: ['dst-transition', date.toISOString(), mentorTimezone],
+    queryFn: async () => {
+      if (!mentorTimezone) return { isDSTTransition: false };
+      
+      const prevDay = new Date(date);
+      prevDay.setDate(prevDay.getDate() - 1);
+      
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      try {
+        const dateDate = new Date(date.setHours(12,0,0,0));
+        const prevDate = new Date(prevDay.setHours(12,0,0,0));
+        const nextDate = new Date(nextDay.setHours(12,0,0,0));
+        
+        const dateOffset = dateDate.getTimezoneOffset();
+        const prevOffset = prevDate.getTimezoneOffset();
+        const nextOffset = nextDate.getTimezoneOffset();
+        
+        const isDSTTransition = dateOffset !== prevOffset || dateOffset !== nextOffset;
+        
+        const direction = isDSTTransition ? 
+          (dateOffset < prevOffset ? "Clocks move forward 1 hour" : "Clocks move back 1 hour") : 
+          null;
+        
+        return { 
+          isDSTTransition, 
+          direction,
+          dateOffset,
+          prevOffset,
+          nextOffset 
+        };
+      } catch (error) {
+        console.error("Error checking DST transition:", error);
+        return { isDSTTransition: false };
+      }
+    },
+    enabled: !!date && !!mentorTimezone,
+  });
 
-  if (error) {
+  const isLoading = isLoadingTimezone || isLoadingTimeSlots || isLoadingDSTInfo;
+  const hasError = timezoneError || timeSlotsError;
+
+  if (hasError) {
     return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <div className="text-center py-8 text-muted-foreground">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
           Error loading time slots. Please try again.
-        </div>
-      </div>
-    );
-  }
-
-  if (!timeSlots || timeSlots.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-        <div className="text-center py-8 text-muted-foreground">
-          No available time slots for this date.
-        </div>
-      </div>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {timeSlots.map((slot) => (
-          <Card
-            key={slot.time}
-            className={cn(
-              "cursor-pointer transition-colors",
-              selectedTime === slot.time
-                ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted',
-              !slot.available && 'opacity-50 cursor-not-allowed'
-            )}
-            onClick={() => slot.available && onTimeSelect(slot.time)}
-          >
-            <CardContent className="p-3 text-center">
-              <span className="text-sm font-medium">{slot.time}</span>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <div>
+      {selectedSessionType && (
+        <p className="text-sm text-muted-foreground mb-2">
+          {selectedSessionType.duration}-minute slots
+        </p>
+      )}
+      <TimeSlotsGrid
+        title={title}
+        timeSlots={availableTimeSlots}
+        selectedTime={selectedTime}
+        onTimeSelect={onTimeSelect}
+        mentorTimezone={mentorTimezone || 'UTC'}
+        date={date}
+        isLoading={isLoading}
+      />
+      <p className="text-xs text-muted-foreground mt-2">
+        Times shown in mentor's timezone ({isLoadingTimezone ? 'Loading...' : mentorTimezone || 'UTC'})
+      </p>
+      
+      {dstTransitionInfo?.isDSTTransition && (
+        <Alert className="mt-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-900">
+          <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-300">Daylight Saving Time Change</AlertTitle>
+          <AlertDescription className="text-xs text-yellow-700 dark:text-yellow-400">
+            This date is affected by Daylight Saving Time changes. 
+            {dstTransitionInfo.direction && ` ${dstTransitionInfo.direction}.`}
+            Double-check the booking time in your timezone.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

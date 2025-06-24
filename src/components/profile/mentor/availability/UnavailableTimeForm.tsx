@@ -1,142 +1,119 @@
-
-import React, { useState } from 'react';
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { TimeSlotSelector } from "./TimeSlotSelector";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { TimeSlotInputs } from "./TimeSlotInputs";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
-export function UnavailableTimeForm() {
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedStartTime, setSelectedStartTime] = useState<string>("");
-  const [selectedEndTime, setSelectedEndTime] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
+interface UnavailableTimeFormProps {
+  selectedDate: Date | undefined;
+  profileId: string;
+  onSuccess: () => void;
+}
+
+export function UnavailableTimeForm({ selectedDate, profileId, onSuccess }: UnavailableTimeFormProps) {
+  const [selectedStartTime, setSelectedStartTime] = useState<string>();
+  const [selectedEndTime, setSelectedEndTime] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { getSetting } = useUserSettings(profileId);
+  const userTimezone = getSetting('timezone');
 
-  const timeSlots = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      timeSlots.push(timeString);
-    }
-  }
-
-  const handleSubmit = async () => {
+  const handleSaveUnavailability = async () => {
     if (!selectedDate || !selectedStartTime || !selectedEndTime) {
       toast({
-        title: "Error",
-        description: "Please select a date, start time, and end time",
+        title: "Missing information",
+        description: "Please select both start and end times",
         variant: "destructive",
       });
       return;
     }
 
-    setIsLoading(true);
+    if (!userTimezone) {
+      toast({
+        title: "Timezone not set",
+        description: "Please set your timezone in settings before setting availability",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    setIsSubmitting(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        throw new Error("No authenticated user");
-      }
-
       const startDateTime = new Date(selectedDate);
-      const [startHour, startMinute] = selectedStartTime.split(':').map(Number);
-      startDateTime.setHours(startHour, startMinute, 0, 0);
+      const [startHours, startMinutes] = selectedStartTime.split(':').map(Number);
+      startDateTime.setHours(startHours, startMinutes, 0, 0);
 
       const endDateTime = new Date(selectedDate);
-      const [endHour, endMinute] = selectedEndTime.split(':').map(Number);
-      endDateTime.setHours(endHour, endMinute, 0, 0);
+      const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
+      endDateTime.setHours(endHours, endMinutes, 0, 0);
 
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          profile_id: session.user.id,
+          profile_id: profileId,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          is_available: false,
-          timezone_offset: new Date().getTimezoneOffset()
+          is_available: false
         });
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Unavailable time slot added successfully",
+        description: "Unavailable time slot has been set",
       });
-
-      // Reset form
-      setSelectedDate(undefined);
-      setSelectedStartTime("");
-      setSelectedEndTime("");
+      
+      setSelectedStartTime(undefined);
+      setSelectedEndTime(undefined);
+      onSuccess();
     } catch (error) {
-      console.error('Error adding unavailable time:', error);
+      console.error('Error setting unavailability:', error);
       toast({
         title: "Error",
-        description: "Failed to add unavailable time slot",
+        description: "Failed to set unavailable time slot",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Block Unavailable Time</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="text-sm font-medium mb-2 block">Select Date</label>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border"
-            disabled={(date) => date < new Date()}
-          />
-        </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Set Unavailable Time</h3>
+      <TimeSlotInputs
+        timeSlots={timeSlots}
+        selectedStartTime={selectedStartTime}
+        selectedEndTime={selectedEndTime}
+        isRecurring={false}
+        userTimezone={userTimezone || 'Not set'}
+        onStartTimeSelect={setSelectedStartTime}
+        onEndTimeSelect={setSelectedEndTime}
+        onRecurringChange={() => {}}
+      />
 
-        {selectedDate && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Start Time</label>
-                <select
-                  value={selectedStartTime}
-                  onChange={(e) => setSelectedStartTime(e.target.value)}
-                  className="w-full border border-input bg-background px-3 py-2 rounded-md"
-                >
-                  <option value="">Select start time</option>
-                  {timeSlots.map((time) => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">End Time</label>
-                <select
-                  value={selectedEndTime}
-                  onChange={(e) => setSelectedEndTime(e.target.value)}
-                  className="w-full border border-input bg-background px-3 py-2 rounded-md"
-                >
-                  <option value="">Select end time</option>
-                  {timeSlots.map((time) => (
-                    <option key={time} value={time}>{time}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <Button onClick={handleSubmit} disabled={isLoading} className="w-full">
-              {isLoading ? "Adding..." : "Block Time Slot"}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
+      <Button 
+        onClick={handleSaveUnavailability}
+        disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
+        className="w-full bg-red-600 hover:bg-red-700 text-white"
+      >
+        {isSubmitting ? "Saving..." : "Mark as Unavailable"}
+      </Button>
+    </div>
   );
 }

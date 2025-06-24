@@ -19,7 +19,7 @@ export interface MentorSession {
   mentee: SessionParticipant;
   session_type: SessionType;
   meeting_link?: string | null;
-  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call' | 'zoom';
+  meeting_platform?: 'google_meet' | 'whatsapp' | 'telegram' | 'phone_call';
   attendance_confirmed?: boolean;
   availability_slot_id?: string | null;
 }
