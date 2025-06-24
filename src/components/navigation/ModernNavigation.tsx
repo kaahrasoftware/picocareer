@@ -131,16 +131,6 @@ export function ModernNavigation() {
           title: "Major Upload", 
           href: "/major/upload",
           description: "Add academic majors"
-        },
-        { 
-          title: "School Upload", 
-          href: "/schools/upload",
-          description: "Add educational institutions"
-        },
-        { 
-          title: "Company Upload", 
-          href: "/companies/upload",
-          description: "Add companies to database"
         }
       ]
     },

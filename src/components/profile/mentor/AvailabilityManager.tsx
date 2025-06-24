@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,11 +89,7 @@ export function AvailabilityManager({ profileId, onUpdate }: AvailabilityManager
       return;
     }
 
-    setAvailability(data.map(slot => ({
-      ...slot,
-      start_time: slot.start_date_time,
-      end_time: slot.end_date_time
-    })));
+    setAvailability(data || []);
   };
 
   const handleDeleteSlot = async (slotId: string) => {

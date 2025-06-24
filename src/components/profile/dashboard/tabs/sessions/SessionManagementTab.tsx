@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,26 +115,6 @@ export function SessionManagementTab() {
       setSortBy(column);
       setSortDirection('desc');
     }
-  };
-
-  const convertPlatformToDb = (platform: string): string => {
-    const platformMap: Record<string, string> = {
-      'WhatsApp': 'whatsapp',
-      'Google Meet': 'google_meet',
-      'Telegram': 'telegram',
-      'Phone Call': 'phone_call'
-    };
-    return platformMap[platform] || platform.toLowerCase().replace(' ', '_');
-  };
-
-  const convertPlatformFromDb = (platform: string): string => {
-    const platformMap: Record<string, string> = {
-      'whatsapp': 'WhatsApp',
-      'google_meet': 'Google Meet',
-      'telegram': 'Telegram',
-      'phone_call': 'Phone Call'
-    };
-    return platformMap[platform] || platform;
   };
 
   // New function to run the one-time no-show sync

@@ -24,7 +24,7 @@ interface SelectWithCustomOptionProps {
 }
 
 export function SelectWithCustomOption({
-  options = [],
+  options,
   value,
   onValueChange,
   placeholder = "Select an option...",
@@ -41,9 +41,9 @@ export function SelectWithCustomOption({
   const [isAdding, setIsAdding] = useState(false);
 
   const filteredOptions = useMemo(() => {
-    if (!search || !Array.isArray(options)) return options || [];
+    if (!search) return options;
     return options.filter(option => 
-      option && option.name && option.name.toLowerCase().includes(search.toLowerCase())
+      option?.name?.toLowerCase().includes(search.toLowerCase())
     );
   }, [options, search]);
 
@@ -86,8 +86,7 @@ export function SelectWithCustomOption({
     }
   };
 
-  const selectedOption = options && Array.isArray(options) ? 
-    options.find(option => option && option.id === value) : null;
+  const selectedOption = options.find(option => option?.id === value);
 
   // If we're in "adding new" mode, show the input field
   if (isAddingNew) {
@@ -147,8 +146,8 @@ export function SelectWithCustomOption({
 
           {/* Options */}
           <div className="max-h-48 overflow-y-auto">
-            {Array.isArray(filteredOptions) && filteredOptions.map((item) => {
-              if (!item || !item.id || !item.name) return null;
+            {filteredOptions.map((item) => {
+              if (!item) return null;
               return (
                 <SelectItem key={item.id} value={item.id}>
                   {item.name}
@@ -156,7 +155,7 @@ export function SelectWithCustomOption({
               );
             })}
             
-            {Array.isArray(filteredOptions) && filteredOptions.length === 0 && search && (
+            {filteredOptions.length === 0 && search && (
               <div className="p-2 text-sm text-muted-foreground text-center">
                 No options found
               </div>

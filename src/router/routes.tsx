@@ -17,8 +17,6 @@ import EventUpload from "../pages/EventUpload";
 import BlogUpload from "../pages/BlogUpload";
 import School from "../pages/School";
 import SchoolDetail from "../pages/SchoolDetail";
-import SchoolUploadPage from "../pages/SchoolUploadPage";
-import CompanyUploadPage from "../pages/CompanyUploadPage";
 import MajorUpload from "../pages/MajorUpload";
 import Profile from "../pages/Profile";
 import PersonalityTest from "../pages/PersonalityTest";
@@ -128,14 +126,6 @@ export const router = createBrowserRouter([
       {
         path: "school/:id",
         element: <SchoolDetail />,
-      },
-      {
-        path: "schools/upload",
-        element: <SchoolUploadPage />,
-      },
-      {
-        path: "companies/upload",
-        element: <CompanyUploadPage />,
       },
       {
         path: "major/upload",
