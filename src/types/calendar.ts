@@ -68,7 +68,7 @@ export interface MentorSession {
 }
 
 // Notification types
-export type NotificationCategory = 'session' | 'system' | 'hub_invite' | 'general';
+export type NotificationCategory = 'session' | 'system' | 'hub_invite' | 'general' | 'mentorship' | 'hub';
 
 export function getNotificationCategory(type?: string): NotificationCategory {
   if (!type) return 'general';
@@ -77,8 +77,16 @@ export function getNotificationCategory(type?: string): NotificationCategory {
     return 'session';
   }
   
+  if (type.includes('mentorship') || type.includes('mentor')) {
+    return 'mentorship';
+  }
+  
   if (type.includes('hub_invite') || type.includes('invite')) {
     return 'hub_invite';
+  }
+  
+  if (type.includes('hub')) {
+    return 'hub';
   }
   
   if (type.includes('system') || type.includes('admin')) {

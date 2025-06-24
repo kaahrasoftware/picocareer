@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,5 +144,3 @@ export function BookingForm({ mentorId, selectedSessionType, onClose }: BookingF
     </div>
   );
 }
-
-import { CalendarIcon } from "@radix-ui/react-icons"

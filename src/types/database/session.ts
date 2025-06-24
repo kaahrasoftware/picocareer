@@ -15,6 +15,7 @@ export interface MentorSession {
   scheduled_at: string;
   status: string;
   notes: string | null;
+  note?: string; // Added for compatibility
   mentor: SessionParticipant;
   mentee: SessionParticipant;
   session_type: SessionType;
