@@ -28,7 +28,7 @@ export function useFieldOptions(fieldName: string) {
       
       try {
         const { data, error } = await supabase
-          .from(fieldConfig.table as any)
+          .from(fieldConfig.table)
           .select(`id, ${fieldConfig.titleField}`)
           .eq('status', 'Approved')
           .order(fieldConfig.titleField);
