@@ -1,331 +1,166 @@
 
 import { useState } from "react";
-import { School, SchoolStatus } from "@/types/database/schools";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Eye, 
-  Pencil, 
-  Trash, 
-  ArrowUpDown, 
-  Loader2, 
-  GraduationCap 
-} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, Edit, Trash2, Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { SchoolDetailsDialog } from "./SchoolDetailsDialog";
-import { usePaginatedSchools, SortField, SortDirection } from "@/hooks/usePaginatedSchools";
-import { StandardPagination } from "@/components/common/StandardPagination";
-import { PageSizeSelector } from "@/components/common/PageSizeSelector";
+import { School } from "@/types/database/schools";
 
 interface SchoolsDataTableProps {
   onEditSchool: (school: School) => void;
-  onDataChange?: () => void;
+  onViewSchool: (school: School) => void;
+  onDataChange: () => void;
 }
 
-export function SchoolsDataTable({ onEditSchool, onDataChange }: SchoolsDataTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const [pageSize, setPageSize] = useState(50);
-  const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
+type SchoolStatus = 'Approved' | 'Pending' | 'Rejected';
 
-  // Use our new paginated schools hook
-  const {
-    data: schools,
-    isLoading,
-    count: totalSchools,
-    page,
-    setPage,
-    totalPages,
-    refetch
-  } = usePaginatedSchools({
-    pageSize,
-    sortField,
-    sortDirection,
-    searchQuery: searchTerm,
-  });
+export function SchoolsDataTable({
+  onEditSchool,
+  onViewSchool,
+  onDataChange
+}: SchoolsDataTableProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<SchoolStatus | 'all'>('all');
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-    // Reset to first page when sorting changes
-    setPage(1);
-  };
+  const { data: schools = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['admin-schools', searchQuery, statusFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from('schools')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const handlePageSizeChange = (newSize: number) => {
-    setPageSize(newSize);
-    setPage(1); // Reset to first page when changing page size
-  };
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`);
+      }
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setPage(1); // Reset to first page when search changes
-  };
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
 
-  const handleDeleteClick = (school: School) => {
-    setSelectedSchool(school);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleViewDetails = (school: School) => {
-    setSelectedSchool(school);
-    setIsDetailsDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedSchool) return;
-    
-    setIsDeleting(true);
-    try {
-      const { error } = await supabase
-        .from("schools")
-        .delete()
-        .eq("id", selectedSchool.id);
+      const { data, error } = await query;
       
       if (error) throw error;
       
-      toast({
-        title: "School deleted",
-        description: `${selectedSchool.name} has been successfully deleted.`,
-      });
+      return (data || []) as School[];
+    }
+  });
+
+  const handleDelete = async (schoolId: string) => {
+    if (!window.confirm('Are you sure you want to delete this school?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('schools')
+        .delete()
+        .eq('id', schoolId);
+      
+      if (error) throw error;
       refetch();
-      if (onDataChange) onDataChange();
+      onDataChange();
     } catch (error) {
-      console.error("Error deleting school:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete school. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-      setSelectedSchool(null);
+      console.error('Error deleting school:', error);
     }
   };
 
-  const getStatusBadgeVariant = (status: SchoolStatus) => {
-    switch (status) {
-      case "Approved": return "success";
-      case "Pending": return "warning";
-      case "Rejected": return "destructive";
-      default: return "secondary";
-    }
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
   };
 
-  // Calculate display range
-  const startIndex = (page - 1) * pageSize + 1;
-  const endIndex = Math.min(startIndex + schools.length - 1, totalSchools);
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value as SchoolStatus | 'all');
+  };
+
+  if (isLoading) {
+    return <div>Loading schools...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading schools: {error.message}</div>;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <Input
-          placeholder="Search schools..."
-          className="max-w-sm"
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-        <div className="flex items-center gap-4">
-          <PageSizeSelector 
-            pageSize={pageSize} 
-            onPageSizeChange={handlePageSizeChange} 
+      {/* Filters */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search schools..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-9"
           />
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex}-{endIndex} of {totalSchools} schools
-          </div>
         </div>
+        <Select value={statusFilter} onValueChange={handleStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Approved">Approved</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="Rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">
-                <div 
-                  className="flex items-center cursor-pointer"
-                  onClick={() => handleSort("name")}
-                >
-                  Name
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div 
-                  className="flex items-center cursor-pointer"
-                  onClick={() => handleSort("type")}
-                >
-                  Type
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div 
-                  className="flex items-center cursor-pointer"
-                  onClick={() => handleSort("location")}
-                >
-                  Location
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div 
-                  className="flex items-center cursor-pointer"
-                  onClick={() => handleSort("status")}
-                >
-                  Status
-                  <ArrowUpDown className="ml-1 h-4 w-4" />
-                </div>
-              </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                    <span>Loading schools...</span>
+      {/* Schools Grid */}
+      {schools.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            No schools found.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {schools.map((school) => (
+            <Card key={school.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{school.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {school.location || 'Location not specified'} | {school.type}
+                    </p>
                   </div>
-                </TableCell>
-              </TableRow>
-            ) : schools.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  <div className="flex flex-col items-center justify-center text-muted-foreground">
-                    <GraduationCap className="h-10 w-10 mb-2" />
-                    <h3 className="text-lg font-medium">No schools found</h3>
-                    <p>Try adjusting your search or add a new school</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              schools.map((school) => (
-                <TableRow key={school.id}>
-                  <TableCell className="font-medium">{school.name}</TableCell>
-                  <TableCell>{school.type}</TableCell>
-                  <TableCell>{school.location || "N/A"}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(school.status)} className="capitalize">
-                      {school.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleViewDetails(school)}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewSchool(school)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => onEditSchool(school)}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDeleteClick(school)}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(school.id)}
                     >
-                      <Trash className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {!isLoading && schools.length > 0 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex}-{endIndex} of {totalSchools} schools
-          </div>
-          <StandardPagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Status: {school.status} | Students: {school.student_population || 'N/A'}
+                  {school.acceptance_rate && ` | Acceptance Rate: ${Math.round(school.acceptance_rate * 100)}%`}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this school?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {selectedSchool?.name}. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span>Deleting...</span>
-                </>
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* School Details Dialog */}
-      {selectedSchool && (
-        <SchoolDetailsDialog
-          open={isDetailsDialogOpen}
-          onClose={() => {
-            setIsDetailsDialogOpen(false);
-            setSelectedSchool(null);
-          }}
-          school={selectedSchool}
-          onEdit={() => {
-            setIsDetailsDialogOpen(false);
-            onEditSchool(selectedSchool);
-          }}
-        />
       )}
     </div>
   );

@@ -1,7 +1,13 @@
+
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorDetailsProps {
-  profile: Profile;
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career?: { title?: string } | null;
+  };
 }
 
 export function MentorDetails({ profile }: MentorDetailsProps) {
