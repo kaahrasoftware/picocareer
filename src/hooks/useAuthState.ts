@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, throttledAuthOperation } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -11,10 +11,10 @@ import { useLoginReward } from './useLoginReward';
  * Returns session, user, loading state, and sign out function
  */
 export function useAuthState() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isInitialized = useRef(false);

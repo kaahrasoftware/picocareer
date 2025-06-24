@@ -6,27 +6,22 @@ import { CampaignList } from "@/components/admin/CampaignList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmailCampaignForm from "@/components/admin/email-campaign-form/EmailCampaignForm";
 import { TemplateSettingsTab } from "@/components/admin/email-templates/TemplateSettingsTab";
+import { ScholarshipScraperTab } from "@/components/admin/ScholarshipScraperTab";
 import { useEmailCampaignAnalytics } from "@/hooks/useEmailCampaignAnalytics";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw, Plus, BarChart, Settings, Bot } from "lucide-react";
+import { AlertCircle, RefreshCw, Plus, BarChart, Settings, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { ScholarshipScraperTab } from "@/components/admin/ScholarshipScraperTab";
 
 export default function AdminEmailCampaigns() {
-  const {
-    session,
-    refreshSession
-  } = useAuthSession();
-  const {
-    data: profile,
-    isLoading: profileLoading
-  } = useUserProfile(session);
+  const { session, refreshSession } = useAuthSession();
+  const { data: profile, isLoading: profileLoading } = useUserProfile(session);
   const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || "create-campaign";
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get('tab') || "create-campaign";
+  });
   const [campaignListKey, setCampaignListKey] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -34,14 +29,6 @@ export default function AdminEmailCampaigns() {
 
   // Get real analytics data
   const analytics = useEmailCampaignAnalytics(profile?.id || '');
-
-  // Update active tab when URL parameter changes
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab && ['create-campaign', 'dashboard', 'scholarship-scraper', 'template-settings'].includes(tab)) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   // Check session on load and periodically
   useEffect(() => {
@@ -149,9 +136,6 @@ export default function AdminEmailCampaigns() {
           </Alert>
         )}
 
-        {/* Modern Header Section */}
-        
-
         {/* Modern Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="flex justify-center">
@@ -164,13 +148,13 @@ export default function AdminEmailCampaigns() {
                 <BarChart className="h-4 w-4" />
                 Campaign Dashboard
               </TabsTrigger>
-              <TabsTrigger value="scholarship-scraper" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Bot className="h-4 w-4" />
-                Scholarship Scraper
-              </TabsTrigger>
               <TabsTrigger value="template-settings" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Settings className="h-4 w-4" />
                 Template Studio
+              </TabsTrigger>
+              <TabsTrigger value="scholarship-scraper" className="flex items-center gap-2 px-6 py-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                <Database className="h-4 w-4" />
+                Scholarship Scraper
               </TabsTrigger>
             </TabsList>
           </div>
@@ -230,10 +214,6 @@ export default function AdminEmailCampaigns() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="scholarship-scraper">
-            <ScholarshipScraperTab adminId={profile.id} sessionValid={sessionValid} />
-          </TabsContent>
-
           <TabsContent value="template-settings">
             <div className="max-w-6xl mx-auto">
               <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
@@ -254,6 +234,31 @@ export default function AdminEmailCampaigns() {
                 </div>
                 <div className="p-8">
                   <TemplateSettingsTab adminId={profile.id} />
+                </div>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="scholarship-scraper">
+            <div className="max-w-6xl mx-auto">
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-10 via-green-10 to-purple-10 px-8 py-6 border-b border-gray-100/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Database className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        Scholarship Data Scraper
+                      </h2>
+                      <p className="text-muted-foreground mt-1">
+                        Automatically discover and import scholarships from multiple sources using AI enhancement
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8">
+                  <ScholarshipScraperTab adminId={profile.id} />
                 </div>
               </Card>
             </div>

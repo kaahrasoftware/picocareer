@@ -1,74 +1,92 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
+// Types for our scholarship data
 interface ScholarshipData {
   title: string;
   description: string;
   amount: number;
   currency: string;
-  application_deadline: string;
+  deadline: string; // Changed from application_deadline
   eligibility_criteria: string[];
   application_url: string;
   provider_name: string;
   category: string[];
+  academic_requirements?: any;
   application_open_date?: string;
   application_process?: string;
   award_frequency?: string;
   contact_email?: string;
   contact_phone?: string;
+  tags: string[];
+  status?: string;
   featured?: boolean;
   cover_image_url?: string;
-  tags?: string[];
+  views_count?: number;
+  author_id?: string;
   source_url?: string;
+}
+
+// Helper function to extract JSON from markdown code blocks
+function extractJsonFromMarkdown(text: string): string {
+  // Remove markdown code block syntax if present
+  const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+  const match = text.match(codeBlockRegex);
+  
+  if (match) {
+    return match[1].trim();
+  }
+  
+  // If no code blocks found, return the original text trimmed
+  return text.trim();
 }
 
 // AI-enhanced data extraction using OpenAI
 async function enhanceScholarshipData(rawData: any): Promise<ScholarshipData | null> {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  
   if (!openAIApiKey) {
     console.error('OpenAI API key not found');
     return null;
   }
 
   const prompt = `
-Extract and standardize scholarship information from the following data. Return a JSON object with these exact fields:
+Extract and standardize scholarship information from the following data. Return ONLY a valid JSON object with these exact fields, no markdown formatting:
 
 {
   "title": "Clean scholarship title",
-  "description": "Detailed description (200-500 words)",
-  "amount": "Numeric amount (use 0 if not specified)",
-  "currency": "USD, EUR, GBP, etc. (default to USD if not specified)",
-  "application_deadline": "YYYY-MM-DD format",
-  "eligibility_criteria": ["criterion1", "criterion2"],
-  "application_url": "Valid URL",
-  "provider_name": "Organization/institution name",
-  "category": ["scholarship_type", "field_of_study"],
-  "application_open_date": "YYYY-MM-DD format (if available)",
-  "application_process": "Brief description of application steps",
-  "award_frequency": "Annual, One-time, Monthly, etc.",
-  "contact_email": "email@domain.com (if available)",
-  "contact_phone": "phone number (if available)",
+  "description": "Detailed description of the scholarship",
+  "amount": 25000,
+  "currency": "USD",
+  "deadline": "2024-12-31",
+  "eligibility_criteria": ["criterion 1", "criterion 2"],
+  "application_url": "https://example.com/apply",
+  "provider_name": "Organization name",
+  "category": ["category1", "category2"],
+  "academic_requirements": {
+    "gpa_minimum": 3.0,
+    "degree_level": "undergraduate"
+  },
+  "application_open_date": "2024-01-01",
+  "application_process": "Description of how to apply",
+  "award_frequency": "Annual",
+  "contact_email": "contact@example.com",
+  "contact_phone": "+1234567890",
   "tags": ["tag1", "tag2", "tag3"]
 }
 
-Focus especially on:
-- Extracting eligibility criteria for international students
-- Standardizing currency and amounts
-- Identifying citizenship requirements
-- Categorizing by field of study and scholarship type
-- Ensuring all dates are in YYYY-MM-DD format
+IMPORTANT: 
+- Use "deadline" not "application_deadline"
+- Return ONLY the JSON object
+- No markdown formatting, explanations, or code blocks
+- Ensure all dates are in YYYY-MM-DD format
+- Amount should be a number (use 0 if not specified)
 
 Raw data: ${JSON.stringify(rawData)}
 `;
@@ -81,280 +99,331 @@ Raw data: ${JSON.stringify(rawData)}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { 
             role: 'system', 
-            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into the exact JSON format requested. Always return valid JSON.' 
+            content: 'You are a scholarship data extraction specialist. Extract and standardize scholarship information into valid JSON format. Always return only valid JSON without any markdown formatting or explanations.' 
           },
           { role: 'user', content: prompt }
         ],
+        max_tokens: 1000,
         temperature: 0.1,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    const extractedData = JSON.parse(data.choices[0].message.content);
-
-    return extractedData;
+    const rawContent = data.choices[0].message.content;
+    
+    console.log('OpenAI raw response:', rawContent);
+    
+    // Extract JSON from potential markdown formatting
+    const jsonContent = extractJsonFromMarkdown(rawContent);
+    
+    console.log('Extracted JSON content:', jsonContent);
+    
+    try {
+      const extractedData = JSON.parse(jsonContent);
+      return extractedData;
+    } catch (parseError) {
+      console.error('JSON parsing failed after extraction:', parseError);
+      console.error('Content that failed to parse:', jsonContent);
+      
+      // Try one more fallback - look for JSON object pattern
+      const jsonObjectMatch = jsonContent.match(/\{[\s\S]*\}/);
+      if (jsonObjectMatch) {
+        try {
+          const fallbackData = JSON.parse(jsonObjectMatch[0]);
+          console.log('Fallback parsing succeeded');
+          return fallbackData;
+        } catch (fallbackError) {
+          console.error('Fallback parsing also failed:', fallbackError);
+        }
+      }
+      
+      return null;
+    }
   } catch (error) {
     console.error('Error enhancing scholarship data with AI:', error);
     return null;
   }
 }
 
-// Scraper for Scholarships.com
-async function scrapeScholarshipsCom(): Promise<ScholarshipData[]> {
-  const scholarships: ScholarshipData[] = [];
-  
-  try {
-    // Simulated scraping - in production, you'd make actual HTTP requests
-    // This is a template structure for real implementation
-    const mockData = [
-      {
-        title: "International Student Excellence Scholarship",
-        rawDescription: "Full tuition scholarship for international students pursuing undergraduate degrees...",
-        amount: "$25,000",
-        deadline: "March 15, 2024",
-        provider: "Global Education Foundation",
-        url: "https://example.com/scholarship1"
-      }
-    ];
-
-    for (const item of mockData) {
-      const enhanced = await enhanceScholarshipData(item);
-      if (enhanced) {
-        scholarships.push({
-          ...enhanced,
-          source_url: item.url
-        });
-      }
+// Mock data for testing different sources
+const mockScholarships = {
+  'scholarships.com': [
+    {
+      title: "International Student Excellence Scholarship",
+      description: "Full tuition scholarship for international students pursuing undergraduate degrees...",
+      amount: "$25,000",
+      deadline: "March 15, 2024",
+      eligibility: "International students, minimum 3.5 GPA",
+      provider: "Global Education Foundation",
+      url: "https://example.com/scholarship1"
     }
-  } catch (error) {
-    console.error('Error scraping Scholarships.com:', error);
-  }
+  ],
+  'fastweb': [
+    {
+      title: "Chevening Scholarships",
+      description: "UK government's global scholarship programme, funded by the Foreign and Commonwealth Office...",
+      amount: "Full funding",
+      deadline: "November 2, 2024",
+      eligibility: "Graduate students, leadership potential",
+      provider: "UK Government",
+      url: "https://example.com/chevening"
+    }
+  ],
+  'government': [
+    {
+      title: "Fulbright Foreign Student Program",
+      description: "Provides funding for graduate students, young professionals and artists...",
+      amount: "Varies",
+      deadline: "October 15, 2024",
+      eligibility: "Graduate students, young professionals",
+      provider: "Fulbright Commission",
+      url: "https://example.com/fulbright"
+    }
+  ]
+};
 
-  return scholarships;
+async function scrapeScholarshipsFromSource(source: string): Promise<any[]> {
+  console.log(`Scraping from ${source}...`);
+  
+  // Return mock data for now
+  return mockScholarships[source as keyof typeof mockScholarships] || [];
 }
 
-// Scraper for FastWeb
-async function scrapeFastWeb(): Promise<ScholarshipData[]> {
-  const scholarships: ScholarshipData[] = [];
-  
-  try {
-    // Mock data for demonstration
-    const mockData = [
-      {
-        title: "Fulbright Foreign Student Program",
-        rawDescription: "Provides funding for graduate students, young professionals and artists...",
-        amount: "Full funding",
-        deadline: "October 15, 2024",
-        provider: "Fulbright Commission",
-        url: "https://example.com/fulbright"
-      }
-    ];
-
-    for (const item of mockData) {
-      const enhanced = await enhanceScholarshipData(item);
-      if (enhanced) {
-        scholarships.push({
-          ...enhanced,
-          source_url: item.url
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Error scraping FastWeb:', error);
-  }
-
-  return scholarships;
-}
-
-// Government scholarship scraper
 async function scrapeGovernmentScholarships(): Promise<ScholarshipData[]> {
   const scholarships: ScholarshipData[] = [];
+  const rawScholarships = await scrapeScholarshipsFromSource('government');
   
-  try {
-    // Mock data for government scholarships
-    const mockData = [
-      {
-        title: "Chevening Scholarships",
-        rawDescription: "UK government's global scholarship programme, funded by the Foreign and Commonwealth Office...",
-        amount: "Full funding",
-        deadline: "November 2, 2024",
-        provider: "UK Government",
-        url: "https://example.com/chevening"
-      }
-    ];
-
-    for (const item of mockData) {
-      const enhanced = await enhanceScholarshipData(item);
-      if (enhanced) {
-        scholarships.push({
-          ...enhanced,
-          source_url: item.url,
-          featured: true // Government scholarships are often featured
-        });
-      }
+  for (const raw of rawScholarships) {
+    const enhanced = await enhanceScholarshipData(raw);
+    if (enhanced) {
+      scholarships.push(enhanced);
     }
-  } catch (error) {
-    console.error('Error scraping government scholarships:', error);
   }
-
+  
   return scholarships;
 }
 
-// Deduplication logic
-function deduplicateScholarships(scholarships: ScholarshipData[]): ScholarshipData[] {
-  const seen = new Set<string>();
-  return scholarships.filter(scholarship => {
-    const key = `${scholarship.title.toLowerCase()}-${scholarship.provider_name.toLowerCase()}`;
-    if (seen.has(key)) {
-      return false;
-    }
-    seen.add(key);
-    return true;
-  });
-}
-
-// Validate scholarship data
-function validateScholarshipData(scholarship: ScholarshipData): boolean {
-  const required = ['title', 'description', 'provider_name', 'application_url'];
-  return required.every(field => scholarship[field as keyof ScholarshipData]);
-}
-
-// Main scraping coordinator
-async function scrapeAllSources(): Promise<ScholarshipData[]> {
-  console.log('Starting scholarship scraping process...');
+async function scrapeScholarshipsCom(): Promise<ScholarshipData[]> {
+  const scholarships: ScholarshipData[] = [];
+  const rawScholarships = await scrapeScholarshipsFromSource('scholarships.com');
   
+  for (const raw of rawScholarships) {
+    const enhanced = await enhanceScholarshipData(raw);
+    if (enhanced) {
+      scholarships.push(enhanced);
+    }
+  }
+  
+  return scholarships;
+}
+
+async function scrapeFastweb(): Promise<ScholarshipData[]> {
+  const scholarships: ScholarshipData[] = [];
+  const rawScholarships = await scrapeScholarshipsFromSource('fastweb');
+  
+  for (const raw of rawScholarships) {
+    const enhanced = await enhanceScholarshipData(raw);
+    if (enhanced) {
+      scholarships.push(enhanced);
+    }
+  }
+  
+  return scholarships;
+}
+
+async function scrapeAllSources(sources: string[]): Promise<ScholarshipData[]> {
   const allScholarships: ScholarshipData[] = [];
   
-  // Run all scrapers in parallel
-  const [scholarshipsCom, fastWeb, government] = await Promise.all([
-    scrapeScholarshipsCom(),
-    scrapeFastWeb(),
-    scrapeGovernmentScholarships()
-  ]);
+  const promises = sources.map(source => {
+    switch (source) {
+      case 'scholarships.com':
+        return scrapeScholarshipsCom();
+      case 'fastweb':
+        return scrapeFastweb();
+      case 'government':
+        return scrapeGovernmentScholarships();
+      default:
+        return Promise.resolve([]);
+    }
+  });
   
-  allScholarships.push(...scholarshipsCom, ...fastWeb, ...government);
+  const results = await Promise.all(promises);
+  results.forEach(scholarships => allScholarships.push(...scholarships));
   
-  // Deduplicate and validate
-  const deduplicated = deduplicateScholarships(allScholarships);
-  const validated = deduplicated.filter(validateScholarshipData);
-  
-  console.log(`Scraped ${allScholarships.length} scholarships, ${validated.length} after deduplication and validation`);
-  
-  return validated;
+  return allScholarships;
 }
 
-// Save scholarships to database
-async function saveScholarships(scholarships: ScholarshipData[]): Promise<{ inserted: number; errors: any[] }> {
+function deduplicateScholarships(scholarships: ScholarshipData[]): ScholarshipData[] {
+  const seen = new Set<string>();
+  const unique: ScholarshipData[] = [];
+  
+  for (const scholarship of scholarships) {
+    const key = `${scholarship.title}-${scholarship.provider_name}`.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(scholarship);
+    }
+  }
+  
+  return unique;
+}
+
+function validateScholarship(scholarship: ScholarshipData): boolean {
+  return !!(
+    scholarship.title &&
+    scholarship.description &&
+    scholarship.provider_name &&
+    scholarship.deadline
+  );
+}
+
+async function insertScholarshipsToDatabase(
+  supabase: any,
+  scholarships: ScholarshipData[],
+  adminId: string
+): Promise<{ inserted: number; errors: any[] }> {
+  let insertedCount = 0;
   const errors: any[] = [];
-  let inserted = 0;
   
   for (const scholarship of scholarships) {
     try {
-      // Check if scholarship already exists
-      const { data: existing } = await supabase
-        .from('scholarships')
-        .select('id')
-        .eq('title', scholarship.title)
-        .eq('provider_name', scholarship.provider_name)
-        .single();
+      // Map the data to match database schema
+      const scholarshipData = {
+        title: scholarship.title,
+        description: scholarship.description,
+        amount: scholarship.amount || 0,
+        currency: scholarship.currency || 'USD',
+        deadline: scholarship.deadline, // Now using correct column name
+        eligibility_criteria: scholarship.eligibility_criteria || [],
+        application_url: scholarship.application_url || '',
+        provider_name: scholarship.provider_name,
+        category: scholarship.category || [],
+        academic_requirements: scholarship.academic_requirements || {},
+        application_open_date: scholarship.application_open_date || null,
+        application_process: scholarship.application_process || '',
+        award_frequency: scholarship.award_frequency || '',
+        contact_information: {
+          email: scholarship.contact_email || '',
+          phone: scholarship.contact_phone || ''
+        },
+        tags: scholarship.tags || [],
+        status: 'Approved',
+        featured: false,
+        cover_image_url: scholarship.cover_image_url || null,
+        views_count: 0,
+        bookmarks_count: 0,
+        author_id: adminId
+      };
       
-      if (existing) {
-        // Update existing scholarship
-        const { error } = await supabase
-          .from('scholarships')
-          .update({
-            ...scholarship,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id);
-        
-        if (error) {
-          errors.push({ scholarship: scholarship.title, error: error.message });
-        } else {
-          inserted++;
-        }
+      const { error } = await supabase
+        .from('scholarships')
+        .insert(scholarshipData);
+      
+      if (error) {
+        console.error(`Error inserting scholarship "${scholarship.title}":`, error);
+        errors.push({
+          scholarship: scholarship.title,
+          error: error.message
+        });
       } else {
-        // Insert new scholarship
-        const { error } = await supabase
-          .from('scholarships')
-          .insert({
-            ...scholarship,
-            status: 'pending', // All scraped scholarships start as pending for review
-            author_id: null, // System-generated
-            views_count: 0,
-            bookmarks_count: 0
-          });
-        
-        if (error) {
-          errors.push({ scholarship: scholarship.title, error: error.message });
-        } else {
-          inserted++;
-        }
+        insertedCount++;
+        console.log(`Successfully inserted: ${scholarship.title}`);
       }
     } catch (error) {
-      errors.push({ scholarship: scholarship.title, error: error.message });
+      console.error(`Error processing scholarship "${scholarship.title}":`, error);
+      errors.push({
+        scholarship: scholarship.title,
+        error: error.message
+      });
     }
   }
   
-  return { inserted, errors };
+  return { inserted: insertedCount, errors };
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { sources, dryRun = false } = await req.json().catch(() => ({}));
-    
+    const { sources, dryRun } = await req.json();
     console.log('Scholarship scraping request received', { sources, dryRun });
     
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Get admin user ID (you might want to pass this from the client)
+    const adminId = '00000000-0000-0000-0000-000000000000'; // Default admin ID
+    
+    console.log('Starting scholarship scraping process...');
+    
     // Scrape scholarships from all sources
-    const scholarships = await scrapeAllSources();
+    const rawScholarships = await scrapeAllSources(sources || ['scholarships.com', 'fastweb', 'government']);
+    
+    // Deduplicate and validate
+    const uniqueScholarships = deduplicateScholarships(rawScholarships);
+    const validScholarships = uniqueScholarships.filter(validateScholarship);
+    
+    console.log(`Scraped ${rawScholarships.length} scholarships, ${validScholarships.length} after deduplication and validation`);
     
     if (dryRun) {
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'Dry run completed',
-        scraped_count: scholarships.length,
-        scholarships: scholarships.slice(0, 5) // Return first 5 for preview
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Preview: Found ${validScholarships.length} scholarships`,
+          scraped_count: validScholarships.length,
+          scholarships: validScholarships
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
+        }
+      );
     }
     
-    // Save to database
-    const { inserted, errors } = await saveScholarships(scholarships);
+    // Insert to database
+    const { inserted, errors } = await insertScholarshipsToDatabase(supabase, validScholarships, adminId);
     
     console.log(`Scraping completed: ${inserted} scholarships saved, ${errors.length} errors`);
     
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Scholarship scraping completed`,
-      scraped_count: scholarships.length,
-      inserted_count: inserted,
-      error_count: errors.length,
-      errors: errors.slice(0, 10) // Return first 10 errors
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Successfully scraped and saved ${inserted} scholarships`,
+        scraped_count: validScholarships.length,
+        inserted_count: inserted,
+        error_count: errors.length,
+        errors: errors
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
+    
   } catch (error) {
-    console.error('Error in scrape-scholarships function:', error);
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error in scholarship scraping:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: error.message,
+        scraped_count: 0
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
   }
 });
