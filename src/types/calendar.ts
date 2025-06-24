@@ -1,6 +1,5 @@
-
 // Define meeting platform options
-export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+export type MeetingPlatform = "Google Meet" | "Zoom" | "Microsoft Teams" | "Telegram" | "WhatsApp" | "Phone Call";
 
 // Define availability type
 export interface Availability {
@@ -68,18 +67,36 @@ export interface MentorSession {
 }
 
 // Define notification categories
-export type NotificationCategory = 'general' | 'mentorship' | 'hub';
+export type NotificationCategory = 'session' | 'availability' | 'payment' | 'profile' | 'general';
 
 // Helper function to get notification category
-export function getNotificationCategory(type?: string): NotificationCategory {
-  if (!type) return 'general';
-  
-  // Map notification types to categories
-  if (type.includes('session') || type.includes('mentor')) {
-    return 'mentorship';
-  } else if (type.includes('hub')) {
-    return 'hub';
+export function getNotificationCategory(type: string): NotificationCategory {
+  switch (type) {
+    case 'session_booked':
+    case 'session_cancelled':
+    case 'session_reminder':
+      return 'session';
+    case 'availability_request':
+      return 'availability';
+    case 'payment_received':
+    case 'payment_failed':
+      return 'payment';
+    case 'profile_updated':
+      return 'profile';
+    case 'general':
+    default:
+      return 'general';
   }
-  
-  return 'general';
+}
+
+export interface NotificationData {
+  id: string;
+  recipient_id: string;
+  title: string;
+  message: string;
+  type: NotificationCategory;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
 }

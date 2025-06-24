@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -10,11 +9,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface TimeSlotInputsProps {
   timeSlots: string[];
+  selectedDate: Date;
   selectedStartTime?: string;
   selectedEndTime?: string;
   isRecurring: boolean;
   userTimezone: string;
-  selectedDate: Date;
   onStartTimeSelect: (time: string) => void;
   onEndTimeSelect: (time: string) => void;
   onRecurringChange: (value: boolean) => void;
@@ -30,11 +29,11 @@ interface ExistingSlot {
 
 export function TimeSlotInputs({
   timeSlots,
+  selectedDate,
   selectedStartTime,
   selectedEndTime,
   isRecurring,
   userTimezone,
-  selectedDate,
   onStartTimeSelect,
   onEndTimeSelect,
   onRecurringChange,
@@ -55,7 +54,6 @@ export function TimeSlotInputs({
         const endOfDay = new Date(selectedDate);
         endOfDay.setHours(23, 59, 59, 999);
 
-        // Get user profile ID from the auth session
         const { data: { session } } = await supabase.auth.getSession();
         const profileId = session?.user?.id;
 
@@ -63,8 +61,6 @@ export function TimeSlotInputs({
           console.error('No profile ID available from session');
           return;
         }
-
-        console.log(`Fetching availability for date: ${selectedDate.toISOString()}, day of week: ${selectedDate.getDay()}, profile: ${profileId}`);
 
         const { data, error } = await supabase
           .from('mentor_availability')
@@ -78,7 +74,6 @@ export function TimeSlotInputs({
           return;
         }
 
-        console.log(`Found ${data?.length} existing slots`, data);
         setExistingSlots(data || []);
       } catch (error) {
         console.error('Error in fetchExistingSlots:', error);
@@ -128,7 +123,6 @@ export function TimeSlotInputs({
     return `${format(selectedDateRange.from, 'MMM d')} - ${format(selectedDateRange.to, 'MMM d, yyyy')} (${daysCount} days)`;
   };
 
-  // Group time slots by hour for a more structured display
   const groupedTimeSlots: Record<string, string[]> = {};
   timeSlots.forEach(timeSlot => {
     const hour = timeSlot.split(':')[0];

@@ -9,4 +9,5 @@ export interface MentorSessionType {
   meeting_platform: ('WhatsApp' | 'Google Meet' | 'Telegram' | 'Phone Call' | 'Zoom')[];
   created_at?: string;
   updated_at?: string;
+  timezone_offset?: number;
 }
