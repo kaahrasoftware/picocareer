@@ -1,50 +1,85 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-
-interface SessionType {
-  id: string;
-  type: string;
-  duration: number;
-  price: number;
-}
+import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SessionType } from "@/types/session";
 
 interface TimeSlotSelectorProps {
-  selectedSessionType: SessionType | null;
-  onSessionTypeSelect: (sessionType: SessionType) => void;
-  availableSlots: string[];
-  selectedSlot: string | null;
-  onSlotSelect: (slot: string) => void;
+  date: Date;
+  mentorId: string;
+  selectedTime?: string;
+  onTimeSelect: (time: string) => void;
+  selectedSessionType?: SessionType;
 }
 
 export function TimeSlotSelector({
-  selectedSessionType,
-  onSessionTypeSelect,
-  availableSlots,
-  selectedSlot,
-  onSlotSelect
+  date,
+  mentorId,
+  selectedTime,
+  onTimeSelect,
+  selectedSessionType
 }: TimeSlotSelectorProps) {
-  return (
-    <div className="space-y-4">
-      <div>
+  const sessionDuration = selectedSessionType?.duration || 60;
+  
+  const { timeSlots, isLoading, error } = useAvailableTimeSlots(
+    date,
+    mentorId,
+    sessionDuration
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
         <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {availableSlots.map((slot) => (
-            <Card
-              key={slot}
-              className={`cursor-pointer transition-colors ${
-                selectedSlot === slot
-                  ? 'bg-primary text-primary-foreground'
-                  : 'hover:bg-muted'
-              }`}
-              onClick={() => onSlotSelect(slot)}
-            >
-              <CardContent className="p-3 text-center">
-                <span className="text-sm font-medium">{slot}</span>
-              </CardContent>
-            </Card>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
+        <p className="text-red-500">Error loading time slots. Please try again.</p>
+      </div>
+    );
+  }
+
+  if (!timeSlots || timeSlots.length === 0) {
+    return (
+      <div className="space-y-2">
+        <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
+        <p className="text-muted-foreground">No available time slots for this date.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold mb-2">Available Time Slots</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        {timeSlots.map((slot) => (
+          <Card
+            key={slot.time}
+            className={`cursor-pointer transition-colors ${
+              selectedTime === slot.time
+                ? 'bg-primary text-primary-foreground'
+                : slot.available 
+                ? 'hover:bg-muted'
+                : 'opacity-50 cursor-not-allowed'
+            }`}
+            onClick={() => slot.available && onTimeSelect(slot.time)}
+          >
+            <CardContent className="p-3 text-center">
+              <span className="text-sm font-medium">{slot.time}</span>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

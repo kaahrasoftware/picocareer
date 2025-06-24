@@ -1,302 +1,170 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useDebouncedCallback } from "@/hooks/useDebounce";
-import { TableName, FieldName, TitleField, InsertData, Status, QueryResult } from "./types";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import type { TableName } from "./types";
 
 interface SelectWithCustomOptionProps {
-  value: string;
-  options: QueryResult[];
-  placeholder: string;
-  handleSelectChange: (name: string, value: string) => void;
   tableName: TableName;
-  fieldName: FieldName;
-  titleField: TitleField;
-  onCancel?: () => void;
+  field: string;
+  value: string | undefined;
+  onChange: (value: string) => void;
 }
 
-export function SelectWithCustomOption({ 
-  value = "", 
-  options = [],
-  placeholder,
-  handleSelectChange,
-  tableName,
-  fieldName,
-  titleField,
-  onCancel
-}: SelectWithCustomOptionProps) {
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customValue, setCustomValue] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredOptions, setFilteredOptions] = useState<QueryResult[]>(options);
-  const [isSearching, setIsSearching] = useState(false);
+export function SelectWithCustomOption({ tableName, field, value, onChange }: SelectWithCustomOptionProps) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [newOption, setNewOption] = useState("");
   const { toast } = useToast();
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  
-  // Update filtered options when options change
-  useEffect(() => {
-    setFilteredOptions(options);
-  }, [options]);
+  const { session, profile } = useAuthSession();
+  const isAdmin = profile?.user_type === 'admin';
 
-  // Handle search input changes with debouncing
-  const handleSearchChange = useDebouncedCallback(async (query: string) => {
-    if (!query || query.length < 2) {
-      setFilteredOptions(options);
-      return;
-    }
-    
-    setIsSearching(true);
-    
-    try {
-      if (query.length >= 2) {
-        const safeQuery = String(query).toLowerCase();
+  const { data, refetch } = useQuery({
+    queryKey: [tableName],
+    queryFn: async () => {
+      try {
+        let query = supabase.from(tableName).select('id, name, title');
         
-        let supabaseQuery = supabase
-          .from(tableName)
-          .select(`id, ${titleField}`)
-          .limit(50);
-        
-        if (titleField === 'title') {
-          supabaseQuery = supabaseQuery.ilike('title', `%${safeQuery}%`);
-        } else {
-          supabaseQuery = supabaseQuery.ilike('name', `%${safeQuery}%`);
+        // Add status filter for non-admin users
+        if (!isAdmin) {
+          query = query.eq('status', 'Approved');
         }
         
-        const { data, error } = await supabaseQuery;
+        const { data, error } = await query;
         
         if (error) {
-          console.error('Search error:', error);
-          // Fall back to local filtering on error
-          const filtered = options.filter(option => {
-            const searchValue = String(option[titleField] || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          setFilteredOptions(filtered);
-          return;
+          console.error(`Error fetching ${tableName}:`, error);
+          return [];
         }
         
-        if (data && data.length > 0) {
-          // Combine with existing options, removing duplicates
-          const combinedOptions = [...options];
-          data.forEach((item: any) => {
-            if (!combinedOptions.some(existing => existing.id === item.id)) {
-              combinedOptions.push({
-                id: item.id,
-                [titleField]: item[titleField]
-              } as QueryResult);
-            }
-          });
-          
-          // Filter the combined results
-          const filtered = combinedOptions.filter(option => {
-            const searchValue = String(option[titleField] || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          
-          setFilteredOptions(filtered);
-        } else {
-          // If no results from API, filter local options
-          const filtered = options.filter(option => {
-            const searchValue = String(option[titleField] || '').toLowerCase();
-            return searchValue.includes(safeQuery);
-          });
-          setFilteredOptions(filtered);
-        }
+        return data || [];
+      } catch (error) {
+        console.error(`Error in query for ${tableName}:`, error);
+        return [];
       }
-    } catch (error) {
-      console.error(`Search error:`, error);
-      // Fall back to local filtering on error
-      const filtered = options.filter(option => {
-        const searchValue = String(option[titleField] || '').toLowerCase();
-        return searchValue.includes(query.toLowerCase());
-      });
-      setFilteredOptions(filtered);
-    } finally {
-      setIsSearching(false);
-    }
-  }, 500);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  // Focus the search input when content opens
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      // Use a short timeout to ensure the select content is rendered
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 10);
-    } else {
-      setSearchQuery("");
-    }
+  const handleAddClick = () => {
+    setIsAdding(true);
   };
 
-  const handleCustomSubmit = async () => {
-    if (!customValue.trim()) {
+  const handleCancelClick = () => {
+    setIsAdding(false);
+    setNewOption("");
+  };
+
+  const handleSaveClick = async () => {
+    if (!newOption.trim()) {
       toast({
         title: "Error",
-        description: "Please enter a value",
+        description: "New option cannot be empty.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Check if entry already exists
-      const { data: existingData, error: checkError } = await supabase
+      const insertData = {
+        title: newOption,
+        name: newOption,
+        status: isAdmin ? 'Approved' : 'Pending'
+      };
+
+      const { error } = await supabase
         .from(tableName)
-        .select(`id, ${titleField}`)
-        .eq(titleField, customValue)
-        .maybeSingle();
+        .insert([insertData]);
 
-      if (checkError) throw checkError;
-
-      if (existingData) {
-        handleSelectChange(fieldName, existingData.id);
-        setShowCustomInput(false);
-        setCustomValue("");
+      if (error) {
+        console.error(`Error inserting into ${tableName}:`, error);
+        toast({
+          title: "Error",
+          description: `Could not add new ${tableName}.`,
+          variant: "destructive",
+        });
         return;
       }
 
-      // Create new entry with proper typing
-      let insertData: any = {
-        status: 'Pending' as Status
-      };
-
-      if (tableName === 'majors' || tableName === 'careers') {
-        insertData.title = customValue;
-        insertData.description = `Custom ${tableName === 'majors' ? 'major' : 'position'}: ${customValue}`;
-      } else {
-        insertData.name = customValue;
-      }
-
-      const { data, error } = await supabase
-        .from(tableName)
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
       toast({
         title: "Success",
-        description: `Successfully added new ${tableName === 'companies' ? 'company' : 
-                     tableName === 'schools' ? 'school' : 
-                     tableName === 'majors' ? 'major' : 'position'}.`,
+        description: `New ${tableName} added successfully!`,
       });
-
-      handleSelectChange(fieldName, data.id);
-      setShowCustomInput(false);
-      setCustomValue("");
+      
+      setNewOption("");
+      setIsAdding(false);
+      await refetch();
     } catch (error) {
-      console.error(`Failed to add new ${tableName}:`, error);
+      console.error(`Error in insert for ${tableName}:`, error);
       toast({
         title: "Error",
-        description: `Failed to add new ${tableName}. Please try again.`,
+        description: "Failed to add new option.",
         variant: "destructive",
       });
     }
   };
 
-  if (showCustomInput) {
-    return (
-      <div className="space-y-2">
-        <Input
-          value={customValue}
-          onChange={(e) => setCustomValue(e.target.value)}
-          placeholder={`Enter ${tableName === 'companies' ? 'company' : 
-                       tableName === 'schools' ? 'school' : 
-                       tableName === 'majors' ? 'major' : 'position'} name`}
-          className="w-full"
-        />
-        <div className="flex gap-2">
-          <Button
-            onClick={handleCustomSubmit}
-            size="sm"
-            type="button"
-          >
-            Add
-          </Button>
-          <Button
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomValue("");
-              if (onCancel) onCancel();
+  const options = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
+    
+    return data.map((item: any) => {
+      // Handle both title and name fields safely
+      const label = item.title || item.name || 'Unknown';
+      return {
+        value: item.id,
+        label: label
+      };
+    });
+  }, [data]);
+
+  return (
+    <div>
+      <Select onValueChange={onChange} defaultValue={value}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder={`Select ${field}`} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+          <SelectItem value="add_new" onClick={(e) => {
+              e.stopPropagation(); // Prevent the select from closing
+              handleAddClick();
             }}
-            variant="outline"
-            size="sm"
-            type="button"
           >
+            Add New
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      {isAdding && (
+        <div className="flex mt-2">
+          <Input
+            type="text"
+            value={newOption}
+            onChange={(e) => setNewOption(e.target.value)}
+            placeholder={`New ${field}`}
+            className="mr-2"
+          />
+          <Button size="sm" variant="outline" onClick={handleSaveClick}>
+            Save
+          </Button>
+          <Button size="sm" variant="ghost" onClick={handleCancelClick}>
             Cancel
           </Button>
         </div>
-      </div>
-    );
-  }
-
-  // Ensure value exists in options before using it
-  const isValidValue = value && options.some(option => option.id === value);
-
-  return (
-    <div className="w-full">
-      <Select
-        value={isValidValue ? value : undefined}
-        onValueChange={(newValue) => {
-          if (newValue === "other") {
-            setShowCustomInput(true);
-          } else {
-            handleSelectChange(fieldName, newValue);
-          }
-        }}
-        onOpenChange={handleOpenChange}
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent ref={contentRef}>
-          <div className="p-2">
-            <Input
-              ref={searchInputRef}
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                handleSearchChange(e.target.value);
-              }}
-              className="mb-2"
-              onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                }
-              }}
-            />
-          </div>
-          <ScrollArea className="h-[200px]">
-            {isSearching ? (
-              <div className="p-2 text-center text-muted-foreground">Searching...</div>
-            ) : filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option[titleField] || ''}
-                </SelectItem>
-              ))
-            ) : (
-              <div className="p-2 text-center text-muted-foreground">No results found</div>
-            )}
-            <SelectItem value="other">Other (Add New)</SelectItem>
-          </ScrollArea>
-        </SelectContent>
-      </Select>
+      )}
     </div>
   );
 }

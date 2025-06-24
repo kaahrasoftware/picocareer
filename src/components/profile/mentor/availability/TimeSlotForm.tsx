@@ -1,55 +1,106 @@
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import React, { useEffect, useState } from 'react';
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { TimeSlotInputs } from "./TimeSlotInputs";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { format, areIntervalsOverlapping } from "date-fns";
+import { format, parse, isWithinInterval, addDays } from 'date-fns';
+import { DateRange } from "react-day-picker";
+import { Clock, Calendar, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-interface TimeSlotFormProps {
+interface TimeSlotInputsProps {
+  timeSlots: string[];
+  selectedStartTime?: string;
+  selectedEndTime?: string;
+  isRecurring: boolean;
+  userTimezone: string;
   selectedDate: Date;
-  profileId: string;
-  onSuccess: () => void;
-  onShowUnavailable?: () => void;
+  onStartTimeSelect: (time: string) => void;
+  onEndTimeSelect: (time: string) => void;
+  onRecurringChange: (value: boolean) => void;
+  selectedDateRange?: DateRange;
 }
 
-export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavailable }: TimeSlotFormProps) {
-  const [selectedStartTime, setSelectedStartTime] = useState<string>();
-  const [selectedEndTime, setSelectedEndTime] = useState<string>();
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const { getSetting } = useUserSettings(profileId);
-  const userTimezone = getSetting('timezone');
+interface ExistingSlot {
+  start_date_time: string;
+  end_date_time: string;
+  recurring: boolean;
+  day_of_week: number | null;
+}
 
-  const checkForOverlap = async (startDateTime: Date, endDateTime: Date) => {
-    const startOfDay = new Date(selectedDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(selectedDate);
-    endOfDay.setHours(23, 59, 59, 999);
+export function TimeSlotInputs({
+  timeSlots,
+  selectedStartTime,
+  selectedEndTime,
+  isRecurring,
+  userTimezone,
+  selectedDate,
+  onStartTimeSelect,
+  onEndTimeSelect,
+  onRecurringChange,
+  selectedDateRange,
+}: TimeSlotInputsProps) {
+  const [existingSlots, setExistingSlots] = useState<ExistingSlot[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    // Get existing availability slots for the day, including recurring slots
-    const { data: existingSlots, error } = await supabase
-      .from('mentor_availability')
-      .select('*')
-      .eq('profile_id', profileId)
-      .eq('is_available', true)
-      .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+  useEffect(() => {
+    async function fetchExistingSlots() {
+      if (!selectedDate) return;
+      
+      setLoading(true);
+      try {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
-    if (error) {
-      console.error('Error checking availability:', error);
-      return true;
+        // Get user profile ID from the auth session
+        const { data: { session } } = await supabase.auth.getSession();
+        const profileId = session?.user?.id;
+
+        if (!profileId) {
+          console.error('No profile ID available from session');
+          return;
+        }
+
+        console.log(`Fetching availability for date: ${selectedDate.toISOString()}, day of week: ${selectedDate.getDay()}, profile: ${profileId}`);
+
+        const { data, error } = await supabase
+          .from('mentor_availability')
+          .select('*')
+          .eq('profile_id', profileId)
+          .eq('is_available', true)
+          .or(`and(start_date_time.gte.${startOfDay.toISOString()},start_date_time.lte.${endOfDay.toISOString()}),and(recurring.eq.true,day_of_week.eq.${selectedDate.getDay()})`);
+
+        if (error) {
+          console.error('Error fetching availability:', error);
+          return;
+        }
+
+        console.log(`Found ${data?.length} existing slots`, data);
+        setExistingSlots(data || []);
+      } catch (error) {
+        console.error('Error in fetchExistingSlots:', error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Check for overlaps with existing slots
-    return existingSlots?.some(slot => {
+    if (selectedDate) {
+      fetchExistingSlots();
+    }
+  }, [selectedDate]);
+
+  const isTimeSlotDisabled = (timeSlot: string) => {
+    if (loading || !selectedDate) return false;
+    
+    const timeToCheck = parse(timeSlot, 'HH:mm', selectedDate);
+
+    return existingSlots.some(slot => {
       let slotStart: Date;
       let slotEnd: Date;
 
       if (slot.recurring) {
-        // For recurring slots, use the time portion from start/end times but the date from selectedDate
         const recurringStart = new Date(slot.start_date_time);
         const recurringEnd = new Date(slot.end_date_time);
         
@@ -63,154 +114,128 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
         slotEnd = new Date(slot.end_date_time);
       }
 
-      return areIntervalsOverlapping(
-        { start: startDateTime, end: endDateTime },
-        { start: slotStart, end: slotEnd }
-      );
-    }) || false;
+      return isWithinInterval(timeToCheck, { start: slotStart, end: slotEnd });
+    });
   };
 
-  const handleSaveAvailability = async () => {
-    if (!selectedDate || !selectedStartTime || !selectedEndTime) {
-      toast({
-        title: "Missing information",
-        description: "Please select both start and end times",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!userTimezone) {
-      toast({
-        title: "Timezone not set",
-        description: "Please set your timezone in settings before setting availability",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const startDateTime = new Date(selectedDate);
-      const [startHours, startMinutes] = selectedStartTime.split(':').map(Number);
-      startDateTime.setHours(startHours, startMinutes, 0, 0);
-
-      const endDateTime = new Date(selectedDate);
-      const [endHours, endMinutes] = selectedEndTime.split(':').map(Number);
-      endDateTime.setHours(endHours, endMinutes, 0, 0);
-
-      // Check for overlapping slots (client-side check for better UX)
-      const hasOverlap = await checkForOverlap(startDateTime, endDateTime);
-
-      if (hasOverlap) {
-        toast({
-          title: "Time slot conflict",
-          description: "This time slot overlaps with an existing availability slot. Please choose a different time.",
-          variant: "destructive",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      const dayOfWeek = selectedDate.getDay();
-      const timezoneOffset = new Date().getTimezoneOffset();
-
-      const { error } = await supabase
-        .from('mentor_availability')
-        .insert({
-          profile_id: profileId,
-          start_date_time: startDateTime.toISOString(),
-          end_date_time: endDateTime.toISOString(),
-          is_available: true,
-          recurring: isRecurring,
-          day_of_week: isRecurring ? dayOfWeek : null,
-          timezone_offset: timezoneOffset
-        });
-
-      if (error) {
-        // Check if it's a duplicate error from our trigger
-        if (error.message.includes('Duplicate') && error.message.includes('availability slot')) {
-          toast({
-            title: "Duplicate time slot",
-            description: "A similar availability slot already exists. Please choose a different time.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        setIsSubmitting(false);
-        return;
-      }
-
-      toast({
-        title: "Success",
-        description: isRecurring 
-          ? `Weekly availability has been set for every ${format(selectedDate, 'EEEE')}`
-          : "Availability has been set",
-      });
-      
-      setSelectedStartTime(undefined);
-      setSelectedEndTime(undefined);
-      setIsRecurring(false);
-      onSuccess();
-    } catch (error: any) {
-      console.error('Error setting availability:', error);
-      toast({
-        title: "Error",
-        description: "Failed to set availability",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const getDateRangeText = () => {
+    if (!selectedDateRange?.from) return "";
+    if (!selectedDateRange.to) return format(selectedDateRange.from, 'MMM d, yyyy');
+    
+    const daysCount = Math.round((selectedDateRange.to.getTime() - selectedDateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    return `${format(selectedDateRange.from, 'MMM d')} - ${format(selectedDateRange.to, 'MMM d, yyyy')} (${daysCount} days)`;
   };
 
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        slots.push(time);
-      }
+  // Group time slots by hour for a more structured display
+  const groupedTimeSlots: Record<string, string[]> = {};
+  timeSlots.forEach(timeSlot => {
+    const hour = timeSlot.split(':')[0];
+    if (!groupedTimeSlots[hour]) {
+      groupedTimeSlots[hour] = [];
     }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
+    groupedTimeSlots[hour].push(timeSlot);
+  });
 
   return (
-    <div className="space-y-4">
-      <TimeSlotInputs
-        timeSlots={timeSlots}
-        selectedDate={selectedDate}
-        selectedStartTime={selectedStartTime}
-        selectedEndTime={selectedEndTime}
-        isRecurring={isRecurring}
-        userTimezone={userTimezone || 'Not set'}
-        onStartTimeSelect={setSelectedStartTime}
-        onEndTimeSelect={setSelectedEndTime}
-        onRecurringChange={() => setIsRecurring(!isRecurring)}
-      />
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <div className="flex items-center mb-1">
+            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Label htmlFor="start-time" className="text-sm font-medium">Start Time</Label>
+          </div>
+          <div className="relative">
+            <select
+              id="start-time"
+              value={selectedStartTime || ""}
+              onChange={(e) => onStartTimeSelect(e.target.value)}
+              className="w-full border border-input bg-background px-3 py-2 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="">Select start time</option>
+              {Object.keys(groupedTimeSlots).sort((a, b) => parseInt(a) - parseInt(b)).map((hour) => (
+                <optgroup key={hour} label={`${hour}:00 - ${hour}:59`}>
+                  {groupedTimeSlots[hour].map((time) => (
+                    <option 
+                      key={time} 
+                      value={time}
+                      disabled={isTimeSlotDisabled(time) || (selectedEndTime ? time >= selectedEndTime : false)}
+                    >
+                      {format(parse(time, 'HH:mm', new Date()), 'h:mm a')}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        </div>
 
-      <div className="flex gap-2">
-        <Button 
-          onClick={handleSaveAvailability}
-          disabled={!selectedStartTime || !selectedEndTime || isSubmitting || !userTimezone}
-          className="flex-1"
-        >
-          {isSubmitting ? "Saving..." : "Save Availability"}
-        </Button>
-        
-        {onShowUnavailable && (
-          <Button 
-            variant="outline"
-            onClick={onShowUnavailable}
-            className="flex-1"
-          >
-            Mark Unavailable
-          </Button>
-        )}
+        <div className="space-y-3">
+          <div className="flex items-center mb-1">
+            <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Label htmlFor="end-time" className="text-sm font-medium">End Time</Label>
+          </div>
+          <div className="relative">
+            <select
+              id="end-time"
+              value={selectedEndTime || ""}
+              onChange={(e) => onEndTimeSelect(e.target.value)}
+              className="w-full border border-input bg-background px-3 py-2 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            >
+              <option value="">Select end time</option>
+              {Object.keys(groupedTimeSlots).sort((a, b) => parseInt(a) - parseInt(b)).map((hour) => (
+                <optgroup key={hour} label={`${hour}:00 - ${hour}:59`}>
+                  {groupedTimeSlots[hour].map((time) => (
+                    <option 
+                      key={time} 
+                      value={time}
+                      disabled={isTimeSlotDisabled(time) || (selectedStartTime ? time <= selectedStartTime : false)}
+                    >
+                      {format(parse(time, 'HH:mm', new Date()), 'h:mm a')}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
+
+      <div className="flex items-center space-x-2 bg-gray-50 dark:bg-gray-900/30 p-3 rounded-md border">
+        <Switch
+          id="recurring"
+          checked={isRecurring}
+          onCheckedChange={onRecurringChange}
+          className="data-[state=checked]:bg-primary"
+        />
+        <Label htmlFor="recurring" className="text-sm font-medium cursor-pointer">
+          {selectedDateRange && selectedDateRange.from && selectedDateRange.to ? 
+            "Make this a weekly recurring availability for all selected dates" :
+            "Make this a weekly recurring availability"
+          }
+        </Label>
+      </div>
+
+      {selectedDateRange && selectedDateRange.from && (
+        <Alert className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-md">
+          <div className="flex items-start">
+            <Calendar className="h-4 w-4 mt-0.5 mr-2 text-amber-700 dark:text-amber-400" />
+            <AlertDescription className="text-amber-700 dark:text-amber-400">
+              <span className="font-medium">Date Range:</span>
+              <span className="ml-1">{getDateRangeText()}</span>
+            </AlertDescription>
+          </div>
+        </Alert>
+      )}
+
+      <Alert className="bg-gray-50 dark:bg-gray-900/30 border-gray-200 dark:border-gray-800">
+        <div className="flex items-start">
+          <Info className="h-4 w-4 mt-0.5 mr-2 text-muted-foreground" />
+          <AlertDescription className="text-muted-foreground text-sm">
+            Times shown in your timezone ({userTimezone})
+          </AlertDescription>
+        </div>
+      </Alert>
     </div>
   );
 }

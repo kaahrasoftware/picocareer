@@ -1,247 +1,168 @@
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/forms/FormField";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useParams, useNavigate } from 'react-router-dom';
 
-interface FormFields {
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface MenteeProject {
+  id: string;
+  mentee_id: string;
   title: string;
-  description: string;
-  status: 'in_progress' | 'completed' | 'on_hold';
-  technologies: string | string[];
-  skills_used: string | string[];
-  collaborators: string | string[];
-  start_date: string;
-  end_date: string;
-  github_url: string;
-  live_demo_url: string;
+  description?: string;
+  technologies?: string[];
+  github_url?: string;
+  live_demo_url?: string;
+  image_urls?: string[];
+  status: 'completed' | 'in_progress' | 'planned';
+  start_date?: string;
+  end_date?: string;
+  collaborators?: string[];
+  skills_used?: string[];
+  created_at: string;
+  updated_at: string;
 }
 
-export function MenteeProjectForm() {
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { menteeId } = useParams<{ menteeId: string }>();
-  const navigate = useNavigate();
+export interface MenteeProjectFormProps {
+  menteeId: string;
+  project?: MenteeProject;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
 
-  const form = useForm<FormFields>({
-    defaultValues: {
-      title: "",
-      description: "",
-      status: "in_progress",
-      technologies: "",
-      skills_used: "",
-      collaborators: "",
-      start_date: "",
-      end_date: "",
-      github_url: "",
-      live_demo_url: ""
-    }
+export function MenteeProjectForm({ menteeId, project, onClose, onSuccess }: MenteeProjectFormProps) {
+  const [formData, setFormData] = useState({
+    title: project?.title || '',
+    description: project?.description || '',
+    github_url: project?.github_url || '',
+    live_demo_url: project?.live_demo_url || '',
+    status: project?.status || 'completed' as const,
+    start_date: project?.start_date || '',
+    end_date: project?.end_date || ''
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const onSubmit = async (data: FormFields) => {
-    if (!profile?.id || !menteeId) {
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to submit the form.",
+        title: "Title required",
+        description: "Please enter a project title.",
         variant: "destructive",
       });
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const formData = {
+      const projectData = {
+        ...formData,
         mentee_id: menteeId,
-        title: data.title || '', // Make sure title is required
-        description: data.description || '',
-        status: data.status || 'in_progress',
-        technologies: Array.isArray(data.technologies) ? data.technologies : 
-                     typeof data.technologies === 'string' ? data.technologies.split(',').map(t => t.trim()) : [],
-        skills_used: Array.isArray(data.skills_used) ? data.skills_used : 
-                    typeof data.skills_used === 'string' ? data.skills_used.split(',').map(s => s.trim()) : [],
-        collaborators: Array.isArray(data.collaborators) ? data.collaborators : 
-                      typeof data.collaborators === 'string' ? data.collaborators.split(',').map(c => c.trim()) : [],
-        start_date: data.start_date || '',
-        end_date: data.end_date || '',
-        github_url: data.github_url || '',
-        live_demo_url: data.live_demo_url || ''
+        updated_at: new Date().toISOString()
       };
 
-      console.log("Form Data:", formData);
+      if (project) {
+        // Update existing project
+        const { error } = await supabase
+          .from('mentee_projects')
+          .update(projectData)
+          .eq('id', project.id);
+
+        if (error) throw error;
+      } else {
+        // Create new project
+        const { error } = await supabase
+          .from('mentee_projects')
+          .insert({
+            ...projectData,
+            created_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Success",
-        description: "Project details submitted successfully!",
+        description: `Project ${project ? 'updated' : 'created'} successfully.`,
       });
 
-      navigate(`/profile/${menteeId}`);
+      onSuccess?.();
+      onClose();
     } catch (error) {
-      console.error("Form submission error:", error);
+      console.error('Error saving project:', error);
       toast({
         title: "Error",
-        description: "Failed to submit project details. Please try again.",
+        description: `Failed to ${project ? 'update' : 'create'} project.`,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Controller
-          control={form.control}
-          name="title"
-          rules={{ required: "Title is required" }}
-          render={({ field }) => (
-            <FormField
-              name="title"
-              field={field}
-              label="Project Title"
-              type="text"
-              placeholder="Enter project title"
-              required
-            />
-          )}
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="title" className="block text-sm font-medium mb-2">
+          Project Title
+        </label>
+        <Input
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          placeholder="Enter project title..."
         />
+      </div>
 
-        <Controller
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormField
-              name="description"
-              field={field}
-              label="Description"
-              type="textarea"
-              placeholder="Enter project description"
-            />
-          )}
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-2">
+          Description
+        </label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="Describe your project..."
+          rows={4}
         />
+      </div>
 
-        <Controller
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormField
-              name="status"
-              field={field}
-              label="Status"
-              type="select"
-              options={[
-                { value: "in_progress", label: "In Progress" },
-                { value: "completed", label: "Completed" },
-                { value: "on_hold", label: "On Hold" },
-              ]}
-            />
-          )}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="github_url" className="block text-sm font-medium mb-2">
+            GitHub URL
+          </label>
+          <Input
+            id="github_url"
+            value={formData.github_url}
+            onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+            placeholder="https://github.com/..."
+          />
+        </div>
 
-        <Controller
-          control={form.control}
-          name="technologies"
-          render={({ field }) => (
-            <FormField
-              name="technologies"
-              field={field}
-              label="Technologies Used"
-              type="text"
-              placeholder="Enter technologies used (comma-separated)"
-            />
-          )}
-        />
+        <div>
+          <label htmlFor="live_demo_url" className="block text-sm font-medium mb-2">
+            Live Demo URL
+          </label>
+          <Input
+            id="live_demo_url"
+            value={formData.live_demo_url}
+            onChange={(e) => setFormData({ ...formData, live_demo_url: e.target.value })}
+            placeholder="https://..."
+          />
+        </div>
+      </div>
 
-        <Controller
-          control={form.control}
-          name="skills_used"
-          render={({ field }) => (
-            <FormField
-              name="skills_used"
-              field={field}
-              label="Skills Used"
-              type="text"
-              placeholder="Enter skills used (comma-separated)"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="collaborators"
-          render={({ field }) => (
-            <FormField
-              name="collaborators"
-              field={field}
-              label="Collaborators"
-              type="text"
-              placeholder="Enter collaborators (comma-separated)"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="start_date"
-          render={({ field }) => (
-            <FormField
-              name="start_date"
-              field={field}
-              label="Start Date"
-              type="text"
-              placeholder="YYYY-MM-DD"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="end_date"
-          render={({ field }) => (
-            <FormField
-              name="end_date"
-              field={field}
-              label="End Date"
-              type="text"
-              placeholder="YYYY-MM-DD"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="github_url"
-          render={({ field }) => (
-            <FormField
-              name="github_url"
-              field={field}
-              label="GitHub URL"
-              type="url"
-              placeholder="Enter GitHub URL"
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="live_demo_url"
-          render={({ field }) => (
-            <FormField
-              name="live_demo_url"
-              field={field}
-              label="Live Demo URL"
-              type="url"
-              placeholder="Enter live demo URL"
-            />
-          )}
-        />
-
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Submitting..." : "Submit"}
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
         </Button>
-      </form>
-    </Form>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : `${project ? 'Update' : 'Create'} Project`}
+        </Button>
+      </div>
+    </div>
   );
 }

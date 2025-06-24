@@ -1,163 +1,116 @@
 
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { Form } from "@/components/ui/form";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/forms/FormField";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
 
-interface MenteeEssay {
-  id?: string;
+export interface MenteeEssayResponse {
+  id: string;
+  mentee_id: string;
   prompt_id: string;
-  response_text: string;
+  response_text?: string;
+  word_count?: number;
+  version: number;
   is_draft: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-interface FormFields {
-  prompt_id: string;
-  response_text: string;
-  is_draft: boolean;
-}
-
-interface MenteeEssayFormProps {
+export interface MenteeEssayFormProps {
   menteeId: string;
+  essay?: MenteeEssayResponse;
+  onClose: () => void;
   onSuccess?: () => void;
-  onCancel?: () => void;
-  existingEssay?: MenteeEssay;
 }
 
-export function MenteeEssayForm({ 
-  menteeId, 
-  onSuccess, 
-  onCancel,
-  existingEssay
-}: MenteeEssayFormProps) {
+export function MenteeEssayForm({ menteeId, essay, onClose, onSuccess }: MenteeEssayFormProps) {
+  const [responseText, setResponseText] = useState(essay?.response_text || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
 
-  const form = useForm<FormFields>({
-    defaultValues: {
-      prompt_id: existingEssay?.prompt_id || "",
-      response_text: existingEssay?.response_text || "",
-      is_draft: existingEssay?.is_draft ?? false
-    }
-  });
-
-  const onSubmit = async (data: FormFields) => {
-    if (!profile?.id) {
+  const handleSubmit = async () => {
+    if (!responseText.trim()) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to create essays.",
+        title: "Response required",
+        description: "Please write a response before saving.",
         variant: "destructive",
       });
       return;
     }
 
-    if (!data.prompt_id) {
-      toast({
-        title: "Validation Error",
-        description: "Please select a prompt.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    setIsSubmitting(true);
     try {
-      const formData = {
-        mentee_id: menteeId,
-        prompt_id: data.prompt_id,
-        response_text: data.response_text || '',
-        is_draft: data.is_draft,
-        word_count: data.response_text?.split(' ').length || 0,
-        version: 1
-      };
+      const wordCount = responseText.trim().split(/\s+/).length;
 
-      const { data: essayData, error } = await supabase
-        .from('mentee_essay_responses')
-        .insert([formData])
-        .select()
-        .single();
+      if (essay) {
+        // Update existing essay
+        const { error } = await supabase
+          .from('mentee_essay_responses')
+          .update({
+            response_text: responseText,
+            word_count: wordCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', essay.id);
 
-      if (error) throw error;
-      
+        if (error) throw error;
+      } else {
+        // Create new essay - would need prompt_id from parent component
+        toast({
+          title: "Error",
+          description: "Cannot create new essay without prompt selection.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Success",
-        description: "Essay created successfully.",
+        description: "Essay response saved successfully.",
       });
 
-      if (onSuccess) onSuccess();
+      onSuccess?.();
+      onClose();
     } catch (error) {
-      console.error('Error with essay:', error);
+      console.error('Error saving essay:', error);
       toast({
         title: "Error",
-        description: "Failed to create essay. Please try again.",
-        variant: "destructive"
+        description: "Failed to save essay response.",
+        variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Controller
-          control={form.control}
-          name="prompt_id"
-          rules={{ required: "Prompt is required" }}
-          render={({ field }) => (
-            <FormField
-              name="prompt_id"
-              field={field}
-              label="Prompt ID"
-              type="text"
-              placeholder="Enter prompt ID"
-              required
-            />
-          )}
+    <div className="space-y-4">
+      <div>
+        <label htmlFor="response" className="block text-sm font-medium mb-2">
+          Essay Response
+        </label>
+        <Textarea
+          id="response"
+          value={responseText}
+          onChange={(e) => setResponseText(e.target.value)}
+          placeholder="Write your essay response here..."
+          rows={10}
+          className="w-full"
         />
+        <p className="text-sm text-muted-foreground mt-1">
+          Word count: {responseText.trim().split(/\s+/).filter(word => word.length > 0).length}
+        </p>
+      </div>
 
-        <Controller
-          control={form.control}
-          name="response_text"
-          render={({ field }) => (
-            <FormField
-              name="response_text"
-              field={field}
-              label="Response Text"
-              type="textarea"
-              placeholder="Enter response text"
-              required
-            />
-          )}
-        />
-
-        <Controller
-          control={form.control}
-          name="is_draft"
-          render={({ field }) => (
-            <FormField
-              name="is_draft"
-              field={field}
-              label="Is Draft"
-              type="checkbox"
-            />
-          )}
-        />
-
-        <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit">
-            {form.formState.isSubmitting ? 'Creating...' : 'Create Essay'}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end gap-3">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Response"}
+        </Button>
+      </div>
+    </div>
   );
 }
