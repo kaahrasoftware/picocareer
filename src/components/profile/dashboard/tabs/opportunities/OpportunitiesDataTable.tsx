@@ -1,125 +1,137 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ExternalLink } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, Edit, Trash2, Search, Check, X } from "lucide-react";
+import { OpportunityWithAuthor } from "@/types/opportunity/types";
 
-interface OpportunityWithAuthor {
-  id: string;
-  title: string;
-  description: string;
-  deadline: string;
-  created_at: string;
-  status: string;
-  company: {
-    name: string;
-  } | null;
-  author: {
-    full_name: string;
-  } | null;
+interface OpportunitiesDataTableProps {
+  opportunities: OpportunityWithAuthor[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  onEdit: (opportunityId: string) => void;
+  onDelete: (opportunityId: string) => void;
+  onApprove: (opportunityId: string) => void;
+  onReject: (opportunityId: string) => void;
 }
 
-export function OpportunitiesDataTable() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+export function OpportunitiesDataTable({
+  opportunities,
+  isLoading,
+  isError,
+  error,
+  onEdit,
+  onDelete,
+  onApprove,
+  onReject
+}: OpportunitiesDataTableProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: opportunities = [], isLoading } = useQuery({
-    queryKey: ['opportunities', currentPage],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          id,
-          title,
-          description,
-          deadline,
-          created_at,
-          status
-        `)
-        .range((currentPage - 1) * pageSize, currentPage * pageSize - 1)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Transform the data to match the expected interface
-      return (data || []).map(item => ({
-        id: item.id,
-        title: item.title || '',
-        description: item.description || '',
-        deadline: item.deadline || '',
-        created_at: item.created_at || '',
-        status: item.status || '',
-        company: null, // Set to null since we're not fetching company data
-        author: null   // Set to null since we're not fetching author data
-      }));
-    }
+  const filteredOpportunities = opportunities.filter(opportunity => {
+    const matchesSearch = opportunity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         opportunity.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || opportunity.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Loading opportunities...</div>;
+    return <div>Loading opportunities...</div>;
+  }
+
+  if (isError) {
+    return <div>Error loading opportunities: {error?.message}</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4">
-        {opportunities.map((opportunity) => (
-          <Card key={opportunity.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                  <div className="flex items-center gap-2 mt-1">
-                    {opportunity.company?.name && (
-                      <span className="text-sm text-muted-foreground">
-                        {opportunity.company.name}
-                      </span>
-                    )}
-                    <Badge variant={opportunity.status === 'Active' ? 'default' : 'secondary'}>
-                      {opportunity.status}
-                    </Badge>
-                  </div>
-                </div>
-                <Button size="sm" variant="outline">
-                  <ExternalLink className="h-4 w-4 mr-1" />
-                  View
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                {opportunity.description?.substring(0, 200)}
-                {opportunity.description?.length > 200 ? '...' : ''}
-              </p>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  Posted: {format(new Date(opportunity.created_at), 'MMM d, yyyy')}
-                </span>
-                {opportunity.deadline && (
-                  <span>
-                    Deadline: {format(new Date(opportunity.deadline), 'MMM d, yyyy')}
-                  </span>
-                )}
-              </div>
-              {opportunity.author?.full_name && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Posted by: {opportunity.author.full_name}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+      {/* Filters */}
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search opportunities..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="closed">Closed</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
-      {opportunities.length === 0 && (
+
+      {/* Opportunities Grid */}
+      {filteredOpportunities.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             No opportunities found.
           </CardContent>
         </Card>
+      ) : (
+        <div className="grid gap-4">
+          {filteredOpportunities.map((opportunity) => (
+            <Card key={opportunity.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg">{opportunity.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {opportunity.company || 'N/A'} | {opportunity.location || 'Remote'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(opportunity.id)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onApprove(opportunity.id)}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onReject(opportunity.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onDelete(opportunity.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm line-clamp-2">{opportunity.description}</p>
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Status: {opportunity.status} | Type: {opportunity.opportunity_type || 'General'}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

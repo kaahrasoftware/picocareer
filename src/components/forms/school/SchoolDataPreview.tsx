@@ -25,7 +25,7 @@ export function SchoolDataPreview({ aiData, currentData, onUpdate, isLoading }: 
       currentValue: any;
       aiValue: any;
       hasChange: boolean;
-      type: 'text' | 'number' | 'array' | 'url';
+      type: 'text' | 'number' | 'array' | 'url' | 'json';
     }> = [];
 
     const fieldLabels: Record<string, string> = {
@@ -33,26 +33,13 @@ export function SchoolDataPreview({ aiData, currentData, onUpdate, isLoading }: 
       type: "School Type",
       country: "Country",
       state: "State/Province",
-      city: "City",
       location: "Location",
       website: "Website",
-      email: "Email",
-      phone: "Phone",
-      established_year: "Established Year",
-      student_population: "Student Population",
       acceptance_rate: "Acceptance Rate",
+      student_population: "Student Population",
       student_faculty_ratio: "Student-Faculty Ratio",
-      tuition_in_state: "In-State Tuition",
-      tuition_out_of_state: "Out-of-State Tuition",
-      tuition_international: "International Tuition",
-      room_and_board: "Room & Board",
-      application_fee: "Application Fee",
-      application_deadline: "Application Deadline",
-      sat_range_low: "SAT Range (Low)",
-      sat_range_high: "SAT Range (High)",
-      act_range_low: "ACT Range (Low)",
-      act_range_high: "ACT Range (High)",
-      gpa_average: "Average GPA",
+      ranking: "Ranking",
+      tuition_fees: "Tuition Fees",
       cover_image_url: "Cover Image URL",
       logo_url: "Logo URL",
       undergraduate_application_url: "Undergraduate Application URL",
@@ -61,12 +48,8 @@ export function SchoolDataPreview({ aiData, currentData, onUpdate, isLoading }: 
       international_students_url: "International Students URL",
       financial_aid_url: "Financial Aid URL",
       virtual_tour_url: "Virtual Tour URL",
-      ranking: "Ranking",
-      programs_offered: "Programs Offered",
-      notable_programs: "Notable Programs",
-      graduation_rate: "Graduation Rate",
-      employment_rate: "Employment Rate",
-      average_salary_after_graduation: "Average Salary After Graduation"
+      undergrad_programs_link: "Undergraduate Programs Link",
+      grad_programs_link: "Graduate Programs Link"
     };
 
     Object.entries(aiData).forEach(([key, aiValue]) => {
@@ -75,11 +58,12 @@ export function SchoolDataPreview({ aiData, currentData, onUpdate, isLoading }: 
         const hasChange = JSON.stringify(currentValue) !== JSON.stringify(aiValue);
         
         if (hasChange || currentValue === null || currentValue === undefined || currentValue === '') {
-          let type: 'text' | 'number' | 'array' | 'url' = 'text';
+          let type: 'text' | 'number' | 'array' | 'url' | 'json' = 'text';
           
           if (Array.isArray(aiValue)) type = 'array';
           else if (typeof aiValue === 'number') type = 'number';
           else if (typeof aiValue === 'string' && (aiValue.startsWith('http') || key.includes('url'))) type = 'url';
+          else if (typeof aiValue === 'object' && aiValue !== null) type = 'json';
 
           changes.push({
             key,
@@ -142,6 +126,21 @@ export function SchoolDataPreview({ aiData, currentData, onUpdate, isLoading }: 
               {item}
             </Badge>
           ))}
+        </div>
+      );
+    }
+
+    if (type === 'json' && typeof value === 'object') {
+      // Handle JSONB fields like tuition_fees
+      if (Object.keys(value).length === 0) {
+        return <span className="text-muted-foreground italic">Empty object</span>;
+      }
+      
+      return (
+        <div className="bg-gray-50 p-2 rounded text-sm font-mono max-w-md">
+          <pre className="whitespace-pre-wrap break-words">
+            {JSON.stringify(value, null, 2)}
+          </pre>
         </div>
       );
     }

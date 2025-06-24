@@ -27,43 +27,40 @@ export function useFieldOptions(fieldName: string) {
       const fieldConfig = fieldToTableMap[fieldName as FieldName];
       
       try {
-        const { data, error } = await supabase
-          .from(fieldConfig.table as any)
-          .select(`id, ${fieldConfig.titleField}`)
-          .eq('status', 'Approved')
-          .order(fieldConfig.titleField);
+        let query;
+        if (fieldConfig.table === 'schools') {
+          query = supabase
+            .from(fieldConfig.table as any)
+            .select(`id, ${fieldConfig.titleField}`)
+            .eq('status', 'Approved')
+            .order(fieldConfig.titleField)
+            .limit(100);
+        } else {
+          query = supabase
+            .from(fieldConfig.table as any)
+            .select(`id, ${fieldConfig.titleField}`)
+            .eq('status', 'Approved')
+            .order(fieldConfig.titleField)
+            .limit(100);
+        }
+        
+        const { data, error } = await query;
         
         if (error) {
           console.error('Error fetching options:', error);
           return [];
         }
 
-        if (!data || !Array.isArray(data)) {
-          return [];
-        }
-
-        return data
-          .filter((item): item is Record<string, any> => {
-            return item !== null && 
-                   typeof item === 'object' && 
-                   item.id !== null && 
-                   item.id !== undefined;
-          })
-          .map(item => {
-            const titleValue = item[fieldConfig.titleField];
-            return {
-              id: item.id,
-              name: typeof titleValue === 'string' ? titleValue : ''
-            };
-          })
-          .filter((item): item is { id: string; name: string } => 
-            item !== null && item.id !== null && item.name !== ''
-          );
+        return (data || []).map(item => ({
+          id: item.id,
+          name: item[fieldConfig.titleField] || 'Unknown'
+        })) as Array<{ id: string; name: string }>;
       } catch (error) {
         console.error('Error in useFieldOptions:', error);
         return [];
       }
     },
-    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)
+    enabled: (['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName),
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 }
