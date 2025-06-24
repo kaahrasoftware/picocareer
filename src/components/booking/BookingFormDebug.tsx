@@ -1,225 +1,154 @@
-import { useState, useEffect } from "react";
-import { MeetingPlatform } from "@/types/calendar";
-import { DateSelector } from "./DateSelector";
-import { TimeSlotSelector } from "./TimeSlotSelector";
-import { SessionTypeSelector } from "./SessionTypeSelector";
-import { SessionNote } from "./SessionNote";
-import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
-import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
-import { SessionPaymentDialogDebug } from "./SessionPaymentDialogDebug";
-import { useSessionTypes } from "@/hooks/useSessionTypes";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useSessionPaymentDebug } from "@/hooks/useSessionPaymentDebug";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import React, { useState } from 'react';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
+import { BookingSessionType } from "@/types/session";
 
-interface BookingFormProps {
+interface BookingFormDebugProps {
   mentorId: string;
-  mentorName: string; // Add this prop to get mentor name
-  onFormChange: (formData: {
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  }) => void;
-  onSuccess: () => void;
+  selectedSessionType?: BookingSessionType;
+  onClose: () => void;
 }
 
-export function BookingFormDebug({ mentorId, mentorName, onFormChange, onSuccess }: BookingFormProps) {
-  const [date, setDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>();
-  const [sessionType, setSessionType] = useState<string>();
-  const [note, setNote] = useState("");
-  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [telegramUsername, setTelegramUsername] = useState("");
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+const bookingFormSchema = z.object({
+  date: z.date({
+    required_error: "A date is required.",
+  }),
+  time: z.string({
+    required_error: "A time slot is required.",
+  }),
+  notes: z.string().optional(),
+});
 
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { processPaymentAndBooking } = useSessionPaymentDebug();
-  const sessionTypes = useSessionTypes(mentorId, true);
-  
-  // Get available platforms from session types
-  const selectedSessionTypeData = sessionTypes.find(type => type.id === sessionType);
-  const availablePlatforms: MeetingPlatform[] = selectedSessionTypeData?.meeting_platform || ["Google Meet"];
-  
-  const formData = {
-    date,
-    selectedTime,
-    sessionType,
-    note,
-    meetingPlatform,
-    menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
-    menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
-  };
+export function BookingFormDebug({ mentorId, selectedSessionType, onClose }: BookingFormDebugProps) {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const { toast } = useToast();
 
-  useEffect(() => {
-    onFormChange(formData);
-  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
+  const form = useForm<z.infer<typeof bookingFormSchema>>({
+    resolver: zodResolver(bookingFormSchema),
+    defaultValues: {
+      date: date,
+      time: "",
+      notes: "",
+    },
+  });
 
-  // Reset time selection when date changes
-  useEffect(() => {
-    setSelectedTime(undefined);
-  }, [date]);
-
-  const handleContinueToPayment = () => {
-    if (!date || !selectedTime || !sessionType) return;
-    console.log('🎯 Debug: Opening payment dialog with debug mode');
-    setShowPaymentDialog(true);
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!profile?.full_name) {
-      console.error('❌ Debug: No profile or full name found');
-      return;
-    }
-
-    console.log('🚀 Debug: Starting payment with enhanced debug notification handling');
-    console.log('👤 Debug: Mentor Name:', mentorName);
-    console.log('👤 Debug: Mentee Name:', profile.full_name);
-
-    await processPaymentAndBooking({
-      mentorId,
-      mentorName, // Pass the mentor name to the payment handler
-      menteeName: profile.full_name,
-      formData,
-      onSuccess: () => {
-        console.log('✅ Debug: Payment and booking completed successfully');
-        setShowPaymentDialog(false);
-        onSuccess();
-      },
-      onError: (error) => {
-        console.error('❌ Debug: Booking error:', error);
-        // Keep dialog open so user can try again
-      }
-    });
-  };
-
-  const canProceedToPayment = date && selectedTime && sessionType;
+  function onSubmit(values: z.infer<typeof bookingFormSchema>) {
+    console.log(values)
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
+        </pre>
+      ),
+    })
+  }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left column - Calendar */}
-        <div className="bg-white/5 rounded-lg p-4">
-          <DateSelector
-            selectedDate={date}
-            onDateSelect={setDate}
-            mentorId={mentorId}
-          />
-        </div>
-
-        {/* Right column - Form elements */}
-        <div className="space-y-4">
-          {sessionTypes.length > 0 && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <SessionTypeSelector
-                sessionTypes={sessionTypes}
-                onSessionTypeSelect={setSessionType}
-              />
-            </div>
-          )}
-
-          {date && sessionType && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <TimeSlotSelector
-                date={date}
-                mentorId={mentorId}
-                selectedTime={selectedTime}
-                onTimeSelect={setSelectedTime}
-                selectedSessionType={sessionTypes.find(type => type.id === sessionType)}
-              />
-            </div>
-          )}
-
-          {sessionType && availablePlatforms.length > 0 && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <MeetingPlatformSelector
-                value={meetingPlatform}
-                onValueChange={setMeetingPlatform}
-                availablePlatforms={availablePlatforms}
-              />
-
-              {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
-                <div className="mt-4">
-                  <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="+1234567890"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="mt-1"
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Date of session</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={setDate}
+                    disabled={(date) =>
+                      date > new Date()
+                    }
+                    initialFocus
                   />
-                </div>
-              )}
-
-              {meetingPlatform === "Telegram" && (
-                <div className="mt-4">
-                  <Label htmlFor="telegramUsername">Telegram Username</Label>
-                  <Input
-                    id="telegramUsername"
-                    type="text"
-                    placeholder="@username"
-                    value={telegramUsername}
-                    onChange={(e) => {
-                      let username = e.target.value;
-                      if (!username.startsWith('@') && username !== '') {
-                        username = '@' + username;
-                      }
-                      setTelegramUsername(username);
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-              )}
-            </div>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
           )}
-
-          <div className="bg-white/5 rounded-lg p-4">
-            <SessionNote
-              note={note}
-              onNoteChange={setNote}
-            />
-          </div>
-
-          <Button
-            className="w-full"
-            disabled={!canProceedToPayment}
-            onClick={handleContinueToPayment}
-          >
-            Continue to Payment (25 Tokens) - Debug Mode
-          </Button>
-
-          {/* Request Availability Button */}
-          <RequestAvailabilityButton
-            mentorId={mentorId}
-            userId={session?.user?.id}
-            onRequestComplete={() => {
-              console.log('Availability request completed');
-            }}
+        />
+        {date && (
+          <FormField
+            control={form.control}
+            name="time"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Time</FormLabel>
+                <FormControl>
+                  <TimeSlotSelector
+                    date={date}
+                    mentorId={mentorId}
+                    selectedTime={field.value}
+                    onTimeSelect={field.onChange}
+                    selectedSessionType={selectedSessionType}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
-      </div>
-
-      {/* Payment Dialog */}
-      <SessionPaymentDialogDebug
-        isOpen={showPaymentDialog}
-        onClose={() => setShowPaymentDialog(false)}
-        onConfirmPayment={handleConfirmPayment}
-        sessionDetails={{
-          mentorName: mentorName,
-          date: date || new Date(),
-          time: selectedTime || "",
-          sessionType: sessionTypes.find(type => type.id === sessionType)?.type || ""
-        }}
-      />
-    </>
-  );
+        )}
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Input placeholder="Write some notes for the mentor" {...field} />
+              </FormControl>
+              <FormDescription>
+                Any additional information you want to provide to the mentor.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">Submit</Button>
+      </form>
+    </Form>
+  )
 }

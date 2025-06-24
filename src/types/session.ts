@@ -1,4 +1,3 @@
-
 import { Control } from "react-hook-form";
 
 export type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call" | "Zoom" | "Microsoft Teams";
@@ -12,6 +11,20 @@ export interface SessionType {
   description?: string;
   created_at: string;
   updated_at: string;
+  meeting_platform: MeetingPlatform[];
+  telegram_username?: string;
+  phone_number?: string;
+  token_cost: number;
+  custom_type_name?: string;
+}
+
+// Simplified SessionType for booking components
+export interface BookingSessionType {
+  id: string;
+  type: SessionTypeEnum;
+  duration: number;
+  price: number;
+  description?: string;
   meeting_platform: MeetingPlatform[];
   telegram_username?: string;
   phone_number?: string;

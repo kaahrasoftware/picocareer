@@ -1,245 +1,146 @@
-import { useState, useEffect } from "react";
-import { MeetingPlatform } from "@/types/calendar";
-import { DateSelector } from "./DateSelector";
-import { TimeSlotSelector } from "./TimeSlotSelector";
-import { SessionTypeSelector } from "./SessionTypeSelector";
-import { SessionNote } from "./SessionNote";
-import { MeetingPlatformSelector } from "./MeetingPlatformSelector";
-import { RequestAvailabilityButton } from "./RequestAvailabilityButton";
-import { SessionPaymentDialog } from "./SessionPaymentDialog";
-import { useSessionTypes } from "@/hooks/useSessionTypes";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useSessionPayment } from "@/hooks/useSessionPayment";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from 'react';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { TimeSlotSelector } from "@/components/booking/TimeSlotSelector";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { BookingSessionType } from "@/types/session";
 
 interface BookingFormProps {
   mentorId: string;
-  onFormChange: (formData: {
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  }) => void;
-  onSuccess: () => void;
+  selectedSessionType?: BookingSessionType;
+  onClose: () => void;
 }
 
-export function BookingForm({ mentorId, onFormChange, onSuccess }: BookingFormProps) {
-  const [date, setDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState<string>();
-  const [sessionType, setSessionType] = useState<string>();
-  const [note, setNote] = useState("");
-  const [meetingPlatform, setMeetingPlatform] = useState<MeetingPlatform>("Google Meet");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [telegramUsername, setTelegramUsername] = useState("");
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+export function BookingForm({ mentorId, selectedSessionType, onClose }: BookingFormProps) {
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { processPaymentAndBooking } = useSessionPayment();
-  const sessionTypes = useSessionTypes(mentorId, true);
-  
-  // Fetch mentor details to get the name
-  const { data: mentorProfile } = useQuery({
-    queryKey: ['mentor-profile', mentorId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', mentorId)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching mentor profile:', error);
-        throw error;
-      }
-      
-      return data;
-    },
-    enabled: !!mentorId
-  });
-
-  const selectedSessionTypeDetails = sessionTypes.find(type => type.id === sessionType);
-  const availablePlatforms = selectedSessionTypeDetails?.meeting_platform || [];
-  const mentorName = mentorProfile?.full_name || 'Unknown Mentor';
-
-  const formData = {
-    date,
-    selectedTime,
-    sessionType,
-    note,
-    meetingPlatform,
-    menteePhoneNumber: (meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") ? phoneNumber : undefined,
-    menteeTelegramUsername: meetingPlatform === "Telegram" ? telegramUsername : undefined,
+  const handleTimeSelect = (time: string) => {
+    setSelectedTime(time);
   };
 
-  useEffect(() => {
-    onFormChange(formData);
-  }, [date, selectedTime, sessionType, note, meetingPlatform, phoneNumber, telegramUsername]);
-
-  // Reset time selection when date changes
-  useEffect(() => {
-    setSelectedTime(undefined);
-  }, [date]);
-
-  const handleContinueToPayment = () => {
-    if (!date || !selectedTime || !sessionType) return;
-    setShowPaymentDialog(true);
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!profile?.full_name) {
-      console.error('No profile or full name found');
+  const handleBookSession = async () => {
+    if (!date || !selectedTime || !selectedSessionType) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a date and time slot.",
+        variant: "destructive",
+      });
       return;
     }
 
-    console.log('Starting payment with notification integration');
-    console.log('Mentor Name:', mentorName);
-    console.log('Mentee Name:', profile.full_name);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
 
-    await processPaymentAndBooking({
-      mentorId,
-      mentorName,
-      menteeName: profile.full_name,
-      formData,
-      onSuccess: () => {
-        console.log('Payment and booking completed successfully');
-        setShowPaymentDialog(false);
-        onSuccess();
-      },
-      onError: (error) => {
-        console.error('Booking error:', error);
-        // Keep dialog open so user can try again
+      if (authError || !authData?.user) {
+        toast({
+          title: "Authentication Error",
+          description: "Could not retrieve user information. Please log in again.",
+          variant: "destructive",
+        });
+        return;
       }
-    });
+
+      const menteeId = authData.user.id;
+
+      // Format the selected date and time into a single ISO string
+      const selectedDateTime = new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        parseInt(selectedTime.split(':')[0]),
+        parseInt(selectedTime.split(':')[1])
+      ).toISOString();
+
+      const { data, error } = await supabase
+        .from('mentor_sessions')
+        .insert([
+          {
+            mentor_id: mentorId,
+            mentee_id: menteeId,
+            session_type_id: selectedSessionType.id,
+            scheduled_at: selectedDateTime,
+            status: 'scheduled',
+          },
+        ]);
+
+      if (error) {
+        console.error("Error booking session:", error);
+        toast({
+          title: "Error",
+          description: "Failed to book session. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Session booked successfully!",
+        });
+        navigate('/dashboard');
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error booking session:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const canProceedToPayment = date && selectedTime && sessionType;
-
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left column - Calendar */}
-        <div className="bg-white/5 rounded-lg p-4">
-          <DateSelector
-            selectedDate={date}
-            onDateSelect={setDate}
-            mentorId={mentorId}
-          />
-        </div>
-
-        {/* Right column - Form elements */}
-        <div className="space-y-4">
-          {sessionTypes.length > 0 && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <SessionTypeSelector
-                sessionTypes={sessionTypes}
-                onSessionTypeSelect={setSessionType}
-              />
-            </div>
-          )}
-
-          {date && sessionType && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <TimeSlotSelector
-                date={date}
-                mentorId={mentorId}
-                selectedTime={selectedTime}
-                onTimeSelect={setSelectedTime}
-                selectedSessionType={selectedSessionTypeDetails}
-              />
-            </div>
-          )}
-
-          {sessionType && availablePlatforms.length > 0 && (
-            <div className="bg-white/5 rounded-lg p-4">
-              <MeetingPlatformSelector
-                value={meetingPlatform}
-                onValueChange={setMeetingPlatform}
-                availablePlatforms={availablePlatforms}
-              />
-
-              {(meetingPlatform === "WhatsApp" || meetingPlatform === "Phone Call") && (
-                <div className="mt-4">
-                  <Label htmlFor="phoneNumber">Phone Number (with country code)</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="+1234567890"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              )}
-
-              {meetingPlatform === "Telegram" && (
-                <div className="mt-4">
-                  <Label htmlFor="telegramUsername">Telegram Username</Label>
-                  <Input
-                    id="telegramUsername"
-                    type="text"
-                    placeholder="@username"
-                    value={telegramUsername}
-                    onChange={(e) => {
-                      let username = e.target.value;
-                      if (!username.startsWith('@') && username !== '') {
-                        username = '@' + username;
-                      }
-                      setTelegramUsername(username);
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="bg-white/5 rounded-lg p-4">
-            <SessionNote
-              note={note}
-              onNoteChange={setNote}
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Select Date</h3>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={format(date || new Date(), "PPP")}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              <span>{format(date || new Date(), "PPP")}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              disabled={(date) =>
+                date < new Date()
+              }
+              initialFocus
             />
-          </div>
-
-          <Button
-            className="w-full"
-            disabled={!canProceedToPayment}
-            onClick={handleContinueToPayment}
-          >
-            Continue to Payment (25 Tokens)
-          </Button>
-
-          {/* Request Availability Button */}
-          <RequestAvailabilityButton
-            mentorId={mentorId}
-            userId={session?.user?.id}
-            onRequestComplete={() => {
-              console.log('Availability request completed');
-            }}
-          />
-        </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Payment Dialog */}
-      <SessionPaymentDialog
-        isOpen={showPaymentDialog}
-        onClose={() => setShowPaymentDialog(false)}
-        onConfirmPayment={handleConfirmPayment}
-        sessionDetails={{
-          mentorName: mentorName,
-          date: date || new Date(),
-          time: selectedTime || "",
-          sessionType: selectedSessionTypeDetails?.type || ""
-        }}
-      />
-    </>
+      {date && (
+        <TimeSlotSelector
+          date={date}
+          mentorId={mentorId}
+          selectedTime={selectedTime}
+          onTimeSelect={handleTimeSelect}
+          selectedSessionType={selectedSessionType}
+        />
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={handleBookSession}>Book Session</Button>
+      </div>
+    </div>
   );
 }
+
+import { CalendarIcon } from "@radix-ui/react-icons"

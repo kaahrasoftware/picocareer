@@ -3,14 +3,14 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useAvailableTimeSlots } from "@/hooks/useAvailableTimeSlots";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SessionType } from "@/types/session";
+import { BookingSessionType } from "@/types/session";
 
 interface TimeSlotSelectorProps {
   date: Date;
   mentorId: string;
   selectedTime?: string;
   onTimeSelect: (time: string) => void;
-  selectedSessionType?: SessionType;
+  selectedSessionType?: BookingSessionType;
 }
 
 export function TimeSlotSelector({
