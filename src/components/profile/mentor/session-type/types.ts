@@ -1,6 +1,6 @@
 
 export interface SessionTypeFormData {
-  type: SessionTypeEnum;
+  type: string;
   description: string;
   duration: number;
   price: number;
@@ -24,7 +24,6 @@ export const SessionTypeEnum = {
 } as const;
 
 export type SessionType = typeof SessionTypeEnum[keyof typeof SessionTypeEnum];
-export type SessionTypeEnum = typeof SessionTypeEnum[keyof typeof SessionTypeEnum];
 
 export interface SessionTypeFormProps {
   profileId: string;
