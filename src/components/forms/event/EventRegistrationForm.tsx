@@ -2,32 +2,45 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { PaginatedSelect } from '@/components/common/PaginatedSelect';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-const eventRegistrationSchema = z.object({
+// Enhanced schema with conditional validation
+const formSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
   last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Please enter a valid email address'),
   country: z.string().min(1, 'Country is required'),
   student_or_professional: z.enum(['Student', 'Professional', 'Both']),
-  'where did you hear about us': z.string().min(1, 'This field is required'),
+  'where did you hear about us': z.string().min(1, 'Please tell us where you heard about us'),
   'current academic field/position': z.string().min(1, 'This field is required'),
-  'current school/company': z.string().min(1, 'This field is required'),
+  'current school/company': z.string().optional(),
   additional_info: z.string().optional(),
+}).refine((data) => {
+  // Conditional validation for school/company field
+  if (data.student_or_professional === 'Student' || data.student_or_professional === 'Both') {
+    return data['current school/company'] && data['current school/company'].length > 0;
+  }
+  if (data.student_or_professional === 'Professional') {
+    return data['current school/company'] && data['current school/company'].length > 0;
+  }
+  return true;
+}, {
+  message: 'This field is required',
+  path: ['current school/company']
 });
 
-type EventRegistrationFormData = z.infer<typeof eventRegistrationSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 interface EventRegistrationFormProps {
   eventId: string;
@@ -35,23 +48,30 @@ interface EventRegistrationFormProps {
   onCancel: () => void;
 }
 
+const countries = [
+  'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Spain', 'Italy',
+  'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Switzerland', 'Austria', 'Belgium',
+  'Portugal', 'Ireland', 'New Zealand', 'Japan', 'South Korea', 'Singapore', 'Other'
+];
+
+const hearAboutUsOptions = [
+  'Instagram', 'LinkedIn', 'Twitter/X', 'Facebook', 'TikTok', 'YouTube', 'Google Search',
+  'Friend/Family', 'School/University', 'Professional Network', 'Event/Conference',
+  'Podcast', 'Blog/Article', 'Email Newsletter', 'Advertisement', 'Other'
+];
+
 export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventRegistrationFormProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<EventRegistrationFormData>({
-    resolver: zodResolver(eventRegistrationSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: '',
       last_name: '',
-      email: user?.email || '',
+      email: '',
       country: '',
       student_or_professional: 'Student',
       'where did you hear about us': '',
@@ -61,10 +81,17 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
     },
   });
 
-  const studentOrProfessional = watch('student_or_professional');
+  const watchedStudentType = form.watch('student_or_professional');
 
-  const handleAddNewSchool = async (schoolName: string): Promise<void> => {
-    try {
+  // Clear conditional fields when user type changes
+  React.useEffect(() => {
+    form.setValue('current school/company', '');
+    form.setValue('current academic field/position', '');
+  }, [watchedStudentType, form]);
+
+  // Mutation for adding new schools
+  const addSchoolMutation = useMutation({
+    mutationFn: async (schoolName: string) => {
       const { data, error } = await supabase
         .from('schools')
         .insert({
@@ -76,69 +103,74 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
           website: '',
           acceptance_rate: 0,
           student_population: 0,
-          status: 'Pending'
+          status: 'Pending',
+          author_id: user?.id
         })
-        .select('id, name')
+        .select()
         .single();
 
       if (error) throw error;
-
-      // Set the new school name in the form
-      setValue('current school/company', schoolName);
-      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['schools'] });
+      form.setValue('current school/company', data.name);
       toast({
-        title: "School Added",
-        description: `${schoolName} has been added and is pending approval.`,
+        title: 'School Added',
+        description: 'Your school has been added and is pending approval.',
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Error adding school:', error);
       toast({
-        title: "Error",
-        description: "Failed to add new school. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add school. Please try again.',
+        variant: 'destructive',
       });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const handleAddNewMajor = async (majorName: string): Promise<void> => {
-    try {
+  // Mutation for adding new majors
+  const addMajorMutation = useMutation({
+    mutationFn: async (majorName: string) => {
       const { data, error } = await supabase
         .from('majors')
         .insert({
           title: majorName,
-          description: `Custom major: ${majorName}`,
-          status: 'Pending'
+          description: `Major in ${majorName}`,
+          status: 'Pending',
+          author_id: user?.id
         })
-        .select('id, title')
+        .select()
         .single();
 
       if (error) throw error;
-
-      // Set the new major name in the form
-      setValue('current academic field/position', majorName);
-      
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['majors'] });
+      form.setValue('current academic field/position', data.title);
       toast({
-        title: "Major Added",
-        description: `${majorName} has been added and is pending approval.`,
+        title: 'Major Added',
+        description: 'Your academic field has been added and is pending approval.',
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Error adding major:', error);
       toast({
-        title: "Error",
-        description: "Failed to add new major. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add academic field. Please try again.',
+        variant: 'destructive',
       });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const onSubmit = async (data: EventRegistrationFormData) => {
-    if (!user?.id) {
+  const onSubmit = async (data: FormData) => {
+    if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to register for events.",
-        variant: "destructive",
+        title: 'Authentication Required',
+        description: 'Please sign in to register for events.',
+        variant: 'destructive',
       });
       return;
     }
@@ -156,7 +188,7 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
         student_or_professional: data.student_or_professional,
         'where did you hear about us': data['where did you hear about us'],
         'current academic field/position': data['current academic field/position'],
-        'current school/company': data['current school/company'],
+        'current school/company': data['current school/company'] || '',
         additional_info: data.additional_info || '',
       };
 
@@ -167,225 +199,335 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
       if (error) throw error;
 
       toast({
-        title: "Registration Successful",
-        description: "You have been registered for the event!",
+        title: 'Registration Successful!',
+        description: 'You have been registered for the event. Check your email for confirmation.',
       });
 
       onSuccess();
     } catch (error) {
       console.error('Registration error:', error);
       toast({
-        title: "Registration Failed",
-        description: "There was an error registering for the event. Please try again.",
-        variant: "destructive",
+        title: 'Registration Failed',
+        description: 'There was an error with your registration. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const renderConditionalFields = () => {
+    const userType = watchedStudentType;
+
+    if (userType === 'Student') {
+      return (
+        <>
+          <FormField
+            control={form.control}
+            name="current school/company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current School *</FormLabel>
+                <FormControl>
+                  <PaginatedSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Search for your school or add new..."
+                    tableName="schools"
+                    selectField="name"
+                    searchField="name"
+                    allowCustomValue={true}
+                    onCustomValueSubmit={(value) => addSchoolMutation.mutate(value)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="current academic field/position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Academic Field of Interest *</FormLabel>
+                <FormControl>
+                  <PaginatedSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Search for your major or add new..."
+                    tableName="majors"
+                    selectField="title"
+                    searchField="title"
+                    allowCustomValue={true}
+                    onCustomValueSubmit={(value) => addMajorMutation.mutate(value)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      );
+    }
+
+    if (userType === 'Professional') {
+      return (
+        <>
+          <FormField
+            control={form.control}
+            name="current school/company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current Company *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your current company"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="current academic field/position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current Position *</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter your current job title/position"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      );
+    }
+
+    if (userType === 'Both') {
+      return (
+        <>
+          <FormField
+            control={form.control}
+            name="current school/company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Current School/Company *</FormLabel>
+                <FormControl>
+                  <PaginatedSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Search for your school/company or add new..."
+                    tableName="schools"
+                    selectField="name"
+                    searchField="name"
+                    allowCustomValue={true}
+                    onCustomValueSubmit={(value) => addSchoolMutation.mutate(value)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="current academic field/position"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Academic Field/Position *</FormLabel>
+                <FormControl>
+                  <PaginatedSelect
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Search for your field/position or add new..."
+                    tableName="majors"
+                    selectField="title"
+                    searchField="title"
+                    allowCustomValue={true}
+                    onCustomValueSubmit={(value) => addMajorMutation.mutate(value)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
+      );
+    }
+
+    return null;
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="first_name">First Name *</Label>
-              <Input
-                id="first_name"
-                {...register('first_name')}
-                className={errors.first_name ? 'border-red-500' : ''}
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Event Registration</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.first_name && (
-                <p className="text-sm text-red-500 mt-1">{errors.first_name.message}</p>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="last_name">Last Name *</Label>
-              <Input
-                id="last_name"
-                {...register('last_name')}
-                className={errors.last_name ? 'border-red-500' : ''}
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.last_name && (
-                <p className="text-sm text-red-500 mt-1">{errors.last_name.message}</p>
-              )}
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...register('email')}
-              className={errors.email ? 'border-red-500' : ''}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter your email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-            )}
-          </div>
 
-          <div>
-            <Label htmlFor="country">Country *</Label>
-            <Input
-              id="country"
-              {...register('country')}
-              className={errors.country ? 'border-red-500' : ''}
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your country" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country} value={country}>
+                          {country}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-            {errors.country && (
-              <p className="text-sm text-red-500 mt-1">{errors.country.message}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Professional Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Are you a student or professional? *</Label>
-            <RadioGroup
-              value={studentOrProfessional}
-              onValueChange={(value) => setValue('student_or_professional', value as 'Student' | 'Professional' | 'Both')}
-              className="flex flex-col space-y-2 mt-2"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Student" id="student" />
-                <Label htmlFor="student">Student</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Professional" id="professional" />
-                <Label htmlFor="professional">Professional</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Both" id="both" />
-                <Label htmlFor="both">Both</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Dynamic fields based on student/professional selection */}
-          {(studentOrProfessional === 'Student' || studentOrProfessional === 'Both') && (
-            <>
-              <div>
-                <Label>Current School *</Label>
-                <PaginatedSelect
-                  value={watch('current school/company') || ''}
-                  onValueChange={(value) => setValue('current school/company', value)}
-                  placeholder="Search for your school or add new..."
-                  tableName="schools"
-                  selectField="name"
-                  searchField="name"
-                  allowCustomValue={true}
-                  onCustomValueSubmit={handleAddNewSchool}
-                />
-                {errors['current school/company'] && (
-                  <p className="text-sm text-red-500 mt-1">{errors['current school/company'].message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label>Academic Field of Interest *</Label>
-                <PaginatedSelect
-                  value={watch('current academic field/position') || ''}
-                  onValueChange={(value) => setValue('current academic field/position', value)}
-                  placeholder="Search for your major or add new..."
-                  tableName="majors"
-                  selectField="title"
-                  searchField="title"
-                  allowCustomValue={true}
-                  onCustomValueSubmit={handleAddNewMajor}
-                />
-                {errors['current academic field/position'] && (
-                  <p className="text-sm text-red-500 mt-1">{errors['current academic field/position'].message}</p>
-                )}
-              </div>
-            </>
-          )}
-
-          {(studentOrProfessional === 'Professional' || studentOrProfessional === 'Both') && (
-            <>
-              <div>
-                <Label htmlFor="current_company">Current Company *</Label>
-                <Input
-                  id="current_company"
-                  {...register('current school/company')}
-                  placeholder="Enter your current company"
-                  className={errors['current school/company'] ? 'border-red-500' : ''}
-                />
-                {errors['current school/company'] && (
-                  <p className="text-sm text-red-500 mt-1">{errors['current school/company'].message}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="current_position">Current Position *</Label>
-                <Input
-                  id="current_position"
-                  {...register('current academic field/position')}
-                  placeholder="Enter your current position"
-                  className={errors['current academic field/position'] ? 'border-red-500' : ''}
-                />
-                {errors['current academic field/position'] && (
-                  <p className="text-sm text-red-500 mt-1">{errors['current academic field/position'].message}</p>
-                )}
-              </div>
-            </>
-          )}
-
-          <div>
-            <Label htmlFor="where_hear">Where did you hear about us? *</Label>
-            <Select onValueChange={(value) => setValue('where did you hear about us', value)}>
-              <SelectTrigger className={errors['where did you hear about us'] ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Social Media">Social Media</SelectItem>
-                <SelectItem value="Google Search">Google Search</SelectItem>
-                <SelectItem value="Friend/Colleague">Friend/Colleague</SelectItem>
-                <SelectItem value="University">University</SelectItem>
-                <SelectItem value="Professional Network">Professional Network</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors['where did you hear about us'] && (
-              <p className="text-sm text-red-500 mt-1">{errors['where did you hear about us'].message}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Additional Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label htmlFor="additional_info">Additional Information (Optional)</Label>
-            <Textarea
-              id="additional_info"
-              {...register('additional_info')}
-              placeholder="Any additional information you'd like to share..."
-              rows={4}
+            <FormField
+              control={form.control}
+              name="student_or_professional"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I am a *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Professional">Professional</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Registering...' : 'Register for Event'}
-        </Button>
-      </div>
-    </form>
+            {/* Conditional Fields */}
+            {renderConditionalFields()}
+
+            <FormField
+              control={form.control}
+              name="where did you hear about us"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Where did you hear about us? *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {hearAboutUsOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="additional_info"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Information</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Any additional information you'd like to share (optional)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex gap-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                {isSubmitting ? 'Registering...' : 'Register for Event'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
