@@ -8,26 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SessionTypeFormProps } from "./types";
+import { SessionTypeEnum } from "@/types/session";
+import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
-
-// Valid meeting platforms based on database schema
-type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
-interface SessionTypeFormData {
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  meeting_platform: string[];
-  telegram_username?: string;
-  phone_number?: string;
-  custom_type_name?: string;
-}
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,13 +22,14 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const queryClient = useQueryClient();
   const { getSetting } = useUserSettings(profileId);
   
+  // Form state with default values that will be updated
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: '',
+      type: undefined as unknown as SessionTypeEnum,
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: [] as string[],
+      meeting_platform: [],
       telegram_username: "",
       phone_number: "",
       custom_type_name: "",
@@ -93,7 +81,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
+      console.log('Profile ID:', profileId);
 
+      // Validate custom type name if Custom type is selected
       if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
         toast({
           title: "Error",
@@ -153,14 +143,14 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         }
       }
 
-      // Create new session type with proper type casting
+      // Create new session type
       const sessionData = {
         profile_id: profileId,
         type: data.type,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform as MeetingPlatform[],
+        meeting_platform: data.meeting_platform,
         telegram_username: showTelegramField ? data.telegram_username || null : null,
         phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
@@ -187,6 +177,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
       console.log('Successfully created session type:', newSessionType);
       
+      // Invalidate and refetch query to update the UI
       queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
@@ -212,8 +203,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              control={methods.control}
-              availableTypes={existingTypes?.map(type => type.type) || []}
+              form={{ control: methods.control }}
+              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
             />
 
             {isCustomType && (
@@ -266,10 +257,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect control={methods.control} />
+            <PlatformSelect form={{ control: methods.control }} />
 
             <PlatformFields
-              control={methods.control}
+              form={{ control: methods.control }}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

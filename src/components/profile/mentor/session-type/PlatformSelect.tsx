@@ -1,64 +1,96 @@
-
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Control } from "react-hook-form";
-import { SessionTypeFormData, MeetingPlatform } from "./types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Control, useFormContext } from "react-hook-form";
+import { SessionTypeFormData } from "./types";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { MeetingPlatform } from "@/types/session";
 
 interface PlatformSelectProps {
   form: {
     control: Control<SessionTypeFormData>;
-    setValue: (name: keyof SessionTypeFormData, value: any) => void;
-    watch: (name: keyof SessionTypeFormData) => any;
   };
 }
 
-const PLATFORMS: { value: MeetingPlatform; label: string }[] = [
-  { value: "Google Meet", label: "Google Meet" },
-  { value: "WhatsApp", label: "WhatsApp" },
-  { value: "Telegram", label: "Telegram" },
-  { value: "Phone Call", label: "Phone Call" }
-];
-
 export function PlatformSelect({ form }: PlatformSelectProps) {
-  const selectedPlatforms = form.watch("meeting_platform") || [];
+  const [selectedPlatforms, setSelectedPlatforms] = useState<MeetingPlatform[]>([]);
+  const methods = useFormContext<SessionTypeFormData>();
 
-  const handlePlatformChange = (platform: MeetingPlatform, checked: boolean) => {
-    const currentPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : [];
-    
-    if (checked) {
-      const newPlatforms = [...currentPlatforms, platform];
-      form.setValue("meeting_platform", newPlatforms);
-    } else {
-      const newPlatforms = currentPlatforms.filter((p: MeetingPlatform) => p !== platform);
-      form.setValue("meeting_platform", newPlatforms);
+  // Watch for changes in the meeting_platform field
+  useEffect(() => {
+    const subscription = methods.watch((value) => {
+      if (value.meeting_platform) {
+        setSelectedPlatforms(value.meeting_platform);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [methods.watch]);
+
+  const handlePlatformSelect = (value: MeetingPlatform) => {
+    if (!selectedPlatforms.includes(value)) {
+      const newPlatforms = [...selectedPlatforms, value];
+      setSelectedPlatforms(newPlatforms);
+      methods.setValue('meeting_platform', newPlatforms, { 
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true 
+      });
     }
+  };
+
+  const removePlatform = (platform: MeetingPlatform) => {
+    const newPlatforms = selectedPlatforms.filter(p => p !== platform);
+    setSelectedPlatforms(newPlatforms);
+    methods.setValue('meeting_platform', newPlatforms, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true
+    });
   };
 
   return (
     <FormField
       control={form.control}
       name="meeting_platform"
-      rules={{ required: "At least one meeting platform is required" }}
-      render={() => (
+      rules={{ required: "At least one platform is required" }}
+      render={({ field }) => (
         <FormItem>
-          <FormLabel>Meeting Platform(s)</FormLabel>
-          <FormControl>
-            <div className="space-y-2">
-              {PLATFORMS.map((platform) => (
-                <div key={platform.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={platform.value}
-                    checked={Array.isArray(selectedPlatforms) && selectedPlatforms.includes(platform.value)}
-                    onCheckedChange={(checked) => handlePlatformChange(platform.value, !!checked)}
-                  />
-                  <label htmlFor={platform.value} className="text-sm font-medium">
-                    {platform.label}
-                  </label>
-                </div>
+          <FormLabel>Meeting Platforms</FormLabel>
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
+              {selectedPlatforms.map((platform) => (
+                <Badge key={platform} variant="secondary" className="gap-1">
+                  {platform}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 p-0 hover:bg-transparent"
+                    onClick={() => removePlatform(platform)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
               ))}
             </div>
-          </FormControl>
-          <FormMessage />
+            <FormControl>
+              <Select onValueChange={handlePlatformSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select platforms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Google Meet">Google Meet</SelectItem>
+                  <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                  <SelectItem value="Telegram">Telegram</SelectItem>
+                  <SelectItem value="Phone Call">Phone Call</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </div>
         </FormItem>
       )}
     />

@@ -11,11 +11,6 @@ interface SelectWithCustomOptionProps {
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder?: string;
   allowCustom?: boolean;
-  tableName?: string;
-  fieldName?: string;
-  titleField?: string;
-  handleSelectChange?: (event: any, value: string) => void;
-  onCancel?: () => void;
 }
 
 export function SelectWithCustomOption({
@@ -23,30 +18,16 @@ export function SelectWithCustomOption({
   onValueChange,
   options,
   placeholder = "Select an option",
-  allowCustom = true,
-  handleSelectChange,
-  onCancel
+  allowCustom = true
 }: SelectWithCustomOptionProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customValue, setCustomValue] = useState('');
 
   const handleCustomSubmit = () => {
     if (customValue.trim()) {
-      if (handleSelectChange) {
-        handleSelectChange(null, customValue.trim());
-      } else {
-        onValueChange(customValue.trim());
-      }
+      onValueChange(customValue.trim());
       setCustomValue('');
       setShowCustomInput(false);
-    }
-  };
-
-  const handleValueChange = (newValue: string) => {
-    if (handleSelectChange) {
-      handleSelectChange(null, newValue);
-    } else {
-      onValueChange(newValue);
     }
   };
 
@@ -54,7 +35,7 @@ export function SelectWithCustomOption({
     <div className="space-y-2">
       {!showCustomInput ? (
         <div className="space-y-2">
-          <Select value={value} onValueChange={handleValueChange}>
+          <Select value={value} onValueChange={onValueChange}>
             <SelectTrigger>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
@@ -102,7 +83,6 @@ export function SelectWithCustomOption({
             onClick={() => {
               setShowCustomInput(false);
               setCustomValue('');
-              if (onCancel) onCancel();
             }}
             size="sm"
           >

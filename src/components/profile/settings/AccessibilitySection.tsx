@@ -1,129 +1,103 @@
 
-import React from 'react';
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState, useEffect } from "react";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { CheckIcon } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { DisplaySection } from "./accessibility/DisplaySection";
+import { TypographySection } from "./accessibility/TypographySection";
+import { NavigationSection } from "./accessibility/NavigationSection";
+import { AccessibilitySettings, defaultAccessibilitySettings, AccessibilitySectionProps } from "./accessibility/types";
+import { applyFontSettings } from "./accessibility/utils";
 
-interface AccessibilitySectionProps {
-  profileId: string;
-}
+export function AccessibilitySection({
+  profileId
+}: AccessibilitySectionProps) {
+  const {
+    getSetting,
+    updateSetting
+  } = useUserSettings(profileId);
+  const [settings, setSettings] = useState<AccessibilitySettings>(defaultAccessibilitySettings);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'saving'>('idle');
 
-interface AccessibilitySettings {
-  highContrast: boolean;
-  fontSize: string;
-  screenReader: boolean;
-  reduceMotion: boolean;
-  keyboardNavigation: boolean;
-}
-
-interface DisplaySectionProps {
-  settings: AccessibilitySettings;
-  handleToggle: (key: keyof AccessibilitySettings) => void;
-  handleFontSizeChange: (size: string) => void;
-}
-
-const DisplaySection = ({ settings, handleToggle, handleFontSizeChange }: DisplaySectionProps): JSX.Element => {
-  return (
-    <div className="space-y-4">
-      <h4 className="font-medium">Display Settings</h4>
-      
-      <div className="flex items-center justify-between">
-        <Label htmlFor="high-contrast">High Contrast Mode</Label>
-        <Switch
-          id="high-contrast"
-          checked={settings.highContrast}
-          onCheckedChange={() => handleToggle('highContrast')}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <Label htmlFor="reduce-motion">Reduce Motion</Label>
-        <Switch
-          id="reduce-motion"
-          checked={settings.reduceMotion}
-          onCheckedChange={() => handleToggle('reduceMotion')}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Font Size</Label>
-        <Select value={settings.fontSize} onValueChange={handleFontSizeChange}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="small">Small</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="large">Large</SelectItem>
-            <SelectItem value="extra-large">Extra Large</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-};
-
-export function AccessibilitySection({ profileId }: AccessibilitySectionProps) {
-  const { getSetting, updateSetting } = useUserSettings(profileId);
-
-  const getAccessibilitySettings = (): AccessibilitySettings => {
-    const settingsStr = getSetting('accessibility_settings');
-    if (settingsStr) {
+  useEffect(() => {
+    const accessibilitySettings = getSetting('accessibility_settings');
+    if (accessibilitySettings) {
       try {
-        return JSON.parse(settingsStr);
-      } catch (error) {
-        console.error('Error parsing accessibility settings:', error);
+        setSettings(JSON.parse(accessibilitySettings));
+      } catch (e) {
+        console.error('Error parsing accessibility settings:', e);
       }
     }
-    
-    return {
-      highContrast: false,
-      fontSize: 'medium',
-      screenReader: false,
-      reduceMotion: false,
-      keyboardNavigation: true,
-    };
+  }, [getSetting]);
+
+  const handleToggle = (key: keyof AccessibilitySettings, value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
-  const [settings, setSettings] = React.useState<AccessibilitySettings>(getAccessibilitySettings);
+  const handleSelectChange = (key: keyof AccessibilitySettings, value: string) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
-  const handleToggle = (key: keyof AccessibilitySettings) => {
-    setSettings(prev => {
-      const newSettings = { ...prev, [key]: !prev[key] };
-      updateSetting.mutate({
+  const saveSettings = async () => {
+    setSaveStatus('saving');
+    try {
+      await updateSetting.mutateAsync({
         type: 'accessibility_settings',
-        value: JSON.stringify(newSettings)
+        value: JSON.stringify(settings)
       });
-      return newSettings;
-    });
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+      applyFontSettings(settings);
+    } catch (error) {
+      console.error('Error saving accessibility settings:', error);
+      setSaveStatus('idle');
+    }
   };
 
-  const handleFontSizeChange = (size: string) => {
-    setSettings(prev => {
-      const newSettings = { ...prev, fontSize: size };
-      updateSetting.mutate({
-        type: 'accessibility_settings',
-        value: JSON.stringify(newSettings)
-      });
-      return newSettings;
-    });
-  };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Accessibility Settings</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Customize your experience to better suit your accessibility needs.
+        <h3 className="text-lg font-semibold mb-2">Accessibility Settings</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Customize your experience for better accessibility.
         </p>
       </div>
 
-      <DisplaySection 
-        settings={settings} 
-        handleToggle={handleToggle}
-        handleFontSizeChange={handleFontSizeChange}
-      />
-    </div>
-  );
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          <DisplaySection 
+            settings={settings} 
+            handleToggle={handleToggle} 
+          />
+          
+          <Separator />
+          
+          <TypographySection 
+            settings={settings} 
+            handleSelectChange={handleSelectChange} 
+          />
+          
+          <Separator />
+          
+          <NavigationSection 
+            settings={settings} 
+            handleToggle={handleToggle} 
+          />
+        </CardContent>
+      </Card>
+
+      <Button onClick={saveSettings} disabled={saveStatus === 'saving'} className="mt-4">
+        {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? <>
+            <CheckIcon className="h-4 w-4 mr-2" />
+            Saved
+          </> : 'Save Accessibility Settings'}
+      </Button>
+    </div>;
 }

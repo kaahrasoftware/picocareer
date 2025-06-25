@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,103 +8,58 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
-interface MenteeProject {
-  id: string;
-  title: string;
-  description: string;
-  status: 'completed' | 'in_progress' | 'planned';
-  technologies: string[];
-  skills_used: string[];
-  github_url?: string;
-  live_demo_url?: string;
-  start_date?: string;
-  end_date?: string;
-}
-
 interface MenteeProjectFormProps {
   menteeId: string;
   onClose: () => void;
-  project?: MenteeProject;
 }
 
-export function MenteeProjectForm({ menteeId, onClose, project }: MenteeProjectFormProps) {
+export function MenteeProjectForm({ menteeId, onClose }: MenteeProjectFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    title: project?.title || '',
-    description: project?.description || '',
-    status: project?.status || 'completed' as const,
-    technologies: project?.technologies?.join(', ') || '',
-    skills_used: project?.skills_used?.join(', ') || '',
-    github_url: project?.github_url || '',
-    live_demo_url: project?.live_demo_url || '',
-    start_date: project?.start_date || '',
-    end_date: project?.end_date || ''
+    title: '',
+    description: '',
+    status: 'completed' as const,
+    technologies: '',
+    skills_used: '',
+    github_url: '',
+    live_demo_url: '',
+    start_date: '',
+    end_date: ''
   });
-
-  useEffect(() => {
-    if (project) {
-      setFormData({
-        title: project.title || '',
-        description: project.description || '',
-        status: project.status || 'completed',
-        technologies: project.technologies?.join(', ') || '',
-        skills_used: project.skills_used?.join(', ') || '',
-        github_url: project.github_url || '',
-        live_demo_url: project.live_demo_url || '',
-        start_date: project.start_date || '',
-        end_date: project.end_date || ''
-      });
-    }
-  }, [project]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const projectData = {
-        title: formData.title,
-        description: formData.description,
-        status: formData.status,
-        technologies: formData.technologies ? formData.technologies.split(',').map(t => t.trim()) : [],
-        skills_used: formData.skills_used ? formData.skills_used.split(',').map(s => s.trim()) : [],
-        github_url: formData.github_url || null,
-        live_demo_url: formData.live_demo_url || null,
-        start_date: formData.start_date || null,
-        end_date: formData.end_date || null
-      };
+      const { error } = await supabase
+        .from('mentee_projects')
+        .insert({
+          mentee_id: menteeId,
+          title: formData.title,
+          description: formData.description,
+          status: formData.status,
+          technologies: formData.technologies ? formData.technologies.split(',').map(t => t.trim()) : [],
+          skills_used: formData.skills_used ? formData.skills_used.split(',').map(s => s.trim()) : [],
+          github_url: formData.github_url || null,
+          live_demo_url: formData.live_demo_url || null,
+          start_date: formData.start_date || null,
+          end_date: formData.end_date || null
+        });
 
-      if (project) {
-        // Update existing project
-        const { error } = await supabase
-          .from('mentee_projects')
-          .update(projectData)
-          .eq('id', project.id);
-
-        if (error) throw error;
-      } else {
-        // Create new project
-        const { error } = await supabase
-          .from('mentee_projects')
-          .insert({
-            mentee_id: menteeId,
-            ...projectData
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Project ${project ? 'updated' : 'saved'} successfully`,
+        description: "Project saved successfully",
       });
 
       onClose();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || `Failed to ${project ? 'update' : 'save'} project`,
+        description: error.message || "Failed to save project",
         variant: "destructive",
       });
     } finally {
@@ -218,7 +173,7 @@ export function MenteeProjectForm({ menteeId, onClose, project }: MenteeProjectF
           Cancel
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? `${project ? 'Updating' : 'Saving'}...` : `${project ? 'Update' : 'Save'} Project`}
+          {isSubmitting ? "Saving..." : "Save Project"}
         </Button>
       </div>
     </form>
