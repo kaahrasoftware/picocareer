@@ -78,17 +78,19 @@ export function SelectWithCustomOption({
   };
 
   const getInsertData = (fieldName: string, value: string) => {
+    const statusValue = 'Pending' as const;
+    
     switch (fieldName) {
       case 'academic_major_id':
-        return { title: value, description: '', status: 'Pending' };
+        return { title: value, description: '', status: statusValue };
       case 'school_id':
-        return { name: value, status: 'Pending' };
+        return { name: value, status: statusValue };
       case 'company_id':
-        return { name: value, status: 'Pending' };
+        return { name: value, status: statusValue };
       case 'position':
-        return { title: value, description: '', status: 'Pending' };
+        return { title: value, description: '', status: statusValue };
       default:
-        return { title: value, description: '', status: 'Pending' };
+        return { title: value, description: '', status: statusValue };
     }
   };
 

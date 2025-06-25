@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Refresh, Mail, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { RefreshCw, Mail, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,7 +50,14 @@ export function EventEmailMonitor() {
         }
 
         console.log('Direct table query result:', tableData);
-        setEmailLogs(tableData || []);
+        // Type assertion to ensure proper status types
+        const typedLogs = (tableData || []).map(log => ({
+          ...log,
+          status: ['queued', 'processing', 'sent', 'failed'].includes(log.status) 
+            ? log.status as 'queued' | 'processing' | 'sent' | 'failed'
+            : 'queued' as const
+        }));
+        setEmailLogs(typedLogs);
       }
     } catch (error) {
       console.error('Error fetching email logs:', error);
@@ -154,7 +160,7 @@ export function EventEmailMonitor() {
               onClick={fetchEmailLogs}
               disabled={isLoading}
             >
-              <Refresh className="h-4 w-4" />
+              <RefreshCw className="h-4 w-4" />
               {isLoading ? "Loading..." : "Refresh"}
             </Button>
           </div>
@@ -202,7 +208,7 @@ export function EventEmailMonitor() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={getStatusVariant(log.status)}>
+                    <Badge variant={getStatusVariant(log.status) as any}>
                       {log.status}
                     </Badge>
                     {log.error_message && (

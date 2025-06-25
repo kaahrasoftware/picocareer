@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,9 @@ import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
+
+// Define allowed meeting platforms based on database schema
+type AllowedMeetingPlatform = "WhatsApp" | "Google Meet" | "Telegram" | "Phone Call";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -92,6 +96,11 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         return;
       }
 
+      // Filter meeting platforms to only include allowed values
+      const allowedPlatforms = data.meeting_platform.filter((platform): platform is AllowedMeetingPlatform => 
+        ['WhatsApp', 'Google Meet', 'Telegram', 'Phone Call'].includes(platform)
+      );
+
       // Create new session type with correct database schema
       const sessionData = {
         profile_id: profileId,
@@ -99,11 +108,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform.filter(platform => 
-          ['WhatsApp', 'Google Meet', 'Telegram', 'Phone Call'].includes(platform)
-        ),
-        telegram_username: data.meeting_platform.includes("Telegram") ? data.telegram_username || null : null,
-        phone_number: (data.meeting_platform.includes("Phone Call") || data.meeting_platform.includes("WhatsApp")) ? data.phone_number || null : null,
+        meeting_platform: allowedPlatforms,
+        telegram_username: allowedPlatforms.includes("Telegram") ? data.telegram_username || null : null,
+        phone_number: (allowedPlatforms.includes("Phone Call") || allowedPlatforms.includes("WhatsApp")) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
       };
 

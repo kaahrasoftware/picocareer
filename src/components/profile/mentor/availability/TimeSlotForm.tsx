@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -181,14 +182,13 @@ export function TimeSlotForm({ selectedDate, profileId, onSuccess, onShowUnavail
     <div className="space-y-4">
       <TimeSlotInputs
         timeSlots={timeSlots}
-        selectedDate={selectedDate}
         selectedStartTime={selectedStartTime}
         selectedEndTime={selectedEndTime}
         isRecurring={isRecurring}
         userTimezone={userTimezone || 'Not set'}
         onStartTimeSelect={setSelectedStartTime}
         onEndTimeSelect={setSelectedEndTime}
-        onRecurringChange={() => setIsRecurring(!isRecurring)}
+        onRecurringChange={setIsRecurring}
       />
 
       <div className="flex gap-2">
