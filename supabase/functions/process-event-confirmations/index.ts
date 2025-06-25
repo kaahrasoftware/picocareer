@@ -16,7 +16,6 @@ interface EmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,6 +26,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Processing email confirmation for registration:', registrationId);
 
+    // Check if registration exists
+    const { data: registration, error: regError } = await supabase
+      .from('event_registrations')
+      .select('*')
+      .eq('id', registrationId)
+      .single();
+
+    if (regError || !registration) {
+      console.error('Registration not found:', regError);
+      
+      // Update email log with error
+      await supabase
+        .from('event_email_logs')
+        .update({ 
+          status: 'failed',
+          error_message: 'Registration not found',
+          updated_at: new Date().toISOString()
+        })
+        .eq('registration_id', registrationId);
+
+      return new Response(
+        JSON.stringify({ success: false, error: 'Registration not found' }), 
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404,
+        }
+      );
+    }
+
     // Update email log status to processing
     await supabase
       .from('event_email_logs')
@@ -36,7 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('registration_id', registrationId);
 
-    // Call the existing send-event-confirmation function
+    // Call the send-event-confirmation function
     const { error: emailError } = await supabase.functions.invoke(
       'send-event-confirmation',
       {
@@ -88,6 +116,25 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error("Error in process-event-confirmations function:", error);
+    
+    // Try to update email log with error if we have the registrationId
+    try {
+      const body = await req.clone().json();
+      if (body.registrationId) {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        await supabase
+          .from('event_email_logs')
+          .update({ 
+            status: 'failed',
+            error_message: error.message,
+            updated_at: new Date().toISOString()
+          })
+          .eq('registration_id', body.registrationId);
+      }
+    } catch (updateError) {
+      console.error('Error updating email log:', updateError);
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }), 
       {

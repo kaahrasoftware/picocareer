@@ -11,6 +11,7 @@ export function EventEmailMonitor() {
   const [emailLogs, setEmailLogs] = useState<EventEmailLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
   const fetchEmailLogs = async () => {
     try {
@@ -28,6 +29,26 @@ export function EventEmailMonitor() {
       setEmailLogs([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleProcessQueue = async () => {
+    setIsProcessingQueue(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('process-email-queue', {});
+      
+      if (error) {
+        console.error('Error processing email queue:', error);
+        toast.error('Failed to process email queue');
+      } else {
+        toast.success(`Queue processed: ${data.processed} emails sent, ${data.failed} failed`);
+        await fetchEmailLogs();
+      }
+    } catch (error) {
+      console.error('Error calling process-email-queue:', error);
+      toast.error('Failed to process email queue');
+    } finally {
+      setIsProcessingQueue(false);
     }
   };
 
@@ -108,6 +129,14 @@ export function EventEmailMonitor() {
               disabled={isLoading}
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
+            </Button>
+            <Button 
+              onClick={handleProcessQueue}
+              variant="outline"
+              size="sm"
+              disabled={isProcessingQueue}
+            >
+              {isProcessingQueue ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Process Queue'}
             </Button>
             {failedCount > 0 && (
               <Button 
