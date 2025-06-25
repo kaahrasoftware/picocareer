@@ -131,6 +131,16 @@ export function ModernNavigation() {
           title: "Major Upload", 
           href: "/major/upload",
           description: "Add academic majors"
+        },
+        { 
+          title: "School Upload", 
+          href: "/schools/upload",
+          description: "Add educational institutions"
+        },
+        { 
+          title: "Company Upload", 
+          href: "/companies/upload",
+          description: "Add companies to database"
         }
       ]
     },
@@ -141,6 +151,11 @@ export function ModernNavigation() {
           title: "Email Campaigns", 
           href: "/admin/email-campaigns",
           description: "Manage email marketing campaigns"
+        },
+        { 
+          title: "Scholarship Scraper", 
+          href: "/admin/email-campaigns?tab=scholarship-scraper",
+          description: "Automated scholarship data collection"
         },
         { 
           title: "Scholarships Add", 

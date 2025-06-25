@@ -5,19 +5,21 @@ import { ScholarshipHeader } from "@/components/scholarships/ScholarshipHeader";
 import { ScholarshipFilters } from "@/components/scholarships/ScholarshipFilters";
 import { ScholarshipGrid } from "@/components/scholarships/ScholarshipGrid";
 import { useScholarshipFilters } from "@/hooks/useScholarshipFilters";
+import { useScholarshipRefresh } from "@/hooks/useScholarshipRefresh";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ScholarshipDetailsDialog } from "@/components/scholarships/ScholarshipDetailsDialog";
 
 export default function Scholarships() {
+  const { refreshKey, refreshScholarships } = useScholarshipRefresh();
   const { 
     categories,
     scholarships,
     isLoading,
     handleFilterChange,
     resetFilters 
-  } = useScholarshipFilters();
+  } = useScholarshipFilters(refreshKey);
 
   const [dialogScholarship, setDialogScholarship] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -79,7 +81,7 @@ export default function Scholarships() {
         <div className="main-content">
           <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
             <div className="space-y-8">
-              <ScholarshipHeader />
+              <ScholarshipHeader onScrapingComplete={refreshScholarships} />
               
               <ScholarshipFilters
                 onFilterChange={handleFilterChange}

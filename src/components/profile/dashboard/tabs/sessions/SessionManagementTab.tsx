@@ -25,7 +25,6 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminSessionsQuery } from '@/hooks/admin-sessions/useAdminSessionsQuery';
-import { useQuery } from '@tanstack/react-query';
 
 export function SessionManagementTab() {
   // State for filters and pagination
@@ -117,6 +116,26 @@ export function SessionManagementTab() {
     }
   };
 
+  const convertPlatformToDb = (platform: string): string => {
+    const platformMap: Record<string, string> = {
+      'WhatsApp': 'whatsapp',
+      'Google Meet': 'google_meet',
+      'Telegram': 'telegram',
+      'Phone Call': 'phone_call'
+    };
+    return platformMap[platform] || platform.toLowerCase().replace(' ', '_');
+  };
+
+  const convertPlatformFromDb = (platform: string): string => {
+    const platformMap: Record<string, string> = {
+      'whatsapp': 'WhatsApp',
+      'google_meet': 'Google Meet',
+      'telegram': 'Telegram',
+      'phone_call': 'Phone Call'
+    };
+    return platformMap[platform] || platform;
+  };
+
   // New function to run the one-time no-show sync
   const handleRunNoShowSync = async () => {
     if (!session?.access_token) {
@@ -164,57 +183,6 @@ export function SessionManagementTab() {
       });
     } finally {
       setIsSyncing(false);
-    }
-  };
-
-  // Fetch sessions data using our updated hook
-  const { 
-    data: sessions, 
-    isLoading, 
-    error 
-  } = useQuery({
-    queryKey: ['admin-sessions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mentor_sessions')
-        .select(`
-          id,
-          status,
-          scheduled_at,
-          notes,
-          meeting_link,
-          meeting_platform,
-          mentor:mentor_id(id, full_name, avatar_url),
-          mentee:mentee_id(id, full_name, avatar_url),
-          session_type:session_type_id(type, duration)
-        `)
-        .order('scheduled_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Transform meeting_platform values to match the expected type
-      const transformedData = data?.map(session => ({
-        ...session,
-        meeting_platform: transformMeetingPlatform(session.meeting_platform)
-      })) || [];
-
-      return transformedData;
-    },
-  });
-
-  // Helper function to transform meeting platform values
-  const transformMeetingPlatform = (platform: string) => {
-    switch (platform) {
-      case 'Google Meet':
-        return 'google_meet';
-      case 'WhatsApp':
-        return 'whatsapp';
-      case 'Telegram':
-        return 'telegram';
-      case 'Phone Call':
-        return 'phone_call';
-      default:
-        return 'google_meet';
     }
   };
 

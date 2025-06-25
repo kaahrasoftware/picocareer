@@ -2,7 +2,12 @@
 import type { Profile } from "@/types/database/profiles";
 
 interface MentorDetailsProps {
-  profile: Profile;
+  profile: Profile & {
+    company_name?: string | null;
+    school_name?: string | null;
+    academic_major?: string | null;
+    career?: { title?: string } | null;
+  };
 }
 
 export function MentorDetails({ profile }: MentorDetailsProps) {
@@ -14,10 +19,10 @@ export function MentorDetails({ profile }: MentorDetailsProps) {
         <h3 className="text-lg font-semibold">Details</h3>
         <ul className="list-disc list-inside">
           <li><strong>Location:</strong> {profile.location}</li>
-          {profile.company_id && <li><strong>Company ID:</strong> {profile.company_id}</li>}
-          {profile.school_id && <li><strong>School ID:</strong> {profile.school_id}</li>}
-          {profile.academic_major_id && <li><strong>Academic Major ID:</strong> {profile.academic_major_id}</li>}
-          {profile.position && <li><strong>Position:</strong> {profile.position}</li>}
+          <li><strong>Company:</strong> {profile.company_name}</li>
+          <li><strong>School:</strong> {profile.school_name}</li>
+          <li><strong>Academic Major:</strong> {profile.academic_major}</li>
+          <li><strong>Career Title:</strong> {profile.career?.title}</li>
         </ul>
       </div>
     </div>
