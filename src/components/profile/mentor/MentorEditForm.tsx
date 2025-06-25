@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
@@ -97,12 +96,7 @@ export function MentorEditForm({ profileId, initialData, onSuccess }: MentorEdit
           {...register("first_name", { required: "First name is required" })}
         />
         {errors.first_name && (
-          <p className="text-sm text-red-500">
-            {typeof errors.first_name.message === 'string' 
-              ? errors.first_name.message 
-              : 'First name is required'
-            }
-          </p>
+          <p className="text-sm text-red-500">{errors.first_name.message}</p>
         )}
       </div>
 
@@ -114,12 +108,7 @@ export function MentorEditForm({ profileId, initialData, onSuccess }: MentorEdit
           {...register("last_name", { required: "Last name is required" })}
         />
         {errors.last_name && (
-          <p className="text-sm text-red-500">
-            {typeof errors.last_name.message === 'string' 
-              ? errors.last_name.message 
-              : 'Last name is required'
-            }
-          </p>
+          <p className="text-sm text-red-500">{errors.last_name.message}</p>
         )}
       </div>
 

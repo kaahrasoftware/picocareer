@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
@@ -37,7 +36,6 @@ export function SelectField({
   return (
     <SelectWithCustomOption
       value={value}
-      onValueChange={onSave}
       options={options}
       placeholder={getPlaceholder()}
       tableName={fieldName === 'company_id' ? 'companies' : 

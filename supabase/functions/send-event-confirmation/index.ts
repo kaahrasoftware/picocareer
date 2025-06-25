@@ -1,371 +1,397 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const resendApiKey = Deno.env.get("RESEND_API_KEY")!;
-
-const resend = new Resend(resendApiKey);
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { format } from "https://deno.land/x/date_fns@v2.22.1/index.js";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-interface EmailData {
-  registrationId: string;
-  eventId?: string;
-  email?: string;
-  fullName?: string;
-  eventTitle?: string;
-  eventDescription?: string;
-  eventStartTime?: string;
-  eventEndTime?: string;
-  eventPlatform?: string;
-  meetingLink?: string;
-  organizedBy?: string;
-  timezone?: string;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const emailData: EmailData = await req.json();
-    const { registrationId } = emailData;
-
-    console.log(`Fetching registration details for: ${registrationId}`);
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // If we don't have complete data, fetch it from the database
-    let registrationData = emailData;
+    const { registrationId, eventId, email, fullName } = await req.json()
     
-    if (!emailData.email || !emailData.eventTitle) {
-      const { data: registration, error } = await supabase
-        .from('event_registrations')
-        .select(`
-          *,
-          event:events (
-            title,
-            description,
-            start_time,
-            end_time,
-            platform,
-            meeting_link,
-            organized_by,
-            timezone
-          ),
-          profile:profiles (
-            email,
-            full_name
-          )
-        `)
-        .eq('id', registrationId)
-        .single();
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-      if (error || !registration) {
-        throw new Error('Registration not found');
-      }
+    // Get event details
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .single()
 
-      registrationData = {
-        registrationId,
-        email: registration.email,
-        fullName: `${registration.first_name} ${registration.last_name}`,
-        eventTitle: registration.event?.title,
-        eventDescription: registration.event?.description,
-        eventStartTime: registration.event?.start_time,
-        eventEndTime: registration.event?.end_time,
-        eventPlatform: registration.event?.platform,
-        meetingLink: registration.event?.meeting_link,
-        organizedBy: registration.event?.organized_by,
-        timezone: registration.event?.timezone || 'EST'
-      };
+    if (eventError) {
+      throw new Error(`Failed to fetch event: ${eventError.message}`)
     }
 
-    console.log('Registration details:', JSON.stringify(registrationData, null, 2));
+    // Format event date and time with timezone
+    const eventDate = format(new Date(event.start_time), 'EEEE, MMMM do, yyyy')
+    const eventTime = format(new Date(event.start_time), 'h:mm a')
+    const eventEndTime = format(new Date(event.end_time), 'h:mm a')
+    const eventTimezone = event.timezone || 'EST'
+    const timeDisplay = `${eventTime} - ${eventEndTime} ${eventTimezone}`
 
-    // Format event times with timezone
-    const formatDateTime = (dateTimeStr: string, timezone: string) => {
-      const date = new Date(dateTimeStr);
-      return date.toLocaleString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        timeZoneName: 'short',
-        timeZone: timezone === 'EST' ? 'America/New_York' : timezone
-      });
-    };
+    // Blue-themed event styling
+    const eventStyles = {
+      primary: '#012169',      // Dark blue
+      secondary: '#00A6D4',    // Light blue  
+      accent: '#0077BE',       // Medium blue
+      background: 'linear-gradient(135deg, #012169 0%, #0077BE 50%, #00A6D4 100%)',
+      lightBackground: '#f0f8ff'
+    }
 
-    const eventStartFormatted = registrationData.eventStartTime 
-      ? formatDateTime(registrationData.eventStartTime, registrationData.timezone || 'EST')
-      : 'TBD';
-    
-    const eventEndFormatted = registrationData.eventEndTime 
-      ? formatDateTime(registrationData.eventEndTime, registrationData.timezone || 'EST')
-      : 'TBD';
-
-    // Clean the event title for better display
-    const originalTitle = registrationData.eventTitle || 'Event';
-    console.log(`Original event title: "${originalTitle}"`);
-    
-    const cleanedTitle = originalTitle.replace(/[""]/g, '"');
-    console.log(`Cleaned event title: "${cleanedTitle}"`);
-
-    // Professional blue-themed email template with company logo
+    // Construct the email HTML with blue theme and company logo
     const emailHtml = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Event Registration Confirmation</title>
-        <style>
-            body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                line-height: 1.6;
-                color: #333;
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 20px;
-                background-color: #f8fafc;
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Confirmation - ${event.title}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(1, 33, 105, 0.1);
+        }
+        .header {
+            background: ${eventStyles.background};
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: ${eventStyles.primary};
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        .event-card {
+            background: ${eventStyles.lightBackground};
+            border: 2px solid ${eventStyles.secondary};
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .event-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: ${eventStyles.primary};
+            margin-bottom: 20px;
+        }
+        .event-details {
+            display: grid;
+            gap: 15px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+        }
+        .detail-icon {
+            width: 20px;
+            height: 20px;
+            background: ${eventStyles.accent};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .detail-text {
+            color: #333;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: ${eventStyles.primary};
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: ${eventStyles.primary};
+            color: white;
+        }
+        .btn-primary:hover {
+            background: ${eventStyles.accent};
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: white;
+            color: ${eventStyles.primary};
+            border: 2px solid ${eventStyles.primary};
+        }
+        .btn-secondary:hover {
+            background: ${eventStyles.primary};
+            color: white;
+        }
+        .next-steps {
+            background: #f8f9fa;
+            border-left: 4px solid ${eventStyles.secondary};
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .next-steps h3 {
+            color: ${eventStyles.primary};
+            margin: 0 0 15px;
+        }
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: ${eventStyles.primary};
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
             .container {
-                background: linear-gradient(135deg, #012169 0%, #00A6D4 100%);
-                border-radius: 12px;
-                overflow: hidden;
-                box-shadow: 0 10px 30px rgba(1, 33, 105, 0.1);
-            }
-            .header {
-                background: rgba(255, 255, 255, 0.95);
-                padding: 30px;
-                text-align: center;
-                border-bottom: 3px solid #012169;
-            }
-            .logo {
-                max-width: 200px;
-                height: auto;
-                margin-bottom: 20px;
-            }
-            .content {
-                background: white;
-                padding: 40px 30px;
-            }
-            .title {
-                color: #012169;
-                font-size: 28px;
-                font-weight: 700;
-                margin-bottom: 10px;
-                text-align: center;
-            }
-            .subtitle {
-                color: #00A6D4;
-                font-size: 18px;
-                text-align: center;
-                margin-bottom: 30px;
-                font-weight: 500;
-            }
-            .event-details {
-                background: linear-gradient(135deg, #f1f8ff 0%, #e6f3ff 100%);
-                border-left: 4px solid #012169;
-                padding: 25px;
-                margin: 25px 0;
+                margin: 10px;
                 border-radius: 8px;
             }
-            .event-title {
-                color: #012169;
-                font-size: 22px;
-                font-weight: 700;
-                margin-bottom: 15px;
+            .header, .content, .footer {
+                padding: 20px;
             }
-            .detail-item {
-                margin: 12px 0;
-                display: flex;
-                align-items: flex-start;
+            .btn {
+                display: block;
+                margin: 10px 0;
             }
-            .detail-label {
-                color: #012169;
-                font-weight: 600;
-                min-width: 120px;
-                margin-right: 10px;
-            }
-            .detail-value {
-                color: #374151;
-                flex: 1;
-            }
-            .meeting-link {
-                background: #012169;
-                color: white;
-                padding: 15px 30px;
-                text-decoration: none;
-                border-radius: 8px;
-                display: inline-block;
-                font-weight: 600;
-                margin: 20px 0;
-                text-align: center;
-                transition: background-color 0.3s ease;
-            }
-            .meeting-link:hover {
-                background: #00A6D4;
-                text-decoration: none;
-                color: white;
-            }
-            .footer {
-                background: linear-gradient(135deg, #012169 0%, #00A6D4 100%);
-                color: white;
-                padding: 30px;
-                text-align: center;
-                font-size: 14px;
-            }
-            .footer a {
-                color: #e6f3ff;
-                text-decoration: none;
-            }
-            .timezone-note {
-                background: #fff3cd;
-                border: 1px solid #ffeaa7;
-                color: #856404;
-                padding: 15px;
-                border-radius: 6px;
-                margin: 20px 0;
-                font-size: 14px;
-                text-align: center;
-            }
-            @media (max-width: 600px) {
-                body {
-                    padding: 10px;
-                }
-                .content {
-                    padding: 25px 20px;
-                }
-                .title {
-                    font-size: 24px;
-                }
-                .event-title {
-                    font-size: 20px;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <img src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/images/email-logos/66e432a2-6061-4f7f-ada7-69c35feecf41.png" alt="Company Logo" class="logo">
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/images/email-logos/66e432a2-6061-4f7f-ada7-69c35feecf41.png" alt="PicoCareer Logo" style="height: 60px; width: auto;">
+            </div>
+            <h1>🎉 You're Registered!</h1>
+            <p>Your spot is confirmed</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hi ${fullName},
             </div>
             
-            <div class="content">
-                <h1 class="title">Registration Confirmed! 🎉</h1>
-                <p class="subtitle">You're all set for the upcoming event</p>
-                
-                <p>Dear ${registrationData.fullName || 'Participant'},</p>
-                
-                <p>Thank you for registering! We're excited to confirm your participation in the following event:</p>
-                
+            <div class="message">
+                Great news! Your registration for <strong>${event.title}</strong> has been confirmed. We're excited to have you join us for this valuable learning experience.
+            </div>
+            
+            <div class="event-card">
+                <div class="event-title">${event.title}</div>
                 <div class="event-details">
-                    <div class="event-title">${cleanedTitle}</div>
-                    
                     <div class="detail-item">
-                        <span class="detail-label">📅 Start Time:</span>
-                        <span class="detail-value">${eventStartFormatted}</span>
+                        <div class="detail-icon">📅</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Date:</span> ${eventDate}
+                        </div>
                     </div>
-                    
                     <div class="detail-item">
-                        <span class="detail-label">⏰ End Time:</span>
-                        <span class="detail-value">${eventEndFormatted}</span>
+                        <div class="detail-icon">🕐</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Time:</span> ${timeDisplay}
+                        </div>
                     </div>
-                    
                     <div class="detail-item">
-                        <span class="detail-label">💻 Platform:</span>
-                        <span class="detail-value">${registrationData.eventPlatform || 'TBD'}</span>
+                        <div class="detail-icon">🌐</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Platform:</span> ${event.platform}
+                        </div>
                     </div>
-                    
+                    ${event.facilitator ? `
                     <div class="detail-item">
-                        <span class="detail-label">🏢 Organized by:</span>
-                        <span class="detail-value">${registrationData.organizedBy || 'Event Team'}</span>
+                        <div class="detail-icon">👨‍🏫</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Facilitator:</span> ${event.facilitator}
+                        </div>
                     </div>
-                </div>
-
-                <div class="timezone-note">
-                    <strong>⏰ Timezone Information:</strong><br>
-                    All times are displayed in ${registrationData.timezone || 'EST'}. Please make sure to convert to your local timezone if needed.
-                </div>
-
-                ${registrationData.meetingLink ? `
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="${registrationData.meetingLink}" class="meeting-link">
-                        🔗 Join Event
-                    </a>
-                </div>
-                ` : ''}
-
-                <div style="margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                    <h3 style="color: #012169; margin-bottom: 15px;">📋 What to Expect:</h3>
-                    <div style="color: #374151; font-size: 14px;">
-                        ${registrationData.eventDescription ? `
-                            <p>${registrationData.eventDescription.substring(0, 300)}${registrationData.eventDescription.length > 300 ? '...' : ''}</p>
-                        ` : `
-                            <p>We'll send you more details about the event agenda and preparation materials closer to the event date.</p>
-                        `}
+                    ` : ''}
+                    ${event.organized_by ? `
+                    <div class="detail-item">
+                        <div class="detail-icon">🏢</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Organized by:</span> ${event.organized_by}
+                        </div>
                     </div>
+                    ` : ''}
                 </div>
-
-                <p style="margin-top: 30px;">If you have any questions or need to make changes to your registration, please don't hesitate to reach out to our team.</p>
-                
-                <p>Looking forward to seeing you at the event!</p>
-                
-                <p style="margin-top: 25px;">
-                    <strong>Best regards,</strong><br>
-                    <span style="color: #012169; font-weight: 600;">The ${registrationData.organizedBy || 'Event'} Team</span>
-                </p>
             </div>
             
-            <div class="footer">
-                <p>This email was sent to confirm your event registration.</p>
-                <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">
-                    © 2025 ${registrationData.organizedBy || 'Event Team'}. All rights reserved.
-                </p>
+            <div class="cta-section">
+                ${event.meeting_link ? `
+                <a href="${event.meeting_link}" class="btn btn-primary">
+                    🚀 Join Event
+                </a>
+                ` : ''}
+                <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${format(new Date(event.start_time), 'yyyyMMdd\'T\'HHmmss')}/${format(new Date(event.end_time), 'yyyyMMdd\'T\'HHmmss')}" class="btn btn-secondary">
+                    📅 Add to Calendar
+                </a>
+            </div>
+            
+            <div class="next-steps">
+                <h3>Next Steps</h3>
+                <ul>
+                    <li>Mark your calendar for ${eventDate} at ${timeDisplay}</li>
+                    <li>Ensure you have a stable internet connection</li>
+                    <li>Join the event 5 minutes early for the best experience</li>
+                    <li>Prepare any questions you'd like to ask during the session</li>
+                    ${event.meeting_link ? '<li>Use the "Join Event" button above when it\'s time</li>' : ''}
+                </ul>
+            </div>
+            
+            <div class="message">
+                If you have any questions or need to make changes to your registration, please don't hesitate to reach out to our support team.
             </div>
         </div>
-    </body>
-    </html>`;
+        
+        <div class="footer">
+            <p><strong>PicoCareer</strong></p>
+            <p>Empowering your career journey, one step at a time</p>
+            <p>
+                <a href="mailto:support@picocareer.com">support@picocareer.com</a> | 
+                <a href="https://picocareer.com">picocareer.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This email was sent because you registered for an event on PicoCareer.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+    `
 
-    const emailResponse = await resend.emails.send({
-      from: `${registrationData.organizedBy || 'Event Team'} <events@picocareer.com>`,
-      to: [registrationData.email!],
-      subject: `✅ Registration Confirmed: ${cleanedTitle}`,
-      html: emailHtml,
-    });
+    // Send email using Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY not configured')
+    }
 
-    console.log("Email sent successfully:", JSON.stringify(emailResponse, null, 2));
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'PicoCareer Events <events@picocareer.com>',
+        to: [email],
+        subject: `✅ Registration Confirmed: ${event.title}`,
+        html: emailHtml,
+      }),
+    })
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text()
+      throw new Error(`Failed to send email: ${errorText}`)
+    }
+
+    const emailResult = await emailResponse.json()
+
+    // Update email log
+    await supabase
+      .from('event_email_logs')
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString()
+      })
+      .eq('registration_id', registrationId)
 
     return new Response(
-      JSON.stringify(emailResponse),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+      JSON.stringify({ 
+        success: true, 
+        emailId: emailResult.id,
+        message: 'Confirmation email sent successfully'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
 
-  } catch (error: any) {
-    console.error("Error in send-event-confirmation function:", error);
+  } catch (error) {
+    console.error('Error sending confirmation email:', error)
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
+      JSON.stringify({ 
+        error: error.message || 'Failed to send confirmation email' 
+      }),
+      { 
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
   }
-};
-
-serve(handler);
+})

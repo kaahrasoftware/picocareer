@@ -21,20 +21,6 @@ interface OpportunitiesDataTableProps {
   selectedLocation: string;
 }
 
-const VALID_OPPORTUNITY_TYPES = [
-  'scholarship',
-  'event', 
-  'other',
-  'job',
-  'internship',
-  'fellowship',
-  'grant',
-  'competition',
-  'volunteer'
-] as const;
-
-type OpportunityType = typeof VALID_OPPORTUNITY_TYPES[number];
-
 export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLocation }: OpportunitiesDataTableProps) {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -58,10 +44,7 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
       }
 
       if (selectedType && selectedType !== 'all') {
-        // Ensure the selectedType is a valid opportunity type
-        if (VALID_OPPORTUNITY_TYPES.includes(selectedType as OpportunityType)) {
-          query = query.eq('opportunity_type', selectedType);
-        }
+        query = query.eq('opportunity_type', selectedType);
       }
 
       if (selectedLocation && selectedLocation !== 'all') {
