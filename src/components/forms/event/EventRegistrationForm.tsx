@@ -12,39 +12,11 @@ import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
 
 // Extract the actual enum values from the database type
+type CountryEnum = Database["public"]["Enums"]["country"];
 type WhereDidYouHearAboutUsEnum = Database["public"]["Enums"]["where did you hear about us"];
 
-// Convert the enum type to an array for use in the Select component
-const HEAR_ABOUT_OPTIONS: WhereDidYouHearAboutUsEnum[] = [
-  "Social Media (Instagram, Facebook, Twitter)",
-  "LinkedIn",
-  "Google Search",
-  "Friend or Family Referral",
-  "University/School Website",
-  "Career Fair or Event",
-  "Professor or Teacher Recommendation",
-  "Online Advertisement",
-  "Blog or Article",
-  "YouTube or Online Video",
-  "Podcast",
-  "Email Newsletter",
-  "Professional Network",
-  "Alumni Network",
-  "Company Website",
-  "Job Board (Indeed, LinkedIn Jobs, etc.)",
-  "Webinar or Online Workshop",
-  "Conference or Professional Event",
-  "Mentor or Advisor Recommendation",
-  "Student Organization",
-  "Other Educational Platform",
-  "News Article or Press Coverage",
-  "Word of Mouth",
-  "Scholarship or Grant Database",
-  "Career Counseling Service",
-  "Other"
-];
-
-const COUNTRIES = [
+// Convert the enum types to arrays for use in the Select components
+const COUNTRIES: CountryEnum[] = [
   "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", 
   "Spain", "Italy", "Netherlands", "Sweden", "Norway", "Denmark", "Finland",
   "Brazil", "Mexico", "Argentina", "Chile", "Colombia", "Peru", "India",
@@ -52,8 +24,41 @@ const COUNTRIES = [
   "Philippines", "Indonesia", "Vietnam", "South Africa", "Nigeria", "Kenya",
   "Egypt", "Morocco", "Israel", "Turkey", "Russia", "Poland", "Czech Republic",
   "Hungary", "Romania", "Bulgaria", "Greece", "Portugal", "Ireland", "Belgium",
-  "Switzerland", "Austria", "Luxembourg", "New Zealand", "Other"
-] as const;
+  "Switzerland", "Austria", "Luxembourg", "New Zealand", "Albania", "Algeria",
+  "Andorra", "Angola", "Antigua and Barbuda", "Armenia", "Azerbaijan", "Bahamas",
+  "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brunei", "Burkina Faso",
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Central African Republic",
+  "Chad", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus",
+  "Democratic Republic of Congo", "Djibouti", "Dominica", "Dominican Republic",
+  "East Timor", "Ecuador", "El Salvador", "Equatorial Guinea", "Eritrea",
+  "Estonia", "Eswatini", "Ethiopia", "Fiji", "Gabon", "Gambia", "Georgia",
+  "Ghana", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+  "Honduras", "Iceland", "Iran", "Iraq", "Ivory Coast", "Jamaica", "Jordan",
+  "Kazakhstan", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
+  "Liberia", "Libya", "Liechtenstein", "Lithuania", "Madagascar", "Malawi",
+  "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius",
+  "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Mozambique",
+  "Myanmar", "Namibia", "Nauru", "Nepal", "Nicaragua", "Niger", "North Korea",
+  "North Macedonia", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea",
+  "Paraguay", "Qatar", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia",
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe",
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Slovakia",
+  "Slovenia", "Solomon Islands", "Somalia", "Sri Lanka", "Sudan", "Suriname",
+  "Syria", "Tajikistan", "Tanzania", "Togo", "Tonga", "Trinidad and Tobago",
+  "Tunisia", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
+  "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Yemen",
+  "Zambia", "Zimbabwe", "Other"
+];
+
+const HEAR_ABOUT_OPTIONS: WhereDidYouHearAboutUsEnum[] = [
+  "Instagram", "Facebook", "TikTok", "LinkedIn", "X (Twitter)", "WhatsApp", 
+  "YouTube", "Search Engine (Google, Bing...)", "RedNote", "Friend/Family", 
+  "Other", "Career Fair", "University/School", "Professor/Teacher", 
+  "Advertisement", "Blog/Article", "Podcast", "Email Newsletter", 
+  "Professional Network", "Alumni Network", "Company Website", "Job Board", 
+  "Webinar/Workshop", "Conference", "Discord"
+];
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -65,34 +70,9 @@ const formSchema = z.object({
   student_or_professional: z.enum(["Student", "Professional"], { 
     required_error: "Please select whether you are a student or professional" 
   }),
-  "where did you hear about us": z.enum([
-    "Social Media (Instagram, Facebook, Twitter)",
-    "LinkedIn",
-    "Google Search",
-    "Friend or Family Referral",
-    "University/School Website",
-    "Career Fair or Event",
-    "Professor or Teacher Recommendation",
-    "Online Advertisement",
-    "Blog or Article",
-    "YouTube or Online Video",
-    "Podcast",
-    "Email Newsletter",
-    "Professional Network",
-    "Alumni Network",
-    "Company Website",
-    "Job Board (Indeed, LinkedIn Jobs, etc.)",
-    "Webinar or Online Workshop",
-    "Conference or Professional Event",
-    "Mentor or Advisor Recommendation",
-    "Student Organization",
-    "Other Educational Platform",
-    "News Article or Press Coverage",
-    "Word of Mouth",
-    "Scholarship or Grant Database",
-    "Career Counseling Service",
-    "Other"
-  ], { required_error: "Please tell us how you heard about us" }),
+  "where did you hear about us": z.enum(HEAR_ABOUT_OPTIONS, { 
+    required_error: "Please tell us how you heard about us" 
+  }),
 });
 
 type FormData = z.infer<typeof formSchema>;
