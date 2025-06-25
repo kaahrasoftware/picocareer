@@ -1,182 +1,62 @@
 
-import { useState, useEffect } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { NotificationItem } from "./NotificationItem";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Bell, BellDot, Check, Search, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { getNotificationCategory, type NotificationCategory } from "@/types/calendar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { useMarkNotificationRead } from "@/hooks/useMarkNotificationRead";
+import React, { useState, useEffect } from 'react';
+import { Bell, X, Check, Archive, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
+import { NotificationDetailsDialog } from './notification-details/NotificationDetailsDialog';
 
 interface Notification {
   id: string;
   title: string;
   message: string;
-  created_at: string;
-  read: boolean;
   type: string;
+  category: 'general' | 'session' | 'system';
+  is_read: boolean;
+  created_at: string;
   action_url?: string;
+  metadata?: any;
 }
+
+type NotificationCategory = 'general' | 'session' | 'system';
 
 interface NotificationPanelProps {
-  notifications: Notification[];
-  unreadCount: number;
-  onMarkAsRead: (id: string) => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: NotificationPanelProps) {
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
-  const [localNotifications, setLocalNotifications] = useState<Notification[]>(notifications);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
-  const [readFilter, setReadFilter] = useState<"all" | "read" | "unread">("all");
-  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
+export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
+  const { user } = useAuth();
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [activeTab, setActiveTab] = useState<NotificationCategory>('general');
   const queryClient = useQueryClient();
-  const markNotificationRead = useMarkNotificationRead();
 
-  // Update local notifications when props change
-  useEffect(() => {
-    setLocalNotifications(notifications);
-  }, [notifications]);
+  // Fetch notifications
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('profile_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const toggleReadStatus = async (notification: Notification) => {
-    try {
-      // Update local state immediately for responsive UI
-      setLocalNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, read: !n.read } : n
-      ));
-      
-      // Call the provided callback (for backward compatibility)
-      if (onMarkAsRead) {
-        onMarkAsRead(notification.id);
-      }
-      
-      // Persist change to database using our mutation hook
-      await markNotificationRead.mutate({ 
-        notificationId: notification.id, 
-        read: !notification.read 
-      });
-    } catch (error) {
-      console.error('Error toggling notification status:', error);
-      
-      // Revert local state if mutation failed
-      setLocalNotifications(prev => prev.map(n => 
-        n.id === notification.id ? { ...n, read: notification.read } : n
-      ));
-      
-      toast({
-        title: "Error updating notification",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-
-      // If JWT error, clear queries and redirect to auth
-      if (error instanceof Error && error.message.includes('JWT')) {
-        queryClient.clear();
-        navigate("/auth");
-      }
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      // Only proceed if there are unread notifications
-      const hasUnreadNotifications = localNotifications.some(n => !n.read);
-      if (!hasUnreadNotifications) {
-        toast({
-          title: "No unread notifications",
-          description: "All your notifications are already marked as read",
-          variant: "default",
-        });
-        return;
-      }
-
-      setIsMarkingAllRead(true);
-      
-      // Update local state immediately for responsive UI
-      setLocalNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      
-      // Persist changes to database
-      await markNotificationRead.mutate({ 
-        allUnread: true 
-      });
-      
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      
-      // Revert local state if mutation failed
-      setLocalNotifications(notifications);
-      
-      toast({
-        title: "Error updating notifications",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsMarkingAllRead(false);
-    }
-  };
-
-  // Apply search and filters to notifications
-  const filteredNotifications = localNotifications.filter(notification => {
-    // For HTML content, we need to check against the plaintext version for search
-    const plainTextMessage = notification.message.replace(/<[^>]*>?/gm, '');
-    
-    // Search text filter
-    const matchesSearch = searchTerm === "" || 
-      notification.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      plainTextMessage.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Read status filter
-    const matchesReadStatus = 
-      readFilter === "all" || 
-      (readFilter === "read" && notification.read) || 
-      (readFilter === "unread" && !notification.read);
-    
-    // Date filter
-    let matchesDate = true;
-    const notificationDate = new Date(notification.created_at);
-    const now = new Date();
-    
-    if (dateFilter === "today") {
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      matchesDate = notificationDate >= today;
-    } else if (dateFilter === "week") {
-      const weekAgo = new Date();
-      weekAgo.setDate(now.getDate() - 7);
-      matchesDate = notificationDate >= weekAgo;
-    } else if (dateFilter === "month") {
-      const monthAgo = new Date();
-      monthAgo.setMonth(now.getMonth() - 1);
-      matchesDate = notificationDate >= monthAgo;
-    }
-    
-    return matchesSearch && matchesReadStatus && matchesDate;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
   });
 
-  // Categorize the filtered notifications
-  const categorizedNotifications = filteredNotifications.reduce((acc, notification) => {
-    const category = getNotificationCategory(notification.type as any);
+  // Group notifications by category
+  const groupedNotifications = notifications.reduce((acc, notification) => {
+    const category = notification.category as NotificationCategory;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -184,241 +64,180 @@ export function NotificationPanel({ notifications, unreadCount, onMarkAsRead }: 
     return acc;
   }, {} as Record<NotificationCategory, Notification[]>);
 
-  const mentorshipUnreadCount = categorizedNotifications.mentorship?.filter(n => !n.read).length || 0;
-  const generalUnreadCount = categorizedNotifications.general?.filter(n => !n.read).length || 0;
-  const hubUnreadCount = categorizedNotifications.hub?.filter(n => !n.read).length || 0;
+  // Mark notification as read
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
 
-  const clearFilters = () => {
-    setSearchTerm("");
-    setDateFilter("all");
-    setReadFilter("all");
+  // Delete notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      markAsReadMutation.mutate(notification.id);
+    }
+    setSelectedNotification(notification);
   };
 
-  const hasActiveFilters = searchTerm !== "" || dateFilter !== "all" || readFilter !== "all";
+  const handleMarkAsRead = (notificationId: string) => {
+    markAsReadMutation.mutate(notificationId);
+  };
+
+  const handleDelete = (notificationId: string) => {
+    deleteNotificationMutation.mutate(notificationId);
+  };
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  if (!isOpen) return null;
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          {unreadCount > 0 ? (
-            <>
-              <BellDot className="h-5 w-5" />
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
+    <>
+      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
+      
+      <div className="fixed top-16 right-4 w-96 bg-white rounded-lg shadow-xl border z-50 max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            <h3 className="font-semibold">Notifications</h3>
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="text-xs">
                 {unreadCount}
               </Badge>
-            </>
-          ) : (
-            <Bell className="h-5 w-5" />
-          )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[400px] bg-white">
-        <SheetHeader>
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2 text-gray-800">
-              Notifications
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="ml-2"
-                >
-                  {localNotifications.filter(n => !n.read).length}
-                </Badge>
-              )}
-            </SheetTitle>
-            
-            {unreadCount > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="text-xs flex items-center gap-1"
-                onClick={markAllAsRead}
-                disabled={isMarkingAllRead}
-              >
-                <Check className="h-3.5 w-3.5" />
-                {isMarkingAllRead ? "Marking..." : "Mark all as read"}
-              </Button>
             )}
           </div>
-        </SheetHeader>
-
-        <div className="mt-4 space-y-3">
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search notifications..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-8 py-2 bg-gray-50"
-            />
-            {searchTerm && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute right-1 top-1 h-8 w-8 text-gray-400"
-                onClick={() => setSearchTerm("")}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2">
-            <select 
-              value={readFilter}
-              onChange={(e) => setReadFilter(e.target.value as "all" | "read" | "unread")}
-              className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm"
-            >
-              <option value="all">All status</option>
-              <option value="read">Read</option>
-              <option value="unread">Unread</option>
-            </select>
-            
-            <select 
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as "all" | "today" | "week" | "month")}
-              className="bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-sm"
-            >
-              <option value="all">All time</option>
-              <option value="today">Today</option>
-              <option value="week">Last 7 days</option>
-              <option value="month">Last 30 days</option>
-            </select>
-
-            {hasActiveFilters && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs h-8 ml-auto"
-                onClick={clearFilters}
-              >
-                Clear filters
-              </Button>
-            )}
-          </div>
-
-          {/* No results message */}
-          {filteredNotifications.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-8 text-gray-400 bg-gray-50 rounded-md mt-4">
-              <Bell className="h-12 w-12 mb-2 opacity-20" />
-              <p className="text-center">
-                {localNotifications.length === 0 
-                  ? "No notifications yet" 
-                  : "No matching notifications"}
-              </p>
-              {localNotifications.length > 0 && hasActiveFilters && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={clearFilters}
-                >
-                  Clear filters
-                </Button>
-              )}
-            </div>
-          )}
-
-          {/* Notifications list */}
-          {filteredNotifications.length > 0 && (
-            <Tabs defaultValue="mentorship" className="w-full">
-              <TabsList className="w-full grid grid-cols-3 mb-4 bg-gray-100">
-                <TabsTrigger value="mentorship" className="relative flex items-center gap-2 data-[state=active]:bg-white">
-                  Mentorship
-                  {mentorshipUnreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {mentorshipUnreadCount}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="hub" className="relative flex items-center gap-2 data-[state=active]:bg-white">
-                  Hub
-                  {hubUnreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {hubUnreadCount}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="general" className="relative flex items-center gap-2 data-[state=active]:bg-white">
-                  General
-                  {generalUnreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="h-5 w-5 flex items-center justify-center p-0 text-xs"
-                    >
-                      {generalUnreadCount}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-              
-              <ScrollArea className="h-[calc(100vh-20rem)]">
-                <TabsContent value="mentorship" className="mt-0 space-y-4">
-                  {categorizedNotifications.mentorship?.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      isExpanded={expandedIds.includes(notification.id)}
-                      onToggleExpand={() => toggleExpand(notification.id)}
-                      onToggleRead={toggleReadStatus}
-                    />
-                  ))}
-                  {(!categorizedNotifications.mentorship || categorizedNotifications.mentorship.length === 0) && (
-                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
-                      No mentorship notifications
-                    </p>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="hub" className="mt-0 space-y-4">
-                  {categorizedNotifications.hub?.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      isExpanded={expandedIds.includes(notification.id)}
-                      onToggleExpand={() => toggleExpand(notification.id)}
-                      onToggleRead={toggleReadStatus}
-                    />
-                  ))}
-                  {(!categorizedNotifications.hub || categorizedNotifications.hub.length === 0) && (
-                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
-                      No hub notifications
-                    </p>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="general" className="mt-0 space-y-4">
-                  {categorizedNotifications.general?.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      isExpanded={expandedIds.includes(notification.id)}
-                      onToggleExpand={() => toggleExpand(notification.id)}
-                      onToggleRead={toggleReadStatus}
-                    />
-                  ))}
-                  {(!categorizedNotifications.general || categorizedNotifications.general.length === 0) && (
-                    <p className="text-center text-gray-400 py-4 bg-gray-50 rounded-md">
-                      No general notifications
-                    </p>
-                  )}
-                </TabsContent>
-              </ScrollArea>
-            </Tabs>
-          )}
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        {/* Tabs */}
+        <div className="flex border-b">
+          {(['general', 'session', 'system'] as NotificationCategory[]).map((category) => (
+            <button
+              key={category}
+              onClick={() => setActiveTab(category)}
+              className={`flex-1 px-4 py-2 text-sm font-medium capitalize ${
+                activeTab === category
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {category}
+              {groupedNotifications[category]?.length > 0 && (
+                <span className="ml-1 text-xs">
+                  ({groupedNotifications[category].length})
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Notifications List */}
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {isLoading ? (
+              <div className="p-4 text-center text-gray-500">Loading notifications...</div>
+            ) : !groupedNotifications[activeTab] || groupedNotifications[activeTab].length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                No {activeTab} notifications
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {groupedNotifications[activeTab].map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                      !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className={`text-sm font-medium truncate ${
+                            !notification.is_read ? 'text-blue-900' : 'text-gray-900'
+                          }`}>
+                            {notification.title}
+                          </h4>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 line-clamp-2 mb-1">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-1 flex-shrink-0">
+                        {!notification.is_read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsRead(notification.id);
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(notification.id);
+                          }}
+                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Notification Details Dialog */}
+      {selectedNotification && (
+        <NotificationDetailsDialog
+          notification={selectedNotification}
+          isOpen={!!selectedNotification}
+          onClose={() => setSelectedNotification(null)}
+        />
+      )}
+    </>
   );
 }
