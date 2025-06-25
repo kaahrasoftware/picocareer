@@ -1,169 +1,165 @@
-import { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/forms/FormField";
-import { useToast } from "@/hooks/use-toast";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { supabase } from "@/integrations/supabase/client";
-import { MentorSessionType } from "@/types/database/mentors";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useEffect } from 'react';
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2 } from "lucide-react";
-import type { Profile } from "@/types/database/profiles";
+} from "@/components/ui/select"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Plus, Trash2 } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Separator } from "@/components/ui/separator"
+import { SelectWithCustomOption } from '../editable/SelectWithCustomOption';
 
-type MeetingPlatform = 'WhatsApp' | 'Google Meet' | 'Telegram' | 'Phone Call' | 'Zoom';
+const profileFormSchema = z.object({
+  first_name: z.string().min(2, {
+    message: "First name must be at least 2 characters.",
+  }),
+  last_name: z.string().min(2, {
+    message: "Last name must be at least 2 characters.",
+  }),
+  title: z.string().optional(),
+  bio: z.string().optional(),
+  linkedin_url: z.string().url({ message: "Invalid LinkedIn URL" }).optional(),
+  github_url: z.string().url({ message: "Invalid GitHub URL" }).optional(),
+  website_url: z.string().url({ message: "Invalid Website URL" }).optional(),
+  sessionTypes: z.array(
+    z.object({
+      type: z.string(),
+      duration: z.number(),
+      price: z.number(),
+      description: z.string(),
+      meeting_platform: z.string()
+    })
+  ).optional(),
+})
 
-interface FormFields {
-  sessionTypes: MentorSessionType[];
-}
+// Define a type for the form data
+export interface MentorFormData extends z.infer<typeof profileFormSchema> {}
 
 interface MentorEditFormProps {
-  profile: Profile;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  mentor: any;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-export function MentorEditForm({ profile, onSuccess, onCancel }: MentorEditFormProps) {
-  const { toast } = useToast();
-  const { session } = useAuthSession();
-  const { data: userProfile } = useUserProfile(session);
-  const [sessionTypes, setSessionTypes] = useState<MentorSessionType[]>([]);
+export function MentorEditForm({ mentor, onSuccess, onCancel }: MentorEditFormProps) {
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+  const [sessionTypes, setSessionTypes] = useState(mentor.sessionTypes || []);
 
-  useEffect(() => {
-    const fetchSessionTypes = async () => {
-      if (!profile?.id) return;
+  const form = useForm<MentorFormData>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      first_name: mentor.first_name || "",
+      last_name: mentor.last_name || "",
+      title: mentor.title || "",
+      bio: mentor.bio || "",
+      linkedin_url: mentor.linkedin_url || "",
+      github_url: mentor.github_url || "",
+      website_url: mentor.website_url || "",
+      sessionTypes: mentor.sessionTypes || [],
+    },
+  })
 
-      const { data, error } = await supabase
-        .from('mentor_session_types')
-        .select('*')
-        .eq('profile_id', profile.id);
+  const handleSubmit = async (data: MentorFormData) => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          title: data.title,
+          bio: data.bio,
+          linkedin_url: data.linkedin_url,
+          github_url: data.github_url,
+          website_url: data.website_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', mentor.id)
 
       if (error) {
-        console.error('Error fetching session types:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load session types. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        console.error('Profile update error:', error);
+        throw error;
       }
 
-      const convertPlatformFromDb = (platforms: string[]): MeetingPlatform[] => {
-        const platformMap: Record<string, MeetingPlatform> = {
-          'WhatsApp': 'WhatsApp',
-          'Google Meet': 'Google Meet',
-          'Telegram': 'Telegram',
-          'Phone Call': 'Phone Call',
-          'Zoom': 'Zoom'
-        };
-        return platforms.map(p => platformMap[p as MeetingPlatform] || p as MeetingPlatform);
-      };
-
-      setSessionTypes(data.map(sessionType => ({
-        ...sessionType,
-        meeting_platform: convertPlatformFromDb(sessionType.meeting_platform as string[])
-      })));
-    };
-
-    fetchSessionTypes();
-  }, [profile?.id, toast]);
-
-  const convertPlatformToDb = (platforms: MeetingPlatform[]): string[] => {
-    const platformMap: Record<MeetingPlatform, string> = {
-      'WhatsApp': 'WhatsApp',
-      'Google Meet': 'Google Meet', 
-      'Telegram': 'Telegram',
-      'Phone Call': 'Phone Call',
-      'Zoom': 'Zoom'
-    };
-    return platforms.map(p => platformMap[p] || p);
-  };
-
-  const form = useForm<FormFields>({
-    defaultValues: {
-      sessionTypes: []
-    }
-  });
-
-  const onSubmit = async () => {
-    if (!userProfile?.id) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to update your profile.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // Delete existing session types
-      const { error: deleteError } = await supabase
-        .from('mentor_session_types')
-        .delete()
-        .eq('profile_id', profile.id);
-
-      if (deleteError) {
-        console.error('Error deleting existing session types:', deleteError);
-        toast({
-          title: "Error",
-          description: "Failed to update session types. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Insert new session types
-      if (sessionTypes.length > 0) {
-        const sessionTypesData = sessionTypes.map(sessionType => ({
-          profile_id: profile.id,
-          type: sessionType.type,
-          duration: sessionType.duration,
-          price: sessionType.price,
-          description: sessionType.description,
-          meeting_platform: convertPlatformToDb(sessionType.meeting_platform)
-        }));
-
-        const { error: sessionTypesError } = await supabase
+      // Handle session types - insert them one by one instead of bulk insert
+      if (data.sessionTypes && data.sessionTypes.length > 0) {
+        // Delete existing session types
+        await supabase
           .from('mentor_session_types')
-          .upsert(sessionTypesData);
+          .delete()
+          .eq('profile_id', mentor.id);
 
-        if (sessionTypesError) {
-          console.error('Error upserting session types:', sessionTypesError);
-          toast({
-            title: "Error",
-            description: "Failed to update session types. Please try again.",
-            variant: "destructive",
-          });
-          return;
+        // Insert new session types one by one
+        for (const sessionType of data.sessionTypes) {
+          const { error: sessionError } = await supabase
+            .from('mentor_session_types')
+            .insert({
+              profile_id: mentor.id,
+              type: sessionType.type,
+              duration: sessionType.duration,
+              price: sessionType.price,
+              description: sessionType.description,
+              meeting_platform: sessionType.meeting_platform as any,
+            });
+
+          if (sessionError) {
+            console.error('Session type insert error:', sessionError);
+            throw sessionError;
+          }
         }
       }
 
       toast({
         title: "Success",
-        description: "Mentor profile updated successfully.",
-      });
-
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      console.error('Error updating mentor profile:', error);
+        description: "Profile updated successfully.",
+      })
+      onSuccess()
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to update mentor profile. Please try again.",
-        variant: "destructive"
-      });
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message,
+      })
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,152 +167,310 @@ export function MentorEditForm({ profile, onSuccess, onCancel }: MentorEditFormP
     setSessionTypes([
       ...sessionTypes,
       {
-        profile_id: profile.id,
+        id: Math.random().toString(36).substring(7),
         type: "",
         duration: 30,
-        price: 0,
+        price: 50,
         description: "",
-        meeting_platform: []
-      }
+        meeting_platform: "Zoom",
+      },
     ]);
   };
 
-  const updateSessionType = (index: number, field: string, value: any) => {
-    const updatedSessionTypes = [...sessionTypes];
-    updatedSessionTypes[index][field] = value;
-    setSessionTypes(updatedSessionTypes);
+  const updateSessionType = (id: string, field: string, value: any) => {
+    setSessionTypes((prevSessionTypes) =>
+      prevSessionTypes.map((sessionType) =>
+        sessionType.id === id ? { ...sessionType, [field]: value } : sessionType
+      )
+    );
   };
 
-  const updateMeetingPlatforms = (index: number, platform: MeetingPlatform, checked: boolean) => {
-    const updatedSessionTypes = [...sessionTypes];
-    const currentPlatforms = updatedSessionTypes[index].meeting_platform || [];
-
-    if (checked) {
-      updatedSessionTypes[index].meeting_platform = [...currentPlatforms, platform];
-    } else {
-      updatedSessionTypes[index].meeting_platform = currentPlatforms.filter(p => p !== platform);
-    }
-
-    setSessionTypes(updatedSessionTypes);
+  const deleteSessionType = (id: string) => {
+    setSessionTypes((prevSessionTypes) =>
+      prevSessionTypes.filter((sessionType) => sessionType.id !== id)
+    );
   };
 
-  const deleteSessionType = (index: number) => {
-    const updatedSessionTypes = [...sessionTypes];
-    updatedSessionTypes.splice(index, 1);
-    setSessionTypes(updatedSessionTypes);
-  };
-
-  const meetingPlatforms: MeetingPlatform[] = ['WhatsApp', 'Google Meet', 'Telegram', 'Phone Call', 'Zoom'];
+  useEffect(() => {
+    form.setValue("sessionTypes", sessionTypes);
+  }, [sessionTypes, form.setValue]);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Session Types</h3>
-          <p className="text-sm text-muted-foreground">
-            Define the types of mentorship sessions you offer.
-          </p>
-          <Separator />
-          <ScrollArea className="h-[400px] rounded-md border p-4">
-            <div className="space-y-4">
-              {sessionTypes.map((sessionType, index) => (
-                <div key={index} className="space-y-2 border rounded-md p-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-lg font-medium">Session Type {index + 1}</h4>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => deleteSessionType(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Software Engineer" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Write a short bio about yourself"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <FormField
+            control={form.control}
+            name="linkedin_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>LinkedIn URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://linkedin.com/in/johndoe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="github_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Github URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://github.com/johndoe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="website_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Website URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://johndoe.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div>
+          <FormLabel>Session Types</FormLabel>
+          <FormDescription>
+            Add the types of sessions you offer.
+          </FormDescription>
+          <Separator className="my-4" />
+          <Accordion type="multiple" collapsible>
+            {sessionTypes.map((sessionType, index) => (
+              <AccordionItem value={sessionType.id} key={sessionType.id}>
+                <AccordionTrigger>
+                  Session Type {index + 1}: {sessionType.type || "New Session"}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor={`type-${index}`}>Type</Label>
-                      <Input
-                        type="text"
-                        id={`type-${index}`}
-                        value={sessionType.type}
-                        onChange={(e) => updateSessionType(index, "type", e.target.value)}
-                        placeholder="e.g., Career Advice, Resume Review"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`duration-${index}`}>Duration (minutes)</Label>
-                      <Select
-                        value={String(sessionType.duration)}
-                        onValueChange={(value) => updateSessionType(index, "duration", parseInt(value))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {[30, 60, 90, 120].map((duration) => (
-                            <SelectItem key={duration} value={String(duration)}>
-                              {duration} minutes
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor={`price-${index}`}>Price</Label>
-                      <Input
-                        type="number"
-                        id={`price-${index}`}
-                        value={String(sessionType.price)}
-                        onChange={(e) => updateSessionType(index, "price", parseFloat(e.target.value))}
-                        placeholder="e.g., 50"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor={`description-${index}`}>Description</Label>
-                    <Textarea
-                      id={`description-${index}`}
-                      value={sessionType.description}
-                      onChange={(e) => updateSessionType(index, "description", e.target.value)}
-                      placeholder="Brief description of the session type"
-                    />
-                  </div>
-                  <div>
-                    <Label>Meeting Platforms</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {meetingPlatforms.map((platform) => (
-                        <div key={platform} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`platform-${index}-${platform}`}
-                            checked={sessionType.meeting_platform?.includes(platform)}
-                            onCheckedChange={(checked) => updateMeetingPlatforms(index, platform, !!checked)}
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Consultation"
+                            value={sessionType.type}
+                            onChange={(e) =>
+                              updateSessionType(
+                                sessionType.id,
+                                "type",
+                                e.target.value
+                              )
+                            }
                           />
-                          <Label htmlFor={`platform-${index}-${platform}`}>{platform}</Label>
-                        </div>
-                      ))}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    </div>
+                    <div>
+                      <FormItem>
+                        <FormLabel>Duration (minutes)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="30"
+                            value={sessionType.duration}
+                            onChange={(e) =>
+                              updateSessionType(
+                                sessionType.id,
+                                "duration",
+                                parseInt(e.target.value)
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-          <Button type="button" variant="secondary" onClick={addSessionType}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <FormItem>
+                        <FormLabel>Price (USD)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="50"
+                            value={sessionType.price}
+                            onChange={(e) =>
+                              updateSessionType(
+                                sessionType.id,
+                                "price",
+                                parseInt(e.target.value)
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    </div>
+                    <div>
+                      <FormItem>
+                        <FormLabel>Meeting Platform</FormLabel>
+                        <Select
+                          value={sessionType.meeting_platform}
+                          onValueChange={(value) =>
+                            updateSessionType(
+                              sessionType.id,
+                              "meeting_platform",
+                              value
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Zoom">Zoom</SelectItem>
+                            <SelectItem value="Google Meet">
+                              Google Meet
+                            </SelectItem>
+                            <SelectItem value="Microsoft Teams">
+                              Microsoft Teams
+                            </SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    </div>
+                  </div>
+                  <div>
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe the session"
+                          className="resize-none"
+                          value={sessionType.description}
+                          onChange={(e) =>
+                            updateSessionType(
+                              sessionType.id,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete the session type.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteSessionType(sessionType.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          <Button type="button" variant="outline" onClick={addSessionType}>
             <Plus className="h-4 w-4 mr-2" />
             Add Session Type
           </Button>
         </div>
 
-        <div className="flex justify-end gap-4">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit">
-            {form.formState.isSubmitting ? "Updating..." : "Update Profile"}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Profile"}
           </Button>
         </div>
       </form>
     </Form>
-  );
+  )
 }

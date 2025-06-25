@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { EventRegistrationsTab } from './events/EventRegistrationsTab';
 import { EventSummaryTab } from './events/EventSummaryTab';
 import { EventResourcesManagementTab } from './events/EventResourcesManagementTab';
+import { EventEmailMonitor } from '@/components/admin/EventEmailMonitor';
 
 export function EventManagementTab() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export function EventManagementTab() {
       <Card className="min-h-[600px]">
         <CardContent className="p-6">
           <Tabs defaultValue="summary" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 rounded-lg">
+            <TabsList className="grid w-full grid-cols-5 bg-muted/50 p-1 rounded-lg">
               <TabsTrigger 
                 value="summary" 
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
@@ -67,6 +68,12 @@ export function EventManagementTab() {
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
               >
                 Event Resources
+              </TabsTrigger>
+              <TabsTrigger 
+                value="email-confirmations"
+                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm font-medium"
+              >
+                Email Confirmations
               </TabsTrigger>
             </TabsList>
 
@@ -92,6 +99,10 @@ export function EventManagementTab() {
 
             <TabsContent value="resources" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
               <EventResourcesManagementTab eventId={selectedEvent?.id || ""} />
+            </TabsContent>
+
+            <TabsContent value="email-confirmations" className="space-y-6 min-h-[400px] bg-background rounded-lg p-6 border">
+              <EventEmailMonitor />
             </TabsContent>
           </Tabs>
         </CardContent>

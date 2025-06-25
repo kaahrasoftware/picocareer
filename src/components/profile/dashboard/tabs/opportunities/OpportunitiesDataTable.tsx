@@ -1,138 +1,237 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Edit, Trash2, Search, Check, X } from "lucide-react";
-import { OpportunityWithAuthor } from "@/types/opportunity/types";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, Trash2, Edit } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface OpportunitiesDataTableProps {
-  opportunities: OpportunityWithAuthor[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  onEdit: (opportunityId: string) => void;
-  onDelete: (opportunityId: string) => void;
-  onApprove: (opportunityId: string) => void;
-  onReject: (opportunityId: string) => void;
+interface Opportunity {
+  id: string;
+  title: string;
+  description: string;
+  company_name: string;
+  location: string;
+  employment_type: string;
+  application_url: string;
+  status: string;
+  created_at: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
-export function OpportunitiesDataTable({
-  opportunities,
-  isLoading,
-  isError,
-  error,
-  onEdit,
-  onDelete,
-  onApprove,
-  onReject
-}: OpportunitiesDataTableProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+interface OpportunitiesDataTableProps {
+  searchQuery: string;
+  selectedType: string;
+  selectedLocation: string;
+}
 
-  const filteredOpportunities = opportunities.filter(opportunity => {
-    const matchesSearch = opportunity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         opportunity.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || opportunity.status === statusFilter;
-    return matchesSearch && matchesStatus;
+export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLocation }: OpportunitiesDataTableProps) {
+  const { toast } = useToast();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const { data: opportunities = [], isLoading, refetch } = useQuery({
+    queryKey: ['admin-opportunities', searchQuery, selectedType, selectedLocation],
+    queryFn: async () => {
+      let query = supabase
+        .from('opportunities')
+        .select(`
+          *,
+          profiles:author_id (
+            first_name,
+            last_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      if (selectedType && selectedType !== 'all') {
+        query = query.eq('employment_type', selectedType);
+      }
+
+      if (selectedLocation && selectedLocation !== 'all') {
+        query = query.eq('location', selectedLocation);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Opportunity[];
+    },
   });
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Opportunity deleted successfully",
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete opportunity",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('opportunities')
+        .delete()
+        .in('id', selectedIds);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${selectedIds.length} opportunities deleted successfully`,
+      });
+
+      setSelectedIds([]);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete opportunities",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return <div>Loading opportunities...</div>;
   }
 
-  if (isError) {
-    return <div>Error loading opportunities: {error?.message}</div>;
-  }
-
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search opportunities..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            {selectedIds.length} selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Selected
+          </Button>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      )}
 
-      {/* Opportunities Grid */}
-      {filteredOpportunities.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-muted-foreground">
-            No opportunities found.
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {filteredOpportunities.map((opportunity) => (
-            <Card key={opportunity.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {opportunity.company || 'N/A'} | {opportunity.location || 'Remote'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.length === opportunities.length && opportunities.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(opportunities.map(o => o.id));
+                    } else {
+                      setSelectedIds([]);
+                    }
+                  }}
+                />
+              </TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Location</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Author</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {opportunities.map((opportunity) => (
+              <TableRow key={opportunity.id}>
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(opportunity.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds([...selectedIds, opportunity.id]);
+                      } else {
+                        setSelectedIds(selectedIds.filter(id => id !== opportunity.id));
+                      }
+                    }}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">{opportunity.title}</TableCell>
+                <TableCell>{opportunity.company_name}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{opportunity.employment_type}</Badge>
+                </TableCell>
+                <TableCell>{opportunity.location}</TableCell>
+                <TableCell>
+                  <Badge 
+                    variant={opportunity.status === 'Approved' ? 'default' : 'secondary'}
+                  >
+                    {opportunity.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {opportunity.profiles ? 
+                    `${opportunity.profiles.first_name} ${opportunity.profiles.last_name}` : 
+                    'Unknown'
+                  }
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {opportunity.application_url && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(opportunity.application_url, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => onEdit(opportunity.id)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onApprove(opportunity.id)}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onReject(opportunity.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => onDelete(opportunity.id)}
+                      onClick={() => handleDelete(opportunity.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm line-clamp-2">{opportunity.description}</p>
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Status: {opportunity.status} | Type: {opportunity.opportunity_type || 'General'}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

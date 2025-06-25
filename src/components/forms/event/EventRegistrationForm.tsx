@@ -1,50 +1,12 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
-
-// Extract enum values from database types
-type CountryEnum = Database['public']['Enums']['country'];
-type WhereDidYouHearEnum = Database['public']['Enums']['where did you hear about us'];
-
-// Create arrays from enum types and sort countries alphabetically
-const COUNTRIES: CountryEnum[] = [
-  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe', 'Democratic Republic of Congo'
-].sort();
-
-const HEAR_ABOUT_OPTIONS: WhereDidYouHearEnum[] = [
-  'Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'X (Twitter)', 'WhatsApp', 'YouTube', 'Search Engine (Google, Bing...)', 'RedNote', 'Friend/Family', 'Other', 'Career Fair', 'University/School', 'Professor/Teacher', 'Advertisement', 'Professional Network', 'Company Website', 'Job Board', 'Webinar/Workshop', 'Conference', 'Blog/Article', 'Podcast', 'Email Newsletter', 'Alumni Network', 'Discord'
-];
-
-// Create the form schema using proper enum values
-const registrationSchema = z.object({
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Please enter a valid email address'),
-  'current school/company': z.string().optional(),
-  'current academic field/position': z.string().min(1, 'Current academic field/position is required'),
-  student_or_professional: z.enum(['Student', 'Professional'], {
-    required_error: 'Please select if you are a student or professional'
-  }),
-  country: z.enum(COUNTRIES as [CountryEnum, ...CountryEnum[]], {
-    required_error: 'Please select your country'
-  }).optional(),
-  'where did you hear about us': z.enum(HEAR_ABOUT_OPTIONS as [WhereDidYouHearEnum, ...WhereDidYouHearEnum[]], {
-    required_error: 'Please tell us where you heard about us'
-  }).optional(),
-});
-
-type RegistrationFormData = z.infer<typeof registrationSchema>;
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 interface EventRegistrationFormProps {
   eventId: string;
@@ -52,226 +14,210 @@ interface EventRegistrationFormProps {
   onCancel: () => void;
 }
 
-export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventRegistrationFormProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+const countries = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
+  "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain",
+  "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan",
+  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+  "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada",
+  "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros",
+  "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+  "Democratic Republic of Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia",
+  "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia",
+  "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea",
+  "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India",
+  "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan",
+  "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos",
+  "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania",
+  "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta",
+  "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia",
+  "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria",
+  "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau",
+  "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland",
+  "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis",
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+  "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles",
+  "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia",
+  "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan",
+  "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania",
+  "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
+  "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
+  "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City",
+  "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+] as const;
 
-  const form = useForm<RegistrationFormData>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      first_name: '',
-      last_name: '',
-      email: '',
-      'current school/company': '',
-      'current academic field/position': '',
-      student_or_professional: undefined,
-      country: undefined,
-      'where did you hear about us': undefined,
-    },
+const hearAboutOptions = [
+  "WhatsApp", "Other", "Instagram", "Facebook", "TikTok", "LinkedIn", "X (Twitter)",
+  "YouTube", "Search Engine (Google, Bing...)", "RedNote", "Friend/Family", "Career Fair",
+  "University/School", "Professor/Teacher", "Advertisement", "Professional Network",
+  "Company Website", "Job Board", "Webinar/Workshop", "Conference", "Podcast",
+  "Blog/Article", "Email Newsletter", "Discord"
+] as const;
+
+export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventRegistrationFormProps) {
+  const { session } = useAuthSession();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: session?.user?.email || '',
+    country: '',
+    currentSchoolCompany: '',
+    studentOrProfessional: '',
+    currentAcademicFieldPosition: '',
+    whereDidYouHearAboutUs: ''
   });
 
-  const onSubmit = async (data: RegistrationFormData) => {
-    setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
       const { error } = await supabase
         .from('event_registrations')
         .insert({
-          ...data,
           event_id: eventId,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email,
+          country: formData.country as any,
+          'current school/company': formData.currentSchoolCompany,
+          student_or_professional: formData.studentOrProfessional,
+          'current academic field/position': formData.currentAcademicFieldPosition,
+          'where did you hear about us': formData.whereDidYouHearAboutUs as any,
+          profile_id: session?.user?.id || null
         });
 
       if (error) throw error;
 
       toast({
-        title: 'Registration Successful!',
-        description: 'You have been registered for the event. Check your email for confirmation.',
+        title: "Registration Successful",
+        description: "You have been registered for the event. A confirmation email will be sent shortly.",
       });
 
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       toast({
-        title: 'Registration Failed',
-        description: 'There was an error registering for the event. Please try again.',
-        variant: 'destructive',
+        title: "Registration Failed",
+        description: error.message || "Failed to register for the event. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Event Registration</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="first_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your first name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="firstName">First Name *</Label>
+          <Input
+            id="firstName"
+            required
+            value={formData.firstName}
+            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="lastName">Last Name *</Label>
+          <Input
+            id="lastName"
+            required
+            value={formData.lastName}
+            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+          />
+        </div>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your last name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+      <div>
+        <Label htmlFor="email">Email *</Label>
+        <Input
+          id="email"
+          type="email"
+          required
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        />
+      </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email Address *</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Enter your email address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div>
+        <Label htmlFor="country">Country *</Label>
+        <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your country" />
+          </SelectTrigger>
+          <SelectContent>
+            {countries.map((country) => (
+              <SelectItem key={country} value={country}>
+                {country}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="current school/company"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current School/Company</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your current school or company" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div>
+        <Label htmlFor="currentSchoolCompany">Current School/Company</Label>
+        <Input
+          id="currentSchoolCompany"
+          value={formData.currentSchoolCompany}
+          onChange={(e) => setFormData({ ...formData, currentSchoolCompany: e.target.value })}
+        />
+      </div>
 
-              <FormField
-                control={form.control}
-                name="current academic field/position"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Academic Field/Position *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Computer Science, Marketing Manager" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+      <div>
+        <Label htmlFor="studentOrProfessional">Student or Professional *</Label>
+        <Select value={formData.studentOrProfessional} onValueChange={(value) => setFormData({ ...formData, studentOrProfessional: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select one" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Student">Student</SelectItem>
+            <SelectItem value="Professional">Professional</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-            <FormField
-              control={form.control}
-              name="student_or_professional"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>I am a *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Student">Student</SelectItem>
-                      <SelectItem value="Professional">Professional</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div>
+        <Label htmlFor="currentAcademicFieldPosition">Current Academic Field/Position *</Label>
+        <Input
+          id="currentAcademicFieldPosition"
+          required
+          value={formData.currentAcademicFieldPosition}
+          onChange={(e) => setFormData({ ...formData, currentAcademicFieldPosition: e.target.value })}
+        />
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Country</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select your country" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-60">
-                        {COUNTRIES.map((country) => (
-                          <SelectItem key={country} value={country}>
-                            {country}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div>
+        <Label htmlFor="whereDidYouHearAboutUs">Where did you hear about us?</Label>
+        <Select value={formData.whereDidYouHearAboutUs} onValueChange={(value) => setFormData({ ...formData, whereDidYouHearAboutUs: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select an option" />
+          </SelectTrigger>
+          <SelectContent>
+            {hearAboutOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="where did you hear about us"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Where did you hear about us?</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select an option" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="max-h-60">
-                        {HEAR_ABOUT_OPTIONS.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Registering...' : 'Register for Event'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Registering..." : "Register"}
+        </Button>
+      </div>
+    </form>
   );
 }
