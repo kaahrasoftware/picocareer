@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,20 +14,18 @@ export function EventEmailMonitor() {
 
   const fetchEmailLogs = async () => {
     try {
-      const { data, error } = await supabase
-        .from('event_email_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const { data, error } = await supabase.functions.invoke('get-event-email-logs', {});
 
       if (error) {
         console.error('Error fetching email logs:', error);
+        setEmailLogs([]);
         return;
       }
 
       setEmailLogs(data || []);
     } catch (error) {
       console.error('Error in fetchEmailLogs:', error);
+      setEmailLogs([]);
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +36,7 @@ export function EventEmailMonitor() {
     try {
       const result = await retryFailedEmails();
       toast.success(`Retried emails: ${result.success} successful, ${result.failed} failed`);
-      await fetchEmailLogs(); // Refresh the list
+      await fetchEmailLogs();
     } catch (error) {
       toast.error('Failed to retry emails');
     } finally {

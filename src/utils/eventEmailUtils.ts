@@ -19,7 +19,7 @@ export const sendConfirmationEmail = async (registrationId: string): Promise<{ s
   try {
     console.log('Manually sending confirmation email for registration:', registrationId);
     
-    const { error } = await supabase.functions.invoke('process-event-confirmations', {
+    const { data, error } = await supabase.functions.invoke('process-event-confirmations', {
       body: { registrationId }
     });
 
@@ -40,11 +40,9 @@ export const sendConfirmationEmail = async (registrationId: string): Promise<{ s
  */
 export const getEmailLogs = async (registrationId: string): Promise<EventEmailLog[]> => {
   try {
-    const { data, error } = await supabase
-      .from('event_email_logs')
-      .select('*')
-      .eq('registration_id', registrationId)
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.functions.invoke('get-event-email-logs', {
+      body: { registrationId }
+    });
 
     if (error) {
       console.error('Error fetching email logs:', error);
@@ -63,18 +61,16 @@ export const getEmailLogs = async (registrationId: string): Promise<EventEmailLo
  */
 export const getFailedEmails = async (): Promise<EventEmailLog[]> => {
   try {
-    const { data, error } = await supabase
-      .from('event_email_logs')
-      .select('*')
-      .eq('status', 'failed')
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.functions.invoke('get-event-email-logs', {});
 
     if (error) {
       console.error('Error fetching failed emails:', error);
       return [];
     }
 
-    return data || [];
+    // Filter for failed emails
+    const allLogs = data || [];
+    return allLogs.filter((log: EventEmailLog) => log.status === 'failed');
   } catch (error) {
     console.error('Error in getFailedEmails:', error);
     return [];
