@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SelectWithCustomOption } from "../SelectWithCustomOption";
 import { useFieldOptions } from "../useFieldOptions";
@@ -33,17 +34,17 @@ export function SelectField({
     }
   };
 
+  const getTitleField = (): 'title' | 'name' => {
+    return (fieldName === 'company_id' || fieldName === 'school_id') ? 'name' : 'title';
+  };
+
   return (
     <SelectWithCustomOption
       value={value}
       options={options}
       placeholder={getPlaceholder()}
-      tableName={fieldName === 'company_id' ? 'companies' : 
-                fieldName === 'school_id' ? 'schools' :
-                fieldName === 'academic_major_id' ? 'majors' : 
-                fieldName === 'position' ? 'careers' : 'majors'}
       fieldName={fieldName}
-      titleField={fieldName === 'company_id' || fieldName === 'school_id' ? 'name' : 'title'}
+      titleField={getTitleField()}
       handleSelectChange={(_, value) => onSave(value)}
       onCancel={onCancel}
     />

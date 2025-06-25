@@ -21,6 +21,20 @@ interface OpportunitiesDataTableProps {
   selectedLocation: string;
 }
 
+interface OpportunityRow {
+  id: string;
+  title: string;
+  company: string;
+  type: string;
+  location: string;
+  status: string;
+  application_url?: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  };
+}
+
 export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLocation }: OpportunitiesDataTableProps) {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -31,7 +45,14 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
       let query = supabase
         .from('opportunities')
         .select(`
-          *,
+          id,
+          title,
+          company,
+          type,
+          location,
+          status,
+          application_url,
+          created_at,
           profiles:author_id (
             first_name,
             last_name
@@ -40,11 +61,11 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        query = query.or(`title.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
 
       if (selectedType && selectedType !== 'all') {
-        query = query.eq('employment_type', selectedType);
+        query = query.eq('type', selectedType);
       }
 
       if (selectedLocation && selectedLocation !== 'all') {
@@ -53,7 +74,7 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      return (data || []) as OpportunityRow[];
     },
   });
 
@@ -173,14 +194,14 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
                   />
                 </TableCell>
                 <TableCell className="font-medium">{opportunity.title}</TableCell>
-                <TableCell>{opportunity.company_name}</TableCell>
+                <TableCell>{opportunity.company}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{opportunity.employment_type}</Badge>
+                  <Badge variant="outline">{opportunity.type}</Badge>
                 </TableCell>
                 <TableCell>{opportunity.location}</TableCell>
                 <TableCell>
                   <Badge 
-                    variant={opportunity.status === 'Approved' ? 'default' : 'secondary'}
+                    variant={opportunity.status === 'Active' ? 'default' : 'secondary'}
                   >
                     {opportunity.status}
                   </Badge>

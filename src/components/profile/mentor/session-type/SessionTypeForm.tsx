@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,7 +80,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
-      console.log('Profile ID:', profileId);
 
       // Validate custom type name if Custom type is selected
       if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
@@ -94,65 +92,18 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         return;
       }
 
-      // Check for existing custom type with the same name
-      if (data.type === "Custom") {
-        const { data: existingType, error: checkError } = await supabase
-          .from('mentor_session_types')
-          .select('id, type, custom_type_name')
-          .eq('profile_id', profileId)
-          .eq('type', 'Custom')
-          .eq('custom_type_name', data.custom_type_name)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error('Error checking existing type:', checkError);
-          throw checkError;
-        }
-
-        if (existingType) {
-          toast({
-            title: "Error",
-            description: "You already have a custom session type with this name",
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      } else {
-        // Check for existing standard type
-        const { data: existingType, error: checkError } = await supabase
-          .from('mentor_session_types')
-          .select('id, type')
-          .eq('profile_id', profileId)
-          .eq('type', data.type)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error('Error checking existing type:', checkError);
-          throw checkError;
-        }
-
-        if (existingType) {
-          toast({
-            title: "Error",
-            description: "You already have this session type",
-            variant: "destructive",
-          });
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      // Create new session type
+      // Create new session type with correct database schema
       const sessionData = {
         profile_id: profileId,
         type: data.type,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform,
-        telegram_username: showTelegramField ? data.telegram_username || null : null,
-        phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
+        meeting_platform: data.meeting_platform.filter(platform => 
+          ['WhatsApp', 'Google Meet', 'Telegram', 'Phone Call'].includes(platform)
+        ),
+        telegram_username: data.meeting_platform.includes("Telegram") ? data.telegram_username || null : null,
+        phone_number: (data.meeting_platform.includes("Phone Call") || data.meeting_platform.includes("WhatsApp")) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
       };
 
