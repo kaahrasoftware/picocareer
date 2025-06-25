@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ExistingTimeSlots } from './ExistingTimeSlots';
 
 interface TimeSlotFormData {
-  day_of_week: string;
+  day_of_week: number;
   start_time: string;
   end_time: string;
   timezone: string;
@@ -22,13 +22,13 @@ interface TimeSlotFormProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 'monday', label: 'Monday' },
-  { value: 'tuesday', label: 'Tuesday' },
-  { value: 'wednesday', label: 'Wednesday' },
-  { value: 'thursday', label: 'Thursday' },
-  { value: 'friday', label: 'Friday' },
-  { value: 'saturday', label: 'Saturday' },
-  { value: 'sunday', label: 'Sunday' }
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+  { value: 0, label: 'Sunday' }
 ];
 
 const TIMEZONES = [
@@ -57,7 +57,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
     formState: { errors }
   } = useForm<TimeSlotFormData>({
     defaultValues: {
-      day_of_week: '',
+      day_of_week: 1,
       start_time: '',
       end_time: '',
       timezone: 'UTC'
@@ -73,7 +73,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          profile_id: profileId,
+          mentor_profile_id: profileId,
           day_of_week: data.day_of_week,
           start_time: data.start_time,
           end_time: data.end_time,
@@ -106,13 +106,13 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="day_of_week">Day of Week</Label>
-          <Select onValueChange={(value) => setValue('day_of_week', value)}>
+          <Select onValueChange={(value) => setValue('day_of_week', parseInt(value))}>
             <SelectTrigger>
               <SelectValue placeholder="Select day" />
             </SelectTrigger>
             <SelectContent>
               {DAYS_OF_WEEK.map((day) => (
-                <SelectItem key={day.value} value={day.value}>
+                <SelectItem key={day.value} value={day.value.toString()}>
                   {day.label}
                 </SelectItem>
               ))}
@@ -168,7 +168,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         </Button>
       </form>
 
-      <ExistingTimeSlots profileId={profileId} onUpdate={onSuccess} />
+      <ExistingTimeSlots mentor_profile_id={profileId} onUpdate={onSuccess} />
     </div>
   );
 }

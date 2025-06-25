@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionTypeEnum } from "@/types/session";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps, SessionTypeFormData, SessionTypeEnum } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -125,7 +124,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           .from('mentor_session_types')
           .select('id, type')
           .eq('profile_id', profileId)
-          .eq('type', data.type)
+          .eq('type', data.type as string)
           .maybeSingle();
 
         if (checkError) {
@@ -147,7 +146,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       // Create new session type with correct field names
       const sessionData = {
         profile_id: profileId,
-        type: data.type,
+        type: data.type as string,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
@@ -205,7 +204,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={methods}
-              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
+              availableTypes={existingTypes?.map(type => type.type as SessionTypeEnum) || []}
             />
 
             {isCustomType && (
