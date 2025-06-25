@@ -1,124 +1,105 @@
-import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
-import { formatInTimeZone } from "date-fns-tz";
-import { format } from "date-fns";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 
-interface TimeSlot {
-  id: string;
-  profile_id: string;
-  start_date_time: string;
-  end_date_time: string;
-  is_available: boolean;
-  recurring: boolean;
-  day_of_week: number | null;
-}
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface ExistingTimeSlotsProps {
-  slots: TimeSlot[];
-  onDelete: (id: string) => void;
+  profile_id: string;
+  onUpdate: () => void;
 }
 
-export function ExistingTimeSlots({ slots, onDelete }: ExistingTimeSlotsProps) {
-  const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const { getSetting } = useUserSettings(profile?.id || '');
-  const userTimezone = getSetting('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-  // Fetch mentor's timezone from user_settings
-  const { data: mentorSettings } = useQuery({
-    queryKey: ['mentor-timezone', slots[0]?.profile_id],
+export function ExistingTimeSlots({ profile_id, onUpdate }: ExistingTimeSlotsProps) {
+  const { toast } = useToast();
+  
+  const { data: timeSlots, isLoading, refetch } = useQuery({
+    queryKey: ['mentor-availability', profile_id],
     queryFn: async () => {
-      if (!slots[0]?.profile_id) return null;
-      
       const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('profile_id', slots[0]?.profile_id)
-        .eq('setting_type', 'timezone')
-        .single();
-
+        .from('mentor_availability')
+        .select('*')
+        .eq('profile_id', profile_id)
+        .eq('is_recurring', true)
+        .order('day_of_week');
+      
       if (error) throw error;
-      return data;
-    },
-    enabled: !!slots[0]?.profile_id
+      return data || [];
+    }
   });
 
-  const mentorTimezone = mentorSettings?.setting_value || 'UTC';
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('mentor_availability')
+        .delete()
+        .eq('id', id);
 
-  if (slots.length === 0) return null;
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Time slot deleted successfully",
+      });
+
+      refetch();
+      onUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete time slot",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading existing time slots...</div>;
+  }
+
+  if (!timeSlots || timeSlots.length === 0) {
+    return <div>No recurring time slots configured.</div>;
+  }
+
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  const formatDateTime = (dateTimeStr: string) => {
+    try {
+      const date = new Date(dateTimeStr);
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return dateTimeStr;
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <h4 className="font-medium">Existing Time Slots</h4>
+      <h3 className="text-lg font-semibold">Existing Time Slots</h3>
       <div className="space-y-2">
-        {slots.map((slot) => {
-          const startDate = new Date(slot.start_date_time);
-          const formattedDate = format(startDate, 'MMM d, yyyy');
-          
-          // Convert times to both user's and mentor's timezone
-          const startTimeUser = formatInTimeZone(
-            startDate,
-            userTimezone,
-            'h:mm a'
-          );
-          const endTimeUser = formatInTimeZone(
-            new Date(slot.end_date_time),
-            userTimezone,
-            'h:mm a'
-          );
-
-          const startTimeMentor = formatInTimeZone(
-            startDate,
-            mentorTimezone,
-            'h:mm a'
-          );
-          const endTimeMentor = formatInTimeZone(
-            new Date(slot.end_date_time),
-            mentorTimezone,
-            'h:mm a'
-          );
-
-          return (
-            <div
-              key={slot.id}
-              className={cn(
-                "flex items-center justify-between rounded-lg border p-4",
-                !slot.is_available && "bg-destructive/10 border-destructive/20"
+        {timeSlots.map((slot) => (
+          <div key={slot.id} className="flex items-center justify-between p-3 border rounded">
+            <div>
+              <span className="font-medium">{DAYS[slot.day_of_week]}</span>
+              <span className="ml-2">
+                {formatDateTime(slot.start_date_time)} - {formatDateTime(slot.end_date_time)}
+              </span>
+              {slot.timezone && (
+                <span className="ml-2 text-sm text-gray-500">({slot.timezone})</span>
               )}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium">
-                  {startTimeUser} - {endTimeUser}
-                  {!slot.is_available && " (Unavailable)"}
-                </span>
-                <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    <span>{formattedDate}</span>
-                  </div>
-                  <span>Your timezone: {userTimezone}</span>
-                  <span>Mentor's time: {startTimeMentor} - {endTimeMentor} ({mentorTimezone})</span>
-                  {slot.recurring && (
-                    <span className="text-primary">Recurring weekly</span>
-                  )}
-                </div>
-              </div>
-              <Button
-                variant={slot.is_available ? "outline" : "destructive"}
-                size="sm"
-                onClick={() => onDelete(slot.id)}
-              >
-                Delete
-              </Button>
             </div>
-          );
-        })}
+            <Button
+              onClick={() => handleDelete(slot.id)}
+              variant="destructive"
+              size="sm"
+            >
+              Delete
+            </Button>
+          </div>
+        ))}
       </div>
     </div>
   );
