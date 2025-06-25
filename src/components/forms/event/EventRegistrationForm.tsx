@@ -1,287 +1,277 @@
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-// Extract the actual enum values from the database type
-type CountryEnum = Database["public"]["Enums"]["country"];
-type WhereDidYouHearAboutUsEnum = Database["public"]["Enums"]["where did you hear about us"];
+// Extract enum values from database types
+type CountryEnum = Database['public']['Enums']['country'];
+type WhereDidYouHearEnum = Database['public']['Enums']['where did you hear about us'];
 
-// Convert the enum types to arrays for use in the Select components
+// Create arrays from enum types and sort countries alphabetically
 const COUNTRIES: CountryEnum[] = [
-  "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", 
-  "Spain", "Italy", "Netherlands", "Sweden", "Norway", "Denmark", "Finland",
-  "Brazil", "Mexico", "Argentina", "Chile", "Colombia", "Peru", "India",
-  "China", "Japan", "South Korea", "Singapore", "Malaysia", "Thailand",
-  "Philippines", "Indonesia", "Vietnam", "South Africa", "Nigeria", "Kenya",
-  "Egypt", "Morocco", "Israel", "Turkey", "Russia", "Poland", "Czech Republic",
-  "Hungary", "Romania", "Bulgaria", "Greece", "Portugal", "Ireland", "Belgium",
-  "Switzerland", "Austria", "Luxembourg", "New Zealand", "Albania", "Algeria",
-  "Andorra", "Angola", "Antigua and Barbuda", "Armenia", "Azerbaijan", "Bahamas",
-  "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belize", "Benin", "Bhutan",
-  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brunei", "Burkina Faso",
-  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Central African Republic",
-  "Chad", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus",
-  "Democratic Republic of Congo", "Djibouti", "Dominica", "Dominican Republic",
-  "East Timor", "Ecuador", "El Salvador", "Equatorial Guinea", "Eritrea",
-  "Estonia", "Eswatini", "Ethiopia", "Fiji", "Gabon", "Gambia", "Georgia",
-  "Ghana", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-  "Honduras", "Iceland", "Iran", "Iraq", "Ivory Coast", "Jamaica", "Jordan",
-  "Kazakhstan", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
-  "Liberia", "Libya", "Liechtenstein", "Lithuania", "Madagascar", "Malawi",
-  "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius",
-  "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Mozambique",
-  "Myanmar", "Namibia", "Nauru", "Nepal", "Nicaragua", "Niger", "North Korea",
-  "North Macedonia", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea",
-  "Paraguay", "Qatar", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia",
-  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe",
-  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Slovakia",
-  "Slovenia", "Solomon Islands", "Somalia", "Sri Lanka", "Sudan", "Suriname",
-  "Syria", "Tajikistan", "Tanzania", "Togo", "Tonga", "Trinidad and Tobago",
-  "Tunisia", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
-  "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Yemen",
-  "Zambia", "Zimbabwe", "Other"
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe', 'Democratic Republic of Congo'
+].sort();
+
+const HEAR_ABOUT_OPTIONS: WhereDidYouHearEnum[] = [
+  'Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'X (Twitter)', 'WhatsApp', 'YouTube', 'Search Engine (Google, Bing...)', 'RedNote', 'Friend/Family', 'Other', 'Career Fair', 'University/School', 'Professor/Teacher', 'Advertisement', 'Professional Network', 'Company Website', 'Job Board', 'Webinar/Workshop', 'Conference', 'Blog/Article', 'Podcast', 'Email Newsletter', 'Alumni Network', 'Discord'
 ];
 
-const HEAR_ABOUT_OPTIONS: WhereDidYouHearAboutUsEnum[] = [
-  "Instagram", "Facebook", "TikTok", "LinkedIn", "X (Twitter)", "WhatsApp", 
-  "YouTube", "Search Engine (Google, Bing...)", "RedNote", "Friend/Family", 
-  "Other", "Career Fair", "University/School", "Professor/Teacher", 
-  "Advertisement", "Blog/Article", "Podcast", "Email Newsletter", 
-  "Professional Network", "Alumni Network", "Company Website", "Job Board", 
-  "Webinar/Workshop", "Conference", "Discord"
-];
-
-const formSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email address"),
-  country: z.enum(COUNTRIES, { required_error: "Please select your country" }),
-  "current school/company": z.string().min(1, "Please enter your current school or company"),
-  "current academic field/position": z.string().min(1, "Please enter your current academic field or position"),
-  student_or_professional: z.enum(["Student", "Professional"], { 
-    required_error: "Please select whether you are a student or professional" 
+// Create the form schema using proper enum values
+const registrationSchema = z.object({
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  'current school/company': z.string().optional(),
+  'current academic field/position': z.string().min(1, 'Current academic field/position is required'),
+  student_or_professional: z.enum(['Student', 'Professional'], {
+    required_error: 'Please select if you are a student or professional'
   }),
-  "where did you hear about us": z.enum(HEAR_ABOUT_OPTIONS, { 
-    required_error: "Please tell us how you heard about us" 
-  }),
+  country: z.enum(COUNTRIES as [CountryEnum, ...CountryEnum[]], {
+    required_error: 'Please select your country'
+  }).optional(),
+  'where did you hear about us': z.enum(HEAR_ABOUT_OPTIONS as [WhereDidYouHearEnum, ...WhereDidYouHearEnum[]], {
+    required_error: 'Please tell us where you heard about us'
+  }).optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type RegistrationFormData = z.infer<typeof registrationSchema>;
 
 interface EventRegistrationFormProps {
   eventId: string;
-  onSuccess?: () => void;
-  onClose?: () => void;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-export function EventRegistrationForm({ eventId, onSuccess, onClose }: EventRegistrationFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventRegistrationFormProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<RegistrationFormData>({
+    resolver: zodResolver(registrationSchema),
     defaultValues: {
-      first_name: "",
-      last_name: "",
-      email: "",
-      country: undefined,
-      "current school/company": "",
-      "current academic field/position": "",
+      first_name: '',
+      last_name: '',
+      email: '',
+      'current school/company': '',
+      'current academic field/position': '',
       student_or_professional: undefined,
-      "where did you hear about us": undefined,
+      country: undefined,
+      'where did you hear about us': undefined,
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true);
+  const onSubmit = async (data: RegistrationFormData) => {
+    setIsLoading(true);
     try {
       const { error } = await supabase
-        .from("event_registrations")
+        .from('event_registrations')
         .insert({
-          event_id: eventId,
           ...data,
+          event_id: eventId,
         });
 
       if (error) throw error;
 
-      toast.success("Registration successful! You should receive a confirmation email shortly.");
-      form.reset();
-      onSuccess?.();
-      onClose?.();
+      toast({
+        title: 'Registration Successful!',
+        description: 'You have been registered for the event. Check your email for confirmation.',
+      });
+
+      onSuccess();
     } catch (error) {
-      console.error("Error registering for event:", error);
-      toast.error("Failed to register for event. Please try again.");
+      console.error('Registration error:', error);
+      toast({
+        title: 'Registration Failed',
+        description: 'There was an error registering for the event. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="first_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your first name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Event Registration</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="last_name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Last Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your last name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="Enter your email address" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter your email address" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="country"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Country</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {COUNTRIES.map((country) => (
-                    <SelectItem key={country} value={country}>
-                      {country}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="current school/company"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current School/Company</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your current school or company" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="current school/company"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current School/Company</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your current school or company" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              <FormField
+                control={form.control}
+                name="current academic field/position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Academic Field/Position *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Computer Science, Marketing Manager" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <FormField
-          control={form.control}
-          name="current academic field/position"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current Academic Field/Position</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Computer Science, Marketing Manager, etc." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="student_or_professional"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I am a *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Student">Student</SelectItem>
+                      <SelectItem value="Professional">Professional</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="student_or_professional"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Are you a student or professional?</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Student">Student</SelectItem>
-                  <SelectItem value="Professional">Professional</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-60">
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country} value={country}>
+                            {country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="where did you hear about us"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>How did you hear about us?</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select how you heard about us" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {HEAR_ABOUT_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              <FormField
+                control={form.control}
+                name="where did you hear about us"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Where did you hear about us?</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-60">
+                        {HEAR_ABOUT_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <div className="flex gap-3 pt-4">
-          {onClose && (
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting} className="flex-1">
-            {isSubmitting ? "Registering..." : "Register for Event"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? 'Registering...' : 'Register for Event'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }
