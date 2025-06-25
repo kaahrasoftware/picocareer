@@ -1,13 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FieldName, TableName, TitleField } from "./types";
-
-interface QueryResult {
-  id: string;
-  title?: string;
-  name?: string;
-}
+import { FieldName, TableName, TitleField, QueryResult } from "./types";
 
 const tableMap: Record<FieldName, TableName> = {
   academic_major_id: 'majors',
@@ -19,7 +13,7 @@ const tableMap: Record<FieldName, TableName> = {
 export function useFieldOptions(fieldName: string) {
   return useQuery({
     queryKey: ['field-options', fieldName],
-    queryFn: async (): Promise<QueryResult[] | null> => {
+    queryFn: async () => {
       // Skip database query for highest_degree as it uses predefined options
       if (fieldName === 'highest_degree') {
         return null;
