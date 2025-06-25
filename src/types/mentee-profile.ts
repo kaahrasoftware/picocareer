@@ -12,9 +12,8 @@ export interface MenteeEssayResponse {
   prompt?: {
     id: string;
     title: string;
-    prompt_text: string;
+    description: string;
     category: EssayPromptCategory;
-    word_limit?: number;
   };
 }
 
@@ -23,7 +22,7 @@ export interface MenteeProject {
   mentee_id: string;
   title: string;
   description?: string;
-  status: 'completed' | 'in_progress' | 'planned';
+  status: ProjectStatus;
   start_date?: string;
   end_date?: string;
   github_url?: string;
@@ -39,15 +38,12 @@ export interface MenteeProject {
 export interface MenteeAcademicRecord {
   id: string;
   mentee_id: string;
-  year: number;
-  semester: string;
-  cumulative_gpa?: number;
-  semester_gpa?: number;
-  credits_earned?: number;
-  credits_attempted?: number;
-  class_rank?: number;
-  honors?: string[];
-  awards?: string[];
+  institution_name: string;
+  degree_type: string;
+  major: string;
+  gpa?: number;
+  graduation_date?: string;
+  status: AcademicStatus;
   created_at: string;
   updated_at: string;
 }
@@ -57,19 +53,18 @@ export interface MenteeCourse {
   mentee_id: string;
   course_name: string;
   course_code?: string;
-  year?: number;
-  semester?: string;
-  status: CourseStatus;
-  grade?: string;
+  instructor?: string;
   credits?: number;
-  instructor_name?: string;
-  description?: string;
+  grade?: string;
+  semester: string;
+  year: number;
+  status: CourseStatus;
   created_at: string;
   updated_at: string;
 }
 
-export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
-export type EssayPromptCategory = 'personal_statement' | 'scholarship' | 'application' | 'academic';
-export type InterestCategory = 'academic' | 'career' | 'hobby' | 'volunteer' | 'research';
 export type ProjectStatus = 'completed' | 'in_progress' | 'planned';
-export type AcademicStatus = 'current' | 'graduated' | 'transferred' | 'on_leave';
+export type CourseStatus = 'completed' | 'in_progress' | 'enrolled' | 'dropped';
+export type AcademicStatus = 'current' | 'graduated' | 'transferred' | 'withdrawn';
+export type EssayPromptCategory = 'personal' | 'academic' | 'career' | 'extracurricular' | 'leadership';
+export type InterestCategory = 'academic' | 'career' | 'personal' | 'extracurricular';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps, SessionTypeFormData, SessionType } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
+
+// Valid meeting platforms based on database schema
+type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -120,7 +122,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           .from('mentor_session_types')
           .select('id, type')
           .eq('profile_id', profileId)
-          .eq('type', data.type)
+          .eq('type', data.type as SessionType)
           .maybeSingle();
 
         if (checkError) {
@@ -139,14 +141,14 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         }
       }
 
-      // Create new session type with proper type handling
+      // Create new session type with correct field names
       const sessionData = {
         profile_id: profileId,
-        type: data.type as any, // Let Supabase handle the type validation
+        type: data.type as SessionType,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform as any,
+        meeting_platform: data.meeting_platform as MeetingPlatform[],
         telegram_username: showTelegramField ? data.telegram_username || null : null,
         phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
