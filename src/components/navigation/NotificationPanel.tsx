@@ -8,7 +8,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { NotificationDetailsDialog } from './notification-details/NotificationDetailsDialog';
 
 interface Notification {
   id: string;
@@ -16,7 +15,7 @@ interface Notification {
   message: string;
   type: string;
   category: 'general' | 'session' | 'system';
-  is_read: boolean;
+  read: boolean;
   created_at: string;
   action_url?: string;
   metadata?: any;
@@ -69,7 +68,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ is_read: true })
+        .update({ read: true })
         .eq('id', notificationId);
       
       if (error) throw error;
@@ -95,7 +94,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   });
 
   const handleNotificationClick = (notification: Notification) => {
-    if (!notification.is_read) {
+    if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
     setSelectedNotification(notification);
@@ -109,7 +108,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     deleteNotificationMutation.mutate(notificationId);
   };
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (!isOpen) return null;
 
@@ -171,7 +170,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                   <div
                     key={notification.id}
                     className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !notification.is_read ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                      !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white'
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -179,11 +178,11 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className={`text-sm font-medium truncate ${
-                            !notification.is_read ? 'text-blue-900' : 'text-gray-900'
+                            !notification.read ? 'text-blue-900' : 'text-gray-900'
                           }`}>
                             {notification.title}
                           </h4>
-                          {!notification.is_read && (
+                          {!notification.read && (
                             <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
                           )}
                         </div>
@@ -196,7 +195,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                       </div>
                       
                       <div className="flex gap-1 flex-shrink-0">
-                        {!notification.is_read && (
+                        {!notification.read && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -229,15 +228,6 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           </div>
         </ScrollArea>
       </div>
-
-      {/* Notification Details Dialog */}
-      {selectedNotification && (
-        <NotificationDetailsDialog
-          notification={selectedNotification}
-          isOpen={!!selectedNotification}
-          onClose={() => setSelectedNotification(null)}
-        />
-      )}
     </>
   );
 }

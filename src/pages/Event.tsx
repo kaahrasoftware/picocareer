@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { EventRegistrationDialog } from "@/components/event/EventRegistrationDialog";
 import { EventDetailsDialog } from "@/components/event/EventDetailsDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EventRegistrationForm } from "@/components/forms/event/EventRegistrationForm";
 
 export default function Event() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,13 +157,21 @@ export default function Event() {
         </CardContent>
       </Card>
 
+      {/* Advanced Event Registration Dialog */}
       {showRegistrationDialog && selectedEvent && (
-        <EventRegistrationDialog
-          event={selectedEvent}
-          isOpen={showRegistrationDialog}
-          onClose={() => setShowRegistrationDialog(false)}
-          onRegistrationSuccess={() => handleRegistrationSuccess(selectedEvent.id)}
-        />
+        <Dialog open={showRegistrationDialog} onOpenChange={(open) => !open && setShowRegistrationDialog(false)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Register for {selectedEvent.title}</DialogTitle>
+            </DialogHeader>
+            
+            <EventRegistrationForm
+              eventId={selectedEvent.id}
+              onSuccess={() => handleRegistrationSuccess(selectedEvent.id)}
+              onCancel={() => setShowRegistrationDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {showDetailsDialog && selectedEvent && (
