@@ -57,17 +57,26 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('Registration details:', registration);
+    console.log('Original event title:', JSON.stringify(registration.event.title));
 
     const eventDate = new Date(registration.event.start_time).toLocaleString('en-US', {
       dateStyle: 'full',
       timeStyle: 'short'
     });
 
-    // Clean the event title for the subject line - remove newlines and trim whitespace
+    // Enhanced cleaning for the event title - handle all problematic characters
     const cleanEventTitle = registration.event.title
-      .replace(/\n/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+      .replace(/\\n/g, ' ')      // Handle escaped newlines
+      .replace(/\n/g, ' ')       // Handle literal newlines  
+      .replace(/\\r/g, ' ')      // Handle escaped carriage returns
+      .replace(/\r/g, ' ')       // Handle literal carriage returns
+      .replace(/\\t/g, ' ')      // Handle escaped tabs
+      .replace(/\t/g, ' ')       // Handle literal tabs
+      .replace(/\s+/g, ' ')      // Replace multiple spaces with single space
+      .trim()                    // Remove leading/trailing whitespace
+      .substring(0, 100);        // Limit length for email best practices
+
+    console.log('Cleaned event title:', JSON.stringify(cleanEventTitle));
 
     const emailContent = `
       <h2>Event Registration Confirmation</h2>
