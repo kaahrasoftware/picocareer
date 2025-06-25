@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, Archive, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -48,7 +47,14 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
         .limit(50);
 
       if (error) throw error;
-      return data || [];
+      
+      // Filter and transform the data to ensure proper types
+      return (data || []).map(notification => ({
+        ...notification,
+        category: ['general', 'session', 'system'].includes(notification.category) 
+          ? notification.category as NotificationCategory 
+          : 'general' as NotificationCategory
+      }));
     },
     enabled: !!user?.id,
   });
