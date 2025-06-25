@@ -71,8 +71,8 @@ export function ExistingTimeSlots({ profile_id, onUpdate }: ExistingTimeSlotsPro
           <div key={slot.id} className="flex items-center justify-between p-3 border rounded">
             <div>
               <span className="font-medium">{DAYS[slot.day_of_week]}</span>
-              <span className="ml-2">{slot.start_date_time?.split('T')[1]?.slice(0, 5) || 'N/A'} - {slot.end_date_time?.split('T')[1]?.slice(0, 5) || 'N/A'}</span>
-              <span className="ml-2 text-sm text-gray-500">({slot.reference_timezone || 'UTC'})</span>
+              <span className="ml-2">{slot.start_time} - {slot.end_time}</span>
+              <span className="ml-2 text-sm text-gray-500">({slot.timezone})</span>
             </div>
             <Button
               onClick={() => handleDelete(slot.id)}
