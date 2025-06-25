@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { StandardPagination } from "./StandardPagination";
 
 interface PaginatedSelectProps {
@@ -42,7 +42,6 @@ export function PaginatedSelect({
   const [customValue, setCustomValue] = useState("");
   const [loadingAll, setLoadingAll] = useState(false);
   const [allOptions, setAllOptions] = useState<any[]>([]);
-  const [showAllOptions, setShowAllOptions] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Clear search when selecting a value
@@ -64,7 +63,7 @@ export function PaginatedSelect({
   
   // Initial paginated results
   const {
-    data: paginatedOptions,
+    data: options,
     isLoading,
     page,
     setPage,
@@ -86,25 +85,18 @@ export function PaginatedSelect({
     }
   });
   
-  // Calculate displayed options - either paginated or all loaded options
-  const displayedOptions = showAllOptions && allOptions.length > 0 ? allOptions : paginatedOptions;
-  
   // Function to load all options when needed
   const loadAllOptions = async () => {
-    if (loadingAll) return;
-    
-    setLoadingAll(true);
-    try {
-      const allItems = await fetchAllFromTable(tableName, searchField);
-      setAllOptions(allItems);
-      setShowAllOptions(true);
-      
-      console.log(`Loaded ${allItems.length} items from ${tableName}`);
-    } catch (error) {
-      console.error(`Error loading all ${tableName}:`, error);
-      setAllOptions([]);
-    } finally {
-      setLoadingAll(false);
+    if (!loadingAll && options.length < totalPages * 20) {
+      setLoadingAll(true);
+      try {
+        const allItems = await fetchAllFromTable(tableName, searchField);
+        setAllOptions(allItems);
+      } catch (error) {
+        console.error(`Error loading all ${tableName}:`, error);
+      } finally {
+        setLoadingAll(false);
+      }
     }
   };
   
@@ -165,9 +157,9 @@ export function PaginatedSelect({
     );
   }
 
-  // Get display value for selected option
-  const selectedOption = displayedOptions.find(option => option.id === value);
-  const displayValue = selectedOption ? selectedOption[selectField] : '';
+  // Display count information if we have it
+  const displayedItems = options.length;
+  const totalItems = allOptions.length > 0 ? allOptions.length : (totalPages * 20);
 
   return (
     <Select
@@ -182,133 +174,92 @@ export function PaginatedSelect({
       onOpenChange={handleOpenChange}
     >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder}>
-          {displayValue}
-        </SelectValue>
+        <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-white border shadow-lg">
-        {/* Enhanced Search Input */}
-        <div className="p-3 border-b bg-gray-50/50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              ref={searchInputRef}
-              placeholder="Search options..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white"
-              onKeyDown={(e) => {
-                // Prevent the select from closing on Enter key
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                }
-              }}
-            />
-          </div>
-          
-          {/* Option Count Display */}
-          {displayedOptions.length > 0 && (
-            <div className="text-xs text-muted-foreground mt-2 px-1">
-              {showAllOptions ? (
-                `Showing all ${displayedOptions.length} options`
-              ) : (
-                `Showing ${displayedOptions.length} of ${totalPages > 1 ? `${totalPages * 20}+` : displayedOptions.length} options`
-              )}
+      <SelectContent>
+        <div className="p-2">
+          <Input
+            ref={searchInputRef}
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="mb-2"
+            onKeyDown={(e) => {
+              // Prevent the select from closing on Enter key
+              if (e.key === 'Enter') {
+                e.stopPropagation();
+              }
+            }}
+          />
+          {displayedItems > 0 && (
+            <div className="text-xs text-muted-foreground mb-2">
+              Showing {displayedItems} of {totalItems} options
             </div>
           )}
         </div>
-        
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-[200px]">
           {isLoading ? (
-            <div className="flex justify-center items-center py-8">
+            <div className="flex justify-center items-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="ml-2 text-sm text-muted-foreground">Loading options...</span>
             </div>
-          ) : displayedOptions.length > 0 ? (
+          ) : options.length > 0 ? (
             <>
-              {/* Options List */}
-              <div className="py-1">
-                {displayedOptions.map((option: any) => (
-                  <SelectItem 
-                    key={option.id} 
-                    value={option.id}
-                    className="hover:bg-gray-50 focus:bg-gray-50"
+              {options.map((option: any) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option[selectField]}
+                </SelectItem>
+              ))}
+              {page < totalPages && (
+                <div className="p-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setPage(page + 1);
+                    }}
                   >
-                    {option[selectField]}
-                  </SelectItem>
-                ))}
-              </div>
-              
-              {/* Load More / Load All Buttons */}
-              {!showAllOptions && (
-                <div className="border-t bg-gray-50/30">
-                  {page < totalPages && (
-                    <div className="p-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs hover:bg-gray-100"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPage(page + 1);
-                        }}
-                      >
-                        Load more results
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {totalPages > 2 && (
-                    <div className="p-2 pt-0">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full text-xs"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          loadAllOptions();
-                        }}
-                        disabled={loadingAll}
-                      >
-                        {loadingAll ? (
-                          <>
-                            <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                            Loading all options...
-                          </>
-                        ) : (
-                          "Load all options"
-                        )}
-                      </Button>
-                    </div>
-                  )}
+                    Load more results
+                  </Button>
+                </div>
+              )}
+              {totalPages > 3 && !loadingAll && (
+                <div className="p-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full text-xs"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      loadAllOptions();
+                    }}
+                    disabled={loadingAll}
+                  >
+                    {loadingAll ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        Loading all options...
+                      </>
+                    ) : (
+                      "Load all options"
+                    )}
+                  </Button>
                 </div>
               )}
             </>
           ) : (
-            <div className="p-4 text-center text-muted-foreground">
-              <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No results found</p>
-              {searchQuery && (
-                <p className="text-xs mt-1">Try a different search term</p>
-              )}
+            <div className="p-2 text-center text-muted-foreground">
+              No results found
             </div>
           )}
           
-          {/* Custom Value Option */}
           {allowCustomValue && (
-            <div className="border-t bg-blue-50/50">
-              <SelectItem 
-                value="custom" 
-                className="font-medium text-primary hover:bg-blue-100 focus:bg-blue-100"
-              >
-                <div className="flex items-center">
-                  <span className="text-lg mr-2">+</span>
-                  Add Custom Value
-                </div>
-              </SelectItem>
-            </div>
+            <SelectItem value="custom" className="font-medium text-primary">
+              + Add Custom Value
+            </SelectItem>
           )}
         </ScrollArea>
       </SelectContent>
