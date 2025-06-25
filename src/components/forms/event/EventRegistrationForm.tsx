@@ -3,324 +3,305 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { COUNTRIES } from "@/constants/geography";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
-// Define the form schema
-const eventRegistrationSchema = z.object({
+// Extract the actual enum values from the database type
+type WhereDidYouHearAboutUsEnum = Database["public"]["Enums"]["where did you hear about us"];
+
+// Convert the enum type to an array for use in the Select component
+const HEAR_ABOUT_OPTIONS: WhereDidYouHearAboutUsEnum[] = [
+  "Social Media (Instagram, Facebook, Twitter)",
+  "LinkedIn",
+  "Google Search",
+  "Friend or Family Referral",
+  "University/School Website",
+  "Career Fair or Event",
+  "Professor or Teacher Recommendation",
+  "Online Advertisement",
+  "Blog or Article",
+  "YouTube or Online Video",
+  "Podcast",
+  "Email Newsletter",
+  "Professional Network",
+  "Alumni Network",
+  "Company Website",
+  "Job Board (Indeed, LinkedIn Jobs, etc.)",
+  "Webinar or Online Workshop",
+  "Conference or Professional Event",
+  "Mentor or Advisor Recommendation",
+  "Student Organization",
+  "Other Educational Platform",
+  "News Article or Press Coverage",
+  "Word of Mouth",
+  "Scholarship or Grant Database",
+  "Career Counseling Service",
+  "Other"
+];
+
+const COUNTRIES = [
+  "United States", "Canada", "United Kingdom", "Australia", "Germany", "France", 
+  "Spain", "Italy", "Netherlands", "Sweden", "Norway", "Denmark", "Finland",
+  "Brazil", "Mexico", "Argentina", "Chile", "Colombia", "Peru", "India",
+  "China", "Japan", "South Korea", "Singapore", "Malaysia", "Thailand",
+  "Philippines", "Indonesia", "Vietnam", "South Africa", "Nigeria", "Kenya",
+  "Egypt", "Morocco", "Israel", "Turkey", "Russia", "Poland", "Czech Republic",
+  "Hungary", "Romania", "Bulgaria", "Greece", "Portugal", "Ireland", "Belgium",
+  "Switzerland", "Austria", "Luxembourg", "New Zealand", "Other"
+] as const;
+
+const formSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email address"),
-  country: z.string().min(1, "Country is required"),
-  student_or_professional: z.enum(["Student", "Professional", "Both"]),
-  "where did you hear about us": z.string().min(1, "Please tell us how you heard about us"),
-  "current academic field/position": z.string().min(1, "This field is required"),
-  "current school/company": z.string().min(1, "This field is required"),
+  country: z.enum(COUNTRIES, { required_error: "Please select your country" }),
+  "current school/company": z.string().min(1, "Please enter your current school or company"),
+  "current academic field/position": z.string().min(1, "Please enter your current academic field or position"),
+  student_or_professional: z.enum(["Student", "Professional"], { 
+    required_error: "Please select whether you are a student or professional" 
+  }),
+  "where did you hear about us": z.enum([
+    "Social Media (Instagram, Facebook, Twitter)",
+    "LinkedIn",
+    "Google Search",
+    "Friend or Family Referral",
+    "University/School Website",
+    "Career Fair or Event",
+    "Professor or Teacher Recommendation",
+    "Online Advertisement",
+    "Blog or Article",
+    "YouTube or Online Video",
+    "Podcast",
+    "Email Newsletter",
+    "Professional Network",
+    "Alumni Network",
+    "Company Website",
+    "Job Board (Indeed, LinkedIn Jobs, etc.)",
+    "Webinar or Online Workshop",
+    "Conference or Professional Event",
+    "Mentor or Advisor Recommendation",
+    "Student Organization",
+    "Other Educational Platform",
+    "News Article or Press Coverage",
+    "Word of Mouth",
+    "Scholarship or Grant Database",
+    "Career Counseling Service",
+    "Other"
+  ], { required_error: "Please tell us how you heard about us" }),
 });
 
-type EventRegistrationFormData = z.infer<typeof eventRegistrationSchema>;
-
-// Hardcoded options to avoid database dependency issues
-const HEAR_ABOUT_OPTIONS = [
-  "Social Media (Instagram, Facebook, etc.)",
-  "LinkedIn",
-  "Twitter/X",
-  "YouTube",
-  "Google Search",
-  "Friend/Family Referral",
-  "School/University",
-  "Professional Network",
-  "Email Newsletter",
-  "Blog/Website",
-  "Podcast",
-  "Conference/Event",
-  "Online Community/Forum",
-  "Advertisement",
-  "Other"
-];
+type FormData = z.infer<typeof formSchema>;
 
 interface EventRegistrationFormProps {
   eventId: string;
   onSuccess?: () => void;
-  onCancel?: () => void;
+  onClose?: () => void;
 }
 
-export function EventRegistrationForm({
-  eventId,
-  onSuccess,
-  onCancel
-}: EventRegistrationFormProps) {
+export function EventRegistrationForm({ eventId, onSuccess, onClose }: EventRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
-  // Get current user profile
-  const { data: profile } = useQuery({
-    queryKey: ['current-profile'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const form = useForm<EventRegistrationFormData>({
-    resolver: zodResolver(eventRegistrationSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: "",
       last_name: "",
       email: "",
-      country: "",
-      student_or_professional: "Student",
-      "where did you hear about us": "",
-      "current academic field/position": "",
+      country: undefined,
       "current school/company": "",
+      "current academic field/position": "",
+      student_or_professional: undefined,
+      "where did you hear about us": undefined,
     },
   });
 
-  const onSubmit = async (data: EventRegistrationFormData) => {
+  const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
-    
     try {
-      const registrationData = {
-        event_id: eventId,
-        profile_id: profile?.id || null,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        country: data.country as any, // Type assertion to handle strict country type
-        student_or_professional: data.student_or_professional,
-        "where did you hear about us": data["where did you hear about us"] as any, // Type assertion
-        "current academic field/position": data["current academic field/position"],
-        "current school/company": data["current school/company"],
-      };
-
       const { error } = await supabase
         .from("event_registrations")
-        .insert(registrationData);
-
-      if (error) {
-        console.error("Registration error:", error);
-        toast({
-          title: "Registration Failed",
-          description: "There was an error submitting your registration. Please try again.",
-          variant: "destructive",
+        .insert({
+          event_id: eventId,
+          ...data,
         });
-        return;
-      }
 
-      toast({
-        title: "Registration Successful!",
-        description: "Thank you for registering. You'll receive a confirmation email shortly.",
-      });
+      if (error) throw error;
 
+      toast.success("Registration successful! You should receive a confirmation email shortly.");
       form.reset();
       onSuccess?.();
+      onClose?.();
     } catch (error) {
-      console.error("Unexpected error:", error);
-      toast({
-        title: "Registration Failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Error registering for event:", error);
+      toast.error("Failed to register for event. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCountryChange = (value: string) => {
-    form.setValue("country", value);
-  };
-
-  const handleStudentProfessionalChange = (value: string) => {
-    form.setValue("student_or_professional", value as "Student" | "Professional" | "Both");
-  };
-
-  const handleHearAboutChange = (value: string) => {
-    form.setValue("where did you hear about us", value);
-  };
-
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Event Registration</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Personal Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">First Name *</Label>
-              <Input
-                id="first_name"
-                {...form.register("first_name")}
-                placeholder="Enter your first name"
-              />
-              {form.formState.errors.first_name && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.first_name.message}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name *</Label>
-              <Input
-                id="last_name"
-                {...form.register("last_name")}
-                placeholder="Enter your last name"
-              />
-              {form.formState.errors.last_name && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.last_name.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address *</Label>
-            <Input
-              id="email"
-              type="email"
-              {...form.register("email")}
-              placeholder="Enter your email address"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.email.message}
-              </p>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="first_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your first name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="country">Country *</Label>
-            <Select value={form.watch("country")} onValueChange={handleCountryChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select your country" />
-              </SelectTrigger>
-              <SelectContent>
-                {COUNTRIES.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    {country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.country && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.country.message}
-              </p>
+          <FormField
+            control={form.control}
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter your last name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="student_or_professional">I am a *</Label>
-            <Select 
-              value={form.watch("student_or_professional")} 
-              onValueChange={handleStudentProfessionalChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Student">Student</SelectItem>
-                <SelectItem value="Professional">Professional</SelectItem>
-                <SelectItem value="Both">Both</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.student_or_professional && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.student_or_professional.message}
-              </p>
-            )}
-          </div>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="Enter your email address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Academic/Professional Information - Now Text Fields */}
-          <div className="space-y-2">
-            <Label htmlFor="academic_field">Current Academic Field/Position *</Label>
-            <Input
-              id="academic_field"
-              {...form.register("current academic field/position")}
-              placeholder="e.g., Computer Science, Marketing Manager, Pre-Med Student"
-            />
-            {form.formState.errors["current academic field/position"] && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors["current academic field/position"].message}
-              </p>
-            )}
-          </div>
+        <FormField
+          control={form.control}
+          name="country"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Country</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your country" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {COUNTRIES.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="school_company">Current School/Company *</Label>
-            <Input
-              id="school_company"
-              {...form.register("current school/company")}
-              placeholder="e.g., Harvard University, Google Inc., Self-employed"
-            />
-            {form.formState.errors["current school/company"] && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors["current school/company"].message}
-              </p>
-            )}
-          </div>
+        <FormField
+          control={form.control}
+          name="current school/company"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Current School/Company</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter your current school or company" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="hear_about">Where did you hear about us? *</Label>
-            <Select 
-              value={form.watch("where did you hear about us")} 
-              onValueChange={handleHearAboutChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select how you heard about us" />
-              </SelectTrigger>
-              <SelectContent>
-                {HEAR_ABOUT_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors["where did you hear about us"] && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors["where did you hear about us"].message}
-              </p>
-            )}
-          </div>
+        <FormField
+          control={form.control}
+          name="current academic field/position"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Current Academic Field/Position</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., Computer Science, Marketing Manager, etc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-4">
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Registering..." : "Register for Event"}
+        <FormField
+          control={form.control}
+          name="student_or_professional"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Are you a student or professional?</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Student">Student</SelectItem>
+                  <SelectItem value="Professional">Professional</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="where did you hear about us"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>How did you hear about us?</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select how you heard about us" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {HEAR_ABOUT_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-3 pt-4">
+          {onClose && (
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
             </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          )}
+          <Button type="submit" disabled={isSubmitting} className="flex-1">
+            {isSubmitting ? "Registering..." : "Register for Event"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
