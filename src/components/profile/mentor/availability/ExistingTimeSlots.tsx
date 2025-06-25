@@ -63,21 +63,6 @@ export function ExistingTimeSlots({ profile_id, onUpdate }: ExistingTimeSlotsPro
 
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Helper function to format time from datetime
-  const formatTime = (dateTimeStr: string) => {
-    if (!dateTimeStr) return '';
-    try {
-      const date = new Date(dateTimeStr);
-      return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      });
-    } catch {
-      return dateTimeStr;
-    }
-  };
-
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Existing Time Slots</h3>
@@ -85,13 +70,9 @@ export function ExistingTimeSlots({ profile_id, onUpdate }: ExistingTimeSlotsPro
         {timeSlots.map((slot) => (
           <div key={slot.id} className="flex items-center justify-between p-3 border rounded">
             <div>
-              <span className="font-medium">{DAYS[slot.day_of_week] || 'Unknown'}</span>
-              <span className="ml-2">
-                {formatTime(slot.start_date_time)} - {formatTime(slot.end_date_time)}
-              </span>
-              <span className="ml-2 text-sm text-gray-500">
-                ({slot.reference_timezone || 'UTC'})
-              </span>
+              <span className="font-medium">{DAYS[slot.day_of_week]}</span>
+              <span className="ml-2">{slot.start_time} - {slot.end_time}</span>
+              <span className="ml-2 text-sm text-gray-500">({slot.timezone})</span>
             </div>
             <Button
               onClick={() => handleDelete(slot.id)}
