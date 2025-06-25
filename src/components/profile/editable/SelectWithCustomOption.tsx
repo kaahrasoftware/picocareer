@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react';
 interface SelectWithCustomOptionProps {
   value: string;
   onValueChange: (value: string) => void;
-  options: Array<{ id: string; title: string }>;
+  options: Array<{ id: string; title?: string; name?: string }>;
   placeholder?: string;
   allowCustom?: boolean;
 }
@@ -41,8 +41,8 @@ export function SelectWithCustomOption({
             </SelectTrigger>
             <SelectContent>
               {options.map((option) => (
-                <SelectItem key={option.id} value={option.title}>
-                  {option.title}
+                <SelectItem key={option.id} value={option.title || option.name || option.id}>
+                  {option.title || option.name || option.id}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -11,25 +11,9 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Trash2, Edit } from 'lucide-react';
+import { ExternalLink, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-interface Opportunity {
-  id: string;
-  title: string;
-  description: string;
-  company_name: string;
-  location: string;
-  employment_type: string;
-  application_url: string;
-  status: string;
-  created_at: string;
-  profiles?: {
-    first_name: string;
-    last_name: string;
-  };
-}
 
 interface OpportunitiesDataTableProps {
   searchQuery: string;
@@ -69,7 +53,7 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Opportunity[];
+      return data || [];
     },
   });
 

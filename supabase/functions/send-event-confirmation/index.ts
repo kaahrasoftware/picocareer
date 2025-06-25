@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -62,9 +63,15 @@ const handler = async (req: Request): Promise<Response> => {
       timeStyle: 'short'
     });
 
+    // Clean the event title for the subject line - remove newlines and trim whitespace
+    const cleanEventTitle = registration.event.title
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     const emailContent = `
       <h2>Event Registration Confirmation</h2>
-      <p>Thank you for registering for ${registration.event.title}!</p>
+      <p>Thank you for registering for ${cleanEventTitle}!</p>
       
       <h3>Event Details:</h3>
       <p><strong>Date:</strong> ${eventDate}</p>
@@ -82,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "PicoCareer <info@picocareer.com>",
       to: [registration.email],
-      subject: `Registration Confirmed: ${registration.event.title}`,
+      subject: `Registration Confirmed: ${cleanEventTitle}`,
       html: emailContent,
     });
 

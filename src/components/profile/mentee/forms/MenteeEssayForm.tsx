@@ -30,6 +30,7 @@ export function MenteeEssayForm({ menteeId, onClose }: MenteeEssayFormProps) {
         .from('mentee_essay_responses')
         .insert({
           mentee_id: menteeId,
+          prompt_id: '00000000-0000-0000-0000-000000000000', // Default prompt ID
           response_text: formData.content,
           word_count: formData.content.split(' ').length,
           is_draft: false
