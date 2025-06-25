@@ -10,10 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { COUNTRIES } from "@/constants/geography";
 
-// Define the form schema without additional_info
+// Define the form schema
 const eventRegistrationSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
@@ -59,7 +59,24 @@ export function EventRegistrationForm({
 }: EventRegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { profile } = useAuth();
+
+  // Get current user profile
+  const { data: profile } = useQuery({
+    queryKey: ['current-profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const form = useForm<EventRegistrationFormData>({
     resolver: zodResolver(eventRegistrationSchema),
@@ -85,9 +102,9 @@ export function EventRegistrationForm({
         first_name: data.first_name,
         last_name: data.last_name,
         email: data.email,
-        country: data.country,
+        country: data.country as any, // Type assertion to handle strict country type
         student_or_professional: data.student_or_professional,
-        "where did you hear about us": data["where did you hear about us"],
+        "where did you hear about us": data["where did you hear about us"] as any, // Type assertion
         "current academic field/position": data["current academic field/position"],
         "current school/company": data["current school/company"],
       };

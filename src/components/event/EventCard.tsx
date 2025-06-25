@@ -139,6 +139,11 @@ export function EventCard({
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">
                 {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                {event.timezone && (
+                  <span className="ml-1 text-xs bg-muted px-1.5 py-0.5 rounded">
+                    {event.timezone}
+                  </span>
+                )}
               </span>
             </div>
           </div>
