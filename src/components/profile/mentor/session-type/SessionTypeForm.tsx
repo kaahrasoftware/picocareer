@@ -15,9 +15,6 @@ import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
 
-// Valid meeting platforms based on database schema
-type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
-
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -142,14 +139,14 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         }
       }
 
-      // Create new session type with proper type casting
+      // Create new session type with proper type handling
       const sessionData = {
         profile_id: profileId,
-        type: data.type as any, // Type cast to handle enum
+        type: data.type as any, // Let Supabase handle the type validation
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform as MeetingPlatform[],
+        meeting_platform: data.meeting_platform as any,
         telegram_username: showTelegramField ? data.telegram_username || null : null,
         phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,

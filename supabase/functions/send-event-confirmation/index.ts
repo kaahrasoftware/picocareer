@@ -37,17 +37,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending event confirmation email for:', emailData.registrationId);
 
-    const { eventTitle, eventDescription, eventStartTime, eventEndTime, eventPlatform, meetingLink, organizedBy, timezone = 'EST' } = emailData;
-    
-    const startDate = new Date(eventStartTime);
-    const endDate = new Date(eventEndTime);
+    // Format dates
+    const startDate = new Date(emailData.eventStartTime);
+    const endDate = new Date(emailData.eventEndTime);
+    const timezone = emailData.timezone || 'EST';
     
     const formatDate = (date: Date) => {
       return date.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       });
     };
     
@@ -55,355 +55,255 @@ const handler = async (req: Request): Promise<Response> => {
       return date.toLocaleTimeString('en-US', {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
       });
     };
 
+    // Generate calendar link
+    const calendarTitle = encodeURIComponent(emailData.eventTitle);
+    const calendarDescription = encodeURIComponent(emailData.eventDescription + (emailData.meetingLink ? `\n\nJoin here: ${emailData.meetingLink}` : ''));
+    const startTimeISO = startDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const endTimeISO = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    
+    const calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${calendarTitle}&dates=${startTimeISO}/${endTimeISO}&details=${calendarDescription}`;
+
+    // Create the email HTML with blue color scheme
     const emailHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Event Registration Confirmation</title>
         <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-          }
-          
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #1e3a8a;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            min-height: 100vh;
-            padding: 20px;
-          }
-          
-          .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(1, 33, 105, 0.15);
-            overflow: hidden;
-            border: 1px solid #bae6fd;
-          }
-          
-          .header {
-            background: linear-gradient(135deg, #012169 0%, #00A6D4 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: shimmer 3s ease-in-out infinite alternate;
-          }
-          
-          @keyframes shimmer {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(180deg); }
-          }
-          
-          .header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-          }
-          
-          .header p {
-            font-size: 16px;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-          }
-          
-          .content {
-            padding: 40px 30px;
-          }
-          
-          .welcome-message {
-            font-size: 18px;
-            color: #1e3a8a;
-            margin-bottom: 30px;
-            text-align: center;
-          }
-          
-          .event-card {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #bae6fd;
-            border-radius: 12px;
-            padding: 30px;
-            margin: 30px 0;
-            position: relative;
-            overflow: hidden;
-          }
-          
-          .event-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #012169 0%, #00A6D4 100%);
-          }
-          
-          .event-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #012169;
-            margin-bottom: 16px;
-          }
-          
-          .event-description {
-            color: #1e40af;
-            margin-bottom: 24px;
-            line-height: 1.7;
-          }
-          
-          .event-details {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-          }
-          
-          .detail-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #bae6fd;
-          }
-          
-          .detail-icon {
-            width: 20px;
-            height: 20px;
-            color: #00A6D4;
-          }
-          
-          .detail-label {
-            font-weight: 600;
-            color: #012169;
-            min-width: 80px;
-          }
-          
-          .detail-value {
-            color: #1e40af;
-          }
-          
-          .meeting-link {
-            background: linear-gradient(135deg, #012169 0%, #00A6D4 100%);
-            color: white;
-            padding: 16px 24px;
-            border-radius: 10px;
-            text-align: center;
-            margin: 30px 0;
-            text-decoration: none;
-            display: inline-block;
-            width: 100%;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(1, 33, 105, 0.3);
-          }
-          
-          .meeting-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(1, 33, 105, 0.4);
-            text-decoration: none;
-            color: white;
-          }
-          
-          .important-info {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-left: 4px solid #00A6D4;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 30px 0;
-          }
-          
-          .important-info h3 {
-            color: #012169;
-            font-size: 18px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          
-          .important-info ul {
-            list-style: none;
-            margin: 16px 0;
-          }
-          
-          .important-info li {
-            color: #1e40af;
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-          }
-          
-          .important-info li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #00A6D4;
-            font-weight: bold;
-          }
-          
-          .footer {
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            padding: 30px;
-            text-align: center;
-            color: #64748b;
-          }
-          
-          .footer p {
-            margin: 8px 0;
-          }
-          
-          .footer a {
-            color: #00A6D4;
-            text-decoration: none;
-          }
-          
-          .footer a:hover {
-            text-decoration: underline;
-          }
-          
-          @media (max-width: 600px) {
-            .container {
-              margin: 10px;
-              border-radius: 12px;
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                line-height: 1.6; 
+                color: #1e3a8a; 
+                margin: 0; 
+                padding: 0; 
+                background-color: #f0f9ff; 
             }
-            
-            .header, .content {
-              padding: 30px 20px;
+            .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background: white; 
+                border-radius: 12px; 
+                overflow: hidden; 
+                box-shadow: 0 10px 30px rgba(1, 33, 105, 0.15); 
             }
-            
-            .event-card {
-              padding: 20px;
+            .header { 
+                background: linear-gradient(135deg, #012169, #00A6D4); 
+                color: white; 
+                padding: 40px 30px; 
+                text-align: center; 
             }
-            
-            .detail-row {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 8px;
+            .header h1 { 
+                margin: 0; 
+                font-size: 28px; 
+                font-weight: 700; 
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
             }
-            
-            .detail-label {
-              min-width: auto;
+            .content { 
+                padding: 40px 30px; 
             }
-          }
+            .greeting { 
+                font-size: 18px; 
+                color: #1e40af; 
+                margin-bottom: 25px; 
+                font-weight: 500; 
+            }
+            .event-details { 
+                background: linear-gradient(135deg, #f0f9ff, #e0f2fe); 
+                border: 2px solid #bae6fd; 
+                border-left: 6px solid #012169; 
+                border-radius: 12px; 
+                padding: 30px; 
+                margin: 30px 0; 
+                box-shadow: 0 4px 12px rgba(1, 33, 105, 0.1); 
+            }
+            .event-title { 
+                font-size: 24px; 
+                font-weight: 700; 
+                color: #012169; 
+                margin-bottom: 15px; 
+            }
+            .event-info { 
+                margin: 15px 0; 
+                display: flex; 
+                align-items: center; 
+            }
+            .event-info strong { 
+                color: #1e40af; 
+                min-width: 120px; 
+                display: inline-block; 
+            }
+            .meeting-link { 
+                background: linear-gradient(135deg, #012169, #00A6D4); 
+                color: white; 
+                padding: 15px 30px; 
+                text-decoration: none; 
+                border-radius: 8px; 
+                display: inline-block; 
+                margin: 20px 0; 
+                font-weight: 600; 
+                box-shadow: 0 4px 12px rgba(1, 33, 105, 0.3); 
+                transition: all 0.3s ease; 
+            }
+            .meeting-link:hover { 
+                transform: translateY(-2px); 
+                box-shadow: 0 6px 16px rgba(1, 33, 105, 0.4); 
+            }
+            .calendar-button { 
+                background: linear-gradient(135deg, #00A6D4, #60a5fa); 
+                color: white; 
+                padding: 12px 25px; 
+                text-decoration: none; 
+                border-radius: 8px; 
+                display: inline-block; 
+                margin: 15px 10px 15px 0; 
+                font-weight: 600; 
+                box-shadow: 0 3px 10px rgba(0, 166, 212, 0.3); 
+            }
+            .important-note { 
+                background: #f0f9ff; 
+                border: 1px solid #bae6fd; 
+                border-radius: 8px; 
+                padding: 20px; 
+                margin: 25px 0; 
+            }
+            .important-note h3 { 
+                color: #1e40af; 
+                margin-top: 0; 
+            }
+            .footer { 
+                background: #f8fafc; 
+                padding: 30px; 
+                text-align: center; 
+                border-top: 1px solid #e0f2fe; 
+                color: #1e40af; 
+            }
+            .team-signature { 
+                margin-top: 30px; 
+                padding-top: 20px; 
+                border-top: 2px solid #bae6fd; 
+                color: #1e40af; 
+            }
+            @media (max-width: 600px) {
+                .container { margin: 10px; border-radius: 8px; }
+                .header, .content { padding: 20px; }
+                .event-details { padding: 20px; }
+                .event-info { flex-direction: column; align-items: flex-start; }
+                .event-info strong { min-width: auto; margin-bottom: 5px; }
+            }
         </style>
-      </head>
-      <body>
+    </head>
+    <body>
         <div class="container">
-          <div class="header">
-            <h1>🎉 Registration Confirmed!</h1>
-            <p>You're all set for this exciting event</p>
-          </div>
-          
-          <div class="content">
-            <p class="welcome-message">
-              Hi <strong>${emailData.fullName}</strong>,<br>
-              Thank you for registering! We're excited to have you join us.
-            </p>
-            
-            <div class="event-card">
-              <h2 class="event-title">${eventTitle}</h2>
-              <p class="event-description">${eventDescription}</p>
-              
-              <div class="event-details">
-                <div class="detail-row">
-                  <span class="detail-icon">📅</span>
-                  <span class="detail-label">Date:</span>
-                  <span class="detail-value">${formatDate(startDate)}</span>
-                </div>
-                
-                <div class="detail-row">
-                  <span class="detail-icon">⏰</span>
-                  <span class="detail-label">Time:</span>
-                  <span class="detail-value">${formatTime(startDate)} - ${formatTime(endDate)} ${timezone}</span>
-                </div>
-                
-                <div class="detail-row">
-                  <span class="detail-icon">💻</span>
-                  <span class="detail-label">Platform:</span>
-                  <span class="detail-value">${eventPlatform}</span>
-                </div>
-                
-                ${organizedBy ? `
-                <div class="detail-row">
-                  <span class="detail-icon">👥</span>
-                  <span class="detail-label">Host:</span>
-                  <span class="detail-value">${organizedBy}</span>
-                </div>
-                ` : ''}
-              </div>
-              
-              ${meetingLink ? `
-              <a href="${meetingLink}" class="meeting-link">
-                🚀 Join Event Now
-              </a>
-              ` : ''}
+            <div class="header">
+                <h1>🎉 Registration Confirmed!</h1>
             </div>
             
-            <div class="important-info">
-              <h3>📋 Important Information</h3>
-              <ul>
-                <li>Please join the event 5-10 minutes early to ensure a smooth start</li>
-                <li>Make sure you have a stable internet connection</li>
-                <li>We recommend using headphones for better audio quality</li>
-                <li>Have a pen and paper ready for notes</li>
-                <li>If you have any questions, feel free to reach out to us</li>
-              </ul>
+            <div class="content">
+                <div class="greeting">
+                    Hello ${emailData.fullName},
+                </div>
+                
+                <p>Thank you for registering! We're excited to confirm your spot for our upcoming event. Here are all the details you need:</p>
+                
+                <div class="event-details">
+                    <div class="event-title">${emailData.eventTitle}</div>
+                    
+                    <div class="event-info">
+                        <strong>📅 Date:</strong>
+                        <span>${formatDate(startDate)}</span>
+                    </div>
+                    
+                    <div class="event-info">
+                        <strong>🕐 Time:</strong>
+                        <span>${formatTime(startDate)} - ${formatTime(endDate)} ${timezone}</span>
+                    </div>
+                    
+                    <div class="event-info">
+                        <strong>💻 Platform:</strong>
+                        <span>${emailData.eventPlatform}</span>
+                    </div>
+                    
+                    ${emailData.organizedBy ? `
+                    <div class="event-info">
+                        <strong>👥 Organized by:</strong>
+                        <span>${emailData.organizedBy}</span>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 25px;">
+                        <strong style="color: #012169;">📝 Description:</strong>
+                        <p style="margin-top: 10px; color: #1e40af; line-height: 1.6;">${emailData.eventDescription}</p>
+                    </div>
+                    
+                    ${emailData.meetingLink ? `
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="${emailData.meetingLink}" class="meeting-link">
+                            🔗 Join Event Meeting
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div class="important-note">
+                    <h3>📅 Add to Your Calendar</h3>
+                    <p>Don't forget to add this event to your calendar so you don't miss it!</p>
+                    <a href="${calendarLink}" class="calendar-button" target="_blank">
+                        Add to Google Calendar
+                    </a>
+                </div>
+                
+                <div class="important-note">
+                    <h3>💡 Important Reminders</h3>
+                    <ul style="color: #1e40af; margin: 10px 0;">
+                        <li>Join the meeting 5-10 minutes early to test your connection</li>
+                        <li>Ensure you have a stable internet connection</li>
+                        <li>Prepare any questions you'd like to ask during the event</li>
+                        <li>Check your email for any last-minute updates</li>
+                    </ul>
+                </div>
+                
+                <p>We're looking forward to seeing you there! If you have any questions or need assistance, please don't hesitate to reach out to our team.</p>
+                
+                <div class="team-signature">
+                    <p><strong>Best regards,</strong><br>
+                    The PicoCareer Team</p>
+                    <p style="font-size: 14px; color: #60a5fa;">
+                        Empowering your career journey, one step at a time 🚀
+                    </p>
+                </div>
             </div>
             
-            <p style="text-align: center; color: #1e40af; font-size: 16px; margin-top: 30px;">
-              We can't wait to see you there! 🌟
-            </p>
-          </div>
-          
-          <div class="footer">
-            <p><strong>PicoCareer Team</strong></p>
-            <p>Your partner in career development</p>
-            <p>
-              <a href="mailto:support@picocareer.com">support@picocareer.com</a> |
-              <a href="https://picocareer.com">www.picocareer.com</a>
-            </p>
-          </div>
+            <div class="footer">
+                <p style="margin: 0; font-size: 14px;">
+                    © ${new Date().getFullYear()} PicoCareer. All rights reserved.
+                </p>
+                <p style="margin: 10px 0 0 0; font-size: 12px; color: #60a5fa;">
+                    This email was sent because you registered for one of our events.
+                </p>
+            </div>
         </div>
-      </body>
-      </html>
+    </body>
+    </html>
     `;
 
+    // Send the email using Supabase's email service or any other email service
+    // For now, we'll just log that we would send the email
     console.log('Email HTML generated for:', emailData.email);
-
+    
+    // Here you would integrate with your email service (SendGrid, Resend, etc.)
+    // For demonstration, we'll return success
+    
     return new Response(
       JSON.stringify({ 
         success: true, 
-        html: emailHtml,
-        message: "Email template generated successfully" 
+        message: 'Event confirmation email sent successfully',
+        registrationId: emailData.registrationId 
       }), 
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

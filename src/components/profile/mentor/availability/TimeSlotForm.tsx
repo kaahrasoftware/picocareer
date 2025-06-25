@@ -13,7 +13,7 @@ interface TimeSlotFormData {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  timezone: string;
+  reference_timezone: string;
 }
 
 interface TimeSlotFormProps {
@@ -60,22 +60,37 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
       day_of_week: 1,
       start_time: '',
       end_time: '',
-      timezone: 'UTC'
+      reference_timezone: 'UTC'
     }
   });
+
+  const selectedTimezone = watch('reference_timezone');
 
   const onSubmit = async (data: TimeSlotFormData) => {
     setIsSubmitting(true);
     try {
-      // Create datetime strings for the database
+      // Create datetime strings for the current week based on the selected day and time
       const today = new Date();
-      const startDateTime = new Date(today);
-      const endDateTime = new Date(today);
+      const currentDay = today.getDay();
+      const targetDay = data.day_of_week;
       
+      // Calculate days until target day
+      let daysUntilTarget = targetDay - currentDay;
+      if (daysUntilTarget <= 0) {
+        daysUntilTarget += 7; // Next week
+      }
+      
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + daysUntilTarget);
+      
+      // Create start and end datetime strings
       const [startHour, startMinute] = data.start_time.split(':').map(Number);
       const [endHour, endMinute] = data.end_time.split(':').map(Number);
       
+      const startDateTime = new Date(targetDate);
       startDateTime.setHours(startHour, startMinute, 0, 0);
+      
+      const endDateTime = new Date(targetDate);
       endDateTime.setHours(endHour, endMinute, 0, 0);
 
       const { error } = await supabase
@@ -85,9 +100,10 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
           day_of_week: data.day_of_week,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          timezone: data.timezone,
+          reference_timezone: data.reference_timezone,
           is_recurring: true,
-          is_available: true
+          is_available: true,
+          dst_aware: false
         });
 
       if (error) throw error;
@@ -157,8 +173,8 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="timezone">Timezone</Label>
-          <Select onValueChange={(value) => setValue('timezone', value)} defaultValue="UTC">
+          <Label htmlFor="reference_timezone">Timezone</Label>
+          <Select onValueChange={(value) => setValue('reference_timezone', value)} defaultValue="UTC">
             <SelectTrigger>
               <SelectValue placeholder="Select timezone" />
             </SelectTrigger>

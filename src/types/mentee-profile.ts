@@ -57,19 +57,19 @@ export interface MenteeCourse {
   mentee_id: string;
   course_name: string;
   course_code?: string;
-  semester?: string;
   year?: number;
+  semester?: string;
+  status: CourseStatus;
   grade?: string;
   credits?: number;
   instructor_name?: string;
   description?: string;
-  status: CourseStatus;
   created_at: string;
   updated_at: string;
 }
 
 export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
+export type EssayPromptCategory = 'personal_statement' | 'scholarship' | 'application' | 'academic';
+export type InterestCategory = 'academic' | 'career' | 'hobby' | 'volunteer' | 'research';
 export type ProjectStatus = 'completed' | 'in_progress' | 'planned';
-export type EssayPromptCategory = 'personal_statement' | 'supplemental' | 'scholarship' | 'other';
-export type InterestCategory = 'academic' | 'extracurricular' | 'professional' | 'personal';
-export type AcademicStatus = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'other';
+export type AcademicStatus = 'current' | 'graduated' | 'transferred' | 'on_leave';
