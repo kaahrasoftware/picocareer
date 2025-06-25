@@ -13,7 +13,7 @@ interface TimeSlotFormData {
   day_of_week: number;
   start_time: string;
   end_time: string;
-  timezone: string;
+  reference_timezone: string;
 }
 
 interface TimeSlotFormProps {
@@ -60,7 +60,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
       day_of_week: 1,
       start_time: '',
       end_time: '',
-      timezone: 'UTC'
+      reference_timezone: 'UTC'
     }
   });
 
@@ -85,8 +85,8 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
           day_of_week: data.day_of_week,
           start_date_time: startDateTime.toISOString(),
           end_date_time: endDateTime.toISOString(),
-          timezone: data.timezone,
-          is_recurring: true,
+          reference_timezone: data.reference_timezone,
+          recurring: true,
           is_available: true
         });
 
@@ -157,8 +157,8 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="timezone">Timezone</Label>
-          <Select onValueChange={(value) => setValue('timezone', value)} defaultValue="UTC">
+          <Label htmlFor="reference_timezone">Timezone</Label>
+          <Select onValueChange={(value) => setValue('reference_timezone', value)} defaultValue="UTC">
             <SelectTrigger>
               <SelectValue placeholder="Select timezone" />
             </SelectTrigger>

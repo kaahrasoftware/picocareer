@@ -87,8 +87,8 @@ export function ExistingTimeSlots({ profile_id, onUpdate }: ExistingTimeSlotsPro
               <span className="ml-2">
                 {formatDateTime(slot.start_date_time)} - {formatDateTime(slot.end_date_time)}
               </span>
-              {slot.timezone && (
-                <span className="ml-2 text-sm text-gray-500">({slot.timezone})</span>
+              {slot.reference_timezone && (
+                <span className="ml-2 text-sm text-gray-500">({slot.reference_timezone})</span>
               )}
             </div>
             <Button

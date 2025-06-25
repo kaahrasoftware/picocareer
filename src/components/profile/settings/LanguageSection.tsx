@@ -10,10 +10,13 @@ interface LanguageSectionProps {
 
 export function LanguageSection({ profileId }: LanguageSectionProps) {
   const { getSetting, updateSetting } = useUserSettings(profileId);
-  const currentLanguage = getSetting('language') || 'en';
+  const currentLanguage = getSetting('language_preference') || 'en';
 
   const handleLanguageChange = (value: string) => {
-    updateSetting('language', value);
+    updateSetting.mutate({
+      type: 'language_preference',
+      value: value
+    });
   };
 
   return (

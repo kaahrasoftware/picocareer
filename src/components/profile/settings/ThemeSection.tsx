@@ -13,7 +13,10 @@ export function ThemeSection({ profileId }: ThemeSectionProps) {
   const currentTheme = getSetting('theme') || 'system';
 
   const handleThemeChange = (value: string) => {
-    updateSetting('theme', value);
+    updateSetting.mutate({
+      type: 'theme',
+      value: value
+    });
   };
 
   return (

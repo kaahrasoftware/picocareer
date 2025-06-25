@@ -23,7 +23,7 @@ export interface MenteeProject {
   mentee_id: string;
   title: string;
   description?: string;
-  status: 'completed' | 'in_progress' | 'planned';
+  status: 'completed' | 'in_progress' | 'planned' | 'on_hold';
   start_date?: string;
   end_date?: string;
   github_url?: string;
@@ -69,7 +69,7 @@ export interface MenteeCourse {
 }
 
 export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
-export type ProjectStatus = 'completed' | 'in_progress' | 'planned';
-export type EssayPromptCategory = 'personal_statement' | 'supplemental' | 'scholarship' | 'other';
-export type InterestCategory = 'academic' | 'extracurricular' | 'professional' | 'personal';
-export type AcademicStatus = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'other';
+export type ProjectStatus = 'completed' | 'in_progress' | 'planned' | 'on_hold';
+export type EssayPromptCategory = 'personal_statement' | 'supplemental' | 'scholarship' | 'college_application' | 'other';
+export type InterestCategory = 'academic' | 'extracurricular' | 'professional' | 'personal' | 'career';
+export type AcademicStatus = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'current_student' | 'gap_year' | 'graduated' | 'transfer_student' | 'prospective_student' | 'other';

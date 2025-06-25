@@ -43,19 +43,19 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
       <h4 className="font-semibold">Professional Experience</h4>
       <EditableField
         label="Position"
-        value={profile?.current_position}
+        value={(profile as any)?.current_position || ''}
         fieldName="current_position"
         profileId={profile?.id || ''}
       />
       <EditableField
         label="Company"
-        value={profile?.current_company}
+        value={(profile as any)?.current_company || ''}
         fieldName="current_company"
         profileId={profile?.id || ''}
       />
       <EditableField
         label="Years of Experience"
-        value={profile?.years_of_experience?.toString()}
+        value={profile?.years_of_experience?.toString() || ''}
         fieldName="years_of_experience"
         profileId={profile?.id || ''}
       />

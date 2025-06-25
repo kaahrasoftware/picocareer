@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -17,6 +17,17 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 
 // Valid meeting platforms based on database schema
 type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
+interface SessionTypeFormData {
+  type: string;
+  description: string;
+  duration: number;
+  price: number;
+  meeting_platform: string[];
+  telegram_username?: string;
+  phone_number?: string;
+  custom_type_name?: string;
+}
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,7 +156,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       // Create new session type with proper type casting
       const sessionData = {
         profile_id: profileId,
-        type: data.type as any, // Type cast to handle enum
+        type: data.type,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
@@ -201,7 +212,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={methods}
+              control={methods.control}
               availableTypes={existingTypes?.map(type => type.type) || []}
             />
 
@@ -255,10 +266,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={methods} />
+            <PlatformSelect control={methods.control} />
 
             <PlatformFields
-              form={methods}
+              control={methods.control}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

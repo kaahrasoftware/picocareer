@@ -20,9 +20,10 @@ interface AccessibilitySettings {
 interface DisplaySectionProps {
   settings: AccessibilitySettings;
   handleToggle: (key: keyof AccessibilitySettings) => void;
+  handleFontSizeChange: (size: string) => void;
 }
 
-const DisplaySection = ({ settings, handleToggle }: DisplaySectionProps): JSX.Element => {
+const DisplaySection = ({ settings, handleToggle, handleFontSizeChange }: DisplaySectionProps): JSX.Element => {
   return (
     <div className="space-y-4">
       <h4 className="font-medium">Display Settings</h4>
@@ -47,7 +48,7 @@ const DisplaySection = ({ settings, handleToggle }: DisplaySectionProps): JSX.El
 
       <div className="space-y-2">
         <Label>Font Size</Label>
-        <Select value={settings.fontSize} onValueChange={(value) => handleToggle('fontSize' as keyof AccessibilitySettings)}>
+        <Select value={settings.fontSize} onValueChange={handleFontSizeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -64,7 +65,7 @@ const DisplaySection = ({ settings, handleToggle }: DisplaySectionProps): JSX.El
 };
 
 export function AccessibilitySection({ profileId }: AccessibilitySectionProps) {
-  const { getSetting, setSetting } = useUserSettings(profileId);
+  const { getSetting, updateSetting } = useUserSettings(profileId);
 
   const getAccessibilitySettings = (): AccessibilitySettings => {
     const settingsStr = getSetting('accessibility_settings');
@@ -90,7 +91,21 @@ export function AccessibilitySection({ profileId }: AccessibilitySectionProps) {
   const handleToggle = (key: keyof AccessibilitySettings) => {
     setSettings(prev => {
       const newSettings = { ...prev, [key]: !prev[key] };
-      setSetting('accessibility_settings', JSON.stringify(newSettings));
+      updateSetting.mutate({
+        type: 'accessibility_settings',
+        value: JSON.stringify(newSettings)
+      });
+      return newSettings;
+    });
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    setSettings(prev => {
+      const newSettings = { ...prev, fontSize: size };
+      updateSetting.mutate({
+        type: 'accessibility_settings',
+        value: JSON.stringify(newSettings)
+      });
       return newSettings;
     });
   };
@@ -104,7 +119,11 @@ export function AccessibilitySection({ profileId }: AccessibilitySectionProps) {
         </p>
       </div>
 
-      <DisplaySection settings={settings} handleToggle={handleToggle} />
+      <DisplaySection 
+        settings={settings} 
+        handleToggle={handleToggle}
+        handleFontSizeChange={handleFontSizeChange}
+      />
     </div>
   );
 }
