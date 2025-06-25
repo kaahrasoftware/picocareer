@@ -140,7 +140,7 @@ export function EventCard({
               <span className="text-muted-foreground">
                 {formatTime(event.start_time)} - {formatTime(event.end_time)}
                 {event.timezone && (
-                  <span className="ml-1 text-xs bg-muted px-1.5 py-0.5 rounded">
+                  <span className="ml-1 text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded border border-orange-200">
                     {event.timezone}
                   </span>
                 )}
