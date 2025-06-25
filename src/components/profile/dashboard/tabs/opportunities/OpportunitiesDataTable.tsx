@@ -1,238 +1,148 @@
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import React from 'react';
+import { DataTable } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Edit } from "lucide-react";
+import { formatDistanceToNow } from 'date-fns';
 
-interface OpportunitiesDataTableProps {
-  searchQuery: string;
-  selectedType: string;
-  selectedLocation: string;
+interface Opportunity {
+  id: string;
+  title: string;
+  provider_name?: string;
+  type: 'scholarship' | 'event' | 'job' | 'internship' | 'fellowship' | 'grant' | 'competition' | 'volunteer' | 'other';
+  deadline?: string;
+  status: string;
+  created_at: string;
+  application_url?: string;
 }
 
-const VALID_OPPORTUNITY_TYPES = [
-  'scholarship',
-  'event', 
-  'other',
-  'job',
-  'internship',
-  'fellowship',
-  'grant',
-  'competition',
-  'volunteer'
-] as const;
+interface OpportunitiesDataTableProps {
+  opportunities: Opportunity[];
+  onEdit?: (opportunity: Opportunity) => void;
+}
 
-type OpportunityType = typeof VALID_OPPORTUNITY_TYPES[number];
+export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesDataTableProps) {
+  const getTypeColor = (type: Opportunity['type']) => {
+    const colors = {
+      scholarship: 'bg-purple-100 text-purple-800',
+      event: 'bg-blue-100 text-blue-800',
+      job: 'bg-green-100 text-green-800',
+      internship: 'bg-yellow-100 text-yellow-800',
+      fellowship: 'bg-indigo-100 text-indigo-800',
+      grant: 'bg-pink-100 text-pink-800',
+      competition: 'bg-orange-100 text-orange-800',
+      volunteer: 'bg-teal-100 text-teal-800',
+      other: 'bg-gray-100 text-gray-800'
+    };
+    return colors[type] || colors.other;
+  };
 
-export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLocation }: OpportunitiesDataTableProps) {
-  const { toast } = useToast();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const { data: opportunities = [], isLoading, refetch } = useQuery({
-    queryKey: ['admin-opportunities', searchQuery, selectedType, selectedLocation],
-    queryFn: async () => {
-      let query = supabase
-        .from('opportunities')
-        .select(`
-          *,
-          profiles:author_id (
-            first_name,
-            last_name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,provider_name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
-      }
-
-      if (selectedType && selectedType !== 'all') {
-        // Ensure the selectedType is a valid opportunity type
-        if (VALID_OPPORTUNITY_TYPES.includes(selectedType as OpportunityType)) {
-          query = query.eq('opportunity_type', selectedType);
-        }
-      }
-
-      if (selectedLocation && selectedLocation !== 'all') {
-        query = query.eq('location', selectedLocation);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
+  const columns = [
+    {
+      header: "Title",
+      accessorKey: "title",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="font-medium">{row.original.title}</div>
+      ),
     },
-  });
-
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('opportunities')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Opportunity deleted successfully",
-      });
-
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete opportunity",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-
-    try {
-      const { error } = await supabase
-        .from('opportunities')
-        .delete()
-        .in('id', selectedIds);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `${selectedIds.length} opportunities deleted successfully`,
-      });
-
-      setSelectedIds([]);
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete opportunities",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading opportunities...</div>;
-  }
+    {
+      header: "Provider",
+      accessorKey: "provider_name",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="text-sm text-muted-foreground">
+          {row.original.provider_name || "N/A"}
+        </div>
+      ),
+    },
+    {
+      header: "Type",
+      accessorKey: "type",
+      cell: ({ row }: { row: { original: Opportunity } }) => {
+        const type = row.original.type;
+        // Ensure type is valid before using it
+        const validType = ['scholarship', 'event', 'job', 'internship', 'fellowship', 'grant', 'competition', 'volunteer', 'other'].includes(type as string) 
+          ? type as Opportunity['type']
+          : 'other' as const;
+        
+        return (
+          <Badge className={getTypeColor(validType)}>
+            {validType.charAt(0).toUpperCase() + validType.slice(1)}
+          </Badge>
+        );
+      },
+    },
+    {
+      header: "Deadline",
+      accessorKey: "deadline",
+      cell: ({ row }: { row: { original: Opportunity } }) => {
+        if (!row.original.deadline) return <span className="text-muted-foreground">No deadline</span>;
+        const deadline = new Date(row.original.deadline);
+        const isExpired = deadline < new Date();
+        return (
+          <div className={`text-sm ${isExpired ? 'text-red-600' : 'text-foreground'}`}>
+            {deadline.toLocaleDateString()}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <Badge variant={row.original.status === 'Published' ? 'default' : 'secondary'}>
+          {row.original.status}
+        </Badge>
+      ),
+    },
+    {
+      header: "Created",
+      accessorKey: "created_at",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="text-sm text-muted-foreground">
+          {formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true })}
+        </div>
+      ),
+    },
+    {
+      header: "Actions",
+      id: "actions",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(row.original)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+          {row.original.application_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+            >
+              <a
+                href={row.original.application_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="space-y-4">
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            {selectedIds.length} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleBulkDelete}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Selected
-          </Button>
-        </div>
-      )}
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.length === opportunities.length && opportunities.length > 0}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedIds(opportunities.map(o => o.id));
-                    } else {
-                      setSelectedIds([]);
-                    }
-                  }}
-                />
-              </TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Author</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {opportunities.map((opportunity) => (
-              <TableRow key={opportunity.id}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(opportunity.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedIds([...selectedIds, opportunity.id]);
-                      } else {
-                        setSelectedIds(selectedIds.filter(id => id !== opportunity.id));
-                      }
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{opportunity.title}</TableCell>
-                <TableCell>{opportunity.provider_name}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{opportunity.opportunity_type}</Badge>
-                </TableCell>
-                <TableCell>{opportunity.location}</TableCell>
-                <TableCell>
-                  <Badge 
-                    variant={opportunity.status === 'Active' ? 'default' : 'secondary'}
-                  >
-                    {opportunity.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {opportunity.profiles ? 
-                    `${opportunity.profiles.first_name} ${opportunity.profiles.last_name}` : 
-                    'Unknown'
-                  }
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {opportunity.application_url && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(opportunity.application_url, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(opportunity.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    <DataTable
+      columns={columns}
+      data={opportunities}
+      searchKey="title"
+    />
   );
 }

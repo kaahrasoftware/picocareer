@@ -1,96 +1,99 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TimeSlotInputs } from './TimeSlotInputs';
-import { ExistingTimeSlots } from './ExistingTimeSlots';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { format, addDays } from 'date-fns';
+import { ExistingTimeSlots } from './ExistingTimeSlots';
+
+interface TimeSlotFormData {
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  timezone: string;
+}
 
 interface TimeSlotFormProps {
   profileId: string;
-  onSuccess?: () => void;
+  onSuccess: () => void;
 }
+
+const DAYS_OF_WEEK = [
+  { value: 'monday', label: 'Monday' },
+  { value: 'tuesday', label: 'Tuesday' },
+  { value: 'wednesday', label: 'Wednesday' },
+  { value: 'thursday', label: 'Thursday' },
+  { value: 'friday', label: 'Friday' },
+  { value: 'saturday', label: 'Saturday' },
+  { value: 'sunday', label: 'Sunday' }
+];
+
+const TIMEZONES = [
+  { value: 'UTC', label: 'UTC' },
+  { value: 'America/New_York', label: 'Eastern Time' },
+  { value: 'America/Chicago', label: 'Central Time' },
+  { value: 'America/Denver', label: 'Mountain Time' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time' },
+  { value: 'Europe/London', label: 'London' },
+  { value: 'Europe/Paris', label: 'Paris' },
+  { value: 'Asia/Tokyo', label: 'Tokyo' },
+  { value: 'Asia/Shanghai', label: 'Shanghai' },
+  { value: 'Australia/Sydney', label: 'Sydney' }
+];
 
 export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
   const { toast } = useToast();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedStartTime, setSelectedStartTime] = useState('');
-  const [selectedEndTime, setSelectedEndTime] = useState('');
-  const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userTimezone, setUserTimezone] = useState('');
 
-  // Generate time slots from 8 AM to 10 PM
-  const timeSlots = Array.from({ length: 56 }, (_, i) => {
-    const hour = Math.floor(i / 4) + 8;
-    const minute = (i % 4) * 15;
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors }
+  } = useForm<TimeSlotFormData>({
+    defaultValues: {
+      day_of_week: '',
+      start_time: '',
+      end_time: '',
+      timezone: 'UTC'
+    }
   });
 
-  useEffect(() => {
-    setUserTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
-  }, []);
+  const selectedDay = watch('day_of_week');
+  const selectedTimezone = watch('timezone');
 
-  const handleSubmit = async () => {
-    if (!selectedStartTime || !selectedEndTime) {
-      toast({
-        title: "Error",
-        description: "Please select both start and end times",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSubmit = async (data: TimeSlotFormData) => {
     setIsSubmitting(true);
     try {
-      const datesToAdd = isRecurring 
-        ? Array.from({ length: 4 }, (_, i) => addDays(selectedDate, i * 7))
-        : [selectedDate];
+      const { error } = await supabase
+        .from('mentor_availability')
+        .insert({
+          profile_id: profileId,
+          day_of_week: data.day_of_week,
+          start_time: data.start_time,
+          end_time: data.end_time,
+          timezone: data.timezone,
+          is_recurring: true
+        });
 
-      for (const date of datesToAdd) {
-        const startDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${selectedStartTime}:00`);
-        const endDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${selectedEndTime}:00`);
-
-        // Calculate timezone offset
-        const timezoneOffset = -startDateTime.getTimezoneOffset();
-
-        const { error } = await supabase
-          .from('mentor_availability')
-          .insert({
-            profile_id: profileId,
-            start_date_time: startDateTime.toISOString(),
-            end_date_time: endDateTime.toISOString(),
-            is_available: true,
-            reference_timezone: userTimezone,
-            timezone_offset: timezoneOffset,
-            dst_aware: true,
-            recurring: isRecurring,
-            day_of_week: isRecurring ? date.getDay() : null
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Time slot${datesToAdd.length > 1 ? 's' : ''} added successfully`,
+        description: "Time slot added successfully",
       });
 
-      // Reset form
-      setSelectedStartTime('');
-      setSelectedEndTime('');
-      setIsRecurring(false);
-      
-      if (onSuccess) {
-        onSuccess();
-      }
+      reset();
+      onSuccess();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to add time slots",
+        description: error.message || "Failed to add time slot",
         variant: "destructive",
       });
     } finally {
@@ -100,44 +103,72 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add Availability</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Select Date</label>
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              disabled={(date) => date < new Date()}
-              className="rounded-md border"
-            />
-          </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <Label htmlFor="day_of_week">Day of Week</Label>
+          <Select onValueChange={(value) => setValue('day_of_week', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select day" />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_WEEK.map((day) => (
+                <SelectItem key={day.value} value={day.value}>
+                  {day.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.day_of_week && (
+            <p className="text-sm text-red-500">Day of week is required</p>
+          )}
+        </div>
 
-          <TimeSlotInputs
-            timeSlots={timeSlots}
-            selectedStartTime={selectedStartTime}
-            selectedEndTime={selectedEndTime}
-            isRecurring={isRecurring}
-            userTimezone={userTimezone}
-            onStartTimeSelect={setSelectedStartTime}
-            onEndTimeSelect={setSelectedEndTime}
-            onRecurringChange={() => setIsRecurring(!isRecurring)}
+        <div>
+          <Label htmlFor="start_time">Start Time</Label>
+          <Input
+            id="start_time"
+            type="time"
+            {...register("start_time", { required: "Start time is required" })}
           />
+          {errors.start_time && (
+            <p className="text-sm text-red-500">{errors.start_time.message}</p>
+          )}
+        </div>
 
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || !selectedStartTime || !selectedEndTime}
-            className="w-full"
-          >
-            {isSubmitting ? 'Adding...' : `Add Time Slot${isRecurring ? 's (4 weeks)' : ''}`}
-          </Button>
-        </CardContent>
-      </Card>
+        <div>
+          <Label htmlFor="end_time">End Time</Label>
+          <Input
+            id="end_time"
+            type="time"
+            {...register("end_time", { required: "End time is required" })}
+          />
+          {errors.end_time && (
+            <p className="text-sm text-red-500">{errors.end_time.message}</p>
+          )}
+        </div>
 
-      <ExistingTimeSlots profile_id={profileId} />
+        <div>
+          <Label htmlFor="timezone">Timezone</Label>
+          <Select onValueChange={(value) => setValue('timezone', value)} defaultValue="UTC">
+            <SelectTrigger>
+              <SelectValue placeholder="Select timezone" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIMEZONES.map((tz) => (
+                <SelectItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Adding..." : "Add Time Slot"}
+        </Button>
+      </form>
+
+      <ExistingTimeSlots profileId={profileId} onUpdate={onSuccess} />
     </div>
   );
 }

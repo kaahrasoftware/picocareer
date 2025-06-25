@@ -20,3 +20,12 @@ export const SessionTypeEnum = {
 } as const;
 
 export type SessionType = typeof SessionTypeEnum[keyof typeof SessionTypeEnum];
+
+export interface SessionTypeFormProps {
+  profileId: string;
+  sessionType?: any;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+export type MeetingPlatform = 'zoom' | 'google_meet' | 'teams' | 'phone' | 'in_person' | 'other';
