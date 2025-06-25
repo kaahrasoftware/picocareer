@@ -1,10 +1,13 @@
 
 export interface SessionTypeFormData {
-  session_type: string;
+  type: string;
   description: string;
   duration: number;
   price: number;
-  meeting_platform: string;
+  meeting_platform: string[];
+  telegram_username?: string;
+  phone_number?: string;
+  custom_type_name?: string;
 }
 
 export const SessionTypeEnum = {
@@ -16,6 +19,7 @@ export const SessionTypeEnum = {
   INDUSTRY_INSIGHTS: 'industry_insights',
   PERSONAL_BRANDING: 'personal_branding',
   GOAL_SETTING: 'goal_setting',
+  CUSTOM: 'Custom',
   OTHER: 'other'
 } as const;
 
@@ -26,6 +30,7 @@ export interface SessionTypeFormProps {
   sessionType?: any;
   onSuccess: () => void;
   onCancel: () => void;
+  existingTypes?: any[];
 }
 
-export type MeetingPlatform = 'zoom' | 'google_meet' | 'teams' | 'phone' | 'in_person' | 'other';
+export type MeetingPlatform = 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';

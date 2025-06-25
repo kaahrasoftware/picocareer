@@ -60,7 +60,6 @@ export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesD
       accessorKey: "type",
       cell: ({ row }: { row: { original: Opportunity } }) => {
         const type = row.original.type;
-        // Ensure type is valid before using it
         const validType = ['scholarship', 'event', 'job', 'internship', 'fellowship', 'grant', 'competition', 'volunteer', 'other'].includes(type as string) 
           ? type as Opportunity['type']
           : 'other' as const;
@@ -142,7 +141,6 @@ export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesD
     <DataTable
       columns={columns}
       data={opportunities}
-      searchKey="title"
     />
   );
 }

@@ -85,22 +85,11 @@ const handler = async (req: Request): Promise<Response> => {
       eventDetails = registration.event;
     }
 
-    console.log('Registration details:', {
-      registrationId,
-      email: registrationEmail,
-      fullName: registrationName,
-      eventTitle: eventDetails.title,
-      eventStartTime: eventDetails.start_time,
-      eventEndTime: eventDetails.end_time,
-      eventPlatform: eventDetails.platform,
-      meetingLink: eventDetails.meeting_link,
-      organizedBy: eventDetails.organized_by
-    });
+    // Extract first name for personalization
+    const firstName = registrationName?.split(' ')[0] || 'there';
 
     // Clean event title for subject
     const cleanEventTitle = eventDetails.title?.replace(/[^\w\s-]/g, '') || 'Event';
-    console.log('Original event title:', eventDetails.title);
-    console.log('Cleaned event title:', cleanEventTitle);
 
     // Format event times
     const startTime = eventDetails.start_time ? new Date(eventDetails.start_time) : null;
@@ -118,92 +107,150 @@ const handler = async (req: Request): Promise<Response> => {
       });
     };
 
-    // Generate simple red-themed email template
+    // Generate Google Calendar link
+    const generateCalendarLink = () => {
+      if (!startTime || !endTime) return null;
+      
+      const formatCalendarDate = (date: Date) => {
+        return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      };
+
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: eventDetails.title || 'Event',
+        dates: `${formatCalendarDate(startTime)}/${formatCalendarDate(endTime)}`,
+        details: eventDetails.description || '',
+        location: eventDetails.meeting_link || ''
+      });
+
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    };
+
+    const calendarLink = generateCalendarLink();
+
+    // Enhanced professional email template with red theme
     const emailHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Event Confirmation</title>
+          <title>Event Confirmation - ${eventDetails.title}</title>
         </head>
-        <body style="margin: 0; padding: 20px; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
+        <body style="margin: 0; padding: 20px; background-color: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
             
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 32px 24px; text-align: center;">
-              <div style="font-size: 48px; margin-bottom: 8px;">🎉</div>
-              <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">Event Confirmation</h1>
-              <p style="margin: 0; font-size: 16px; opacity: 0.8;">You're all set for the event!</p>
+            <!-- Professional Header -->
+            <div style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 40px 32px; text-align: center;">
+              <div style="font-size: 56px; margin-bottom: 12px;">🗓️</div>
+              <h1 style="margin: 0 0 12px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">Event Confirmation</h1>
+              <p style="margin: 0; font-size: 18px; opacity: 0.9;">You're all set for your upcoming event!</p>
             </div>
             
             <!-- Content -->
-            <div style="padding: 32px 24px;">
-              <p style="color: #374151; font-size: 16px; line-height: 1.5; margin-top: 0;">
-                Hello ${registrationName},
+            <div style="padding: 40px 32px;">
+              <!-- Personalized Greeting -->
+              <p style="color: #1f2937; font-size: 18px; line-height: 1.6; margin-top: 0; font-weight: 500;">
+                Hello ${firstName},
               </p>
               
-              <p style="color: #374151; font-size: 16px; line-height: 1.5;">
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 32px;">
                 Thank you for registering! We're excited to confirm your registration for the following event:
               </p>
               
               <!-- Event Details Card -->
-              <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin: 24px 0; border-left: 4px solid #ef4444;">
-                <h2 style="margin-top: 0; margin-bottom: 16px; color: #1f2937; font-size: 20px; font-weight: 600;">
+              <div style="background: linear-gradient(135deg, #fef2f2, #fee2e2); border-radius: 12px; padding: 32px; margin: 32px 0; border: 2px solid #fecaca; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);">
+                <h2 style="margin-top: 0; margin-bottom: 20px; color: #7f1d1d; font-size: 24px; font-weight: 700; line-height: 1.3;">
                   ${eventDetails.title}
                 </h2>
                 
                 ${eventDetails.description ? `
-                  <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-bottom: 16px;">
-                    ${eventDetails.description.substring(0, 200)}${eventDetails.description.length > 200 ? '...' : ''}
+                  <p style="color: #991b1b; font-size: 15px; line-height: 1.6; margin-bottom: 24px; background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    ${eventDetails.description.substring(0, 250)}${eventDetails.description.length > 250 ? '...' : ''}
                   </p>
                 ` : ''}
                 
-                <div style="margin: 16px 0;">
+                <div style="margin: 24px 0;">
                   ${startTime ? `
-                    <p style="margin: 8px 0; color: #374151; font-size: 14px;">
-                      <strong>📅 Date & Time:</strong> ${formatTime(startTime)}
-                    </p>
+                    <div style="margin: 12px 0; color: #7f1d1d; font-size: 15px; display: flex; align-items: center;">
+                      <span style="font-weight: 600; min-width: 140px; display: inline-block;">📅 Date & Time:</span>
+                      <span style="font-weight: 500;">${formatTime(startTime)}</span>
+                    </div>
                   ` : ''}
                   
                   ${eventDetails.platform ? `
-                    <p style="margin: 8px 0; color: #374151; font-size: 14px;">
-                      <strong>💻 Platform:</strong> ${eventDetails.platform}
-                    </p>
+                    <div style="margin: 12px 0; color: #7f1d1d; font-size: 15px; display: flex; align-items: center;">
+                      <span style="font-weight: 600; min-width: 140px; display: inline-block;">💻 Platform:</span>
+                      <span style="font-weight: 500;">${eventDetails.platform}</span>
+                    </div>
                   ` : ''}
                   
                   ${eventDetails.organized_by ? `
-                    <p style="margin: 8px 0; color: #374151; font-size: 14px;">
-                      <strong>🏢 Organized by:</strong> ${eventDetails.organized_by}
-                    </p>
+                    <div style="margin: 12px 0; color: #7f1d1d; font-size: 15px; display: flex; align-items: center;">
+                      <span style="font-weight: 600; min-width: 140px; display: inline-block;">🏢 Organized by:</span>
+                      <span style="font-weight: 500;">${eventDetails.organized_by}</span>
+                    </div>
                   ` : ''}
                 </div>
                 
-                ${eventDetails.meeting_link ? `
-                  <div style="margin-top: 20px;">
+                <!-- Action Buttons -->
+                <div style="margin-top: 32px; display: flex; gap: 16px; flex-wrap: wrap;">
+                  ${eventDetails.meeting_link ? `
                     <a href="${eventDetails.meeting_link}" 
-                       style="display: inline-block; background-color: #ef4444; color: white; padding: 12px 24px; 
-                              text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px;">
-                      Join Event
+                       style="display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 14px 28px; 
+                              text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; 
+                              box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); transition: all 0.2s;">
+                      🚀 Join Event
                     </a>
-                  </div>
-                ` : ''}
+                  ` : ''}
+                  
+                  ${calendarLink ? `
+                    <a href="${calendarLink}" 
+                       style="display: inline-block; background: white; color: #ef4444; padding: 14px 28px; 
+                              text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;
+                              border: 2px solid #ef4444; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);">
+                      📅 Add to Calendar
+                    </a>
+                  ` : ''}
+                </div>
               </div>
               
-              <p style="color: #374151; font-size: 16px; line-height: 1.5;">
-                We look forward to seeing you there! If you have any questions, please don't hesitate to reach out.
+              <!-- Next Steps Section -->
+              <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 32px 0; border-left: 4px solid #ef4444;">
+                <h3 style="margin-top: 0; margin-bottom: 16px; color: #1f2937; font-size: 18px; font-weight: 600;">
+                  📋 Next Steps
+                </h3>
+                <ul style="color: #4b5563; font-size: 15px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                  <li style="margin-bottom: 8px;">Save the event date and time in your calendar</li>
+                  <li style="margin-bottom: 8px;">Test your internet connection and platform access beforehand</li>
+                  <li style="margin-bottom: 8px;">Prepare any questions you'd like to ask during the event</li>
+                  <li style="margin-bottom: 0;">Join the event 5 minutes early to ensure smooth participation</li>
+                </ul>
+              </div>
+              
+              <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+                We look forward to seeing you there! If you have any questions or need assistance, please don't hesitate to reach out to our support team.
               </p>
               
-              <p style="color: #374151; font-size: 16px; line-height: 1.5; margin-bottom: 0;">
+              <p style="color: #1f2937; font-size: 16px; line-height: 1.6; margin-bottom: 0; font-weight: 500;">
                 Best regards,<br>
-                <strong>The ${eventDetails.organized_by || 'Event'} Team</strong>
+                <strong style="color: #ef4444;">The ${eventDetails.organized_by || 'PicoCareer'} Team</strong>
               </p>
             </div>
             
-            <!-- Footer -->
-            <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">
-                © ${new Date().getFullYear()} ${eventDetails.organized_by || 'Event Platform'}. All rights reserved.
+            <!-- Enhanced Footer -->
+            <div style="background: linear-gradient(135deg, #f9fafb, #f3f4f6); padding: 32px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <div style="margin-bottom: 24px;">
+                <a href="https://picocareer.com" style="display: inline-block; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 0 8px;">
+                  Visit PicoCareer
+                </a>
+                <a href="https://picocareer.com/contact" style="display: inline-block; background: white; color: #ef4444; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; border: 2px solid #ef4444; margin: 0 8px;">
+                  Contact Support
+                </a>
+              </div>
+              <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
+                © ${new Date().getFullYear()} ${eventDetails.organized_by || 'PicoCareer'}. All rights reserved.<br>
+                Professional development platform for career growth and networking.
               </p>
             </div>
           </div>
@@ -211,7 +258,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send email using Resend
+    // Send email using Resend with enhanced subject
     const emailResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -221,7 +268,7 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: 'PicoCareer Events <events@picocareer.com>',
         to: [registrationEmail],
-        subject: `Event Confirmation: ${cleanEventTitle}`,
+        subject: `🗓️ Event Confirmation: ${cleanEventTitle}`,
         html: emailHtml,
       }),
     });
