@@ -9,6 +9,12 @@ export interface MenteeEssayResponse {
   version: number;
   created_at: string;
   updated_at: string;
+  prompt?: {
+    id: string;
+    title: string;
+    description: string;
+    category: EssayPromptCategory;
+  };
 }
 
 export interface MenteeProject {
@@ -16,7 +22,7 @@ export interface MenteeProject {
   mentee_id: string;
   title: string;
   description?: string;
-  status: 'completed' | 'in_progress' | 'planned';
+  status: ProjectStatus;
   start_date?: string;
   end_date?: string;
   github_url?: string;
@@ -28,3 +34,37 @@ export interface MenteeProject {
   created_at: string;
   updated_at: string;
 }
+
+export interface MenteeAcademicRecord {
+  id: string;
+  mentee_id: string;
+  institution_name: string;
+  degree_type: string;
+  major: string;
+  gpa?: number;
+  graduation_date?: string;
+  status: AcademicStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MenteeCourse {
+  id: string;
+  mentee_id: string;
+  course_name: string;
+  course_code?: string;
+  instructor?: string;
+  credits?: number;
+  grade?: string;
+  semester: string;
+  year: number;
+  status: CourseStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ProjectStatus = 'completed' | 'in_progress' | 'planned';
+export type CourseStatus = 'completed' | 'in_progress' | 'enrolled' | 'dropped';
+export type AcademicStatus = 'current' | 'graduated' | 'transferred' | 'withdrawn';
+export type EssayPromptCategory = 'personal' | 'academic' | 'career' | 'extracurricular' | 'leadership';
+export type InterestCategory = 'academic' | 'career' | 'personal' | 'extracurricular';
