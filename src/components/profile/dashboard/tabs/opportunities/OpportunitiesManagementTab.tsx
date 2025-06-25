@@ -2,58 +2,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { OpportunityWithAuthor } from "@/types/opportunity/types";
 import { OpportunitiesDataTable } from "./OpportunitiesDataTable";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export function OpportunitiesManagementTab() {
-  const [selectedOpportunity, setSelectedOpportunity] = useState<OpportunityWithAuthor | null>(null);
-
-  const { data: opportunities = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['admin-opportunities'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select(`
-          *,
-          profiles!opportunities_author_id_fkey(
-            id,
-            full_name,
-            email,
-            avatar_url
-          )
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      return data.map(opp => ({
-        ...opp,
-        author: opp.profiles
-      })) as OpportunityWithAuthor[];
-    }
-  });
-
-  const handleEditOpportunity = (opportunityId: string) => {
-    console.log('Edit opportunity:', opportunityId);
-  };
-
-  const handleDeleteOpportunity = (opportunityId: string) => {
-    console.log('Delete opportunity:', opportunityId);
-  };
-
-  const handleApproveOpportunity = (opportunityId: string) => {
-    console.log('Approve opportunity:', opportunityId);
-  };
-
-  const handleRejectOpportunity = (opportunityId: string) => {
-    console.log('Reject opportunity:', opportunityId);
-  };
-
-  const handleDataChange = () => {
-    refetch();
-  };
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
 
   return (
     <div className="space-y-6">
@@ -66,14 +20,9 @@ export function OpportunitiesManagementTab() {
       </div>
       
       <OpportunitiesDataTable 
-        opportunities={opportunities}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        onEdit={handleEditOpportunity}
-        onDelete={handleDeleteOpportunity}
-        onApprove={handleApproveOpportunity}
-        onReject={handleRejectOpportunity}
+        searchQuery={searchQuery}
+        selectedType={selectedType}
+        selectedLocation={selectedLocation}
       />
     </div>
   );

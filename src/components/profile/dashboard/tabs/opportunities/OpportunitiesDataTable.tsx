@@ -40,11 +40,11 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
         .order('created_at', { ascending: false });
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+        query = query.or(`title.ilike.%${searchQuery}%,provider_name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
 
       if (selectedType && selectedType !== 'all') {
-        query = query.eq('employment_type', selectedType);
+        query = query.eq('opportunity_type', selectedType);
       }
 
       if (selectedLocation && selectedLocation !== 'all') {
@@ -148,7 +148,7 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
                 />
               </TableHead>
               <TableHead>Title</TableHead>
-              <TableHead>Company</TableHead>
+              <TableHead>Provider</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
@@ -173,14 +173,14 @@ export function OpportunitiesDataTable({ searchQuery, selectedType, selectedLoca
                   />
                 </TableCell>
                 <TableCell className="font-medium">{opportunity.title}</TableCell>
-                <TableCell>{opportunity.company_name}</TableCell>
+                <TableCell>{opportunity.provider_name}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{opportunity.employment_type}</Badge>
+                  <Badge variant="outline">{opportunity.opportunity_type}</Badge>
                 </TableCell>
                 <TableCell>{opportunity.location}</TableCell>
                 <TableCell>
                   <Badge 
-                    variant={opportunity.status === 'Approved' ? 'default' : 'secondary'}
+                    variant={opportunity.status === 'Active' ? 'default' : 'secondary'}
                   >
                     {opportunity.status}
                   </Badge>

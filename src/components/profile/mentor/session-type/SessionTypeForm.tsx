@@ -16,20 +16,22 @@ import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
 
+// Valid meeting platforms based on database schema
+type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { getSetting } = useUserSettings(profileId);
   
-  // Form state with default values that will be updated
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
       type: undefined as unknown as SessionTypeEnum,
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: [],
+      meeting_platform: [] as MeetingPlatform[],
       telegram_username: "",
       phone_number: "",
       custom_type_name: "",
@@ -81,7 +83,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
     try {
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
-      console.log('Profile ID:', profileId);
 
       // Validate custom type name if Custom type is selected
       if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
@@ -143,14 +144,14 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         }
       }
 
-      // Create new session type
+      // Create new session type with correct field names
       const sessionData = {
         profile_id: profileId,
         type: data.type,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform,
+        meeting_platform: data.meeting_platform as MeetingPlatform[],
         telegram_username: showTelegramField ? data.telegram_username || null : null,
         phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
@@ -203,7 +204,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={{ control: methods.control }}
+              form={methods}
               availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
             />
 
@@ -257,10 +258,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={{ control: methods.control }} />
+            <PlatformSelect form={methods} />
 
             <PlatformFields
-              form={{ control: methods.control }}
+              form={methods}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

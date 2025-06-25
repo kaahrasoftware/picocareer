@@ -1,325 +1,397 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { format } from "https://deno.land/x/date_fns@v2.22.1/index.js";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-interface EmailRequest {
-  registrationId: string;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Event-specific styling (red theme for events)
-const eventStyles = {
-  primary: '#ef4444',
-  secondary: '#b91c1c',
-  accent: '#dc2626'
-};
-
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { registrationId }: EmailRequest = await req.json();
+    const { registrationId, eventId, email, fullName } = await req.json()
+    
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    console.log('Fetching registration details for:', registrationId);
+    // Get event details
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .single()
 
-    // Get registration details with event and profile information
-    const { data: registration, error: regError } = await supabase
-      .from('event_registrations')
-      .select(`
-        *,
-        event:events(
-          title,
-          description,
-          start_time,
-          end_time,
-          platform,
-          meeting_link,
-          organized_by
-        ),
-        profile:profiles(
-          full_name,
-          email
-        )
-      `)
-      .eq('id', registrationId)
-      .single();
-
-    if (regError || !registration) {
-      console.error('Error fetching registration:', regError);
-      throw new Error('Registration not found');
+    if (eventError) {
+      throw new Error(`Failed to fetch event: ${eventError.message}`)
     }
 
-    console.log('Registration details:', registration);
-    console.log('Original event title:', JSON.stringify(registration.event.title));
+    // Format event date and time with timezone
+    const eventDate = format(new Date(event.start_time), 'EEEE, MMMM do, yyyy')
+    const eventTime = format(new Date(event.start_time), 'h:mm a')
+    const eventEndTime = format(new Date(event.end_time), 'h:mm a')
+    const eventTimezone = event.timezone || 'EST'
+    const timeDisplay = `${eventTime} - ${eventEndTime} ${eventTimezone}`
 
-    const eventDate = new Date(registration.event.start_time).toLocaleString('en-US', {
-      dateStyle: 'full',
-      timeStyle: 'short'
-    });
+    // Blue-themed event styling
+    const eventStyles = {
+      primary: '#012169',      // Dark blue
+      secondary: '#00A6D4',    // Light blue  
+      accent: '#0077BE',       // Medium blue
+      background: 'linear-gradient(135deg, #012169 0%, #0077BE 50%, #00A6D4 100%)',
+      lightBackground: '#f0f8ff'
+    }
 
-    const eventTime = new Date(registration.event.start_time).toLocaleString('en-US', {
-      timeStyle: 'short'
-    });
-
-    const eventEndTime = new Date(registration.event.end_time).toLocaleString('en-US', {
-      timeStyle: 'short'
-    });
-
-    // Enhanced cleaning for the event title - handle all problematic characters
-    const cleanEventTitle = registration.event.title
-      .replace(/\\n/g, ' ')      // Handle escaped newlines
-      .replace(/\n/g, ' ')       // Handle literal newlines  
-      .replace(/\\r/g, ' ')      // Handle escaped carriage returns
-      .replace(/\r/g, ' ')       // Handle literal carriage returns
-      .replace(/\\t/g, ' ')      // Handle escaped tabs
-      .replace(/\t/g, ' ')       // Handle literal tabs
-      .replace(/\s+/g, ' ')      // Replace multiple spaces with single space
-      .trim()                    // Remove leading/trailing whitespace
-      .substring(0, 100);        // Limit length for email best practices
-
-    console.log('Cleaned event title:', JSON.stringify(cleanEventTitle));
-
-    const recipientName = registration.first_name || 'Valued Attendee';
-    const siteUrl = 'https://picocareer.com';
-    const unsubscribeUrl = `${siteUrl}/unsubscribe`;
-
-    // Generate calendar link (Google Calendar)
-    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(cleanEventTitle)}&dates=${new Date(registration.event.start_time).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(registration.event.end_time).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(registration.event.description)}&location=${encodeURIComponent(registration.event.platform)}`;
-
-    // Professional email template
-    const emailContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Event Registration Confirmed</title>
-        </head>
-        <body style="margin: 0; padding: 20px; background-color: #f9fafb; 
-                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; 
-                      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
-            
-            <!-- Header with event theme -->
-            <div style="
-              background: linear-gradient(135deg, ${eventStyles.primary}, ${eventStyles.secondary});
-              color: white;
-              padding: 32px 24px;
-              text-align: center;
-            ">
-              <div style="font-size: 48px; margin-bottom: 8px;">🗓️</div>
-              <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">
-                Registration Confirmed!
-              </h1>
-              <p style="margin: 0; font-size: 16px; opacity: 0.9;">
-                You're all set for this exciting event
-              </p>
-            </div>
-            
-            <!-- Main content -->
-            <div style="padding: 32px 24px;">
-              <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 1.5;">
-                Hello ${recipientName},
-              </p>
-              
-              <p style="margin: 0 0 32px 0; color: #374151; font-size: 16px; line-height: 1.5;">
-                Great news! Your registration for <strong>${cleanEventTitle}</strong> has been confirmed. 
-                We're excited to have you join us for this event.
-              </p>
-
-              <!-- Event details card -->
-              <div style="
-                background-color: #f9fafb;
-                border-left: 4px solid ${eventStyles.accent};
+    // Construct the email HTML with blue theme and company logo
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Confirmation - ${event.title}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(1, 33, 105, 0.1);
+        }
+        .header {
+            background: ${eventStyles.background};
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: ${eventStyles.primary};
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        .event-card {
+            background: ${eventStyles.lightBackground};
+            border: 2px solid ${eventStyles.secondary};
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .event-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: ${eventStyles.primary};
+            margin-bottom: 20px;
+        }
+        .event-details {
+            display: grid;
+            gap: 15px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+        }
+        .detail-icon {
+            width: 20px;
+            height: 20px;
+            background: ${eventStyles.accent};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .detail-text {
+            color: #333;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: ${eventStyles.primary};
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: ${eventStyles.primary};
+            color: white;
+        }
+        .btn-primary:hover {
+            background: ${eventStyles.accent};
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: white;
+            color: ${eventStyles.primary};
+            border: 2px solid ${eventStyles.primary};
+        }
+        .btn-secondary:hover {
+            background: ${eventStyles.primary};
+            color: white;
+        }
+        .next-steps {
+            background: #f8f9fa;
+            border-left: 4px solid ${eventStyles.secondary};
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .next-steps h3 {
+            color: ${eventStyles.primary};
+            margin: 0 0 15px;
+        }
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: ${eventStyles.primary};
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
                 border-radius: 8px;
-                padding: 24px;
-                margin-bottom: 32px;
-              ">
-                <h2 style="margin: 0 0 16px 0; color: ${eventStyles.primary}; font-size: 20px; font-weight: 600;">
-                  📅 Event Details
-                </h2>
-                
-                <div style="margin-bottom: 12px;">
-                  <strong style="color: #374151;">Event:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${cleanEventTitle}</span>
-                </div>
-                
-                <div style="margin-bottom: 12px;">
-                  <strong style="color: #374151;">Date & Time:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${eventDate}</span>
-                </div>
-                
-                <div style="margin-bottom: 12px;">
-                  <strong style="color: #374151;">Duration:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${eventTime} - ${eventEndTime}</span>
-                </div>
-                
-                <div style="margin-bottom: 12px;">
-                  <strong style="color: #374151;">Platform:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${registration.event.platform}</span>
-                </div>
-                
-                ${registration.event.organized_by ? `
-                  <div style="margin-bottom: 12px;">
-                    <strong style="color: #374151;">Organized by:</strong>
-                    <span style="color: #6b7280; margin-left: 8px;">${registration.event.organized_by}</span>
-                  </div>
-                ` : ''}
-              </div>
-
-              <!-- Event description -->
-              ${registration.event.description ? `
-                <div style="margin-bottom: 32px;">
-                  <h3 style="margin: 0 0 16px 0; color: ${eventStyles.primary}; font-size: 18px; font-weight: 600;">
-                    About This Event
-                  </h3>
-                  <div style="color: #4b5563; font-size: 14px; line-height: 1.6; background-color: #f9fafb; padding: 16px; border-radius: 6px;">
-                    ${registration.event.description.replace(/\n/g, '<br>')}
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Call-to-action buttons -->
-              <div style="text-align: center; margin-bottom: 32px;">
-                ${registration.event.meeting_link ? `
-                  <a 
-                    href="${registration.event.meeting_link}" 
-                    style="
-                      display: inline-block;
-                      background-color: ${eventStyles.accent};
-                      color: white;
-                      padding: 14px 28px;
-                      text-decoration: none;
-                      border-radius: 6px;
-                      font-weight: 600;
-                      font-size: 16px;
-                      margin: 8px;
-                      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
-                    "
-                  >
-                    🚀 Join Event
-                  </a>
-                ` : ''}
-                
-                <a 
-                  href="${calendarUrl}" 
-                  style="
-                    display: inline-block;
-                    background-color: white;
-                    color: ${eventStyles.accent};
-                    border: 2px solid ${eventStyles.accent};
-                    padding: 12px 26px;
-                    text-decoration: none;
-                    border-radius: 6px;
-                    font-weight: 600;
-                    font-size: 16px;
-                    margin: 8px;
-                  "
-                >
-                  📅 Add to Calendar
-                </a>
-              </div>
-
-              <!-- Next steps -->
-              <div style="
-                background-color: #fef3c7;
-                border: 1px solid #fbbf24;
-                border-radius: 6px;
-                padding: 16px;
-                margin-bottom: 24px;
-              ">
-                <h4 style="margin: 0 0 8px 0; color: #92400e; font-size: 16px; font-weight: 600;">
-                  📋 Next Steps
-                </h4>
-                <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px;">
-                  <li style="margin-bottom: 4px;">Save the event date and time in your calendar</li>
-                  ${registration.event.meeting_link ? '<li style="margin-bottom: 4px;">Use the "Join Event" button above when it\'s time</li>' : ''}
-                  <li style="margin-bottom: 4px;">Prepare any questions you'd like to ask</li>
-                  <li>Check your email for any updates about the event</li>
-                </ul>
-              </div>
-
-              <p style="margin: 0 0 16px 0; color: #374151; font-size: 14px; line-height: 1.5;">
-                We look forward to seeing you at the event! If you have any questions, feel free to contact us.
-              </p>
-              
-              <p style="margin: 0; color: #374151; font-size: 14px; font-weight: 500;">
-                Best regards,<br>
-                The PicoCareer Team
-              </p>
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/images/email-logos/66e432a2-6061-4f7f-ada7-69c35feecf41.png" alt="PicoCareer Logo" style="height: 60px; width: auto;">
+            </div>
+            <h1>🎉 You're Registered!</h1>
+            <p>Your spot is confirmed</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hi ${fullName},
             </div>
             
-            <!-- Footer -->
-            <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0 0 16px 0; color: #4b5563; font-size: 14px;">
-                Visit our website for more career opportunities and events
-              </p>
-              <a 
-                href="${siteUrl}" 
-                style="
-                  display: inline-block;
-                  background-color: ${eventStyles.accent};
-                  color: white;
-                  padding: 12px 24px;
-                  text-decoration: none;
-                  border-radius: 6px;
-                  font-weight: 500;
-                  font-size: 14px;
-                "
-              >
-                Visit PicoCareer
-              </a>
+            <div class="message">
+                Great news! Your registration for <strong>${event.title}</strong> has been confirmed. We're excited to have you join us for this valuable learning experience.
             </div>
-
-            <!-- Legal footer -->
-            <div style="padding: 24px; text-align: center; color: #6b7280; font-size: 12px;">
-              <p style="margin: 0 0 8px 0;">© ${new Date().getFullYear()} PicoCareer. All rights reserved.</p>
-              <a 
-                href="${unsubscribeUrl}" 
-                style="color: #6b7280; text-decoration: underline;"
-              >
-                Unsubscribe from notifications
-              </a>
+            
+            <div class="event-card">
+                <div class="event-title">${event.title}</div>
+                <div class="event-details">
+                    <div class="detail-item">
+                        <div class="detail-icon">📅</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Date:</span> ${eventDate}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon">🕐</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Time:</span> ${timeDisplay}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-icon">🌐</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Platform:</span> ${event.platform}
+                        </div>
+                    </div>
+                    ${event.facilitator ? `
+                    <div class="detail-item">
+                        <div class="detail-icon">👨‍🏫</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Facilitator:</span> ${event.facilitator}
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${event.organized_by ? `
+                    <div class="detail-item">
+                        <div class="detail-icon">🏢</div>
+                        <div class="detail-text">
+                            <span class="detail-label">Organized by:</span> ${event.organized_by}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
             </div>
-          </div>
-        </body>
-      </html>
-    `;
+            
+            <div class="cta-section">
+                ${event.meeting_link ? `
+                <a href="${event.meeting_link}" class="btn btn-primary">
+                    🚀 Join Event
+                </a>
+                ` : ''}
+                <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${format(new Date(event.start_time), 'yyyyMMdd\'T\'HHmmss')}/${format(new Date(event.end_time), 'yyyyMMdd\'T\'HHmmss')}" class="btn btn-secondary">
+                    📅 Add to Calendar
+                </a>
+            </div>
+            
+            <div class="next-steps">
+                <h3>Next Steps</h3>
+                <ul>
+                    <li>Mark your calendar for ${eventDate} at ${timeDisplay}</li>
+                    <li>Ensure you have a stable internet connection</li>
+                    <li>Join the event 5 minutes early for the best experience</li>
+                    <li>Prepare any questions you'd like to ask during the session</li>
+                    ${event.meeting_link ? '<li>Use the "Join Event" button above when it\'s time</li>' : ''}
+                </ul>
+            </div>
+            
+            <div class="message">
+                If you have any questions or need to make changes to your registration, please don't hesitate to reach out to our support team.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>PicoCareer</strong></p>
+            <p>Empowering your career journey, one step at a time</p>
+            <p>
+                <a href="mailto:support@picocareer.com">support@picocareer.com</a> | 
+                <a href="https://picocareer.com">picocareer.com</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This email was sent because you registered for an event on PicoCareer.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+    `
 
-    const emailResponse = await resend.emails.send({
-      from: "PicoCareer <info@picocareer.com>",
-      to: [registration.email],
-      subject: `🗓️ Event Confirmed: ${cleanEventTitle}`,
-      html: emailContent,
-    });
+    // Send email using Resend
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY not configured')
+    }
 
-    console.log('Email sent successfully:', emailResponse);
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'PicoCareer Events <events@picocareer.com>',
+        to: [email],
+        subject: `✅ Registration Confirmed: ${event.title}`,
+        html: emailHtml,
+      }),
+    })
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (error: any) {
-    console.error("Error in send-event-confirmation function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text()
+      throw new Error(`Failed to send email: ${errorText}`)
+    }
+
+    const emailResult = await emailResponse.json()
+
+    // Update email log
+    await supabase
+      .from('event_email_logs')
+      .update({
+        status: 'sent',
+        sent_at: new Date().toISOString()
+      })
+      .eq('registration_id', registrationId)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        emailId: emailResult.id,
+        message: 'Confirmation email sent successfully'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Error sending confirmation email:', error)
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || 'Failed to send confirmation email' 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-};
-
-serve(handler);
+})
