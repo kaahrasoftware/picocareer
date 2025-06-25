@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SelectWithCustomOption } from "./SelectWithCustomOption";
 
@@ -29,6 +30,7 @@ export function CustomSelect({
   return (
     <SelectWithCustomOption
       value={value}
+      onValueChange={onSave}
       options={options}
       placeholder={placeholder}
       tableName={tableName}

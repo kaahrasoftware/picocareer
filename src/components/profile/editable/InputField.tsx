@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { SelectWithCustomOption } from "./SelectWithCustomOption";
@@ -65,6 +66,7 @@ export function InputField({ value, onChange, onSave, onCancel, fieldName }: Inp
     <div className="space-y-4">
       <SelectWithCustomOption
         value={value}
+        onValueChange={onChange}
         options={options}
         placeholder={placeholder}
         tableName={tableName}
