@@ -73,7 +73,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          profile_id: profileId,
+          mentor_profile_id: profileId,
           day_of_week: data.day_of_week,
           start_time: data.start_time,
           end_time: data.end_time,
@@ -168,7 +168,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         </Button>
       </form>
 
-      <ExistingTimeSlots profile_id={profileId} onUpdate={onSuccess} />
+      <ExistingTimeSlots mentor_profile_id={profileId} onUpdate={onSuccess} />
     </div>
   );
 }
