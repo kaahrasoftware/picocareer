@@ -57,6 +57,3 @@ verify_jwt = true
 
 [functions.send-event-confirmation]
 verify_jwt = true
-
-[functions.get-event-email-logs]
-verify_jwt = true

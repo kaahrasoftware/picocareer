@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Profile } from '@/types/database/profiles';
 import { EditableField } from '../EditableField';
@@ -14,6 +13,7 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
   // Don't render anything for mentees
   if (isMentee) return null;
 
+  // Add error boundary and logging for the careers query
   const { data: careers, error: careersError } = useQuery({
     queryKey: ['careers-for-profile'],
     queryFn: async () => {
@@ -43,14 +43,14 @@ export function ProfessionalInfoSection({ profile, isMentee }: ProfessionalInfoS
       <h4 className="font-semibold">Professional Experience</h4>
       <EditableField
         label="Position"
-        value={profile?.current_position}
-        fieldName="current_position"
+        value={profile?.career?.title}
+        fieldName="position"
         profileId={profile?.id || ''}
       />
       <EditableField
         label="Company"
-        value={profile?.current_company}
-        fieldName="current_company"
+        value={profile?.company_name}
+        fieldName="company_name"
         profileId={profile?.id || ''}
       />
       <EditableField

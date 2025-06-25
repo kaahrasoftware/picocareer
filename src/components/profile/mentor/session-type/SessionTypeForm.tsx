@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps, SessionTypeFormData, SessionTypeEnum } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
@@ -25,11 +26,11 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: '',
+      type: undefined as unknown as SessionTypeEnum,
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: [] as string[],
+      meeting_platform: [] as MeetingPlatform[],
       telegram_username: "",
       phone_number: "",
       custom_type_name: "",
@@ -82,6 +83,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
 
+      // Validate custom type name if Custom type is selected
       if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
         toast({
           title: "Error",
@@ -122,7 +124,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           .from('mentor_session_types')
           .select('id, type')
           .eq('profile_id', profileId)
-          .eq('type', data.type)
+          .eq('type', data.type as string)
           .maybeSingle();
 
         if (checkError) {
@@ -144,7 +146,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       // Create new session type with correct field names
       const sessionData = {
         profile_id: profileId,
-        type: data.type,
+        type: data.type as string,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
@@ -175,6 +177,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
       console.log('Successfully created session type:', newSessionType);
       
+      // Invalidate and refetch query to update the UI
       queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
@@ -201,7 +204,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
           <div className="space-y-4">
             <SessionTypeSelect
               form={methods}
-              availableTypes={existingTypes?.map(type => type.type) || []}
+              availableTypes={existingTypes?.map(type => type.type as SessionTypeEnum) || []}
             />
 
             {isCustomType && (
