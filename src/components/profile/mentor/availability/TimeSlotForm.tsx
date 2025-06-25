@@ -7,7 +7,7 @@ import { TimeSlotInputs } from './TimeSlotInputs';
 import { ExistingTimeSlots } from './ExistingTimeSlots';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 interface TimeSlotFormProps {
   profileId: string;
@@ -54,6 +54,9 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         const startDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${selectedStartTime}:00`);
         const endDateTime = new Date(`${format(date, 'yyyy-MM-dd')}T${selectedEndTime}:00`);
 
+        // Calculate timezone offset
+        const timezoneOffset = -startDateTime.getTimezoneOffset();
+
         const { error } = await supabase
           .from('mentor_availability')
           .insert({
@@ -61,7 +64,11 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
             start_date_time: startDateTime.toISOString(),
             end_date_time: endDateTime.toISOString(),
             is_available: true,
-            reference_timezone: userTimezone
+            reference_timezone: userTimezone,
+            timezone_offset: timezoneOffset,
+            dst_aware: true,
+            recurring: isRecurring,
+            day_of_week: isRecurring ? date.getDay() : null
           });
 
         if (error) throw error;
@@ -130,7 +137,7 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
         </CardContent>
       </Card>
 
-      <ExistingTimeSlots profileId={profileId} />
+      <ExistingTimeSlots profile_id={profileId} />
     </div>
   );
 }
