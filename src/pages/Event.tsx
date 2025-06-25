@@ -7,9 +7,21 @@ import { EventHeader } from "@/components/event/EventHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { EventRegistrationDialog } from "@/components/event/EventRegistrationDialog";
+import { EventDetailsDialog } from "@/components/event/EventDetailsDialog";
 
 export default function Event() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [showRegistrationDialog, setShowRegistrationDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
+  const [registeringEvent, setRegisteringEvent] = useState<string | null>(null);
+  
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
@@ -23,6 +35,65 @@ export default function Event() {
       return data || [];
     },
   });
+
+  // Fetch user's event registrations
+  const { data: userRegistrations } = useQuery({
+    queryKey: ['user-event-registrations', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('event_id')
+        .eq('profile_id', user.id);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Update registered events set when data loads
+  useState(() => {
+    if (userRegistrations) {
+      const registeredIds = new Set(userRegistrations.map(reg => reg.event_id));
+      setRegisteredEvents(registeredIds);
+    }
+  });
+
+  const handleRegister = async (eventId: string) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to register for events.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const event = events?.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setShowRegistrationDialog(true);
+    }
+  };
+
+  const handleViewDetails = (eventId: string) => {
+    const event = events?.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setShowDetailsDialog(true);
+    }
+  };
+
+  const handleRegistrationSuccess = (eventId: string) => {
+    setRegisteredEvents(prev => new Set([...prev, eventId]));
+    setShowRegistrationDialog(false);
+    toast({
+      title: "Registration Successful",
+      description: "You have been registered for the event!",
+    });
+  };
 
   const filteredEvents = events?.filter(event =>
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,7 +133,14 @@ export default function Event() {
           ) : filteredEvents && filteredEvents.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard 
+                  key={event.id} 
+                  event={event}
+                  onRegister={handleRegister}
+                  onViewDetails={handleViewDetails}
+                  isRegistering={registeringEvent === event.id}
+                  isRegistered={registeredEvents.has(event.id)}
+                />
               ))}
             </div>
           ) : (
@@ -77,6 +155,23 @@ export default function Event() {
           )}
         </CardContent>
       </Card>
+
+      {showRegistrationDialog && selectedEvent && (
+        <EventRegistrationDialog
+          event={selectedEvent}
+          isOpen={showRegistrationDialog}
+          onClose={() => setShowRegistrationDialog(false)}
+          onRegistrationSuccess={() => handleRegistrationSuccess(selectedEvent.id)}
+        />
+      )}
+
+      {showDetailsDialog && selectedEvent && (
+        <EventDetailsDialog
+          event={selectedEvent}
+          isOpen={showDetailsDialog}
+          onClose={() => setShowDetailsDialog(false)}
+        />
+      )}
     </div>
   );
 }
