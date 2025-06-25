@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -141,10 +142,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         }
       }
 
-      // Create new session type with correct field names
+      // Create new session type with proper type casting
       const sessionData = {
         profile_id: profileId,
-        type: data.type,
+        type: data.type as any, // Type cast to handle enum
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,

@@ -64,21 +64,30 @@ export function TimeSlotForm({ profileId, onSuccess }: TimeSlotFormProps) {
     }
   });
 
-  const selectedDay = watch('day_of_week');
-  const selectedTimezone = watch('timezone');
-
   const onSubmit = async (data: TimeSlotFormData) => {
     setIsSubmitting(true);
     try {
+      // Create datetime strings for the database
+      const today = new Date();
+      const startDateTime = new Date(today);
+      const endDateTime = new Date(today);
+      
+      const [startHour, startMinute] = data.start_time.split(':').map(Number);
+      const [endHour, endMinute] = data.end_time.split(':').map(Number);
+      
+      startDateTime.setHours(startHour, startMinute, 0, 0);
+      endDateTime.setHours(endHour, endMinute, 0, 0);
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: profileId,
           day_of_week: data.day_of_week,
-          start_time: data.start_time,
-          end_time: data.end_time,
+          start_date_time: startDateTime.toISOString(),
+          end_date_time: endDateTime.toISOString(),
           timezone: data.timezone,
-          is_recurring: true
+          is_recurring: true,
+          is_available: true
         });
 
       if (error) throw error;
