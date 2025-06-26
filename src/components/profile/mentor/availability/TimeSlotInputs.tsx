@@ -1,19 +1,17 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface TimeSlotInputsProps {
-  timeSlots: any[];
-  selectedStartTime: string;
-  selectedEndTime: string;
+  timeSlots: string[];
+  selectedStartTime?: string;
+  selectedEndTime?: string;
   isRecurring: boolean;
   userTimezone: string;
   onStartTimeSelect: (time: string) => void;
   onEndTimeSelect: (time: string) => void;
-  onRecurringChange: () => void;
+  onRecurringChange: (value: boolean) => void;
 }
 
 export function TimeSlotInputs({
@@ -24,56 +22,62 @@ export function TimeSlotInputs({
   userTimezone,
   onStartTimeSelect,
   onEndTimeSelect,
-  onRecurringChange
+  onRecurringChange,
 }: TimeSlotInputsProps) {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Start Time</Label>
-          <Select value={selectedStartTime} onValueChange={onStartTimeSelect}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select start time" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeSlots.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <h4 className="font-medium mb-2">Start Time</h4>
+        <select
+          value={selectedStartTime}
+          onChange={(e) => onStartTimeSelect(e.target.value)}
+          className="w-full border border-input bg-background px-3 py-2 rounded-md"
+        >
+          <option value="">Select start time</option>
+          {timeSlots.map((time) => (
+            <option 
+              key={time} 
+              value={time}
+              disabled={selectedEndTime ? time >= selectedEndTime : false}
+            >
+              {time}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div>
-          <Label>End Time</Label>
-          <Select value={selectedEndTime} onValueChange={onEndTimeSelect}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select end time" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeSlots.map((slot) => (
-                <SelectItem key={slot} value={slot}>
-                  {slot}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div>
+        <h4 className="font-medium mb-2">End Time</h4>
+        <select
+          value={selectedEndTime}
+          onChange={(e) => onEndTimeSelect(e.target.value)}
+          className="w-full border border-input bg-background px-3 py-2 rounded-md"
+        >
+          <option value="">Select end time</option>
+          {timeSlots.map((time) => (
+            <option 
+              key={time} 
+              value={time}
+              disabled={selectedStartTime ? time <= selectedStartTime : false}
+            >
+              {time}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex items-center space-x-2">
-        <Checkbox
+        <Switch
           id="recurring"
           checked={isRecurring}
           onCheckedChange={onRecurringChange}
         />
-        <Label htmlFor="recurring">Repeat weekly</Label>
+        <Label htmlFor="recurring">Make this a weekly recurring availability</Label>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        Times shown in {userTimezone}
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Times shown in your timezone ({userTimezone})
+      </p>
     </div>
   );
 }

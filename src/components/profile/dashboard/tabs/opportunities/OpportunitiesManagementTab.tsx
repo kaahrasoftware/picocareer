@@ -5,8 +5,9 @@ import { Plus } from "lucide-react";
 import { OpportunitiesDataTable } from "./OpportunitiesDataTable";
 
 export function OpportunitiesManagementTab() {
-  // Mock data - replace with actual data fetching
-  const opportunities = [];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("all");
 
   return (
     <div className="space-y-6">
@@ -19,7 +20,9 @@ export function OpportunitiesManagementTab() {
       </div>
       
       <OpportunitiesDataTable 
-        opportunities={opportunities}
+        searchQuery={searchQuery}
+        selectedType={selectedType}
+        selectedLocation={selectedLocation}
       />
     </div>
   );

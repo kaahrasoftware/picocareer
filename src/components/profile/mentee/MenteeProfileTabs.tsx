@@ -69,11 +69,11 @@ export function MenteeProfileTabs({ profile, isEditing, onEditToggle }: MenteePr
           </TabsContent>
 
           <TabsContent value="projects">
-            <MenteeProjectsTab profile={profile} isEditing={isEditing} />
+            <MenteeProjectsTab profileId={profile.id} />
           </TabsContent>
 
           <TabsContent value="essays">
-            <MenteeEssaysTab profile={profile} isEditing={isEditing} />
+            <MenteeEssaysTab profileId={profile.id} />
           </TabsContent>
 
           <TabsContent value="interests">

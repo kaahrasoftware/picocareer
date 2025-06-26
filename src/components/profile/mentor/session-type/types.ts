@@ -1,36 +1,44 @@
 
+import { MeetingPlatform } from "@/types/calendar";
+import { SessionTypeEnum } from "@/types/session";
+
 export interface SessionTypeFormData {
-  type: string;
-  description: string;
+  type: SessionTypeEnum;
   duration: number;
   price: number;
-  meeting_platform: string[];
-  telegram_username?: string;
+  description?: string;
+  meeting_platform: MeetingPlatform[];
   phone_number?: string;
-  custom_type_name?: string;
+  telegram_username?: string;
+  custom_type_name?: string; // Added custom type name field
 }
-
-export const SessionTypeEnum = {
-  CAREER_GUIDANCE: 'career_guidance',
-  RESUME_REVIEW: 'resume_review',
-  INTERVIEW_PREP: 'interview_prep',
-  SKILL_DEVELOPMENT: 'skill_development',
-  NETWORKING: 'networking',
-  INDUSTRY_INSIGHTS: 'industry_insights',
-  PERSONAL_BRANDING: 'personal_branding',
-  GOAL_SETTING: 'goal_setting',
-  CUSTOM: 'Custom',
-  OTHER: 'other'
-} as const;
-
-export type SessionType = typeof SessionTypeEnum[keyof typeof SessionTypeEnum];
 
 export interface SessionTypeFormProps {
   profileId: string;
-  sessionType?: any;
   onSuccess: () => void;
   onCancel: () => void;
-  existingTypes?: any[];
+  existingTypes: Array<{
+    id: string;
+    type: string;
+    duration: number;
+    price: number;
+    description?: string | null;
+    meeting_platform?: MeetingPlatform[];
+    telegram_username?: string | null;
+    phone_number?: string | null;
+    custom_type_name?: string | null; // Added custom type name field
+  }>;
 }
 
-export type MeetingPlatform = 'Google Meet' | 'WhatsApp' | 'Telegram' | 'Phone Call';
+export const SESSION_TYPES = {
+  "Career Guidance": "Career Guidance",
+  "Mock Interview": "Mock Interview",
+  "Resume Review": "Resume Review",
+  "Technical Mentoring": "Technical Mentoring",
+  "Academic Advising": "Academic Advising",
+  "Industry Insights": "Industry Insights",
+  "SAT Exam Prep Advice": "SAT Exam Prep Advice",
+  "Custom": "Custom" // Added Custom type
+} as const;
+
+export type SessionTypeEnum = keyof typeof SESSION_TYPES;
