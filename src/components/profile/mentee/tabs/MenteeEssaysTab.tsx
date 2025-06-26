@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,27 +9,26 @@ import type { Profile } from "@/types/database/profiles";
 import type { EssayPromptCategory, MenteeEssayResponse } from "@/types/mentee-profile";
 
 interface MenteeEssaysTabProps {
-  profile: Profile;
+  profileId: string;
   isEditing: boolean;
 }
 
-const CATEGORY_COLORS: Record<EssayPromptCategory, string> = {
-  college_application: "bg-blue-100 text-blue-800",
-  scholarship: "bg-green-100 text-green-800",
-  personal_statement: "bg-purple-100 text-purple-800",
-  supplemental: "bg-orange-100 text-orange-800",
-  creative_writing: "bg-pink-100 text-pink-800",
-  academic_reflection: "bg-indigo-100 text-indigo-800"
+const categoryColorMapping: Record<EssayPromptCategory, string> = {
+  personal_statement: 'bg-blue-100 text-blue-800 border-blue-200',
+  supplemental: 'bg-green-100 text-green-800 border-green-200',
+  scholarship: 'bg-purple-100 text-purple-800 border-purple-200',
+  extracurricular: 'bg-orange-100 text-orange-800 border-orange-200',
+  academic: 'bg-red-100 text-red-800 border-red-200'
 };
 
-export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
+export function MenteeEssaysTab({ profileId, isEditing }: MenteeEssaysTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingEssay, setEditingEssay] = useState<MenteeEssayResponse | null>(null);
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
   
-  const { data: essayResponses = [], isLoading: responsesLoading } = useMenteeEssayResponses(profile.id);
+  const { data: essayResponses = [], isLoading: responsesLoading } = useMenteeEssayResponses(profileId);
   const { data: prompts = [], isLoading: promptsLoading } = useEssayPrompts();
-  const { deleteEssayResponse } = useMenteeDataMutations();
+  const { deleteEssayResponse, saveEssayResponse } = useMenteeDataMutations();
 
   const handleEdit = (essay: MenteeEssayResponse) => {
     setEditingEssay(essay);
@@ -59,6 +57,23 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
     setEditingEssay(null);
     setSelectedPromptId(null);
     setShowForm(true);
+  };
+
+  const handleSaveResponse = async (response: Partial<MenteeEssayResponse>) => {
+    try {
+      const responseData = {
+        mentee_id: profileId,
+        prompt_id: response.prompt_id!,
+        response_text: response.response_text || '',
+        is_draft: response.is_draft ?? true,
+        word_count: response.word_count || 0,
+        version: response.version || 1
+      };
+
+      saveEssayResponse.mutate(responseData);
+    } catch (error) {
+      console.error('Error saving essay response:', error);
+    }
   };
 
   if (responsesLoading || promptsLoading) {
@@ -92,7 +107,7 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium">{prompt.title}</h4>
-                        <Badge className={CATEGORY_COLORS[prompt.category]}>
+                        <Badge className={categoryColorMapping[prompt.category]}>
                           {prompt.category.replace('_', ' ')}
                         </Badge>
                         {prompt.word_limit && (
@@ -134,7 +149,7 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <CardTitle className="text-lg">{response.prompt?.title}</CardTitle>
-                    <Badge className={CATEGORY_COLORS[response.prompt?.category || 'personal_statement']}>
+                    <Badge className={categoryColorMapping[response.prompt?.category || 'personal_statement']}>
                       {response.prompt?.category.replace('_', ' ')}
                     </Badge>
                     {response.is_draft && (
@@ -204,9 +219,10 @@ export function MenteeEssaysTab({ profile, isEditing }: MenteeEssaysTabProps) {
 
       {showForm && (
         <MenteeEssayForm
-          menteeId={profile.id}
+          menteeId={profileId}
           essay={editingEssay}
           onClose={handleFormClose}
+          onSave={handleSaveResponse}
         />
       )}
     </div>

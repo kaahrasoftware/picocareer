@@ -1,121 +1,71 @@
 import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuthSession } from '@/hooks/useAuthSession';
-
-const scholarshipFormSchema = z.object({
-  title: z.string().min(2, {
-    message: "Title must be at least 2 characters.",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  eligibility_criteria: z.string().min(10, {
-    message: "Eligibility criteria must be at least 10 characters.",
-  }),
-  application_open_date: z.date(),
-  application_close_date: z.date(),
-  award_amount: z.string().refine((value) => {
-    // Allow empty string
-    if (!value) return true;
-
-    // Check if the value is a valid number
-    const num = Number(value);
-    return !isNaN(num) && num > 0;
-  }, {
-    message: "Award amount must be a valid number greater than 0.",
-  }).optional(),
-  contact_email: z.string().email({
-    message: "Invalid email address.",
-  }).optional(),
-  website_url: z.string().url({
-    message: "Invalid URL.",
-  }).optional(),
-});
-
-type ScholarshipFormData = z.infer<typeof scholarshipFormSchema>;
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface ScholarshipFormProps {
-  scholarship?: any;
-  onSuccess: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function ScholarshipForm({ scholarship, onSuccess, onCancel }: ScholarshipFormProps) {
+export function ScholarshipForm({ onClose }: ScholarshipFormProps) {
+  const [formData, setFormData] = useState({
+    provider_name: '',
+    title: '',
+    description: '',
+    contact_email: '',
+    website_url: '',
+    eligibility_criteria: '',
+    award_amount: '',
+    application_open_date: undefined,
+    application_close_date: undefined
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { session } = useAuthSession();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<ScholarshipFormData>({
-    resolver: zodResolver(scholarshipFormSchema),
-    defaultValues: {
-      title: scholarship?.title || "",
-      description: scholarship?.description || "",
-      eligibility_criteria: scholarship?.eligibility_criteria || "",
-      application_open_date: scholarship?.application_open_date ? new Date(scholarship.application_open_date) : new Date(),
-      application_close_date: scholarship?.application_close_date ? new Date(scholarship.application_close_date) : new Date(),
-      award_amount: scholarship?.award_amount || "",
-      contact_email: scholarship?.contact_email || "",
-      website_url: scholarship?.website_url || "",
-    },
-  });
-
-  const onSubmit = async (data: ScholarshipFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+
     try {
-      const processedData = {
-        ...data,
-        author_id: session?.user?.id || '',
-        // Convert Date to ISO string for database
-        application_open_date: data.application_open_date instanceof Date 
-          ? data.application_open_date.toISOString().split('T')[0]
-          : data.application_open_date,
-        application_close_date: data.application_close_date instanceof Date
-          ? data.application_close_date.toISOString().split('T')[0] 
-          : data.application_close_date,
+      const scholarshipData = {
+        author_id: session?.user.id!,
+        provider_name: formData.provider_name || 'Unknown Provider', // Add required field
+        title: formData.title,
+        description: formData.description,
+        contact_email: formData.contact_email,
+        website_url: formData.website_url,
+        eligibility_criteria: formData.eligibility_criteria,
+        award_amount: formData.award_amount,
+        application_open_date: formData.application_open_date,
+        application_close_date: formData.application_close_date
       };
 
-      if (scholarship) {
-        const { error } = await supabase
-          .from('scholarships')
-          .update(processedData)
-          .eq('id', scholarship.id);
+      const { error } = await supabase
+        .from('scholarships')
+        .insert(scholarshipData);
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('scholarships')
-          .insert(processedData);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: scholarship ? "Scholarship updated successfully" : "Scholarship created successfully",
+        description: "Scholarship created successfully",
       });
 
-      onSuccess();
-    } catch (error: any) {
+      onClose();
+    } catch (error) {
+      console.error('Error creating scholarship:', error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: "Failed to create scholarship",
         variant: "destructive",
       });
     } finally {
@@ -124,139 +74,152 @@ export function ScholarshipForm({ scholarship, onSuccess, onCancel }: Scholarshi
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Add provider_name field */}
       <div>
-        <Label htmlFor="title">Title</Label>
-        <Input id="title" type="text" placeholder="Scholarship Title" {...form.register("title")} />
-        {form.formState.errors.title && (
-          <p className="text-sm text-red-500">{form.formState.errors.title.message}</p>
-        )}
+        <label htmlFor="provider_name" className="block text-sm font-medium text-gray-700">
+          Provider Name *
+        </label>
+        <input
+          type="text"
+          id="provider_name"
+          value={formData.provider_name || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, provider_name: e.target.value }))}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          required
+        />
       </div>
+      
+      <div>
+        <Label htmlFor="title">Title *</Label>
+        <Input
+          type="text"
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          required
+        />
+      </div>
+
       <div>
         <Label htmlFor="description">Description</Label>
-        <Textarea id="description" placeholder="Scholarship Description" {...form.register("description")} />
-        {form.formState.errors.description && (
-          <p className="text-sm text-red-500">{form.formState.errors.description.message}</p>
-        )}
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+        />
       </div>
-      <div>
-        <Label htmlFor="eligibility_criteria">Eligibility Criteria</Label>
-        <Textarea id="eligibility_criteria" placeholder="Eligibility Criteria" {...form.register("eligibility_criteria")} />
-        {form.formState.errors.eligibility_criteria && (
-          <p className="text-sm text-red-500">{form.formState.errors.eligibility_criteria.message}</p>
-        )}
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Application Open Date</Label>
-          <Controller
-            control={form.control}
-            name="application_open_date"
-            render={({ field }) => (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !field.value && "text-muted-foreground"
-                    )}
-                  >
-                    {field.value ? (
-                      format(field.value, "MMMM d, yyyy")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date()
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          />
-          {form.formState.errors.application_open_date && (
-            <p className="text-sm text-red-500">{form.formState.errors.application_open_date.message}</p>
-          )}
-        </div>
-        <div>
-          <Label>Application Close Date</Label>
-          <Controller
-            control={form.control}
-            name="application_close_date"
-            render={({ field }) => (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !field.value && "text-muted-foreground"
-                    )}
-                  >
-                    {field.value ? (
-                      format(field.value, "MMMM d, yyyy")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date()
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          />
-          {form.formState.errors.application_close_date && (
-            <p className="text-sm text-red-500">{form.formState.errors.application_close_date.message}</p>
-          )}
-        </div>
-      </div>
-      <div>
-        <Label htmlFor="award_amount">Award Amount</Label>
-        <Input id="award_amount" type="number" placeholder="Award Amount" {...form.register("award_amount")} />
-        {form.formState.errors.award_amount && (
-          <p className="text-sm text-red-500">{form.formState.errors.award_amount.message}</p>
-        )}
-      </div>
+
       <div>
         <Label htmlFor="contact_email">Contact Email</Label>
-        <Input id="contact_email" type="email" placeholder="Contact Email" {...form.register("contact_email")} />
-        {form.formState.errors.contact_email && (
-          <p className="text-sm text-red-500">{form.formState.errors.contact_email.message}</p>
-        )}
+        <Input
+          type="email"
+          id="contact_email"
+          value={formData.contact_email}
+          onChange={(e) => setFormData(prev => ({ ...prev, contact_email: e.target.value }))}
+        />
       </div>
+
       <div>
         <Label htmlFor="website_url">Website URL</Label>
-        <Input id="website_url" type="url" placeholder="Website URL" {...form.register("website_url")} />
-        {form.formState.errors.website_url && (
-          <p className="text-sm text-red-500">{form.formState.errors.website_url.message}</p>
-        )}
+        <Input
+          type="url"
+          id="website_url"
+          value={formData.website_url}
+          onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
+        />
       </div>
-      <div className="flex justify-end space-x-2">
-        <Button variant="ghost" onClick={onCancel} disabled={isSubmitting}>Cancel</Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </Button>
+
+      <div>
+        <Label htmlFor="eligibility_criteria">Eligibility Criteria</Label>
+        <Textarea
+          id="eligibility_criteria"
+          value={formData.eligibility_criteria}
+          onChange={(e) => setFormData(prev => ({ ...prev, eligibility_criteria: e.target.value }))}
+        />
       </div>
+
+      <div>
+        <Label htmlFor="award_amount">Award Amount</Label>
+        <Input
+          type="text"
+          id="award_amount"
+          value={formData.award_amount}
+          onChange={(e) => setFormData(prev => ({ ...prev, award_amount: e.target.value }))}
+        />
+      </div>
+
+      <div className="flex space-x-2">
+        <div className="w-1/2">
+          <Label htmlFor="application_open_date">Application Open Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.application_open_date && "text-muted-foreground"
+                )}
+              >
+                {formData.application_open_date ? (
+                  format(formData.application_open_date, "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.application_open_date}
+                onSelect={(date) => setFormData(prev => ({ ...prev, application_open_date: date }))}
+                disabled={(date) =>
+                  date > new Date()
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="w-1/2">
+          <Label htmlFor="application_close_date">Application Close Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !formData.application_close_date && "text-muted-foreground"
+                )}
+              >
+                {formData.application_close_date ? (
+                  format(formData.application_close_date, "PPP")
+                ) : (
+                  <span>Pick a date</span>
+                )}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={formData.application_close_date}
+                onSelect={(date) => setFormData(prev => ({ ...prev, application_close_date: date }))}
+                disabled={(date) =>
+                  date > new Date()
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Creating..." : "Create Scholarship"}
+      </Button>
     </form>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,11 +155,11 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       // Create new session type with proper type casting
       const sessionData = {
         profile_id: profileId,
-        type: data.type,
+        type: data.type as any, // Cast to match database enum
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: data.meeting_platform as MeetingPlatform[],
+        meeting_platform: data.meeting_platform as any, // Cast to match database array type
         telegram_username: showTelegramField ? data.telegram_username || null : null,
         phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
@@ -212,7 +211,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              control={methods.control}
               availableTypes={existingTypes?.map(type => type.type) || []}
             />
 
@@ -266,10 +264,9 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect control={methods.control} />
+            <PlatformSelect />
 
             <PlatformFields
-              control={methods.control}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

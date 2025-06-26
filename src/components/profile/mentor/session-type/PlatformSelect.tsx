@@ -1,16 +1,8 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Control } from "react-hook-form";
-import { SessionTypeFormData, MeetingPlatform } from "./types";
-
-interface PlatformSelectProps {
-  form: {
-    control: Control<SessionTypeFormData>;
-    setValue: (name: keyof SessionTypeFormData, value: any) => void;
-    watch: (name: keyof SessionTypeFormData) => any;
-  };
-}
+import { MeetingPlatform } from "./types";
+import { useFormContext } from "react-hook-form";
 
 const PLATFORMS: { value: MeetingPlatform; label: string }[] = [
   { value: "Google Meet", label: "Google Meet" },
@@ -19,24 +11,25 @@ const PLATFORMS: { value: MeetingPlatform; label: string }[] = [
   { value: "Phone Call", label: "Phone Call" }
 ];
 
-export function PlatformSelect({ form }: PlatformSelectProps) {
-  const selectedPlatforms = form.watch("meeting_platform") || [];
+export function PlatformSelect() {
+  const { control, setValue, watch } = useFormContext();
+  const selectedPlatforms = watch("meeting_platform") || [];
 
   const handlePlatformChange = (platform: MeetingPlatform, checked: boolean) => {
     const currentPlatforms = Array.isArray(selectedPlatforms) ? selectedPlatforms : [];
     
     if (checked) {
       const newPlatforms = [...currentPlatforms, platform];
-      form.setValue("meeting_platform", newPlatforms);
+      setValue("meeting_platform", newPlatforms);
     } else {
       const newPlatforms = currentPlatforms.filter((p: MeetingPlatform) => p !== platform);
-      form.setValue("meeting_platform", newPlatforms);
+      setValue("meeting_platform", newPlatforms);
     }
   };
 
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="meeting_platform"
       rules={{ required: "At least one meeting platform is required" }}
       render={() => (

@@ -1,6 +1,5 @@
-
-import { useState } from "react";
-import { Plus, Edit, Trash2, Target, Book, Trophy, Heart, Building, Zap, Star, Award } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Target, BookOpen, Briefcase, User, Users, Trophy, Heart, Building, Zap, Star, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,48 +13,34 @@ interface MenteeInterestsTabEnhancedProps {
   isEditing: boolean;
 }
 
-const CATEGORY_INFO: Record<InterestCategory, { color: string; bgColor: string; icon: any; label: string; description: string }> = {
-  career: { 
-    color: "text-blue-700", 
-    bgColor: "bg-blue-50 border-blue-200", 
-    icon: Target, 
-    label: "Career Goals", 
-    description: "Professional aspirations and career paths" 
+const categoryConfig: Record<InterestCategory, { color: string; bgColor: string; icon: any; label: string; description: string; }> = {
+  academic: {
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    icon: BookOpen,
+    label: 'Academic',
+    description: 'Academic subjects and fields of study'
   },
-  academic: { 
-    color: "text-green-700", 
-    bgColor: "bg-green-50 border-green-200", 
-    icon: Book, 
-    label: "Academic Interests", 
-    description: "Fields of study and educational pursuits" 
+  professional: {
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    icon: Briefcase,
+    label: 'Professional',
+    description: 'Career-related interests and professional development'
   },
-  extracurricular: { 
-    color: "text-purple-700", 
-    bgColor: "bg-purple-50 border-purple-200", 
-    icon: Trophy, 
-    label: "Extracurricular Activities", 
-    description: "School clubs, teams, and organized activities" 
+  personal: {
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    icon: User,
+    label: 'Personal',
+    description: 'Personal interests and hobbies'
   },
-  hobby: { 
-    color: "text-pink-700", 
-    bgColor: "bg-pink-50 border-pink-200", 
-    icon: Heart, 
-    label: "Personal Hobbies", 
-    description: "Personal interests and recreational activities" 
-  },
-  industry: { 
-    color: "text-orange-700", 
-    bgColor: "bg-orange-50 border-orange-200", 
-    icon: Building, 
-    label: "Industry Interests", 
-    description: "Sectors and business areas of interest" 
-  },
-  skill: { 
-    color: "text-indigo-700", 
-    bgColor: "bg-indigo-50 border-indigo-200", 
-    icon: Zap, 
-    label: "Skills & Abilities", 
-    description: "Technical and soft skills you're developing" 
+  extracurricular: {
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-50',
+    icon: Users,
+    label: 'Extracurricular',
+    description: 'Activities, clubs, and organizations'
   }
 };
 
@@ -74,7 +59,7 @@ function InterestCard({
   onDelete 
 }: {
   interest: EnhancedMenteeInterest;
-  categoryInfo: typeof CATEGORY_INFO[InterestCategory];
+  categoryInfo: typeof categoryConfig[InterestCategory];
   isEditing: boolean;
   onEdit: () => void;
   onDelete: () => void;
@@ -253,7 +238,7 @@ export function MenteeInterestsTabEnhanced({ profile, isEditing }: MenteeInteres
         </Card>
       ) : (
         <div className="space-y-8">
-          {Object.entries(CATEGORY_INFO).map(([category, info]) => {
+          {Object.entries(categoryConfig).map(([category, info]) => {
             const categoryInterests = groupedInterests[category as InterestCategory] || [];
             if (categoryInterests.length === 0) return null;
 

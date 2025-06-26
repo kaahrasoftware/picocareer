@@ -1,24 +1,22 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Control } from "react-hook-form";
-import { SessionTypeFormData } from "./types";
+import { useFormContext } from "react-hook-form";
 
 interface PlatformFieldsProps {
-  form: {
-    control: Control<SessionTypeFormData>;
-  };
   showTelegramField: boolean;
   showPhoneField: boolean;
   showWhatsAppField: boolean;
 }
 
-export function PlatformFields({ form, showTelegramField, showPhoneField, showWhatsAppField }: PlatformFieldsProps) {
+export function PlatformFields({ showTelegramField, showPhoneField, showWhatsAppField }: PlatformFieldsProps) {
+  const { control } = useFormContext();
+
   return (
     <>
       {showTelegramField && (
         <FormField
-          control={form.control}
+          control={control}
           name="telegram_username"
           rules={{ required: "Telegram username is required for Telegram sessions" }}
           render={({ field }) => (
@@ -45,7 +43,7 @@ export function PlatformFields({ form, showTelegramField, showPhoneField, showWh
 
       {(showPhoneField || showWhatsAppField) && (
         <FormField
-          control={form.control}
+          control={control}
           name="phone_number"
           rules={{ required: "Phone number is required for phone call/WhatsApp sessions" }}
           render={({ field }) => (
