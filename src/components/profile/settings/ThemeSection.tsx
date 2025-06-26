@@ -1,52 +1,39 @@
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { useUserSettings } from "@/hooks/useUserSettings";
-import { useState, useEffect } from "react";
+
+import React from 'react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUserSettings } from '@/hooks/useUserSettings';
+
 interface ThemeSectionProps {
   profileId: string;
 }
-export function ThemeSection({
-  profileId
-}: ThemeSectionProps) {
-  const {
-    getSetting,
-    updateSetting
-  } = useUserSettings(profileId);
-  const [darkMode, setDarkMode] = useState(false);
-  const [compactMode, setCompactMode] = useState(false);
-  useEffect(() => {
-    try {
-      const themeData = getSetting('theme');
-      if (themeData) {
-        const parsedTheme = JSON.parse(themeData);
-        setDarkMode(parsedTheme.theme === 'dark');
-        setCompactMode(parsedTheme.compact_mode || false);
-      }
-    } catch (error) {
-      console.error("Error parsing theme data:", error);
-    }
-  }, [getSetting]);
-  const handleThemeChange = (checked: boolean) => {
-    const themeData = {
-      theme: checked ? 'dark' : 'light',
-      compact_mode: compactMode
-    };
+
+export function ThemeSection({ profileId }: ThemeSectionProps) {
+  const { getSetting, updateSetting } = useUserSettings(profileId);
+  const currentTheme = getSetting('theme') || 'system';
+
+  const handleThemeChange = (value: string) => {
     updateSetting.mutate({
       type: 'theme',
-      value: JSON.stringify(themeData)
+      value: value
     });
-    setDarkMode(checked);
   };
-  const handleCompactModeChange = (checked: boolean) => {
-    const themeData = {
-      theme: darkMode ? 'dark' : 'light',
-      compact_mode: checked
-    };
-    updateSetting.mutate({
-      type: 'theme',
-      value: JSON.stringify(themeData)
-    });
-    setCompactMode(checked);
-  };
-  return;
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="theme-select">Theme</Label>
+        <Select value={currentTheme} onValueChange={handleThemeChange}>
+          <SelectTrigger id="theme-select">
+            <SelectValue placeholder="Select theme" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="light">Light</SelectItem>
+            <SelectItem value="dark">Dark</SelectItem>
+            <SelectItem value="system">System</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
 }

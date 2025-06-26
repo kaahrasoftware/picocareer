@@ -1,107 +1,107 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Mail, AlertCircle, CheckCircle, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-interface EmailLog {
-  id: string;
-  registration_id: string;
-  email: string;
-  status: 'queued' | 'processing' | 'sent' | 'failed';
-  error_message?: string;
-  sent_at?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, Mail, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { EventEmailLog, getFailedEmails, retryFailedEmails, sendConfirmationEmail } from '@/utils/eventEmailUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export function EventEmailMonitor() {
-  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [emailLogs, setEmailLogs] = useState<EventEmailLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
 
   const fetchEmailLogs = async () => {
-    setIsLoading(true);
     try {
-      console.log('Fetching email logs...');
-      
-      // Try the edge function first
-      const { data: edgeFunctionData, error: edgeFunctionError } = await supabase.functions.invoke('get-event-email-logs');
-      
-      if (!edgeFunctionError && edgeFunctionData) {
-        console.log('Edge function response:', edgeFunctionData);
-        // Handle both direct array and wrapped response formats
-        const logs = Array.isArray(edgeFunctionData) ? edgeFunctionData : edgeFunctionData.data || [];
-        setEmailLogs(logs);
-      } else {
-        console.log('Edge function failed, querying table directly:', edgeFunctionError);
-        
-        // Fallback to direct table query
-        const { data: tableData, error: tableError } = await supabase
-          .from('event_email_logs')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50);
+      const { data, error } = await supabase.functions.invoke('get-event-email-logs', {});
 
-        if (tableError) {
-          throw tableError;
-        }
-
-        console.log('Direct table query result:', tableData);
-        // Type assertion to ensure proper status types
-        const typedLogs = (tableData || []).map(log => ({
-          ...log,
-          status: ['queued', 'processing', 'sent', 'failed'].includes(log.status) 
-            ? log.status as 'queued' | 'processing' | 'sent' | 'failed'
-            : 'queued' as const
-        }));
-        setEmailLogs(typedLogs);
+      if (error) {
+        console.error('Error fetching email logs:', error);
+        setEmailLogs([]);
+        return;
       }
+
+      setEmailLogs(data || []);
     } catch (error) {
-      console.error('Error fetching email logs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch email logs",
-        variant: "destructive",
-      });
+      console.error('Error in fetchEmailLogs:', error);
+      setEmailLogs([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const retryFailedEmails = async () => {
-    const failedLogs = emailLogs.filter(log => log.status === 'failed');
-    
-    if (failedLogs.length === 0) {
-      toast({
-        title: "Info",
-        description: "No failed emails to retry",
-      });
-      return;
-    }
-
+  const handleProcessQueue = async () => {
+    setIsProcessingQueue(true);
     try {
-      for (const log of failedLogs) {
-        await supabase.functions.invoke('process-event-confirmations', {
-          body: { registrationId: log.registration_id }
-        });
+      const { data, error } = await supabase.functions.invoke('process-email-queue', {});
+      
+      if (error) {
+        console.error('Error processing email queue:', error);
+        toast.error('Failed to process email queue');
+      } else {
+        toast.success(`Queue processed: ${data.processed} emails sent, ${data.failed} failed`);
+        await fetchEmailLogs();
       }
-      
-      toast({
-        title: "Success", 
-        description: `Retrying ${failedLogs.length} failed emails`,
-      });
-      
-      // Refresh the logs after a short delay
-      setTimeout(fetchEmailLogs, 2000);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to retry emails",
-        variant: "destructive",
-      });
+      console.error('Error calling process-email-queue:', error);
+      toast.error('Failed to process email queue');
+    } finally {
+      setIsProcessingQueue(false);
+    }
+  };
+
+  const handleRetryFailed = async () => {
+    setIsRetrying(true);
+    try {
+      const result = await retryFailedEmails();
+      toast.success(`Retried emails: ${result.success} successful, ${result.failed} failed`);
+      await fetchEmailLogs();
+    } catch (error) {
+      toast.error('Failed to retry emails');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleRetrySingle = async (registrationId: string) => {
+    try {
+      const result = await sendConfirmationEmail(registrationId);
+      if (result.success) {
+        toast.success('Email sent successfully');
+        await fetchEmailLogs();
+      } else {
+        toast.error(`Failed to send email: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error('Failed to send email');
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'sent':
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case 'failed':
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+      case 'processing':
+        return <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'sent':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
     }
   };
 
@@ -109,118 +109,110 @@ export function EventEmailMonitor() {
     fetchEmailLogs();
   }, []);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'sent': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'processing': return <Clock className="h-4 w-4 text-blue-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'sent': return 'default';
-      case 'failed': return 'destructive';
-      case 'processing': return 'secondary';
-      default: return 'outline';
-    }
-  };
-
-  const statusCounts = emailLogs.reduce((acc, log) => {
-    acc[log.status] = (acc[log.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const failedCount = emailLogs.filter(log => log.status === 'failed').length;
+  const sentCount = emailLogs.filter(log => log.status === 'sent').length;
+  const queuedCount = emailLogs.filter(log => log.status === 'queued').length;
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email Monitoring
-            </CardTitle>
-            <CardDescription>
-              Monitor event confirmation email delivery status
-            </CardDescription>
-          </div>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Event Email Confirmations
+          </CardTitle>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={retryFailedEmails}
-              disabled={isLoading || !emailLogs.some(log => log.status === 'failed')}
-            >
-              Retry Failed
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            <Button 
               onClick={fetchEmailLogs}
+              variant="outline"
+              size="sm"
               disabled={isLoading}
             >
-              <RefreshCw className="h-4 w-4" />
-              {isLoading ? "Loading..." : "Refresh"}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Refresh'}
             </Button>
+            <Button 
+              onClick={handleProcessQueue}
+              variant="outline"
+              size="sm"
+              disabled={isProcessingQueue}
+            >
+              {isProcessingQueue ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Process Queue'}
+            </Button>
+            {failedCount > 0 && (
+              <Button 
+                onClick={handleRetryFailed}
+                variant="outline"
+                size="sm"
+                disabled={isRetrying}
+              >
+                {isRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : `Retry Failed (${failedCount})`}
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {/* Status Summary */}
-          <div className="grid grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{statusCounts.sent || 0}</div>
-              <div className="text-sm text-muted-foreground">Sent</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{statusCounts.failed || 0}</div>
-              <div className="text-sm text-muted-foreground">Failed</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{statusCounts.processing || 0}</div>
-              <div className="text-sm text-muted-foreground">Processing</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-600">{statusCounts.queued || 0}</div>
-              <div className="text-sm text-muted-foreground">Queued</div>
-            </div>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">{sentCount}</div>
+            <div className="text-sm text-gray-600">Sent</div>
           </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">{failedCount}</div>
+            <div className="text-sm text-gray-600">Failed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-yellow-600">{queuedCount}</div>
+            <div className="text-sm text-gray-600">Queued</div>
+          </div>
+        </div>
 
-          {/* Email Logs */}
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {emailLogs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Mail className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No email logs found</p>
-              </div>
-            ) : (
-              emailLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(log.status)}
-                    <div>
-                      <div className="font-medium">{log.email}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(log.created_at).toLocaleString()}
-                      </div>
+        {/* Email Logs List */}
+        <div className="space-y-2">
+          {isLoading ? (
+            <div className="text-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+              <p className="text-sm text-gray-600 mt-2">Loading email logs...</p>
+            </div>
+          ) : emailLogs.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-600">No email logs found</p>
+            </div>
+          ) : (
+            emailLogs.map((log) => (
+              <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon(log.status)}
+                  <div>
+                    <div className="font-medium">{log.email}</div>
+                    <div className="text-sm text-gray-600">
+                      {new Date(log.created_at).toLocaleString()}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={getStatusVariant(log.status) as any}>
-                      {log.status}
-                    </Badge>
                     {log.error_message && (
-                      <div className="text-xs text-red-500 max-w-xs truncate">
-                        {log.error_message}
+                      <div className="text-sm text-red-600 mt-1">
+                        Error: {log.error_message}
                       </div>
                     )}
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(log.status)}>
+                    {log.status}
+                  </Badge>
+                  {log.status === 'failed' && (
+                    <Button
+                      onClick={() => handleRetrySingle(log.registration_id)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Retry
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

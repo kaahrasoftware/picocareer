@@ -8,16 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SessionTypeEnum } from "@/types/session";
-import type { SessionTypeFormProps, SessionTypeFormData } from "./types";
+import type { SessionTypeFormProps } from "./types";
 import { SessionTypeSelect } from "./SessionTypeSelect";
 import { PlatformSelect } from "./PlatformSelect";
 import { PlatformFields } from "./PlatformFields";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserSettings } from "@/hooks/useUserSettings";
 
-// Define allowed meeting platforms based on database schema
-type AllowedMeetingPlatform = "WhatsApp" | "Google Meet" | "Telegram" | "Phone Call";
+// Valid meeting platforms based on database schema
+type MeetingPlatform = "Google Meet" | "WhatsApp" | "Telegram" | "Phone Call";
+
+interface SessionTypeFormData {
+  type: string;
+  description: string;
+  duration: number;
+  price: number;
+  meeting_platform: string[];
+  telegram_username?: string;
+  phone_number?: string;
+  custom_type_name?: string;
+}
 
 export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes }: SessionTypeFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,14 +35,13 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
   const queryClient = useQueryClient();
   const { getSetting } = useUserSettings(profileId);
   
-  // Form state with default values that will be updated
   const methods = useForm<SessionTypeFormData>({
     defaultValues: {
-      type: undefined as unknown as SessionTypeEnum,
+      type: '',
       duration: 30,
       price: 0,
       description: "",
-      meeting_platform: [],
+      meeting_platform: [] as string[],
       telegram_username: "",
       phone_number: "",
       custom_type_name: "",
@@ -85,7 +94,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
       setIsSubmitting(true);
       console.log('Attempting to add session type:', data);
 
-      // Validate custom type name if Custom type is selected
       if (data.type === "Custom" && (!data.custom_type_name || data.custom_type_name.trim() === "")) {
         toast({
           title: "Error",
@@ -96,21 +104,65 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         return;
       }
 
-      // Filter meeting platforms to only include allowed values
-      const allowedPlatforms = data.meeting_platform.filter((platform): platform is AllowedMeetingPlatform => 
-        ['WhatsApp', 'Google Meet', 'Telegram', 'Phone Call'].includes(platform)
-      );
+      // Check for existing custom type with the same name
+      if (data.type === "Custom") {
+        const { data: existingType, error: checkError } = await supabase
+          .from('mentor_session_types')
+          .select('id, type, custom_type_name')
+          .eq('profile_id', profileId)
+          .eq('type', 'Custom')
+          .eq('custom_type_name', data.custom_type_name)
+          .maybeSingle();
 
-      // Create new session type with correct database schema
+        if (checkError) {
+          console.error('Error checking existing type:', checkError);
+          throw checkError;
+        }
+
+        if (existingType) {
+          toast({
+            title: "Error",
+            description: "You already have a custom session type with this name",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        // Check for existing standard type
+        const { data: existingType, error: checkError } = await supabase
+          .from('mentor_session_types')
+          .select('id, type')
+          .eq('profile_id', profileId)
+          .eq('type', data.type)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error('Error checking existing type:', checkError);
+          throw checkError;
+        }
+
+        if (existingType) {
+          toast({
+            title: "Error",
+            description: "You already have this session type",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Create new session type with proper type casting
       const sessionData = {
         profile_id: profileId,
         type: data.type,
         duration: Number(data.duration),
         price: 0,
         description: data.description || null,
-        meeting_platform: allowedPlatforms,
-        telegram_username: allowedPlatforms.includes("Telegram") ? data.telegram_username || null : null,
-        phone_number: (allowedPlatforms.includes("Phone Call") || allowedPlatforms.includes("WhatsApp")) ? data.phone_number || null : null,
+        meeting_platform: data.meeting_platform as MeetingPlatform[],
+        telegram_username: showTelegramField ? data.telegram_username || null : null,
+        phone_number: (showPhoneField || showWhatsAppField) ? data.phone_number || null : null,
         custom_type_name: data.type === "Custom" ? data.custom_type_name : null,
       };
 
@@ -135,7 +187,6 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
 
       console.log('Successfully created session type:', newSessionType);
       
-      // Invalidate and refetch query to update the UI
       queryClient.invalidateQueries({ queryKey: ['mentor-session-types', profileId] });
 
       toast({
@@ -161,8 +212,8 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             <SessionTypeSelect
-              form={{ control: methods.control }}
-              availableTypes={existingTypes.map(type => type.type as SessionTypeEnum)}
+              control={methods.control}
+              availableTypes={existingTypes?.map(type => type.type) || []}
             />
 
             {isCustomType && (
@@ -215,10 +266,10 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel, existingTypes 
               )}
             />
 
-            <PlatformSelect form={{ control: methods.control }} />
+            <PlatformSelect control={methods.control} />
 
             <PlatformFields
-              form={{ control: methods.control }}
+              control={methods.control}
               showTelegramField={showTelegramField}
               showPhoneField={showPhoneField}
               showWhatsAppField={showWhatsAppField}

@@ -1,106 +1,146 @@
 
-import { useState } from "react";
+import React from 'react';
+import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Edit } from "lucide-react";
+import { formatDistanceToNow } from 'date-fns';
 
-interface OpportunityRow {
+interface Opportunity {
   id: string;
   title: string;
-  company: string;
-  type: string;
-  location: string;
+  provider_name?: string;
+  type: 'scholarship' | 'event' | 'job' | 'internship' | 'fellowship' | 'grant' | 'competition' | 'volunteer' | 'other';
+  deadline?: string;
   status: string;
+  created_at: string;
+  application_url?: string;
 }
 
 interface OpportunitiesDataTableProps {
-  searchQuery: string;
-  selectedType: string;
-  selectedLocation: string;
+  opportunities: Opportunity[];
+  onEdit?: (opportunity: Opportunity) => void;
 }
 
-export function OpportunitiesDataTable({ 
-  searchQuery, 
-  selectedType, 
-  selectedLocation 
-}: OpportunitiesDataTableProps) {
-  const [opportunities] = useState<OpportunityRow[]>([]);
+export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesDataTableProps) {
+  const getTypeColor = (type: Opportunity['type']) => {
+    const colors = {
+      scholarship: 'bg-purple-100 text-purple-800',
+      event: 'bg-blue-100 text-blue-800',
+      job: 'bg-green-100 text-green-800',
+      internship: 'bg-yellow-100 text-yellow-800',
+      fellowship: 'bg-indigo-100 text-indigo-800',
+      grant: 'bg-pink-100 text-pink-800',
+      competition: 'bg-orange-100 text-orange-800',
+      volunteer: 'bg-teal-100 text-teal-800',
+      other: 'bg-gray-100 text-gray-800'
+    };
+    return colors[type] || colors.other;
+  };
 
-  // Mock data for now since we don't have the actual opportunities table
-  const mockOpportunities: OpportunityRow[] = [
+  const columns = [
     {
-      id: "1",
-      title: "Software Engineer",
-      company: "Tech Corp",
-      type: "Full-time",
-      location: "San Francisco",
-      status: "Active"
+      header: "Title",
+      accessorKey: "title",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="font-medium">{row.original.title}</div>
+      ),
     },
     {
-      id: "2", 
-      title: "Product Manager",
-      company: "StartupCo",
-      type: "Contract",
-      location: "Remote",
-      status: "Active"
-    }
+      header: "Provider",
+      accessorKey: "provider_name",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="text-sm text-muted-foreground">
+          {row.original.provider_name || "N/A"}
+        </div>
+      ),
+    },
+    {
+      header: "Type",
+      accessorKey: "type",
+      cell: ({ row }: { row: { original: Opportunity } }) => {
+        const type = row.original.type;
+        const validType = ['scholarship', 'event', 'job', 'internship', 'fellowship', 'grant', 'competition', 'volunteer', 'other'].includes(type as string) 
+          ? type as Opportunity['type']
+          : 'other' as const;
+        
+        return (
+          <Badge className={getTypeColor(validType)}>
+            {validType.charAt(0).toUpperCase() + validType.slice(1)}
+          </Badge>
+        );
+      },
+    },
+    {
+      header: "Deadline",
+      accessorKey: "deadline",
+      cell: ({ row }: { row: { original: Opportunity } }) => {
+        if (!row.original.deadline) return <span className="text-muted-foreground">No deadline</span>;
+        const deadline = new Date(row.original.deadline);
+        const isExpired = deadline < new Date();
+        return (
+          <div className={`text-sm ${isExpired ? 'text-red-600' : 'text-foreground'}`}>
+            {deadline.toLocaleDateString()}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <Badge variant={row.original.status === 'Published' ? 'default' : 'secondary'}>
+          {row.original.status}
+        </Badge>
+      ),
+    },
+    {
+      header: "Created",
+      accessorKey: "created_at",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="text-sm text-muted-foreground">
+          {formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true })}
+        </div>
+      ),
+    },
+    {
+      header: "Actions",
+      id: "actions",
+      cell: ({ row }: { row: { original: Opportunity } }) => (
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(row.original)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          )}
+          {row.original.application_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+            >
+              <a
+                href={row.original.application_url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          )}
+        </div>
+      ),
+    },
   ];
 
-  const filteredOpportunities = mockOpportunities.filter(opportunity => {
-    const matchesSearch = opportunity.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         opportunity.company.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === "all" || opportunity.type.toLowerCase() === selectedType.toLowerCase();
-    const matchesLocation = selectedLocation === "all" || opportunity.location.toLowerCase() === selectedLocation.toLowerCase();
-    
-    return matchesSearch && matchesType && matchesLocation;
-  });
-
   return (
-    <div className="space-y-4">
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search opportunities..."
-            className="pl-9"
-            value={searchQuery}
-            readOnly
-          />
-        </div>
-        <Button variant="outline">
-          Filter
-        </Button>
-      </div>
-
-      <div className="border rounded-lg">
-        <div className="grid grid-cols-5 gap-4 p-4 bg-muted/50 font-medium">
-          <div>Title</div>
-          <div>Company</div>
-          <div>Type</div>
-          <div>Location</div>
-          <div>Status</div>
-        </div>
-        
-        {filteredOpportunities.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            No opportunities found
-          </div>
-        ) : (
-          filteredOpportunities.map((opportunity) => (
-            <div key={opportunity.id} className="grid grid-cols-5 gap-4 p-4 border-t">
-              <div className="font-medium">{opportunity.title}</div>
-              <div>{opportunity.company}</div>
-              <div>{opportunity.type}</div>
-              <div>{opportunity.location}</div>
-              <div>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                  {opportunity.status}
-                </span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
+    <DataTable
+      columns={columns}
+      data={opportunities}
+    />
   );
 }
