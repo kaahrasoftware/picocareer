@@ -2,12 +2,17 @@
 import React from 'react';
 import { SelectWithCustomOption } from "./SelectWithCustomOption";
 
+type TableName = 'majors' | 'schools' | 'companies' | 'careers';
+type FieldName = 'academic_major_id' | 'school_id' | 'company_id' | 'position';
+type TitleField = 'title' | 'name';
+
 interface CustomSelectProps {
   value: string;
   options: Array<{ id: string; title?: string; name?: string }>;
   placeholder: string;
-  fieldName: string;
-  titleField: 'title' | 'name';
+  tableName: TableName;
+  fieldName: FieldName;
+  titleField: TitleField;
   onSave: (value: string) => void;
   onCancel: () => void;
 }
@@ -16,6 +21,7 @@ export function CustomSelect({
   value,
   options,
   placeholder,
+  tableName,
   fieldName,
   titleField,
   onSave,
@@ -24,8 +30,10 @@ export function CustomSelect({
   return (
     <SelectWithCustomOption
       value={value}
+      onValueChange={onSave}
       options={options}
       placeholder={placeholder}
+      tableName={tableName}
       handleSelectChange={(_, value) => onSave(value)}
       fieldName={fieldName}
       titleField={titleField}

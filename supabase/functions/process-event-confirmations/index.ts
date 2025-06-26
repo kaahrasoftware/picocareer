@@ -26,10 +26,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Processing email confirmation for registration:', registrationId);
 
-    // Check if registration exists
+    // Fetch complete registration details with event information
     const { data: registration, error: regError } = await supabase
       .from('event_registrations')
-      .select('*')
+      .select(`
+        *,
+        event:events (
+          id,
+          title,
+          description,
+          start_time,
+          end_time,
+          platform,
+          meeting_link,
+          organized_by,
+          timezone
+        ),
+        profile:profiles (
+          email,
+          full_name
+        )
+      `)
       .eq('id', registrationId)
       .single();
 
@@ -64,11 +81,24 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq('registration_id', registrationId);
 
-    // Call the send-event-confirmation function
+    // Call the send-event-confirmation function with complete data
     const { error: emailError } = await supabase.functions.invoke(
       'send-event-confirmation',
       {
-        body: { registrationId }
+        body: { 
+          registrationId,
+          eventId: registration.event?.id,
+          email: registration.email,
+          fullName: `${registration.first_name} ${registration.last_name}`,
+          eventTitle: registration.event?.title,
+          eventDescription: registration.event?.description,
+          eventStartTime: registration.event?.start_time,
+          eventEndTime: registration.event?.end_time,
+          eventPlatform: registration.event?.platform,
+          meetingLink: registration.event?.meeting_link,
+          organizedBy: registration.event?.organized_by,
+          timezone: registration.event?.timezone || 'EST'
+        }
       }
     );
 

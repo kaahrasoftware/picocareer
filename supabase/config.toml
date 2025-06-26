@@ -48,3 +48,15 @@ security_update_password_require_reauthentication = true
 
 [functions.fetch-school-data]
 verify_jwt = true
+
+[functions.process-email-queue]
+verify_jwt = true
+
+[functions.process-event-confirmations]
+verify_jwt = true
+
+[functions.send-event-confirmation]
+verify_jwt = true
+
+[functions.get-event-email-logs]
+verify_jwt = true
