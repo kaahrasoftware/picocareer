@@ -37,7 +37,7 @@ export default function Event() {
     },
   });
 
-  // Fetch user's event registrations
+  // Fetch user's event registrations only if user is authenticated
   const { data: userRegistrations } = useQuery({
     queryKey: ['user-event-registrations', user?.id],
     queryFn: async () => {
@@ -63,15 +63,7 @@ export default function Event() {
   });
 
   const handleRegister = async (eventId: string) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to register for events.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    // No authentication check - anyone can register
     const event = events?.find(e => e.id === eventId);
     if (event) {
       setSelectedEvent(event);
@@ -92,7 +84,7 @@ export default function Event() {
     setShowRegistrationDialog(false);
     toast({
       title: "Registration Successful",
-      description: "You have been registered for the event!",
+      description: "You have been registered for the event! A confirmation email will be sent to you shortly.",
     });
   };
 
@@ -157,7 +149,7 @@ export default function Event() {
         </CardContent>
       </Card>
 
-      {/* Advanced Event Registration Dialog */}
+      {/* Event Registration Dialog - No authentication required */}
       {showRegistrationDialog && selectedEvent && (
         <Dialog open={showRegistrationDialog} onOpenChange={(open) => !open && setShowRegistrationDialog(false)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

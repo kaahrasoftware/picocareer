@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ const categoryColorMapping: Record<EssayPromptCategory, string> = {
   personal_statement: 'bg-blue-100 text-blue-800 border-blue-200',
   supplemental: 'bg-green-100 text-green-800 border-green-200',
   scholarship: 'bg-purple-100 text-purple-800 border-purple-200',
-  extracurricular: 'bg-orange-100 text-orange-800 border-orange-200',
   academic: 'bg-red-100 text-red-800 border-red-200'
 };
 
@@ -28,7 +28,7 @@ export function MenteeEssaysTab({ profileId, isEditing }: MenteeEssaysTabProps) 
   
   const { data: essayResponses = [], isLoading: responsesLoading } = useMenteeEssayResponses(profileId);
   const { data: prompts = [], isLoading: promptsLoading } = useEssayPrompts();
-  const { deleteEssayResponse, saveEssayResponse } = useMenteeDataMutations();
+  const { deleteEssayResponse, addEssayResponse } = useMenteeDataMutations();
 
   const handleEdit = (essay: MenteeEssayResponse) => {
     setEditingEssay(essay);
@@ -70,7 +70,7 @@ export function MenteeEssaysTab({ profileId, isEditing }: MenteeEssaysTabProps) 
         version: response.version || 1
       };
 
-      saveEssayResponse.mutate(responseData);
+      addEssayResponse.mutate(responseData);
     } catch (error) {
       console.error('Error saving essay response:', error);
     }

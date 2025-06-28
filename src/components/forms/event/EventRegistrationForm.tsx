@@ -61,6 +61,7 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Pre-fill email if user is authenticated
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -89,6 +90,7 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
           student_or_professional: formData.studentOrProfessional,
           'current academic field/position': formData.currentAcademicFieldPosition,
           'where did you hear about us': formData.whereDidYouHearAboutUs as any,
+          // Link to user profile if authenticated, otherwise null
           profile_id: session?.user?.id || null
         });
 
@@ -113,111 +115,124 @@ export function EventRegistrationForm({ eventId, onSuccess, onCancel }: EventReg
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      {/* Welcome message for anonymous users */}
+      {!session && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-blue-800">
+            <strong>Welcome!</strong> You can register for this event without creating an account. 
+            If you'd like to track your registrations and access additional features, consider signing up after registration.
+          </p>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="firstName">First Name *</Label>
+            <Input
+              id="firstName"
+              required
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label htmlFor="lastName">Last Name *</Label>
+            <Input
+              id="lastName"
+              required
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            />
+          </div>
+        </div>
+
         <div>
-          <Label htmlFor="firstName">First Name *</Label>
+          <Label htmlFor="email">Email *</Label>
           <Input
-            id="firstName"
+            id="email"
+            type="email"
             required
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="Enter your email address"
           />
         </div>
+
         <div>
-          <Label htmlFor="lastName">Last Name *</Label>
+          <Label htmlFor="country">Country *</Label>
+          <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your country" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="currentSchoolCompany">Current School/Company</Label>
           <Input
-            id="lastName"
-            required
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            id="currentSchoolCompany"
+            value={formData.currentSchoolCompany}
+            onChange={(e) => setFormData({ ...formData, currentSchoolCompany: e.target.value })}
           />
         </div>
-      </div>
 
-      <div>
-        <Label htmlFor="email">Email *</Label>
-        <Input
-          id="email"
-          type="email"
-          required
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
-      </div>
+        <div>
+          <Label htmlFor="studentOrProfessional">Student or Professional *</Label>
+          <Select value={formData.studentOrProfessional} onValueChange={(value) => setFormData({ ...formData, studentOrProfessional: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select one" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Student">Student</SelectItem>
+              <SelectItem value="Professional">Professional</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div>
-        <Label htmlFor="country">Country *</Label>
-        <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your country" />
-          </SelectTrigger>
-          <SelectContent>
-            {countries.map((country) => (
-              <SelectItem key={country} value={country}>
-                {country}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+        <div>
+          <Label htmlFor="currentAcademicFieldPosition">Current Academic Field/Position *</Label>
+          <Input
+            id="currentAcademicFieldPosition"
+            required
+            value={formData.currentAcademicFieldPosition}
+            onChange={(e) => setFormData({ ...formData, currentAcademicFieldPosition: e.target.value })}
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="currentSchoolCompany">Current School/Company</Label>
-        <Input
-          id="currentSchoolCompany"
-          value={formData.currentSchoolCompany}
-          onChange={(e) => setFormData({ ...formData, currentSchoolCompany: e.target.value })}
-        />
-      </div>
+        <div>
+          <Label htmlFor="whereDidYouHearAboutUs">Where did you hear about us?</Label>
+          <Select value={formData.whereDidYouHearAboutUs} onValueChange={(value) => setFormData({ ...formData, whereDidYouHearAboutUs: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              {hearAboutOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div>
-        <Label htmlFor="studentOrProfessional">Student or Professional *</Label>
-        <Select value={formData.studentOrProfessional} onValueChange={(value) => setFormData({ ...formData, studentOrProfessional: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select one" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Student">Student</SelectItem>
-            <SelectItem value="Professional">Professional</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="currentAcademicFieldPosition">Current Academic Field/Position *</Label>
-        <Input
-          id="currentAcademicFieldPosition"
-          required
-          value={formData.currentAcademicFieldPosition}
-          onChange={(e) => setFormData({ ...formData, currentAcademicFieldPosition: e.target.value })}
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="whereDidYouHearAboutUs">Where did you hear about us?</Label>
-        <Select value={formData.whereDidYouHearAboutUs} onValueChange={(value) => setFormData({ ...formData, whereDidYouHearAboutUs: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select an option" />
-          </SelectTrigger>
-          <SelectContent>
-            {hearAboutOptions.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Registering..." : "Register"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Registering..." : "Register"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

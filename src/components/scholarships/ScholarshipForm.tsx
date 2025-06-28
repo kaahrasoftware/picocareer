@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ScholarshipFormProps {
   onClose: () => void;
@@ -38,7 +40,7 @@ export function ScholarshipForm({ onClose }: ScholarshipFormProps) {
     try {
       const scholarshipData = {
         author_id: session?.user.id!,
-        provider_name: formData.provider_name || 'Unknown Provider', // Add required field
+        provider_name: formData.provider_name || 'Unknown Provider',
         title: formData.title,
         description: formData.description,
         contact_email: formData.contact_email,
@@ -75,7 +77,6 @@ export function ScholarshipForm({ onClose }: ScholarshipFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Add provider_name field */}
       <div>
         <label htmlFor="provider_name" className="block text-sm font-medium text-gray-700">
           Provider Name *
