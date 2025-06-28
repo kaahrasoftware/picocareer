@@ -4,7 +4,7 @@ export interface MenteeEssayResponse {
   prompt_id: string;
   mentee_id: string;
   response_text: string;
-  word_count: number;
+  word_count?: number;
   is_draft: boolean;
   version: number;
   created_at: string;

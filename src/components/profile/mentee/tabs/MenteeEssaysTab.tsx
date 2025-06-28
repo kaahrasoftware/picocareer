@@ -184,7 +184,7 @@ export function MenteeEssaysTab({ profileId, isEditing }: MenteeEssaysTabProps) 
                 <div className="space-y-3">
                   <div className="flex gap-4 text-sm text-muted-foreground">
                     <div>
-                      <span className="font-medium">Word Count:</span> {response.word_count || 0}
+                      <span className="font-medium">Word Count:</span> {response.word_count}
                     </div>
                     {response.prompt?.word_limit && (
                       <div>

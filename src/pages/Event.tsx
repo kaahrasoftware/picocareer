@@ -24,40 +24,16 @@ export default function Event() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const { data: events, isLoading, refetch } = useQuery({
+  const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      console.log('Fetching events and registration counts...');
-      
-      // Use a single query with LEFT JOIN to get events and their registration counts
-      const { data: eventsWithCounts, error } = await supabase
+      const { data, error } = await supabase
         .from('events')
-        .select(`
-          *,
-          event_registrations(count)
-        `)
+        .select('*')
         .order('start_time', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching events:', error);
-        throw error;
-      }
-
-      // Process the data to add registration counts
-      const processedEvents = eventsWithCounts?.map(event => {
-        const registrations_count = event.event_registrations?.[0]?.count || 0;
-        console.log(`Event ${event.title}: ${registrations_count} registrations`);
-        
-        return {
-          ...event,
-          registrations_count,
-          // Remove the nested event_registrations object to clean up the data
-          event_registrations: undefined
-        };
-      }) || [];
-
-      console.log('Processed events:', processedEvents);
-      return processedEvents;
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -106,21 +82,6 @@ export default function Event() {
   const handleRegistrationSuccess = (eventId: string) => {
     setRegisteredEvents(prev => new Set([...prev, eventId]));
     setShowRegistrationDialog(false);
-    
-    // Update the local events data to reflect the new registration count
-    // This provides immediate feedback without waiting for refetch
-    if (events) {
-      const updatedEvents = events.map(event => 
-        event.id === eventId 
-          ? { ...event, registrations_count: (event.registrations_count || 0) + 1 }
-          : event
-      );
-      // Note: We can't directly update the query cache here, but the refetch below will handle it
-    }
-    
-    // Refetch events to get the latest registration counts from the database
-    refetch();
-    
     toast({
       title: "Registration Successful",
       description: "You have been registered for the event! A confirmation email will be sent to you shortly.",
