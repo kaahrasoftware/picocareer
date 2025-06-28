@@ -34,7 +34,19 @@ export function ProfileTab({ profile }: ProfileTabProps) {
 
   // If user has student status, use the comprehensive student profile system
   if (isStudent) {
-    return <MenteeProfileTabs profile={profile} isEditing={isEditing} onEditToggle={handleEditToggle} />;
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-end mb-4">
+          <Button 
+            onClick={handleEditToggle}
+            variant={isEditing ? "destructive" : "default"}
+          >
+            {isEditing ? "Close Editing" : "Edit Profile"}
+          </Button>
+        </div>
+        <MenteeProfileTabs profile={profile} isEditing={isEditing} />
+      </div>
+    );
   }
 
   // Keep existing mentor/admin profile structure

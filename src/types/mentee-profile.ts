@@ -3,7 +3,7 @@ export interface MenteeEssayResponse {
   id: string;
   prompt_id: string;
   mentee_id: string;
-  response_text?: string;
+  response_text: string;
   word_count?: number;
   is_draft: boolean;
   version: number;
