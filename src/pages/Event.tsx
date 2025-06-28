@@ -27,13 +27,28 @@ export default function Event() {
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
+      // Query events with registration counts using LEFT JOIN
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          registrations_count:event_registrations(count)
+        `)
         .order('start_time', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+      }
+
+      // Transform the data to include the registration count as a number
+      const eventsWithCounts = data?.map(event => ({
+        ...event,
+        registrations_count: event.registrations_count?.[0]?.count || 0
+      })) || [];
+
+      console.log('Events with registration counts:', eventsWithCounts);
+      return eventsWithCounts;
     },
   });
 
