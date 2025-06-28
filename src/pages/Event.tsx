@@ -24,16 +24,38 @@ export default function Event() {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const { data: events, isLoading } = useQuery({
+  const { data: events, isLoading, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all events
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*')
         .order('start_time', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (eventsError) throw eventsError;
+
+      // Then get registration counts for each event
+      const { data: registrationCounts, error: countError } = await supabase
+        .from('event_registrations')
+        .select('event_id')
+        .eq('status', 'registered');
+
+      if (countError) throw countError;
+
+      // Count registrations per event
+      const countMap = registrationCounts?.reduce((acc, reg) => {
+        acc[reg.event_id] = (acc[reg.event_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      // Add registration counts to events
+      const eventsWithCounts = eventsData?.map(event => ({
+        ...event,
+        registrations_count: countMap[event.id] || 0
+      })) || [];
+
+      return eventsWithCounts;
     },
   });
 
@@ -82,6 +104,10 @@ export default function Event() {
   const handleRegistrationSuccess = (eventId: string) => {
     setRegisteredEvents(prev => new Set([...prev, eventId]));
     setShowRegistrationDialog(false);
+    
+    // Refetch events to update registration counts
+    refetch();
+    
     toast({
       title: "Registration Successful",
       description: "You have been registered for the event! A confirmation email will be sent to you shortly.",
