@@ -27,25 +27,35 @@ export default function Event() {
   const { data: events, isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      // Query events with registration counts using LEFT JOIN
-      const { data, error } = await supabase
+      // First, fetch all events
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
-        .select(`
-          *,
-          registrations_count:event_registrations(count)
-        `)
+        .select('*')
         .order('start_time', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching events:', error);
-        throw error;
+      if (eventsError) {
+        console.error('Error fetching events:', eventsError);
+        throw eventsError;
       }
 
-      // Transform the data to include the registration count as a number
-      const eventsWithCounts = data?.map(event => ({
-        ...event,
-        registrations_count: event.registrations_count?.[0]?.count || 0
-      })) || [];
+      // Then, fetch registration counts for each event
+      const eventsWithCounts = await Promise.all(
+        (eventsData || []).map(async (event) => {
+          const { count, error: countError } = await supabase
+            .from('event_registrations')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', event.id);
+
+          if (countError) {
+            console.error('Error fetching registration count for event:', event.id, countError);
+          }
+
+          return {
+            ...event,
+            registrations_count: count || 0
+          };
+        })
+      );
 
       console.log('Events with registration counts:', eventsWithCounts);
       return eventsWithCounts;
