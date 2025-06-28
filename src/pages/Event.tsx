@@ -27,35 +27,37 @@ export default function Event() {
   const { data: events, isLoading, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
-      // First get all events
-      const { data: eventsData, error: eventsError } = await supabase
+      console.log('Fetching events and registration counts...');
+      
+      // Use a single query with LEFT JOIN to get events and their registration counts
+      const { data: eventsWithCounts, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          event_registrations(count)
+        `)
         .order('start_time', { ascending: false });
 
-      if (eventsError) throw eventsError;
+      if (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+      }
 
-      // Then get registration counts for each event
-      const { data: registrationCounts, error: countError } = await supabase
-        .from('event_registrations')
-        .select('event_id')
-        .eq('status', 'registered');
+      // Process the data to add registration counts
+      const processedEvents = eventsWithCounts?.map(event => {
+        const registrations_count = event.event_registrations?.[0]?.count || 0;
+        console.log(`Event ${event.title}: ${registrations_count} registrations`);
+        
+        return {
+          ...event,
+          registrations_count,
+          // Remove the nested event_registrations object to clean up the data
+          event_registrations: undefined
+        };
+      }) || [];
 
-      if (countError) throw countError;
-
-      // Count registrations per event
-      const countMap = registrationCounts?.reduce((acc, reg) => {
-        acc[reg.event_id] = (acc[reg.event_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>) || {};
-
-      // Add registration counts to events
-      const eventsWithCounts = eventsData?.map(event => ({
-        ...event,
-        registrations_count: countMap[event.id] || 0
-      })) || [];
-
-      return eventsWithCounts;
+      console.log('Processed events:', processedEvents);
+      return processedEvents;
     },
   });
 
@@ -105,7 +107,18 @@ export default function Event() {
     setRegisteredEvents(prev => new Set([...prev, eventId]));
     setShowRegistrationDialog(false);
     
-    // Refetch events to update registration counts
+    // Update the local events data to reflect the new registration count
+    // This provides immediate feedback without waiting for refetch
+    if (events) {
+      const updatedEvents = events.map(event => 
+        event.id === eventId 
+          ? { ...event, registrations_count: (event.registrations_count || 0) + 1 }
+          : event
+      );
+      // Note: We can't directly update the query cache here, but the refetch below will handle it
+    }
+    
+    // Refetch events to get the latest registration counts from the database
     refetch();
     
     toast({
