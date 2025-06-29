@@ -31,30 +31,55 @@ export function NotificationDetailsDialog({
 }: NotificationDetailsDialogProps) {
   const navigate = useNavigate();
 
-  // Extract session ID from action URL for session notifications
+  // Enhanced session ID extraction with better debugging
   const getSessionIdFromActionUrl = (actionUrl: string): string | null => {
-    const url = new URL(actionUrl, window.location.origin);
-    return url.searchParams.get('feedbackSession');
+    console.log('🔍 Extracting session ID from URL:', actionUrl);
+    
+    try {
+      const url = new URL(actionUrl, window.location.origin);
+      const sessionId = url.searchParams.get('feedbackSession');
+      
+      console.log('📝 Extracted session ID:', sessionId);
+      return sessionId;
+    } catch (error) {
+      console.error('❌ Error parsing action URL:', error);
+      return null;
+    }
   };
 
-  // Fetch session details when needed
+  // Extract session ID from action URL for session notifications
   const sessionId = notification?.action_url ? getSessionIdFromActionUrl(notification.action_url) : null;
   
-  const { data: sessionDetails } = useQuery({
+  console.log('🎯 Current notification:', {
+    id: notification?.id,
+    type: notification?.type,
+    action_url: notification?.action_url,
+    extracted_session_id: sessionId
+  });
+
+  // Fetch session details when needed with enhanced error handling
+  const { data: sessionDetails, isLoading: isSessionLoading, error: sessionError } = useQuery({
     queryKey: ['session-details', sessionId],
     queryFn: async () => {
-      if (!sessionId) return null;
+      if (!sessionId) {
+        console.log('⚠️ No session ID found, skipping query');
+        return null;
+      }
+      
+      console.log('🔄 Fetching session details for ID:', sessionId);
       
       const { data, error } = await supabase
         .from('mentor_sessions')
-        .select('scheduled_at')
+        .select('id, scheduled_at, mentor_id, mentee_id')
         .eq('id', sessionId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error('Error fetching session details:', error);
+        console.error('❌ Error fetching session details:', error);
         return null;
       }
+      
+      console.log('✅ Session details fetched:', data);
       return data;
     },
     enabled: !!sessionId && (notification?.type === 'session_booked' || notification?.type === 'session_reminder'),
@@ -71,23 +96,49 @@ export function NotificationDetailsDialog({
     onOpenChange(false);
   };
 
-  const handleActionUrl = () => {
+  const handleActionUrl = async () => {
     if (!notification.action_url) return;
     
-    // Handle session-related notifications - always navigate to calendar
+    console.log('🚀 Handling action URL click for notification:', notification.type);
+    
+    // Handle session-related notifications with proper data loading
     if (notification.type === 'session_booked' || notification.type === 'session_reminder') {
+      console.log('📅 Processing session notification');
+      console.log('Session loading state:', isSessionLoading);
+      console.log('Session details:', sessionDetails);
+      console.log('Session error:', sessionError);
+      
+      // Wait for session data if it's still loading
+      if (isSessionLoading) {
+        console.log('⏳ Session data still loading, waiting...');
+        return; // Don't navigate while loading
+      }
+      
       let targetDate;
       
       if (sessionDetails?.scheduled_at) {
         // Use the actual session date if available
         targetDate = format(new Date(sessionDetails.scheduled_at), 'yyyy-MM-dd');
+        console.log('✅ Using session date:', targetDate);
       } else {
         // Fallback to current date if session details aren't available
         targetDate = format(new Date(), 'yyyy-MM-dd');
-        console.log('Session details not found, using current date as fallback');
+        console.log('⚠️ Session details not found, using current date as fallback:', targetDate);
+        
+        // Log additional debug info
+        console.log('Debug info:', {
+          sessionId,
+          sessionDetails,
+          sessionError,
+          isSessionLoading,
+          notificationType: notification.type
+        });
       }
       
-      navigate(`/profile?tab=calendar&date=${targetDate}`);
+      const navigationUrl = `/profile?tab=calendar&date=${targetDate}`;
+      console.log('🎯 Navigating to:', navigationUrl);
+      
+      navigate(navigationUrl);
       onOpenChange(false);
       return;
     }
@@ -150,7 +201,7 @@ export function NotificationDetailsDialog({
     switch (notification.type) {
       case 'session_booked':
       case 'session_reminder':
-        return "View Session";
+        return isSessionLoading ? "Loading..." : "View Session";
       case 'hub_invite':
         return "View Invitation";
       case 'hub_membership':
@@ -237,12 +288,27 @@ export function NotificationDetailsDialog({
             </div>
           </div>
 
+          {/* Debug Information for Session Notifications (only in development) */}
+          {(notification.type === 'session_booked' || notification.type === 'session_reminder') && 
+           process.env.NODE_ENV === 'development' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info</h4>
+              <div className="text-xs text-yellow-700 space-y-1">
+                <div>Session ID: {sessionId || 'Not found'}</div>
+                <div>Loading: {isSessionLoading ? 'Yes' : 'No'}</div>
+                <div>Session Date: {sessionDetails?.scheduled_at || 'Not available'}</div>
+                <div>Error: {sessionError ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          )}
+
           {/* Actions Section */}
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="flex items-center gap-2">
               {notification.action_url && getActionButtonText() && (
                 <Button
                   onClick={handleActionUrl}
+                  disabled={isSessionLoading}
                   className="flex items-center gap-2"
                 >
                   {getActionButtonText()}
