@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Clock, MapPin, Users, Calendar, Video } from 'lucide-react';
+import { CheckCircle, Clock, Calendar, Video } from 'lucide-react';
 import { Form } from '@/components/ui/form';
 import { eventFormSchema, EventFormData, eventFormSteps } from './types';
 import { BasicInfoStep } from './steps/BasicInfoStep';
@@ -32,7 +32,6 @@ export function NewEventUploadForm({ onSubmit, isSubmitting = false }: NewEventU
       start_time: '',
       end_time: '',
       timezone: 'EST',
-      location: '',
       max_attendees: 50,
       event_type: 'virtual',
       platform: 'Google Meet',

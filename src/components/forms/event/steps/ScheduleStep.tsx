@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Clock, MapPin, Globe } from 'lucide-react';
+import { Clock, Globe, Calendar } from 'lucide-react';
 import { EventFormData } from '../types';
 
 interface ScheduleStepProps {
@@ -27,7 +27,7 @@ export function ScheduleStep({ form }: ScheduleStepProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Schedule & Location
+          Schedule & Details
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -102,7 +102,10 @@ export function ScheduleStep({ form }: ScheduleStepProps) {
           name="event_type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Event Type</FormLabel>
+              <FormLabel className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Event Type
+              </FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -115,32 +118,6 @@ export function ScheduleStep({ form }: ScheduleStepProps) {
                   <SelectItem value="hybrid">Hybrid</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Location
-              </FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder={
-                    form.watch('event_type') === 'virtual' 
-                      ? 'Online (link will be provided)' 
-                      : form.watch('event_type') === 'hybrid'
-                      ? 'Address + Online link'
-                      : 'Full address of the venue'
-                  }
-                  {...field} 
-                />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

@@ -7,7 +7,6 @@ export const eventFormSchema = z.object({
   start_time: z.string().min(1, 'Start date and time is required'),
   end_time: z.string().min(1, 'End date and time is required'),
   timezone: z.string().default('EST'),
-  location: z.string().min(1, 'Location is required'),
   max_attendees: z.number().min(1, 'Maximum attendees must be at least 1'),
   event_type: z.enum(['virtual', 'in-person', 'hybrid']),
   platform: z.enum(['Google Meet', 'Zoom', 'Microsoft Teams', 'Other']).default('Google Meet'),
@@ -35,9 +34,9 @@ export const eventFormSteps: EventFormStep[] = [
   },
   {
     id: 'schedule',
-    title: 'Schedule & Location',
-    description: 'When and where your event will take place',
-    fields: ['start_time', 'end_time', 'timezone', 'location', 'event_type']
+    title: 'Schedule & Details',
+    description: 'When your event will take place and event type',
+    fields: ['start_time', 'end_time', 'timezone', 'event_type']
   },
   {
     id: 'platform',

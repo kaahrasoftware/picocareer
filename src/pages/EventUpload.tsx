@@ -39,14 +39,13 @@ export default function EventUpload() {
     setIsSubmitting(true);
 
     try {
-      // Convert form data to match database schema
+      // Convert form data to match database schema exactly
       const eventData = {
         title: data.title,
         description: data.description,
         start_time: data.start_time,
         end_time: data.end_time,
         timezone: data.timezone,
-        location: data.location,
         max_attendees: data.max_attendees,
         event_type: data.event_type,
         platform: data.platform,
@@ -54,8 +53,8 @@ export default function EventUpload() {
         facilitator: data.facilitator || null,
         organized_by: data.organized_by || null,
         thumbnail_url: data.thumbnail_url || null,
-        created_by: session.user.id,
-        status: 'Pending'
+        author_id: session.user.id, // Add the current user as author
+        status: 'Pending' // Set default status
       };
 
       const { data: eventResult, error } = await supabase

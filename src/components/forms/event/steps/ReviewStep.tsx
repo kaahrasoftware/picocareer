@@ -4,7 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Edit, Calendar, Clock, MapPin, Users, Video, User, Building } from 'lucide-react';
+import { CheckCircle, Edit, Calendar, Clock, Users, Video, User, Building } from 'lucide-react';
 import { EventFormData } from '../types';
 import { format } from 'date-fns';
 
@@ -92,12 +92,12 @@ export function ReviewStep({ form, onEdit }: ReviewStepProps) {
         </CardContent>
       </Card>
 
-      {/* Schedule & Location */}
+      {/* Schedule & Details */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Schedule & Location
+            Schedule & Details
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={() => onEdit(1)}>
             <Edit className="h-4 w-4" />
@@ -121,14 +121,6 @@ export function ReviewStep({ form, onEdit }: ReviewStepProps) {
             </div>
           </div>
           
-          <div>
-            <h4 className="font-medium flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Location
-            </h4>
-            <p className="text-muted-foreground">{formData.location || 'Not specified'}</p>
-          </div>
-
           <div>
             <h4 className="font-medium">Timezone</h4>
             <p className="text-muted-foreground">{formData.timezone}</p>
