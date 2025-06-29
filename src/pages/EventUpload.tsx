@@ -1,357 +1,356 @@
 
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { toast } from "sonner";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FormRichEditor } from "@/components/FormRichEditor";
-import { ImageUpload } from "@/components/forms/ImageUpload";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft } from "lucide-react";
-import { z } from "zod";
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FormRichEditor } from '@/components/FormRichEditor';
+import { ImageUpload } from '@/components/forms/ImageUpload';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
-const eventFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  start_time: z.string().min(1, "Start time is required"),
-  end_time: z.string().min(1, "End time is required"),
-  platform: z.enum(['Google Meet', 'Zoom']),
-  meeting_link: z.string().optional(),
-  max_attendees: z.number().optional(),
-  thumbnail_url: z.string().optional(),
-  organized_by: z.string().optional(),
+const eventSchema = z.object({
+  title: z.string().min(1, 'Event title is required'),
+  description: z.string().min(1, 'Event description is required'),
+  start_time: z.string().min(1, 'Start time is required'),
+  end_time: z.string().min(1, 'End time is required'),
+  event_type: z.enum(['webinar', 'workshop', 'conference', 'seminar', 'networking']),
+  platform: z.enum(['Google Meet', 'Zoom', 'Microsoft Teams', 'Other']),
+  max_attendees: z.number().min(1).optional(),
+  meeting_link: z.string().url().optional().or(z.literal('')),
   facilitator: z.string().optional(),
-  event_type: z.enum(['Coffee Time', 'Hackathon', 'Panel', 'Webinar', 'Workshop']),
-  timezone: z.string().min(1, "Timezone is required"),
+  organized_by: z.string().optional(),
+  thumbnail_url: z.string().optional(),
+  timezone: z.string().default('EST'),
 });
 
-type EventFormData = z.infer<typeof eventFormSchema>;
+type EventFormData = z.infer<typeof eventSchema>;
 
 export default function EventUpload() {
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { session } = useAuthSession();
-  const { data: profile } = useUserProfile(session);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFromDashboard, setIsFromDashboard] = useState(false);
 
-  const form = useForm<EventFormData>({
-    resolver: zodResolver(eventFormSchema),
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+    watch,
+  } = useForm<EventFormData>({
+    resolver: zodResolver(eventSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      start_time: "",
-      end_time: "",
-      platform: "Google Meet",
-      meeting_link: "",
+      title: '',
+      description: '',
+      start_time: '',
+      end_time: '',
+      event_type: 'webinar',
+      platform: 'Google Meet',
       max_attendees: undefined,
-      thumbnail_url: "",
-      organized_by: "",
-      facilitator: "",
-      event_type: "Webinar",
-      timezone: "EST",
+      meeting_link: '',
+      facilitator: '',
+      organized_by: '',
+      thumbnail_url: '',
+      timezone: 'EST',
     },
   });
 
-  useEffect(() => {
-    // Check if we're coming from the dashboard
-    const referrer = document.referrer;
-    if (referrer && referrer.includes('/dashboard')) {
-      setIsFromDashboard(true);
-    }
-  }, []);
-
   const onSubmit = async (data: EventFormData) => {
-    if (!session?.user) {
-      toast.error("You must be logged in to submit an event");
+    if (!session?.user?.id) {
+      toast({
+        title: 'Authentication Required',
+        description: 'You must be logged in to create an event.',
+        variant: 'destructive',
+      });
       return;
     }
-    
-    setIsSubmitting(true);
-    
+
     try {
-      const { error } = await supabase
-        .from('events')
-        .insert({
+      const { error } = await supabase.from('events').insert([
+        {
+          ...data,
           author_id: session.user.id,
           status: 'Pending',
-          ...data
-        });
+        },
+      ]);
 
       if (error) throw error;
 
-      toast.success("Event has been submitted for review");
-      form.reset();
-      
-      // If coming from dashboard, redirect back
-      if (isFromDashboard) {
-        navigate('/dashboard');
-      }
+      toast({
+        title: 'Success!',
+        description: 'Event created successfully.',
+      });
+
+      navigate('/profile?tab=dashboard');
     } catch (error: any) {
-      console.error('Error submitting event:', error);
-      toast.error(error.message);
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error creating event:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create event. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
-  useEffect(() => {
-    if (profile && profile.user_type !== 'admin') {
-      toast.error("Only administrators can access this page");
-      navigate('/');
-    }
-  }, [profile, navigate]);
-
-  if (!profile) return null;
-  if (profile.user_type !== 'admin') return null;
-
   return (
-    <div className="container max-w-3xl py-10">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Create New Event</h1>
-        
-        {isFromDashboard && (
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        )}
-      </div>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Event Title *</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter event title" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="container mx-auto py-8 px-4">
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-center">Create New Event</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Event Title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Event Title *</Label>
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    id="title"
+                    placeholder="Enter event title"
+                    {...field}
+                    className={errors.title ? 'border-red-500' : ''}
+                  />
+                )}
+              />
+              {errors.title && (
+                <p className="text-sm text-red-600">{errors.title.message}</p>
+              )}
+            </div>
 
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Event Description *</FormLabel>
-                <FormControl>
+            {/* Event Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Event Description *</Label>
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
                   <FormRichEditor
                     value={field.value}
                     onChange={field.onChange}
                     placeholder="Enter event description"
                     uploadConfig={{
-                      bucket: "Event_Posts",
-                      folderPath: "descriptions/"
+                      bucket: 'event-images',
+                      folderPath: 'descriptions/',
                     }}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="start_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Time *</FormLabel>
-                  <FormControl>
-                    <Input type="datetime-local" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                )}
+              />
+              {errors.description && (
+                <p className="text-sm text-red-600">{errors.description.message}</p>
               )}
-            />
+            </div>
 
-            <FormField
-              control={form.control}
-              name="end_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>End Time *</FormLabel>
-                  <FormControl>
-                    <Input type="datetime-local" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+            {/* Date and Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_time">Start Date & Time *</Label>
+                <Controller
+                  name="start_time"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="start_time"
+                      type="datetime-local"
+                      {...field}
+                      className={errors.start_time ? 'border-red-500' : ''}
+                    />
+                  )}
+                />
+                {errors.start_time && (
+                  <p className="text-sm text-red-600">{errors.start_time.message}</p>
+                )}
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="platform"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Meeting Platform *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select platform" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Google Meet">Google Meet</SelectItem>
-                      <SelectItem value="Zoom">Zoom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="end_time">End Date & Time *</Label>
+                <Controller
+                  name="end_time"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="end_time"
+                      type="datetime-local"
+                      {...field}
+                      className={errors.end_time ? 'border-red-500' : ''}
+                    />
+                  )}
+                />
+                {errors.end_time && (
+                  <p className="text-sm text-red-600">{errors.end_time.message}</p>
+                )}
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="event_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Category *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
+            {/* Event Type and Platform */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="event_type">Event Type *</Label>
+                <Controller
+                  name="event_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select event type" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Coffee Time">Coffee Time</SelectItem>
-                      <SelectItem value="Hackathon">Hackathon</SelectItem>
-                      <SelectItem value="Panel">Panel</SelectItem>
-                      <SelectItem value="Webinar">Webinar</SelectItem>
-                      <SelectItem value="Workshop">Workshop</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                      <SelectContent>
+                        <SelectItem value="webinar">Webinar</SelectItem>
+                        <SelectItem value="workshop">Workshop</SelectItem>
+                        <SelectItem value="conference">Conference</SelectItem>
+                        <SelectItem value="seminar">Seminar</SelectItem>
+                        <SelectItem value="networking">Networking</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.event_type && (
+                  <p className="text-sm text-red-600">{errors.event_type.message}</p>
+                )}
+              </div>
 
-          <FormField
-            control={form.control}
-            name="meeting_link"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Meeting Link</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter meeting link" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <div className="space-y-2">
+                <Label htmlFor="platform">Platform *</Label>
+                <Controller
+                  name="platform"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Google Meet">Google Meet</SelectItem>
+                        <SelectItem value="Zoom">Zoom</SelectItem>
+                        <SelectItem value="Microsoft Teams">Microsoft Teams</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.platform && (
+                  <p className="text-sm text-red-600">{errors.platform.message}</p>
+                )}
+              </div>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="max_attendees"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Maximum Attendees</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      placeholder="Enter maximum number of attendees"
+            {/* Additional Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="max_attendees">Max Attendees</Label>
+                <Controller
+                  name="max_attendees"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="max_attendees"
+                      type="number"
+                      placeholder="Enter max attendees"
                       {...field}
                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                      value={field.value || ""}
+                      value={field.value || ''}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  )}
+                />
+                {errors.max_attendees && (
+                  <p className="text-sm text-red-600">{errors.max_attendees.message}</p>
+                )}
+              </div>
 
-            <FormField
-              control={form.control}
-              name="timezone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Timezone *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter timezone (e.g., EST)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="meeting_link">Meeting Link</Label>
+                <Controller
+                  name="meeting_link"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="meeting_link"
+                      type="url"
+                      placeholder="Enter meeting link"
+                      {...field}
+                      className={errors.meeting_link ? 'border-red-500' : ''}
+                    />
+                  )}
+                />
+                {errors.meeting_link && (
+                  <p className="text-sm text-red-600">{errors.meeting_link.message}</p>
+                )}
+              </div>
+            </div>
 
-          <FormField
-            control={form.control}
-            name="thumbnail_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Event Image</FormLabel>
-                <FormControl>
-                  <ImageUpload
-                    control={form.control}
-                    name="thumbnail_url"
-                    label=""
-                    bucket="Event_Posts"
-                    accept="image/*"
-                    folderPath="thumbnails/"
-                    onUploadSuccess={(url) => field.onChange(url)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            {/* Facilitator and Organizer */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="facilitator">Facilitator</Label>
+                <Controller
+                  name="facilitator"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="facilitator"
+                      placeholder="Enter facilitator name"
+                      {...field}
+                    />
+                  )}
+                />
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="organized_by"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Organized By</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter organizer name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="space-y-2">
+                <Label htmlFor="organized_by">Organized By</Label>
+                <Controller
+                  name="organized_by"
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      id="organized_by"
+                      placeholder="Enter organization name"
+                      {...field}
+                    />
+                  )}
+                />
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="facilitator"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Facilitator</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter facilitator name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+            {/* Thumbnail Image */}
+            <div className="space-y-2">
+              <Label htmlFor="thumbnail_url">Event Thumbnail</Label>
+              <ImageUpload
+                control={control}
+                name="thumbnail_url"
+                label=""
+                bucket="event-images"
+                folderPath="thumbnails/"
+                onUploadSuccess={(url) => setValue('thumbnail_url', url)}
+              />
+            </div>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit Event'}
-          </Button>
-        </form>
-      </Form>
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/profile?tab=dashboard')}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Creating...' : 'Create Event'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useToast } from "@/hooks/use-toast";
@@ -17,15 +17,15 @@ interface FormRichEditorProps {
 
 const bucketUrl = `https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/`;
 
-export function FormRichEditor({ value, onChange, placeholder, uploadConfig }: FormRichEditorProps) {
+export const FormRichEditor = React.memo(function FormRichEditor({ 
+  value, 
+  onChange, 
+  placeholder, 
+  uploadConfig 
+}: FormRichEditorProps) {
   const { toast } = useToast();
   const supabase = useSupabaseClient();
-  const [isMounted, setIsMounted] = useState(false);
   const quillRef = useRef<ReactQuill>(null);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Function to handle image upload manually
   const handleImageUpload = () => {
@@ -106,12 +106,8 @@ export function FormRichEditor({ value, onChange, placeholder, uploadConfig }: F
     'link', 'image'
   ];
 
-  if (!isMounted) {
-    return null;
-  }
-
   return (
-    <div>
+    <div className="form-rich-editor">
       <ReactQuill
         ref={quillRef}
         theme="snow"
@@ -121,25 +117,28 @@ export function FormRichEditor({ value, onChange, placeholder, uploadConfig }: F
         modules={modules}
         formats={formats}
       />
-      <style>
-        {`
-        .ql-editor {
+      <style jsx>{`
+        .form-rich-editor .ql-editor {
           min-height: 200px;
           max-height: 500px;
           overflow-y: auto;
+          background-color: white;
         }
-        .ql-toolbar {
+        .form-rich-editor .ql-toolbar {
           background-color: #f9fafb;
           border-top-left-radius: 0.375rem;
           border-top-right-radius: 0.375rem;
         }
-        .ql-container {
+        .form-rich-editor .ql-container {
           border-bottom-left-radius: 0.375rem;
           border-bottom-right-radius: 0.375rem;
           background-color: white;
         }
-        `}
-      </style>
+        .form-rich-editor .ql-editor.ql-blank::before {
+          color: #9ca3af;
+          font-style: italic;
+        }
+      `}</style>
     </div>
   );
-}
+});
