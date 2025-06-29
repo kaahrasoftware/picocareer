@@ -40,7 +40,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   });
   const queryClient = useQueryClient();
 
-  // Fetch notifications - removed limit to get all notifications
+  // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -81,6 +81,20 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     },
   });
 
+  const markAsUnreadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: false })
+        .eq('id', notificationId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -96,11 +110,13 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   });
 
   const handleNotificationClick = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setIsDetailsDialogOpen(true);
+    
+    // Mark as read when opened (if not already read)
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
-    setSelectedNotification(notification);
-    setIsDetailsDialogOpen(true);
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -113,8 +129,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
   const handleToggleRead = (notification: Notification) => {
     if (notification.read) {
-      // Mark as unread (would need additional mutation)
-      console.log('Mark as unread not implemented yet');
+      markAsUnreadMutation.mutate(notification.id);
     } else {
       markAsReadMutation.mutate(notification.id);
     }
@@ -198,7 +213,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
                           )}
                         </div>
                         <p className="text-xs text-gray-600 line-clamp-2 mb-1">
-                          {notification.message}
+                          {notification.message.replace(/<[^>]*>/g, '')}
                         </p>
                         <p className="text-xs text-gray-400">
                           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
