@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus } from 'lucide-react';
 
 interface SessionTypeFormProps {
-  mentorId: string;
+  profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -50,7 +50,7 @@ const sessionTypes = [
 
 type SessionType = typeof sessionTypes[number];
 
-export function SessionTypeForm({ mentorId, onSuccess, onCancel }: SessionTypeFormProps) {
+export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeFormProps) {
   const [sessionType, setSessionType] = useState<SessionType>('Know About my Career');
   const [customType, setCustomType] = useState('');
   const [duration, setDuration] = useState(30);
@@ -79,7 +79,7 @@ export function SessionTypeForm({ mentorId, onSuccess, onCancel }: SessionTypeFo
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
-          mentor_id: mentorId,
+          profile_id: profileId,
           session_type: finalSessionType,
           duration_minutes: duration,
           cost_tokens: cost,

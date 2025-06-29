@@ -10,12 +10,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Clock, Plus } from 'lucide-react';
 
 interface TimeSlotFormProps {
-  mentorId: string;
+  profileId: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export function TimeSlotForm({ mentorId, onSuccess, onCancel }: TimeSlotFormProps) {
+export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormProps) {
   const [selectedDay, setSelectedDay] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -50,7 +50,7 @@ export function TimeSlotForm({ mentorId, onSuccess, onCancel }: TimeSlotFormProp
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          mentor_id: mentorId,
+          profile_id: profileId,
           day_of_week: selectedDay,
           start_time: startTime,
           end_time: endTime,

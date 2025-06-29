@@ -1,3 +1,4 @@
+
 import { SessionTypeCard } from "./session-type/SessionTypeCard";
 import { useSessionTypeManager } from "./hooks/useSessionTypeManager";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,6 @@ export function SessionTypeManager({ profileId, sessionTypes = [], onUpdate }: S
             profileId={profileId}
             onSuccess={handleFormSuccess}
             onCancel={() => setShowForm(false)}
-            existingTypes={fetchedSessionTypes}
           />
         </DialogContent>
       </Dialog>
