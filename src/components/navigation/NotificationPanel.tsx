@@ -8,8 +8,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
+import { NotificationFilters } from './filters/NotificationFilters';
+import { filterNotifications, NotificationFilters as FilterState } from './utils/notificationFilters';
 
-interface Notification {
+export interface Notification {
   id: string;
   title: string;
   message: string;
@@ -21,8 +23,6 @@ interface Notification {
   metadata?: any;
 }
 
-type NotificationCategory = 'general' | 'session' | 'system';
-
 interface NotificationPanelProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,7 +31,11 @@ interface NotificationPanelProps {
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const { user } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [activeTab, setActiveTab] = useState<NotificationCategory>('general');
+  const [filters, setFilters] = useState<FilterState>({
+    category: 'all',
+    status: 'all',
+    timeRange: 'all'
+  });
   const queryClient = useQueryClient();
 
   // Fetch notifications
@@ -53,22 +57,15 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       return (data || []).map(notification => ({
         ...notification,
         category: ['general', 'session', 'system'].includes(notification.category) 
-          ? notification.category as NotificationCategory 
-          : 'general' as NotificationCategory
+          ? notification.category as 'general' | 'session' | 'system'
+          : 'general' as 'general' | 'session' | 'system'
       }));
     },
     enabled: !!user?.id,
   });
 
-  // Group notifications by category
-  const groupedNotifications = notifications.reduce((acc, notification) => {
-    const category = notification.category as NotificationCategory;
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(notification);
-    return acc;
-  }, {} as Record<NotificationCategory, Notification[]>);
+  // Apply filters to notifications
+  const filteredNotifications = filterNotifications(notifications, filters);
 
   // Mark notification as read
   const markAsReadMutation = useMutation({
@@ -115,6 +112,14 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     deleteNotificationMutation.mutate(notificationId);
   };
 
+  const handleResetFilters = () => {
+    setFilters({
+      category: 'all',
+      status: 'all',
+      timeRange: 'all'
+    });
+  };
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   if (!isOpen) return null;
@@ -140,40 +145,31 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b">
-          {(['general', 'session', 'system'] as NotificationCategory[]).map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveTab(category)}
-              className={`flex-1 px-4 py-2 text-sm font-medium capitalize ${
-                activeTab === category
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {category}
-              {groupedNotifications[category]?.length > 0 && (
-                <span className="ml-1 text-xs">
-                  ({groupedNotifications[category].length})
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* Filters */}
+        <NotificationFilters
+          category={filters.category}
+          status={filters.status}
+          timeRange={filters.timeRange}
+          onCategoryChange={(category) => setFilters(prev => ({ ...prev, category }))}
+          onStatusChange={(status) => setFilters(prev => ({ ...prev, status }))}
+          onTimeRangeChange={(timeRange) => setFilters(prev => ({ ...prev, timeRange }))}
+          onResetFilters={handleResetFilters}
+          totalCount={notifications.length}
+          filteredCount={filteredNotifications.length}
+        />
 
         {/* Notifications List with Improved Scrolling */}
         <ScrollArea className="h-[400px]">
           <div className="p-3">
             {isLoading ? (
               <div className="p-4 text-center text-gray-500">Loading notifications...</div>
-            ) : !groupedNotifications[activeTab] || groupedNotifications[activeTab].length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                No {activeTab} notifications
+                {notifications.length === 0 ? "No notifications" : "No notifications match your filters"}
               </div>
             ) : (
               <div className="space-y-2">
-                {groupedNotifications[activeTab].map((notification) => (
+                {filteredNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
