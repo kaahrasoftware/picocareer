@@ -1,8 +1,8 @@
 
 import React from "react";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { FormDescription, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Control } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 import { UploadButton } from "./upload/UploadButton";
 import { ImagePreview } from "./upload/ImagePreview";
 import { useImageUpload } from "./upload/useImageUpload";
@@ -35,37 +35,37 @@ export function ImageUpload({
   });
 
   return (
-    <FormField
+    <Controller
       control={control}
       name={name}
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <UploadButton
-                  uploading={uploading}
-                  hasValue={!!field.value}
-                  onInputChange={(e) => handleUpload(e, field)}
-                  accept={accept}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <UploadButton
+                uploading={uploading}
+                hasValue={!!field.value}
+                onInputChange={(e) => handleUpload(e, field)}
+                accept={accept}
+              />
+              {field.value && (
+                <ImagePreview
+                  imageUrl={field.value}
+                  onRemove={() => handleRemove(field)}
                 />
-                {field.value && (
-                  <ImagePreview
-                    imageUrl={field.value}
-                    onRemove={() => handleRemove(field)}
-                  />
-                )}
-              </div>
-              <Input {...field} type="hidden" />
+              )}
             </div>
-          </FormControl>
+            <Input {...field} type="hidden" />
+          </div>
           {description && (
             <FormDescription className="text-sm text-muted-foreground mt-2">
               {description}
             </FormDescription>
           )}
-          <FormMessage />
+          {fieldState.error && (
+            <FormMessage>{fieldState.error.message}</FormMessage>
+          )}
         </FormItem>
       )}
     />

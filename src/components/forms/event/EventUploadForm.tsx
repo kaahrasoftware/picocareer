@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,7 +83,7 @@ export function EventUploadForm({ onSubmit, isSubmitting = false }: EventUploadF
                 control={form.control}
                 name="description"
                 render={({ field, fieldState }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2" key="description-wrapper">
                     <FormRichEditor
                       value={field.value}
                       onChange={field.onChange}
@@ -187,19 +186,13 @@ export function EventUploadForm({ onSubmit, isSubmitting = false }: EventUploadF
               />
             </div>
 
-            <FormField
+            <ImageUpload
               control={form.control}
               name="image_url"
-              render={({ field }) => (
-                <ImageUpload
-                  control={form.control}
-                  name="image_url"
-                  label="Event Image"
-                  bucket="content-images"
-                  folderPath="events/"
-                  onUploadSuccess={(url) => field.onChange(url)}
-                />
-              )}
+              label="Event Image"
+              bucket="content-images"
+              folderPath="events/"
+              onUploadSuccess={(url) => form.setValue('image_url', url)}
             />
           </CardContent>
         </Card>
