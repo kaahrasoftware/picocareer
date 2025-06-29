@@ -6,7 +6,8 @@ import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { EventUploadForm } from "@/components/forms/event/EventUploadForm";
+import { NewEventUploadForm } from "@/components/forms/event/NewEventUploadForm";
+import type { EventFormData } from "@/components/forms/event/types";
 
 export default function EventUpload() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function EventUpload() {
     );
   }
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: EventFormData) => {
     if (!session?.user) {
       toast({
         title: "Authentication Required",
@@ -38,18 +39,28 @@ export default function EventUpload() {
     setIsSubmitting(true);
 
     try {
-      const { data: eventData, error } = await supabase
+      // Convert form data to match database schema
+      const eventData = {
+        title: data.title,
+        description: data.description,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        timezone: data.timezone,
+        location: data.location,
+        max_attendees: data.max_attendees,
+        event_type: data.event_type,
+        platform: data.platform,
+        meeting_link: data.meeting_link || null,
+        facilitator: data.facilitator || null,
+        organized_by: data.organized_by || null,
+        thumbnail_url: data.thumbnail_url || null,
+        created_by: session.user.id,
+        status: 'Pending'
+      };
+
+      const { data: eventResult, error } = await supabase
         .from('events')
-        .insert({
-          title: data.title,
-          description: data.description,
-          event_date: data.event_date,
-          location: data.location,
-          max_attendees: data.max_attendees,
-          event_type: data.event_type,
-          image_url: data.image_url,
-          created_by: session.user.id,
-        })
+        .insert(eventData)
         .select()
         .single();
 
@@ -57,7 +68,7 @@ export default function EventUpload() {
 
       toast({
         title: "Success!",
-        description: "Event created successfully.",
+        description: "Event created successfully and is pending approval.",
       });
 
       navigate("/events");
@@ -74,7 +85,7 @@ export default function EventUpload() {
   };
 
   return (
-    <div className="container px-4 py-8 mx-auto max-w-4xl">
+    <div className="container px-4 py-8 mx-auto max-w-6xl">
       <Button 
         variant="ghost" 
         className="mb-6 flex items-center gap-1"
@@ -84,14 +95,14 @@ export default function EventUpload() {
         Back to Events
       </Button>
 
-      <div className="mb-8">
+      <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">Create New Event</h1>
         <p className="text-muted-foreground">
-          Fill out the form below to create a new event for the community.
+          Create an engaging event for the PicoCareer community with our step-by-step form.
         </p>
       </div>
 
-      <EventUploadForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      <NewEventUploadForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
     </div>
   );
 }
