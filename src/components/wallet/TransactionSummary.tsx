@@ -11,6 +11,14 @@ interface TransactionSummaryProps {
   dateTo?: Date | null;
 }
 
+interface SummaryData {
+  total_purchased: number;
+  total_spent: number;
+  total_refunded: number;
+  net_tokens: number;
+  transaction_count: number;
+}
+
 export function TransactionSummary({ walletId, dateFrom, dateTo }: TransactionSummaryProps) {
   const { data: summary, isLoading } = useQuery({
     queryKey: ['transaction-summary', walletId, dateFrom, dateTo],
@@ -22,7 +30,7 @@ export function TransactionSummary({ walletId, dateFrom, dateTo }: TransactionSu
       });
 
       if (error) throw error;
-      return data;
+      return data as SummaryData;
     },
     enabled: !!walletId
   });

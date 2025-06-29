@@ -27,11 +27,13 @@ export function ReviewStep({ form, onEdit }: ReviewStepProps) {
 
   const getEventTypeBadge = (type: string) => {
     const variants = {
-      virtual: 'bg-blue-50 text-blue-700 border-blue-200',
-      'in-person': 'bg-green-50 text-green-700 border-green-200',
-      hybrid: 'bg-purple-50 text-purple-700 border-purple-200'
+      'Coffee Time': 'bg-amber-50 text-amber-700 border-amber-200',
+      'Hackathon': 'bg-red-50 text-red-700 border-red-200',
+      'Panel': 'bg-blue-50 text-blue-700 border-blue-200',
+      'Webinar': 'bg-green-50 text-green-700 border-green-200',
+      'Workshop': 'bg-purple-50 text-purple-700 border-purple-200'
     };
-    return variants[type as keyof typeof variants] || '';
+    return variants[type as keyof typeof variants] || 'bg-gray-50 text-gray-700 border-gray-200';
   };
 
   return (
@@ -140,7 +142,7 @@ export function ReviewStep({ form, onEdit }: ReviewStepProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(formData.event_type === 'virtual' || formData.event_type === 'hybrid') && (
+          {(formData.event_type === 'Webinar' || formData.event_type === 'Workshop') && (
             <div>
               <h4 className="font-medium flex items-center gap-2">
                 <Video className="h-4 w-4" />

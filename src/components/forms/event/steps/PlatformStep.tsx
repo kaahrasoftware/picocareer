@@ -14,7 +14,8 @@ interface PlatformStepProps {
 
 export function PlatformStep({ form }: PlatformStepProps) {
   const eventType = form.watch('event_type');
-  const showPlatformFields = eventType === 'virtual' || eventType === 'hybrid';
+  // Show platform fields for events that typically need virtual meeting platforms
+  const showPlatformFields = eventType === 'Webinar' || eventType === 'Workshop';
 
   return (
     <Card>
