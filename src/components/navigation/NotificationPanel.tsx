@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, Archive, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -124,7 +125,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       
       <div className="fixed top-16 right-4 w-96 bg-white rounded-lg shadow-xl border z-50 max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between">
+        <div className="p-4 border-b flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
             <h3 className="font-semibold">Notifications</h3>
@@ -140,7 +141,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b">
+        <div className="flex border-b flex-shrink-0">
           {(['general', 'session', 'system'] as NotificationCategory[]).map((category) => (
             <button
               key={category}
@@ -161,78 +162,80 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           ))}
         </div>
 
-        {/* Notifications List */}
-        <ScrollArea className="flex-1">
-          <div className="p-2">
-            {isLoading ? (
-              <div className="p-4 text-center text-gray-500">Loading notifications...</div>
-            ) : !groupedNotifications[activeTab] || groupedNotifications[activeTab].length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No {activeTab} notifications
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {groupedNotifications[activeTab].map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
-                      !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white'
-                    }`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`text-sm font-medium truncate ${
-                            !notification.read ? 'text-blue-900' : 'text-gray-900'
-                          }`}>
-                            {notification.title}
-                          </h4>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
-                          )}
+        {/* Notifications List - Fixed ScrollArea */}
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full max-h-[500px]">
+            <div className="p-2">
+              {isLoading ? (
+                <div className="p-4 text-center text-gray-500">Loading notifications...</div>
+              ) : !groupedNotifications[activeTab] || groupedNotifications[activeTab].length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No {activeTab} notifications
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {groupedNotifications[activeTab].map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                        !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                      }`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className={`text-sm font-medium truncate ${
+                              !notification.read ? 'text-blue-900' : 'text-gray-900'
+                            }`}>
+                              {notification.title}
+                            </h4>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2 mb-1">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                          </p>
                         </div>
-                        <p className="text-xs text-gray-600 line-clamp-2 mb-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-1 flex-shrink-0">
-                        {!notification.read && (
+                        
+                        <div className="flex gap-1 flex-shrink-0">
+                          {!notification.read && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsRead(notification.id);
+                              }}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMarkAsRead(notification.id);
+                              handleDelete(notification.id);
                             }}
-                            className="h-6 w-6 p-0"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                           >
-                            <Check className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(notification.id);
-                          }}
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+                  ))}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </>
   );
