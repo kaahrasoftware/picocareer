@@ -41,7 +41,7 @@ export const SearchResultCard = ({
             <div className="flex items-center gap-3 mb-3">
               <ProfileAvatar 
                 avatarUrl={result.avatar_url} 
-                fallbackName={result.title[0]} 
+                fallback={result.title[0]} 
                 size="sm" 
                 editable={false} 
               />
