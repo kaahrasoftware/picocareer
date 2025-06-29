@@ -117,7 +117,7 @@ export const FormRichEditor = React.memo(function FormRichEditor({
         modules={modules}
         formats={formats}
       />
-      <style jsx>{`
+      <style>{`
         .form-rich-editor .ql-editor {
           min-height: 200px;
           max-height: 500px;
