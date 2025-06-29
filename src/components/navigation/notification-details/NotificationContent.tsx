@@ -1,9 +1,10 @@
 
-import { FC } from "react";
+import { FC, useState, useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { sanitizeHtml } from "@/lib/sanitize-html";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NotificationContentProps {
   notification: {
@@ -42,11 +43,44 @@ const getSessionIdFromActionUrl = (actionUrl: string): string | null => {
   return null;
 };
 
+// Function to fetch session date from database
+const fetchSessionDate = async (sessionId: string): Promise<string | null> => {
+  try {
+    console.log('Fetching session date for ID:', sessionId);
+    
+    const { data: sessionData, error } = await supabase
+      .from('mentor_sessions')
+      .select('scheduled_at')
+      .eq('id', sessionId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching session date:', error);
+      return null;
+    }
+
+    if (sessionData?.scheduled_at) {
+      // Format the date as YYYY-MM-DD for URL parameter
+      const sessionDate = new Date(sessionData.scheduled_at);
+      const formattedDate = sessionDate.toISOString().split('T')[0];
+      console.log('Session date fetched and formatted:', formattedDate);
+      return formattedDate;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching session date:', error);
+    return null;
+  }
+};
+
 export const NotificationContent: FC<NotificationContentProps> = ({
   notification,
   isExpanded
 }) => {
   const { message = '', type, action_url, id } = notification;
+  const [sessionDate, setSessionDate] = useState<string | null>(null);
+  const [isLoadingSessionDate, setIsLoadingSessionDate] = useState(false);
 
   // Define the truncated length based on notification type
   const getTruncatedLength = () => {
@@ -65,6 +99,20 @@ export const NotificationContent: FC<NotificationContentProps> = ({
   const truncatedMessage = plainTextMessage.length > truncateLength && !isExpanded
     ? `${plainTextMessage.substring(0, truncateLength)}...`
     : plainTextMessage;
+
+  // Effect to fetch session date when component mounts and is expanded
+  useEffect(() => {
+    if (action_url && isExpanded) {
+      const sessionId = getSessionIdFromActionUrl(action_url);
+      if (sessionId) {
+        setIsLoadingSessionDate(true);
+        fetchSessionDate(sessionId).then((date) => {
+          setSessionDate(date);
+          setIsLoadingSessionDate(false);
+        });
+      }
+    }
+  }, [action_url, isExpanded]);
 
   return (
     <div className="mt-2 mb-2">
@@ -89,13 +137,32 @@ export const NotificationContent: FC<NotificationContentProps> = ({
               const sessionId = getSessionIdFromActionUrl(action_url);
               if (sessionId) {
                 // For session notifications, redirect to calendar with session date
-                return (
-                  <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
-                    <Link to={`/profile?tab=calendar&sessionId=${sessionId}`}>
-                      View Session
-                    </Link>
-                  </Button>
-                );
+                if (isLoadingSessionDate) {
+                  return (
+                    <Button variant="outline" size="sm" className="rounded-full text-xs" disabled>
+                      Loading...
+                    </Button>
+                  );
+                }
+                
+                if (sessionDate) {
+                  return (
+                    <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
+                      <Link to={`/profile?tab=calendar&date=${sessionDate}`}>
+                        View Session
+                      </Link>
+                    </Button>
+                  );
+                } else {
+                  // Fallback to original URL if session date fetch failed
+                  return (
+                    <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
+                      <Link to={action_url}>
+                        View Session
+                      </Link>
+                    </Button>
+                  );
+                }
               } else {
                 // Regular internal link
                 return (

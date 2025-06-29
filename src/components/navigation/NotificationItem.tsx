@@ -58,11 +58,13 @@ export const NotificationItem = forwardRef<HTMLDivElement, NotificationItemProps
         />
         
         <NotificationContent 
-          message={notification.message}
+          notification={{
+            message: notification.message,
+            type: notification.type,
+            action_url: notification.action_url,
+            id: notification.id
+          }}
           isExpanded={isExpanded}
-          type={notification.type}
-          action_url={notification.action_url}
-          notification_id={notification.id}
         />
         
         <NotificationActions 
