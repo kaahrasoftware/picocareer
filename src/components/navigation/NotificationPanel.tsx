@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Bell, X, Check, Archive, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -161,9 +162,9 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           ))}
         </div>
 
-        {/* Notifications List */}
-        <ScrollArea className="flex-1">
-          <div className="p-2">
+        {/* Notifications List with Improved Scrolling */}
+        <ScrollArea className="h-[400px]">
+          <div className="p-3">
             {isLoading ? (
               <div className="p-4 text-center text-gray-500">Loading notifications...</div>
             ) : !groupedNotifications[activeTab] || groupedNotifications[activeTab].length === 0 ? (
