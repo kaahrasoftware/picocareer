@@ -8,7 +8,7 @@ export const eventFormSchema = z.object({
   end_time: z.string().min(1, 'End date and time is required'),
   timezone: z.string().default('EST'),
   max_attendees: z.number().min(1, 'Maximum attendees must be at least 1'),
-  event_type: z.enum(['virtual', 'in-person', 'hybrid']),
+  event_type: z.enum(['Coffee Time', 'Hackathon', 'Panel', 'Webinar', 'Workshop']),
   platform: z.enum(['Google Meet', 'Zoom', 'Microsoft Teams', 'Other']).default('Google Meet'),
   meeting_link: z.string().url().optional().or(z.literal('')),
   facilitator: z.string().optional(),

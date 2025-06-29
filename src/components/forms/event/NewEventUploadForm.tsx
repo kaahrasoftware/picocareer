@@ -33,7 +33,7 @@ export function NewEventUploadForm({ onSubmit, isSubmitting = false }: NewEventU
       end_time: '',
       timezone: 'EST',
       max_attendees: 50,
-      event_type: 'virtual',
+      event_type: 'Webinar',
       platform: 'Google Meet',
       meeting_link: '',
       facilitator: '',

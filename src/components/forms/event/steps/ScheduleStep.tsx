@@ -113,9 +113,11 @@ export function ScheduleStep({ form }: ScheduleStepProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="virtual">Virtual</SelectItem>
-                  <SelectItem value="in-person">In-Person</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="Coffee Time">Coffee Time</SelectItem>
+                  <SelectItem value="Hackathon">Hackathon</SelectItem>
+                  <SelectItem value="Panel">Panel</SelectItem>
+                  <SelectItem value="Webinar">Webinar</SelectItem>
+                  <SelectItem value="Workshop">Workshop</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
