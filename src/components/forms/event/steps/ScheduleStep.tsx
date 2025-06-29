@@ -133,7 +133,7 @@ export function ScheduleStep({ form }: ScheduleStepProps) {
                 <Input 
                   placeholder={
                     form.watch('event_type') === 'virtual' 
-                      ? 'Online (link will be provided)" 
+                      ? 'Online (link will be provided)' 
                       : form.watch('event_type') === 'hybrid'
                       ? 'Address + Online link'
                       : 'Full address of the venue'
