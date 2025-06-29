@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { X, Trash2, ExternalLink, CheckCircle, Circle, Calendar, Users } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import type { Notification } from './NotificationPanel';
 
 interface NotificationDetailsDialogProps {
@@ -30,6 +32,32 @@ export function NotificationDetailsDialog({
 }: NotificationDetailsDialogProps) {
   const navigate = useNavigate();
 
+  // Extract session ID from action URL for session notifications
+  const getSessionIdFromActionUrl = (actionUrl: string): string | null => {
+    const url = new URL(actionUrl, window.location.origin);
+    return url.searchParams.get('feedbackSession');
+  };
+
+  // Fetch session details when needed
+  const sessionId = notification?.action_url ? getSessionIdFromActionUrl(notification.action_url) : null;
+  
+  const { data: sessionDetails } = useQuery({
+    queryKey: ['session-details', sessionId],
+    queryFn: async () => {
+      if (!sessionId) return null;
+      
+      const { data, error } = await supabase
+        .from('mentor_sessions')
+        .select('scheduled_at')
+        .eq('id', sessionId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!sessionId && (notification?.type === 'session_booked' || notification?.type === 'session_reminder'),
+  });
+
   if (!notification) return null;
 
   const handleToggleRead = () => {
@@ -43,6 +71,14 @@ export function NotificationDetailsDialog({
 
   const handleActionUrl = () => {
     if (!notification.action_url) return;
+    
+    // Handle session-related notifications with enhanced navigation
+    if ((notification.type === 'session_booked' || notification.type === 'session_reminder') && sessionDetails?.scheduled_at) {
+      const sessionDate = format(new Date(sessionDetails.scheduled_at), 'yyyy-MM-dd');
+      navigate(`/profile?tab=calendar&date=${sessionDate}`);
+      onOpenChange(false);
+      return;
+    }
     
     if (notification.action_url.startsWith('/')) {
       // Internal route - use React Router
@@ -198,7 +234,9 @@ export function NotificationDetailsDialog({
                   className="flex items-center gap-2"
                 >
                   {getActionButtonText()}
-                  {!notification.action_url.startsWith('/') && (
+                  {!notification.action_url.startsWith('/') && 
+                   notification.type !== 'session_booked' && 
+                   notification.type !== 'session_reminder' && (
                     <ExternalLink className="h-4 w-4" />
                   )}
                 </Button>

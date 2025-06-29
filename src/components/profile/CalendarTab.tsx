@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CalendarContainer } from "./calendar/CalendarContainer";
 import { EventsSidebar } from "./calendar/EventsSidebar";
 import { useSessionEvents } from "@/hooks/useSessionEvents";
@@ -11,10 +12,25 @@ interface CalendarTabProps {
 }
 
 export function CalendarTab({ profile }: CalendarTabProps) {
+  const [searchParams] = useSearchParams();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { data: events = [], refetch } = useSessionEvents();
   const { session } = useAuthSession();
   const isMentor = profile.id === session?.user.id && profile.user_type === 'mentor';
+
+  // Handle date parameter from URL
+  useEffect(() => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      // Parse date in YYYY-MM-DD format
+      const parsedDate = new Date(dateParam + 'T00:00:00');
+      
+      // Validate the date
+      if (!isNaN(parsedDate.getTime())) {
+        setSelectedDate(parsedDate);
+      }
+    }
+  }, [searchParams]);
 
   return (
     <div className="space-y-4">
