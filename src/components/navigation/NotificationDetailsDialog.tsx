@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -52,7 +51,10 @@ export function NotificationDetailsDialog({
         .eq('id', sessionId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching session details:', error);
+        return null;
+      }
       return data;
     },
     enabled: !!sessionId && (notification?.type === 'session_booked' || notification?.type === 'session_reminder'),
@@ -72,10 +74,20 @@ export function NotificationDetailsDialog({
   const handleActionUrl = () => {
     if (!notification.action_url) return;
     
-    // Handle session-related notifications with enhanced navigation
-    if ((notification.type === 'session_booked' || notification.type === 'session_reminder') && sessionDetails?.scheduled_at) {
-      const sessionDate = format(new Date(sessionDetails.scheduled_at), 'yyyy-MM-dd');
-      navigate(`/profile?tab=calendar&date=${sessionDate}`);
+    // Handle session-related notifications - always navigate to calendar
+    if (notification.type === 'session_booked' || notification.type === 'session_reminder') {
+      let targetDate;
+      
+      if (sessionDetails?.scheduled_at) {
+        // Use the actual session date if available
+        targetDate = format(new Date(sessionDetails.scheduled_at), 'yyyy-MM-dd');
+      } else {
+        // Fallback to current date if session details aren't available
+        targetDate = format(new Date(), 'yyyy-MM-dd');
+        console.log('Session details not found, using current date as fallback');
+      }
+      
+      navigate(`/profile?tab=calendar&date=${targetDate}`);
       onOpenChange(false);
       return;
     }
