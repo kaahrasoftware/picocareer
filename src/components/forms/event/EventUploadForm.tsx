@@ -45,6 +45,7 @@ export function EventUploadForm({ onSubmit, isSubmitting = false }: EventUploadF
 
   const handleSubmit = async (data: EventFormData) => {
     try {
+      console.log('Form submission data:', data);
       await onSubmit(data);
       form.reset();
     } catch (error) {
@@ -77,13 +78,13 @@ export function EventUploadForm({ onSubmit, isSubmitting = false }: EventUploadF
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Description</FormLabel>
-                  <FormControl>
+            <div className="space-y-2">
+              <FormLabel>Event Description</FormLabel>
+              <Controller
+                control={form.control}
+                name="description"
+                render={({ field, fieldState }) => (
+                  <div className="space-y-2">
                     <FormRichEditor
                       value={field.value}
                       onChange={field.onChange}
@@ -93,11 +94,15 @@ export function EventUploadForm({ onSubmit, isSubmitting = false }: EventUploadF
                         folderPath: 'events/'
                       }}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    {fieldState.error && (
+                      <p className="text-sm font-medium text-destructive">
+                        {fieldState.error.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

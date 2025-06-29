@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,7 @@ interface FormRichEditorProps {
 
 const bucketUrl = `https://wurdmlkfkzuivvwxjmxk.supabase.co/storage/v1/object/public/`;
 
-export const FormRichEditor = React.memo(function FormRichEditor({ 
+export function FormRichEditor({ 
   value, 
   onChange, 
   placeholder, 
@@ -27,8 +27,8 @@ export const FormRichEditor = React.memo(function FormRichEditor({
   const supabase = useSupabaseClient();
   const quillRef = useRef<ReactQuill>(null);
 
-  // Function to handle image upload manually
-  const handleImageUpload = () => {
+  // Memoize the image upload handler to prevent recreating on every render
+  const handleImageUpload = useCallback(() => {
     if (!uploadConfig) {
       toast({
         title: "Upload Configuration Missing",
@@ -82,9 +82,10 @@ export const FormRichEditor = React.memo(function FormRichEditor({
         });
       }
     };
-  };
+  }, [uploadConfig, supabase.storage, toast]);
 
-  const modules = {
+  // Memoize modules to prevent recreation
+  const modules = React.useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, false] }],
@@ -97,7 +98,7 @@ export const FormRichEditor = React.memo(function FormRichEditor({
         image: handleImageUpload
       }
     }
-  };
+  }), [handleImageUpload]);
 
   const formats = [
     'header',
@@ -106,16 +107,31 @@ export const FormRichEditor = React.memo(function FormRichEditor({
     'link', 'image'
   ];
 
+  // Stable onChange handler
+  const handleChange = useCallback((content: string) => {
+    console.log('FormRichEditor onChange called with:', content?.length, 'characters');
+    onChange(content);
+  }, [onChange]);
+
+  // Add debugging to track component lifecycle
+  React.useEffect(() => {
+    console.log('FormRichEditor mounted/updated with value length:', value?.length);
+    return () => {
+      console.log('FormRichEditor cleanup');
+    };
+  }, [value]);
+
   return (
-    <div className="form-rich-editor">
+    <div className="form-rich-editor" key="stable-rich-editor">
       <ReactQuill
         ref={quillRef}
         theme="snow"
         value={value || ''}
-        onChange={onChange}
+        onChange={handleChange}
         placeholder={placeholder}
         modules={modules}
         formats={formats}
+        preserveWhitespace
       />
       <style>{`
         .form-rich-editor .ql-editor {
@@ -141,4 +157,4 @@ export const FormRichEditor = React.memo(function FormRichEditor({
       `}</style>
     </div>
   );
-});
+}
