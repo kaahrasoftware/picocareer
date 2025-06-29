@@ -30,7 +30,7 @@ export function EventImageUpload({ value, onChange }: EventImageUploadProps) {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       
       const { data, error } = await supabase.storage
-        .from('content-images')
+        .from('event-resources')
         .upload(`events/${fileName}`, processedFile, {
           cacheControl: '3600',
           upsert: false
@@ -39,7 +39,7 @@ export function EventImageUpload({ value, onChange }: EventImageUploadProps) {
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('content-images')
+        .from('event-resources')
         .getPublicUrl(`events/${fileName}`);
 
       onChange(publicUrl);
