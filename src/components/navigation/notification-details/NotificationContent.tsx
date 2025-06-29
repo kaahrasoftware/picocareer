@@ -1,26 +1,53 @@
 
 import { FC } from "react";
-import { Notification } from "../NotificationItem";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 
 interface NotificationContentProps {
-  message: string;
+  notification: {
+    message?: string;
+    type?: string;
+    action_url?: string;
+    id: string;
+  };
   isExpanded: boolean;
-  type?: string;
-  action_url?: string;
-  notification_id: string;
 }
 
+// Enhanced session ID extraction function to handle multiple URL patterns
+const getSessionIdFromActionUrl = (actionUrl: string): string | null => {
+  if (!actionUrl) {
+    console.log('No action URL provided');
+    return null;
+  }
+
+  console.log('Extracting session ID from URL:', actionUrl);
+
+  // Pattern 1: /sessions/SESSION_ID (for booking confirmations)
+  const sessionPathMatch = actionUrl.match(/\/sessions\/([a-f0-9-]{36})/i);
+  if (sessionPathMatch) {
+    console.log('Session ID found in path pattern:', sessionPathMatch[1]);
+    return sessionPathMatch[1];
+  }
+
+  // Pattern 2: feedbackSession=SESSION_ID (for feedback requests)
+  const feedbackParamMatch = actionUrl.match(/feedbackSession=([a-f0-9-]{36})/i);
+  if (feedbackParamMatch) {
+    console.log('Session ID found in feedback parameter:', feedbackParamMatch[1]);
+    return feedbackParamMatch[1];
+  }
+
+  console.log('No valid session ID pattern found in URL');
+  return null;
+};
+
 export const NotificationContent: FC<NotificationContentProps> = ({
-  message,
-  isExpanded,
-  type,
-  action_url,
-  notification_id
+  notification,
+  isExpanded
 }) => {
+  const { message = '', type, action_url, id } = notification;
+
   // Define the truncated length based on notification type
   const getTruncatedLength = () => {
     if (type === 'session_booking' || type === 'hub_invitation') return 100;
@@ -57,12 +84,29 @@ export const NotificationContent: FC<NotificationContentProps> = ({
       {action_url && isExpanded && (
         <div className="mt-3">
           {action_url.startsWith('/') ? (
-            // Internal link
-            <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
-              <Link to={action_url}>
-                View Details
-              </Link>
-            </Button>
+            // Internal link - check if it's a session-related URL for special handling
+            (() => {
+              const sessionId = getSessionIdFromActionUrl(action_url);
+              if (sessionId) {
+                // For session notifications, redirect to calendar with session date
+                return (
+                  <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
+                    <Link to={`/profile?tab=calendar&sessionId=${sessionId}`}>
+                      View Session
+                    </Link>
+                  </Button>
+                );
+              } else {
+                // Regular internal link
+                return (
+                  <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
+                    <Link to={action_url}>
+                      View Details
+                    </Link>
+                  </Button>
+                );
+              }
+            })()
           ) : (
             // External link
             <Button asChild variant="outline" size="sm" className="rounded-full text-xs">
