@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { NotificationFilters } from './filters/NotificationFilters';
 import { filterNotifications, NotificationFilters as FilterState } from './utils/notificationFilters';
+import { NotificationDetailsDialog } from './NotificationDetailsDialog';
 
 export interface Notification {
   id: string;
@@ -31,6 +32,7 @@ interface NotificationPanelProps {
 export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   const { user } = useAuth();
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     category: 'all',
     status: 'all',
@@ -52,7 +54,6 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
       if (error) throw error;
       
-      // Map database categories to expected categories
       return (data || []).map(notification => ({
         ...notification,
         category: notification.category === 'system' ? 'mentorship' : 
@@ -64,10 +65,8 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     enabled: !!user?.id,
   });
 
-  // Apply filters to notifications
   const filteredNotifications = filterNotifications(notifications, filters);
 
-  // Mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -82,7 +81,6 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
     },
   });
 
-  // Delete notification
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -102,6 +100,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       markAsReadMutation.mutate(notification.id);
     }
     setSelectedNotification(notification);
+    setIsDetailsDialogOpen(true);
   };
 
   const handleMarkAsRead = (notificationId: string) => {
@@ -110,6 +109,15 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
 
   const handleDelete = (notificationId: string) => {
     deleteNotificationMutation.mutate(notificationId);
+  };
+
+  const handleToggleRead = (notification: Notification) => {
+    if (notification.read) {
+      // Mark as unread (would need additional mutation)
+      console.log('Mark as unread not implemented yet');
+    } else {
+      markAsReadMutation.mutate(notification.id);
+    }
   };
 
   const handleResetFilters = () => {
@@ -231,6 +239,15 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           </div>
         </ScrollArea>
       </div>
+
+      {/* Notification Details Dialog */}
+      <NotificationDetailsDialog
+        notification={selectedNotification}
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        onToggleRead={handleToggleRead}
+        onDelete={handleDelete}
+      />
     </>
   );
 }
