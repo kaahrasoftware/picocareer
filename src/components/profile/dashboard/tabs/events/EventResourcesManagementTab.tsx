@@ -2,13 +2,17 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, FileText, Download, Eye, BarChart3 } from 'lucide-react';
+import { Plus, Upload, BarChart3 } from 'lucide-react';
 import { EventResourceForm } from '@/components/event/EventResourceForm';
+import { EventResourcesDataTable } from '@/components/event/EventResourcesDataTable';
+import { ResourceFilters } from '@/components/event/ResourceFilters';
+import { ResourceStats } from '@/components/event/ResourceStats';
 import { EventResourceMetrics } from './EventResourceMetrics';
 import { ModernResourceAnalytics } from './ModernResourceAnalytics';
 import { useEventResources } from '@/hooks/useEventResources';
+import { EventResource } from '@/types/event-resources';
 
 interface EventResourcesManagementTabProps {
   eventId: string;
@@ -16,27 +20,67 @@ interface EventResourcesManagementTabProps {
 
 export function EventResourcesManagementTab({ eventId }: EventResourcesManagementTabProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [selectedResource, setSelectedResource] = useState<any>(null);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<EventResource | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedAccess, setSelectedAccess] = useState('all');
   
   const { resources = [], isLoading } = useEventResources(eventId);
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case 'pdf': return <FileText className="h-4 w-4" />;
-      case 'video': return <FileText className="h-4 w-4" />;
-      case 'link': return <FileText className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
+  // Filter resources based on search and filters
+  const filteredResources = resources.filter(resource => {
+    const matchesSearch = searchQuery.toLowerCase() === '' || 
+      resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (resource.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+
+    const matchesType = selectedType === 'all' || resource.resource_type === selectedType;
+    const matchesAccess = selectedAccess === 'all' || resource.access_level === selectedAccess;
+
+    return matchesSearch && matchesType && matchesAccess;
+  });
+
+  const handleEdit = (resource: EventResource) => {
+    setSelectedResource(resource);
+    setShowEditForm(true);
+  };
+
+  const handleFormSuccess = () => {
+    setShowCreateForm(false);
+    setShowEditForm(false);
+    setSelectedResource(null);
+  };
+
+  const handleExport = () => {
+    // TODO: Implement export functionality
+    console.log('Export resources');
+  };
+
+  const handleBulkUpload = () => {
+    // TODO: Implement bulk upload functionality
+    console.log('Bulk upload resources');
   };
 
   if (isLoading) {
-    return <div>Loading resources...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading resources...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Event Resources</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Event Resources</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage and track resources for your event
+          </p>
+        </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Resource
@@ -50,76 +94,47 @@ export function EventResourcesManagementTab({ eventId }: EventResourcesManagemen
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="resources" className="space-y-4">
-          {resources.length === 0 ? (
+        <TabsContent value="resources" className="space-y-6">
+          <ResourceStats resources={resources} />
+          
+          <ResourceFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedType={selectedType}
+            onTypeChange={setSelectedType}
+            selectedAccess={selectedAccess}
+            onAccessChange={setSelectedAccess}
+            onExport={handleExport}
+            onBulkUpload={handleBulkUpload}
+          />
+
+          {filteredResources.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center">
+              <CardContent className="p-8 text-center">
                 <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">No resources yet</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  {resources.length === 0 ? 'No resources yet' : 'No resources match your filters'}
+                </h3>
                 <p className="text-muted-foreground mb-4">
-                  Add your first resource to share with event attendees
+                  {resources.length === 0 
+                    ? 'Add your first resource to share with event attendees'
+                    : 'Try adjusting your search or filter criteria'
+                  }
                 </p>
-                <Button onClick={() => setShowCreateForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Resource
-                </Button>
+                {resources.length === 0 && (
+                  <Button onClick={() => setShowCreateForm(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Resource
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
-              {resources.map((resource) => (
-                <Card key={resource.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {getResourceIcon(resource.resource_type)}
-                        <div>
-                          <CardTitle className="text-lg">{resource.title}</CardTitle>
-                          <p className="text-sm text-muted-foreground">
-                            {resource.description}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {resource.resource_type}
-                        </Badge>
-                        <Badge variant={resource.access_level === 'public' ? 'default' : 'secondary'}>
-                          {resource.access_level}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
-                          {resource.view_count || 0} views
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Download className="h-4 w-4" />
-                          {resource.download_count || 0} downloads
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedResource(resource)}
-                        >
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Analytics
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <EventResourcesDataTable
+              eventId={eventId}
+              resources={filteredResources}
+              onEdit={handleEdit}
+            />
           )}
         </TabsContent>
 
@@ -132,13 +147,36 @@ export function EventResourcesManagementTab({ eventId }: EventResourcesManagemen
         </TabsContent>
       </Tabs>
 
-      {showCreateForm && (
-        <EventResourceForm
-          eventId={eventId}
-          onSuccess={() => setShowCreateForm(false)}
-          onCancel={() => setShowCreateForm(false)}
-        />
-      )}
+      {/* Create Resource Dialog */}
+      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Resource</DialogTitle>
+          </DialogHeader>
+          <EventResourceForm
+            eventId={eventId}
+            onSuccess={handleFormSuccess}
+            onCancel={() => setShowCreateForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Resource Dialog */}
+      <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Resource</DialogTitle>
+          </DialogHeader>
+          {selectedResource && (
+            <EventResourceForm
+              eventId={eventId}
+              initialResource={selectedResource}
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowEditForm(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
