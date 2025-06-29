@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Clock, MapPin, Users, Calendar, Video } from 'lucide-react';
+import { Form } from '@/components/ui/form';
 import { eventFormSchema, EventFormData, eventFormSteps } from './types';
 import { BasicInfoStep } from './steps/BasicInfoStep';
 import { ScheduleStep } from './steps/ScheduleStep';
@@ -191,36 +192,39 @@ export function NewEventUploadForm({ onSubmit, isSubmitting = false }: NewEventU
         </CardContent>
       </Card>
 
-      {/* Step Content */}
-      <form onSubmit={form.handleSubmit(handleSubmit)}>
-        {renderStepContent()}
+      {/* Form Provider Wrapper */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)}>
+          {/* Step Content */}
+          {renderStepContent()}
 
-        {/* Navigation Buttons */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 0}
-              >
-                Previous
-              </Button>
+          {/* Navigation Buttons */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 0}
+                >
+                  Previous
+                </Button>
 
-              {currentStep < eventFormSteps.length - 1 ? (
-                <Button type="button" onClick={handleNext}>
-                  Next
-                </Button>
-              ) : (
-                <Button type="submit" disabled={isSubmitting} className="min-w-32">
-                  {isSubmitting ? 'Creating Event...' : 'Create Event'}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+                {currentStep < eventFormSteps.length - 1 ? (
+                  <Button type="button" onClick={handleNext}>
+                    Next
+                  </Button>
+                ) : (
+                  <Button type="submit" disabled={isSubmitting} className="min-w-32">
+                    {isSubmitting ? 'Creating Event...' : 'Create Event'}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
     </div>
   );
 }
