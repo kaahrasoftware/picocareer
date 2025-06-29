@@ -4,49 +4,60 @@ import { useNavigate } from "react-router-dom";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { toast } from "sonner";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { FormField } from "@/components/forms/FormField";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { RichTextEditor } from "@/components/forms/RichTextEditor";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormRichEditor } from "@/components/FormRichEditor";
+import { ImageUpload } from "@/components/forms/ImageUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
+import { z } from "zod";
 
-interface EventFormData {
-  title: string;
-  description: string;
-  start_time: string;
-  end_time: string;
-  platform: 'Google Meet' | 'Zoom';
-  meeting_link?: string;
-  max_attendees?: number;
-  thumbnail_url?: string;
-  organized_by?: string;
-  facilitator?: string;
-  event_type: 'Coffee Time' | 'Hackathon' | 'Panel' | 'Webinar' | 'Workshop';
-  timezone: string;
-}
+const eventFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  start_time: z.string().min(1, "Start time is required"),
+  end_time: z.string().min(1, "End time is required"),
+  platform: z.enum(['Google Meet', 'Zoom']),
+  meeting_link: z.string().optional(),
+  max_attendees: z.number().optional(),
+  thumbnail_url: z.string().optional(),
+  organized_by: z.string().optional(),
+  facilitator: z.string().optional(),
+  event_type: z.enum(['Coffee Time', 'Hackathon', 'Panel', 'Webinar', 'Workshop']),
+  timezone: z.string().min(1, "Timezone is required"),
+});
+
+type EventFormData = z.infer<typeof eventFormSchema>;
 
 export default function EventUpload() {
   const navigate = useNavigate();
   const { session } = useAuthSession();
   const { data: profile } = useUserProfile(session);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const form = useForm<EventFormData>();
   const [isFromDashboard, setIsFromDashboard] = useState(false);
 
-  const platformOptions = [
-    { id: 'Google Meet', name: 'Google Meet' },
-    { id: 'Zoom', name: 'Zoom' }
-  ];
-
-  const eventTypeOptions = [
-    { id: 'Coffee Time', name: 'Coffee Time' },
-    { id: 'Hackathon', name: 'Hackathon' },
-    { id: 'Panel', name: 'Panel' },
-    { id: 'Webinar', name: 'Webinar' },
-    { id: 'Workshop', name: 'Workshop' }
-  ];
+  const form = useForm<EventFormData>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      start_time: "",
+      end_time: "",
+      platform: "Google Meet",
+      meeting_link: "",
+      max_attendees: undefined,
+      thumbnail_url: "",
+      organized_by: "",
+      facilitator: "",
+      event_type: "Webinar",
+      timezone: "EST",
+    },
+  });
 
   useEffect(() => {
     // Check if we're coming from the dashboard
@@ -122,35 +133,66 @@ export default function EventUpload() {
           <FormField
             control={form.control}
             name="title"
-            label="Event Title"
-            placeholder="Enter event title"
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Title *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter event title" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <FormField
             control={form.control}
             name="description"
-            label="Event Description"
-            type="richtext"
-            component={RichTextEditor}
-            required
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Description *</FormLabel>
+                <FormControl>
+                  <FormRichEditor
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Enter event description"
+                    uploadConfig={{
+                      bucket: "Event_Posts",
+                      folderPath: "descriptions/"
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="start_time"
-              label="Start Time"
-              type="datetime-local"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time *</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
               control={form.control}
               name="end_time"
-              label="End Time"
-              type="datetime-local"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Time *</FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
@@ -158,68 +200,150 @@ export default function EventUpload() {
             <FormField
               control={form.control}
               name="platform"
-              label="Meeting Platform"
-              type="select"
-              options={platformOptions}
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meeting Platform *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select platform" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Google Meet">Google Meet</SelectItem>
+                      <SelectItem value="Zoom">Zoom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
               control={form.control}
               name="event_type"
-              label="Event Category"
-              type="select"
-              options={eventTypeOptions}
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Event Category *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select event type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Coffee Time">Coffee Time</SelectItem>
+                      <SelectItem value="Hackathon">Hackathon</SelectItem>
+                      <SelectItem value="Panel">Panel</SelectItem>
+                      <SelectItem value="Webinar">Webinar</SelectItem>
+                      <SelectItem value="Workshop">Workshop</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
           <FormField
             control={form.control}
             name="meeting_link"
-            label="Meeting Link"
-            placeholder="Enter meeting link"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Meeting Link</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter meeting link" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="max_attendees"
-              label="Maximum Attendees"
-              type="number"
-              placeholder="Enter maximum number of attendees"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Maximum Attendees</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="Enter maximum number of attendees"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
               control={form.control}
               name="timezone"
-              label="Timezone"
-              placeholder="Enter timezone (e.g., EST)"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Timezone *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter timezone (e.g., EST)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
           <FormField
             control={form.control}
             name="thumbnail_url"
-            label="Event Image"
-            type="image"
-            bucket="Event_Posts"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Image</FormLabel>
+                <FormControl>
+                  <ImageUpload
+                    control={form.control}
+                    name="thumbnail_url"
+                    label=""
+                    bucket="Event_Posts"
+                    accept="image/*"
+                    folderPath="thumbnails/"
+                    onUploadSuccess={(url) => field.onChange(url)}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="organized_by"
-              label="Organized By"
-              placeholder="Enter organizer name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Organized By</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter organizer name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
 
             <FormField
               control={form.control}
               name="facilitator"
-              label="Facilitator"
-              placeholder="Enter facilitator name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Facilitator</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter facilitator name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
 
