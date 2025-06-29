@@ -1,7 +1,7 @@
 
 import { Notification } from "../NotificationPanel";
 
-export type NotificationFilterCategory = 'all' | 'general' | 'session' | 'system';
+export type NotificationFilterCategory = 'all' | 'general' | 'session' | 'mentorship';
 export type NotificationFilterStatus = 'all' | 'unread' | 'read';
 export type NotificationFilterTime = 'all' | 'today' | 'week' | 'month';
 

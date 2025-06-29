@@ -19,7 +19,7 @@ export function HorizontalWalletOverview() {
       if (!wallet?.id) return [];
       
       const { data, error } = await supabase
-        .from('wallet_transactions')
+        .from('token_transactions')
         .select('*')
         .eq('wallet_id', wallet.id)
         .order('created_at', { ascending: false })

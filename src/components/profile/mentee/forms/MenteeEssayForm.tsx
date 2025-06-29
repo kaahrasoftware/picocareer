@@ -11,7 +11,7 @@ interface MenteeEssayResponse {
   id: string;
   prompt_id: string;
   response_text: string;
-  word_count: number;
+  word_count?: number;
   is_draft: boolean;
 }
 
@@ -45,13 +45,15 @@ export function MenteeEssayForm({ menteeId, onClose, essay }: MenteeEssayFormPro
     setIsSubmitting(true);
 
     try {
+      const wordCount = formData.content.split(' ').filter(word => word.length > 0).length;
+      
       if (essay) {
         // Update existing essay
         const { error } = await supabase
           .from('mentee_essay_responses')
           .update({
             response_text: formData.content,
-            word_count: formData.content.split(' ').length,
+            word_count: wordCount,
             is_draft: false
           })
           .eq('id', essay.id);
@@ -65,7 +67,7 @@ export function MenteeEssayForm({ menteeId, onClose, essay }: MenteeEssayFormPro
             mentee_id: menteeId,
             prompt_id: '00000000-0000-0000-0000-000000000000',
             response_text: formData.content,
-            word_count: formData.content.split(' ').length,
+            word_count: wordCount,
             is_draft: false
           });
 

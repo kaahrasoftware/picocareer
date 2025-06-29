@@ -16,7 +16,7 @@ export interface Notification {
   title: string;
   message: string;
   type: string;
-  category: 'general' | 'session' | 'system';
+  category: 'general' | 'session' | 'mentorship';
   read: boolean;
   created_at: string;
   action_url?: string;
@@ -38,7 +38,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
   });
   const queryClient = useQueryClient();
 
-  // Fetch notifications
+  // Fetch notifications - removed limit to get all notifications
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -48,17 +48,17 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
         .from('notifications')
         .select('*')
         .eq('profile_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Filter and transform the data to ensure proper types
+      // Map database categories to expected categories
       return (data || []).map(notification => ({
         ...notification,
-        category: ['general', 'session', 'system'].includes(notification.category) 
-          ? notification.category as 'general' | 'session' | 'system'
-          : 'general' as 'general' | 'session' | 'system'
+        category: notification.category === 'system' ? 'mentorship' : 
+                 ['general', 'session', 'mentorship'].includes(notification.category) 
+                   ? notification.category as 'general' | 'session' | 'mentorship'
+                   : 'general' as 'general' | 'session' | 'mentorship'
       }));
     },
     enabled: !!user?.id,
@@ -158,7 +158,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           filteredCount={filteredNotifications.length}
         />
 
-        {/* Notifications List with Improved Scrolling */}
+        {/* Notifications List */}
         <ScrollArea className="h-[400px]">
           <div className="p-3">
             {isLoading ? (

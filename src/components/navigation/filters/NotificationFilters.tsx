@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
-export type NotificationFilterCategory = 'all' | 'general' | 'session' | 'system';
+export type NotificationFilterCategory = 'all' | 'general' | 'session' | 'mentorship';
 export type NotificationFilterStatus = 'all' | 'unread' | 'read';
 export type NotificationFilterTime = 'all' | 'today' | 'week' | 'month';
 
@@ -36,7 +36,6 @@ export function NotificationFilters({
 
   return (
     <div className="border-b p-4 space-y-3">
-      {/* Filter Controls */}
       <div className="flex flex-wrap gap-2">
         <Select value={category} onValueChange={onCategoryChange}>
           <SelectTrigger className="w-32">
@@ -46,7 +45,7 @@ export function NotificationFilters({
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="general">General</SelectItem>
             <SelectItem value="session">Session</SelectItem>
-            <SelectItem value="system">System</SelectItem>
+            <SelectItem value="mentorship">Mentorship</SelectItem>
           </SelectContent>
         </Select>
 
@@ -86,7 +85,6 @@ export function NotificationFilters({
         )}
       </div>
 
-      {/* Filter Summary */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <span>
