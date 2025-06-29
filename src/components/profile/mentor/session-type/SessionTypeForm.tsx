@@ -79,9 +79,11 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
-          profile_id: profileId,
-          custom_type_name: finalSessionType,
+          mentor_id: profileId,
+          type: finalSessionType,
           duration: duration,
+          price: cost,
+          custom_type_name: sessionType === 'Custom' ? finalSessionType : null,
           description: description || null,
         });
 
@@ -154,7 +156,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
               />
             </div>
             <div>
-              <Label htmlFor="cost">Cost (tokens)</Label>
+              <Label htmlfor="cost">Cost (tokens)</Label>
               <Input
                 id="cost"
                 type="number"

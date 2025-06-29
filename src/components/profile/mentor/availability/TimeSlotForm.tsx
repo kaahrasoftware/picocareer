@@ -16,26 +16,26 @@ interface TimeSlotFormProps {
 }
 
 export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormProps) {
-  const [selectedDay, setSelectedDay] = useState('');
+  const [selectedDay, setSelectedDay] = useState<number | ''>('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const daysOfWeek = [
-    { value: 'monday', label: 'Monday' },
-    { value: 'tuesday', label: 'Tuesday' },
-    { value: 'wednesday', label: 'Wednesday' },
-    { value: 'thursday', label: 'Thursday' },
-    { value: 'friday', label: 'Friday' },
-    { value: 'saturday', label: 'Saturday' },
-    { value: 'sunday', label: 'Sunday' },
+    { value: 0, label: 'Sunday' },
+    { value: 1, label: 'Monday' },
+    { value: 2, label: 'Tuesday' },
+    { value: 3, label: 'Wednesday' },
+    { value: 4, label: 'Thursday' },
+    { value: 5, label: 'Friday' },
+    { value: 6, label: 'Saturday' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedDay || !startTime || !endTime) {
+    if (selectedDay === '' || !startTime || !endTime) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields.",
@@ -50,8 +50,8 @@ export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormPro
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
-          profile_id: profileId,
-          day_of_week: selectedDay,
+          mentor_id: profileId,
+          day_of_week: selectedDay as number,
           start_time: startTime,
           end_time: endTime,
           is_available: true,
@@ -89,13 +89,13 @@ export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormPro
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="day">Day of Week</Label>
-            <Select value={selectedDay} onValueChange={setSelectedDay}>
+            <Select value={selectedDay.toString()} onValueChange={(value) => setSelectedDay(parseInt(value))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a day" />
               </SelectTrigger>
               <SelectContent>
                 {daysOfWeek.map((day) => (
-                  <SelectItem key={day.value} value={day.value}>
+                  <SelectItem key={day.value} value={day.value.toString()}>
                     {day.label}
                   </SelectItem>
                 ))}

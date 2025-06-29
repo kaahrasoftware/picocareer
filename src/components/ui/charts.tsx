@@ -30,11 +30,13 @@ ChartContainer.displayName = "ChartContainer"
 // Chart tooltip component
 const ChartTooltip = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof Tooltip>
+  Omit<React.ComponentProps<typeof Tooltip>, 'className'> & {
+    className?: string
+  }
 >(({ className, ...props }, ref) => {
   return (
     <Tooltip
-      className={cn(
+      wrapperClassName={cn(
         "rounded-lg border bg-background p-2 shadow-md",
         className
       )}

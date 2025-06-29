@@ -50,7 +50,7 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
       }
 
       if (statusFilter !== 'all') {
-        query = query.eq('transaction_status', statusFilter);
+        query = query.eq('transaction_status', statusFilter as TransactionStatus);
       }
 
       const { data, error } = await query;

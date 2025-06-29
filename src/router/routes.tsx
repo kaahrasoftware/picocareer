@@ -1,3 +1,4 @@
+
 import { Navigate, createBrowserRouter } from "react-router-dom";
 
 import { MainLayout } from "./layouts";
@@ -103,6 +104,10 @@ export const router = createBrowserRouter([
       },
       {
         path: "event",
+        element: <Event />,
+      },
+      {
+        path: "events",
         element: <Event />,
       },
       {
