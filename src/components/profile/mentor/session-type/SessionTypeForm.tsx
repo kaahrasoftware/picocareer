@@ -74,7 +74,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
-          profile_id: profileId,
+          mentor_id: profileId,
           type: sessionType,
           duration: duration,
           price: cost,
