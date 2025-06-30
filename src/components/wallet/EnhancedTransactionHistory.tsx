@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Download, Filter, Search, ArrowUpDown, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { Calendar, Search, ArrowUpDown, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface EnhancedTransactionHistoryProps {
@@ -33,7 +33,6 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { data: transactions, isLoading } = useQuery({

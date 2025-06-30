@@ -4704,6 +4704,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      bytea_to_text: {
+        Args: { data: string }
+        Returns: string
+      }
       calculate_hub_member_count: {
         Args: { _hub_id: string }
         Returns: number
@@ -4861,6 +4865,57 @@ export type Database = {
         Args: { p_opportunity_id: string }
         Returns: Json
       }
+      http: {
+        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_delete: {
+        Args:
+          | { uri: string }
+          | { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_get: {
+        Args: { uri: string } | { uri: string; data: Json }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_head: {
+        Args: { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_header: {
+        Args: { field: string; value: string }
+        Returns: Database["public"]["CompositeTypes"]["http_header"]
+      }
+      http_list_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          curlopt: string
+          value: string
+        }[]
+      }
+      http_patch: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_post: {
+        Args:
+          | { uri: string; content: string; content_type: string }
+          | { uri: string; data: Json }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_put: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_reset_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      http_set_curlopt: {
+        Args: { curlopt: string; value: string }
+        Returns: boolean
+      }
       increment_opportunity_applications_count: {
         Args: { opportunity_id: string }
         Returns: undefined
@@ -4973,6 +5028,10 @@ export type Database = {
         Args: { "": string }
         Returns: string[]
       }
+      text_to_bytea: {
+        Args: { data: string }
+        Returns: string
+      }
       update_availability_dst: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -4984,6 +5043,10 @@ export type Database = {
       update_careers_profiles_count: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      urlencode: {
+        Args: { data: Json } | { string: string } | { string: string }
+        Returns: string
       }
     }
     Enums: {
@@ -5632,7 +5695,23 @@ export type Database = {
         | "Discord"
     }
     CompositeTypes: {
-      [_ in never]: never
+      http_header: {
+        field: string | null
+        value: string | null
+      }
+      http_request: {
+        method: unknown | null
+        uri: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content_type: string | null
+        content: string | null
+      }
+      http_response: {
+        status: number | null
+        content_type: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content: string | null
+      }
     }
   }
 }
