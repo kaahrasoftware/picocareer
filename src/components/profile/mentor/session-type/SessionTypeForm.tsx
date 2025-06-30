@@ -80,7 +80,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
         .from('mentor_session_types')
         .insert({
           profile_id: profileId,
-          type: finalSessionType,
+          type: sessionType,
           duration: duration,
           price: cost,
           custom_type_name: sessionType === 'Custom' ? finalSessionType : null,

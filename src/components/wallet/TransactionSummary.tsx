@@ -30,7 +30,7 @@ export function TransactionSummary({ walletId, dateFrom, dateTo }: TransactionSu
       });
 
       if (error) throw error;
-      return data as SummaryData;
+      return data as unknown as SummaryData;
     },
     enabled: !!walletId
   });

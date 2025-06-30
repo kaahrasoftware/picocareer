@@ -47,14 +47,23 @@ export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormPro
     setIsSubmitting(true);
 
     try {
+      // Create a proper datetime for the availability slot
+      const today = new Date();
+      const startDateTime = new Date(today);
+      startDateTime.setHours(parseInt(startTime.split(':')[0]), parseInt(startTime.split(':')[1]), 0, 0);
+      
+      const endDateTime = new Date(today);
+      endDateTime.setHours(parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]), 0, 0);
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
           profile_id: profileId,
           day_of_week: selectedDay as number,
-          start_time: startTime,
-          end_time: endTime,
+          start_date_time: startDateTime.toISOString(),
+          end_date_time: endDateTime.toISOString(),
           is_available: true,
+          reference_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         });
 
       if (error) throw error;
