@@ -39,11 +39,6 @@ const sessionTypes = [
   'Cover Letter Review',
   'Portfolio Review',
   'Mock Interview',
-  'Skill Development',
-  'Career Transition',
-  'Entrepreneurship Guidance',
-  'Research Opportunities',
-  'Internship Guidance',
   'Job Search Strategy',
   'Custom'
 ] as const;

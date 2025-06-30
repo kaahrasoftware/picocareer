@@ -19,52 +19,49 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    console.log('Starting event email listener service');
-    
-    // Set up real-time listener for database notifications
-    const channel = supabase.channel('event_confirmations');
-    
+    console.log('Starting event email listener...');
+
     // Listen for PostgreSQL notifications
-    channel.on('postgres_changes', 
-      { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'event_registrations' 
-      }, 
-      async (payload) => {
-        console.log('New event registration detected:', payload.new.id);
+    const channel = supabase
+      .channel('event_confirmation_email')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'event_email_logs'
+      }, async (payload) => {
+        console.log('Received notification:', payload);
         
-        try {
-          // Call the process-event-confirmations function
-          const { error } = await supabase.functions.invoke(
-            'process-event-confirmations',
-            {
-              body: { registrationId: payload.new.id }
-            }
-          );
+        if (payload.eventType === 'INSERT' && payload.new?.status === 'queued') {
+          const registrationId = payload.new.registration_id;
           
-          if (error) {
-            console.error('Error processing email confirmation:', error);
-          } else {
-            console.log('Email confirmation processed successfully for:', payload.new.id);
+          console.log('Processing queued email for registration:', registrationId);
+          
+          // Call the process-event-confirmations function
+          try {
+            const { error } = await supabase.functions.invoke('process-event-confirmations', {
+              body: { registrationId }
+            });
+            
+            if (error) {
+              console.error('Error processing email confirmation:', error);
+            } else {
+              console.log('Email confirmation processed successfully');
+            }
+          } catch (error) {
+            console.error('Failed to process email confirmation:', error);
           }
-        } catch (error) {
-          console.error('Error in email processing:', error);
         }
-      }
-    );
+      })
+      .subscribe();
 
-    // Subscribe to the channel
-    channel.subscribe((status) => {
-      console.log('Subscription status:', status);
-    });
+    // Keep the function alive
+    let isRunning = true;
+    while (isRunning) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
-    // Keep the function alive to listen for events
     return new Response(
-      JSON.stringify({ 
-        message: 'Event email listener started',
-        status: 'listening'
-      }), 
+      JSON.stringify({ message: 'Event email listener started' }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -72,9 +69,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Error in event-email-listener function:", error);
+    console.error("Error in event-email-listener:", error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

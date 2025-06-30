@@ -7,8 +7,7 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,116 +20,59 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log('Starting email queue processing...');
 
-    // Get all queued email logs
+    // Get all queued emails older than 2 minutes (in case immediate processing failed)
     const { data: queuedEmails, error: fetchError } = await supabase
       .from('event_email_logs')
-      .select(`
-        id,
-        registration_id,
-        email,
-        status,
-        created_at
-      `)
+      .select('registration_id, email, created_at')
       .eq('status', 'queued')
-      .order('created_at', { ascending: true })
-      .limit(50); // Process in batches
+      .lt('created_at', new Date(Date.now() - 2 * 60 * 1000).toISOString())
+      .limit(50);
 
     if (fetchError) {
       console.error('Error fetching queued emails:', fetchError);
       throw fetchError;
     }
 
-    if (!queuedEmails || queuedEmails.length === 0) {
-      console.log('No queued emails found');
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'No emails in queue',
-          processed: 0 
-        }), 
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
+    console.log(`Found ${queuedEmails?.length || 0} queued emails to process`);
 
-    console.log(`Found ${queuedEmails.length} queued emails to process`);
+    let processed = 0;
+    let errors = 0;
 
-    let processedCount = 0;
-    let errorCount = 0;
-
-    // Process each queued email
-    for (const emailLog of queuedEmails) {
-      try {
-        console.log(`Processing email for registration: ${emailLog.registration_id}`);
-
-        // Update status to processing
-        await supabase
-          .from('event_email_logs')
-          .update({ 
-            status: 'processing',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', emailLog.id);
-
-        // Call the process-event-confirmations function
-        const { error: processError } = await supabase.functions.invoke(
-          'process-event-confirmations',
-          {
+    if (queuedEmails && queuedEmails.length > 0) {
+      for (const emailLog of queuedEmails) {
+        try {
+          console.log('Processing email for registration:', emailLog.registration_id);
+          
+          const { error: processError } = await supabase.functions.invoke('process-event-confirmations', {
             body: { registrationId: emailLog.registration_id }
-          }
-        );
+          });
 
-        if (processError) {
-          console.error(`Error processing email for registration ${emailLog.registration_id}:`, processError);
-          
-          // Update status to failed
-          await supabase
-            .from('event_email_logs')
-            .update({ 
-              status: 'failed',
-              error_message: processError.message,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', emailLog.id);
-            
-          errorCount++;
-        } else {
-          console.log(`Successfully processed email for registration: ${emailLog.registration_id}`);
-          processedCount++;
+          if (processError) {
+            console.error(`Error processing email for ${emailLog.registration_id}:`, processError);
+            errors++;
+          } else {
+            console.log('Successfully processed email for registration:', emailLog.registration_id);
+            processed++;
+          }
+        } catch (error) {
+          console.error(`Failed to process email for ${emailLog.registration_id}:`, error);
+          errors++;
         }
 
-        // Add small delay between processing to avoid overwhelming the system
+        // Small delay to avoid overwhelming the system
         await new Promise(resolve => setTimeout(resolve, 100));
-
-      } catch (error: any) {
-        console.error(`Error processing email log ${emailLog.id}:`, error);
-        
-        // Update status to failed
-        await supabase
-          .from('event_email_logs')
-          .update({ 
-            status: 'failed',
-            error_message: error.message,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', emailLog.id);
-          
-        errorCount++;
       }
     }
 
-    console.log(`Email queue processing completed. Processed: ${processedCount}, Errors: ${errorCount}`);
+    console.log(`Email queue processing completed. Processed: ${processed}, Errors: ${errors}`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Email queue processing completed`,
-        processed: processedCount,
-        errors: errorCount,
-        total: queuedEmails.length
-      }), 
+        processed,
+        errors,
+        totalFound: queuedEmails?.length || 0
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -138,14 +80,9 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
   } catch (error: any) {
-    console.error("Error in process-email-queue function:", error);
-    
+    console.error("Error in process-email-queue:", error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message,
-        message: 'Failed to process email queue'
-      }), 
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

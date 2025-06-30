@@ -55,6 +55,9 @@ export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormPro
       const endDateTime = new Date(today);
       endDateTime.setHours(parseInt(endTime.split(':')[0]), parseInt(endTime.split(':')[1]), 0, 0);
 
+      // Calculate timezone offset
+      const timezoneOffset = -(new Date().getTimezoneOffset());
+
       const { error } = await supabase
         .from('mentor_availability')
         .insert({
@@ -64,6 +67,7 @@ export function TimeSlotForm({ profileId, onSuccess, onCancel }: TimeSlotFormPro
           end_date_time: endDateTime.toISOString(),
           is_available: true,
           reference_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone_offset: timezoneOffset,
         });
 
       if (error) throw error;
