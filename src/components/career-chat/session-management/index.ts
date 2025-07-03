@@ -1,2 +1,0 @@
-
-export { SessionManagementDialog } from './SessionManagementDialog';

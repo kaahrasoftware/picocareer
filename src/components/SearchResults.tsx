@@ -1,3 +1,4 @@
+
 import { Command, CommandEmpty, CommandInput, CommandList } from "@/components/ui/command";
 import { Card } from "@/components/ui/card";
 import { useSearchData } from "@/hooks/useSearchData";
@@ -63,11 +64,12 @@ export const SearchResults = ({ query, onClose }: SearchResultsProps) => {
       />
     ];
     
-    const hasResults = sections.some(section => 
-      section.props.mentors?.length > 0 || 
-      section.props.careers?.length > 0 || 
-      section.props.majors?.length > 0
-    );
+    const hasResults = sections.some(section => {
+      if (section.key === 'mentors') return section.props.mentors?.length > 0;
+      if (section.key === 'careers') return section.props.careers?.length > 0;
+      if (section.key === 'majors') return section.props.majors?.length > 0;
+      return false;
+    });
 
     return hasResults ? (
       <>
