@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Calendar, Edit2, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { MenteeEssayForm } from '@/components/profile/mentee/essay/MenteeEssayForm';
 import { formatDistanceToNow } from 'date-fns';
 
 interface MenteeEssaysTabProps {
@@ -116,15 +116,12 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
 
   if (showForm) {
     return (
-      <MenteeEssayForm
-        menteeId={profileId}
-        essay={selectedEssay}
-        onClose={() => {
-          setShowForm(false);
-          setSelectedEssay(null);
-        }}
-        onSubmit={handleSaveEssay}
-      />
+      <div className="p-4">
+        <h3>Essay Form Coming Soon</h3>
+        <Button onClick={() => setShowForm(false)} variant="outline">
+          Back to Essays
+        </Button>
+      </div>
     );
   }
 
