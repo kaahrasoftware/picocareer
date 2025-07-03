@@ -58,10 +58,8 @@ export function useAdvancedCampaignFilters(adminId: string) {
       }
 
       // Add date range filtering if provided
-      if (filters.dateRange.from) {
+      if (filters.dateRange.from && filters.dateRange.to) {
         query = query.gte('created_at', filters.dateRange.from.toISOString());
-      }
-      if (filters.dateRange.to) {
         query = query.lte('created_at', filters.dateRange.to.toISOString());
       }
 

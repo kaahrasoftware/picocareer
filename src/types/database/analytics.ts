@@ -39,3 +39,19 @@ export interface MemberGrowth {
   date: string;
   new_members: number;
 }
+
+export interface ResourceEngagement {
+  resource_id: string;
+  resource_title: string;
+  view_count: number;
+  download_count: number;
+  engagement_rate: number;
+}
+
+export interface AnnouncementEngagement {
+  announcement_id: string;
+  announcement_title: string;
+  view_count: number;
+  reaction_count: number;
+  engagement_rate: number;
+}
