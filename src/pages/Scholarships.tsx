@@ -83,16 +83,22 @@ export default function Scholarships() {
             <div className="space-y-8">
               <ScholarshipHeader onScrapingComplete={refreshScholarships} />
               
-              <ScholarshipFilters
-                onFilterChange={handleFilterChange}
-                categories={categories}
-              />
-
-              <ScholarshipGrid
-                scholarships={scholarships}
-                isLoading={isLoading}
-                resetFilters={resetFilters}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="lg:col-span-1">
+                  <ScholarshipFilters
+                    onFilterChange={handleFilterChange}
+                    categories={categories}
+                  />
+                </div>
+                
+                <div className="lg:col-span-3">
+                  <ScholarshipGrid
+                    scholarships={scholarships}
+                    isLoading={isLoading}
+                    resetFilters={resetFilters}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

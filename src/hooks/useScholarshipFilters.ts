@@ -16,25 +16,30 @@ export function useScholarshipFilters(refreshKey: number = 0) {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Apply filters
-      if (filters.search) {
+      // Apply filters only if they have valid values
+      if (filters.search && filters.search.trim()) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,provider_name.ilike.%${filters.search}%`);
       }
 
-      if (filters.category) {
+      if (filters.category && filters.category !== 'all' && filters.category.trim()) {
         query = query.contains('category', [filters.category]);
       }
 
-      if (filters.amount) {
-        const [min, max] = filters.amount.split('-').map(Number);
-        if (max) {
-          query = query.gte('amount', min).lte('amount', max);
-        } else {
+      if (filters.amount && filters.amount !== 'all' && filters.amount.trim()) {
+        const amountParts = filters.amount.split('-');
+        const min = parseInt(amountParts[0]);
+        const max = amountParts[1] ? parseInt(amountParts[1]) : null;
+        
+        // Only apply filter if we have valid numbers
+        if (!isNaN(min)) {
           query = query.gte('amount', min);
+          if (max && !isNaN(max)) {
+            query = query.lte('amount', max);
+          }
         }
       }
 
-      if (filters.deadline) {
+      if (filters.deadline && filters.deadline instanceof Date) {
         const deadlineStr = filters.deadline.toISOString().split('T')[0];
         query = query.gte('application_deadline', deadlineStr);
       }
@@ -42,8 +47,14 @@ export function useScholarshipFilters(refreshKey: number = 0) {
       // Add other filters as needed
       if (filters.citizenship && filters.citizenship.length > 0) {
         // Filter by citizenship requirements (assuming it's stored in eligibility_criteria)
-        const citizenshipFilter = filters.citizenship.map(c => `eligibility_criteria.cs.{${c}}`).join(',');
-        query = query.or(citizenshipFilter);
+        const citizenshipFilter = filters.citizenship
+          .filter(c => c && c.trim()) // Remove empty values
+          .map(c => `eligibility_criteria.cs.{${c}}`)
+          .join(',');
+        
+        if (citizenshipFilter) {
+          query = query.or(citizenshipFilter);
+        }
       }
 
       const { data, error } = await query;
