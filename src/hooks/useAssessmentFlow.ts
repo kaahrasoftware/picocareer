@@ -1,157 +1,198 @@
 
 import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AssessmentQuestion, QuestionResponse, CareerRecommendation } from '@/types/assessment';
-import { useAuthSession } from './useAuthSession';
-
-const ASSESSMENT_QUESTIONS: AssessmentQuestion[] = [
-  {
-    id: '1',
-    title: 'What type of work environment do you prefer?',
-    type: 'multiple_choice',
-    options: [
-      'Office setting with team collaboration',
-      'Remote work with flexibility',
-      'Field work with variety',
-      'Laboratory or research setting',
-      'Customer-facing environment'
-    ],
-    order: 1,
-    isRequired: true
-  },
-  {
-    id: '2',
-    title: 'Which activities do you find most engaging?',
-    description: 'Select all that apply',
-    type: 'multiple_select',
-    options: [
-      'Problem solving and analysis',
-      'Creative design and art',
-      'Leading and managing people',
-      'Teaching and mentoring',
-      'Building and creating things',
-      'Research and investigation',
-      'Helping and supporting others'
-    ],
-    order: 2,
-    isRequired: true
-  },
-  {
-    id: '3',
-    title: 'How important is work-life balance to you?',
-    type: 'scale',
-    order: 3,
-    isRequired: true
-  },
-  {
-    id: '4',
-    title: 'What are your long-term career goals?',
-    description: 'Share your aspirations and what you hope to achieve',
-    type: 'text',
-    order: 4,
-    isRequired: true
-  },
-  {
-    id: '5',
-    title: 'Which skills do you feel most confident about?',
-    type: 'multiple_select',
-    options: [
-      'Communication and presentation',
-      'Technical and analytical',
-      'Creative and artistic',
-      'Leadership and management',
-      'Research and critical thinking',
-      'Organizational and planning',
-      'Interpersonal and social'
-    ],
-    order: 5,
-    isRequired: true,
-    isLast: true
-  }
-];
+import { useToast } from '@/hooks/use-toast';
+import type { AssessmentQuestion, QuestionResponse, AssessmentResult } from '@/types/assessment';
 
 export const useAssessmentFlow = () => {
-  const { session } = useAuthSession();
-  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
-  const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const currentQuestion = ASSESSMENT_QUESTIONS[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / ASSESSMENT_QUESTIONS.length) * 100;
-
-  const handleAnswer = useCallback((response: QuestionResponse) => {
-    setResponses(prev => [...prev, response]);
-    
-    if (currentQuestionIndex < ASSESSMENT_QUESTIONS.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+  // Fetch assessment questions
+  const { data: questions = [], isLoading } = useQuery({
+    queryKey: ['assessment-questions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('assessment_questions')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index');
+      
+      if (error) throw error;
+      return data as AssessmentQuestion[];
     }
-  }, [currentQuestionIndex]);
+  });
 
-  const generateRecommendations = useCallback(async () => {
-    if (!session?.user?.id) return;
+  // Create new assessment
+  const createAssessment = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
 
-    setIsGenerating(true);
-    
-    try {
-      // Call the AI edge function to generate recommendations
-      const { data, error } = await supabase.functions.invoke('ai-career-assessment', {
+      const { data, error } = await supabase
+        .from('career_assessments')
+        .insert({
+          user_id: user.id,
+          status: 'in_progress'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setAssessmentId(data.id);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to start assessment. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error creating assessment:', error);
+    }
+  });
+
+  // Save individual response
+  const saveResponse = useMutation({
+    mutationFn: async ({ questionId, answer }: { questionId: string; answer: any }) => {
+      if (!assessmentId) throw new Error('No active assessment');
+
+      const { error } = await supabase
+        .from('assessment_responses')
+        .upsert({
+          assessment_id: assessmentId,
+          question_id: questionId,
+          answer: JSON.stringify(answer)
+        });
+
+      if (error) throw error;
+    },
+    onError: (error) => {
+      console.error('Error saving response:', error);
+    }
+  });
+
+  // Process assessment with AI
+  const processAssessment = useMutation({
+    mutationFn: async () => {
+      if (!assessmentId || responses.length === 0) {
+        throw new Error('Invalid assessment data');
+      }
+
+      const response = await supabase.functions.invoke('ai-career-assessment', {
         body: {
-          responses: responses,
-          userId: session.user.id
+          assessmentId,
+          responses: responses.map(r => ({
+            questionId: r.questionId,
+            answer: r.answer
+          }))
         }
       });
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to process assessment');
+      }
 
-      setRecommendations(data.recommendations);
-      
-      // Save the assessment to the database
-      const { error: saveError } = await supabase
-        .from('career_assessments')
-        .insert({
-          user_id: session.user.id,
-          responses: responses,
-          recommendations: data.recommendations,
-          status: 'completed'
-        });
-
-      if (saveError) throw saveError;
-
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['career-assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
       toast({
         title: "Assessment Complete!",
         description: "Your personalized career recommendations are ready.",
       });
-
-    } catch (error) {
-      console.error('Error generating recommendations:', error);
+    },
+    onError: (error) => {
       toast({
-        title: "Error",
+        title: "Processing Error",
         description: "Failed to generate recommendations. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsGenerating(false);
+      console.error('Error processing assessment:', error);
     }
-  }, [responses, session, toast]);
+  });
 
-  const resetAssessment = useCallback(() => {
+  const startAssessment = useCallback(() => {
+    if (!assessmentId) {
+      createAssessment.mutate();
+    }
     setCurrentQuestionIndex(0);
     setResponses([]);
-    setRecommendations([]);
-    setIsGenerating(false);
-  }, []);
+  }, [assessmentId, createAssessment]);
+
+  const answerQuestion = useCallback((answer: string | string[] | number) => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    const newResponse: QuestionResponse = {
+      questionId: currentQuestion.id,
+      answer,
+      timestamp: new Date().toISOString()
+    };
+
+    // Update responses
+    const updatedResponses = responses.filter(r => r.questionId !== currentQuestion.id);
+    updatedResponses.push(newResponse);
+    setResponses(updatedResponses);
+
+    // Save to database
+    if (assessmentId) {
+      saveResponse.mutate({ questionId: currentQuestion.id, answer });
+    }
+  }, [currentQuestionIndex, questions, responses, assessmentId, saveResponse]);
+
+  const nextQuestion = useCallback(() => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  }, [currentQuestionIndex, questions.length]);
+
+  const previousQuestion = useCallback(() => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  }, [currentQuestionIndex]);
+
+  const completeAssessment = useCallback(() => {
+    if (responses.length === questions.length) {
+      processAssessment.mutate();
+    }
+  }, [responses.length, questions.length, processAssessment]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const canProceed = responses.some(r => r.questionId === currentQuestion?.id);
+  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   return {
+    // State
+    questions,
     currentQuestion,
+    currentQuestionIndex,
     responses,
-    recommendations,
-    isGenerating,
+    assessmentId,
+    isLastQuestion,
+    canProceed,
     progress,
-    handleAnswer,
-    generateRecommendations,
-    resetAssessment
+    
+    // Loading states
+    isLoading,
+    isCreating: createAssessment.isPending,
+    isSaving: saveResponse.isPending,
+    isProcessing: processAssessment.isPending,
+    
+    // Actions
+    startAssessment,
+    answerQuestion,
+    nextQuestion,
+    previousQuestion,
+    completeAssessment,
   };
 };

@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assessment_questions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_required: boolean
+          options: Json | null
+          order_index: number
+          title: string
+          type: Database["public"]["Enums"]["question_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          order_index: number
+          title: string
+          type: Database["public"]["Enums"]["question_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          order_index?: number
+          title?: string
+          type?: Database["public"]["Enums"]["question_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      assessment_responses: {
+        Row: {
+          answer: Json
+          assessment_id: string
+          created_at: string
+          id: string
+          question_id: string
+        }
+        Insert: {
+          answer: Json
+          assessment_id: string
+          created_at?: string
+          id?: string
+          question_id: string
+        }
+        Update: {
+          answer?: Json
+          assessment_id?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_responses_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "career_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       availability_requests: {
         Row: {
           created_at: string
@@ -137,6 +215,36 @@ export type Database = {
         }
         Relationships: []
       }
+      career_assessments: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          started_at: string
+          status: Database["public"]["Enums"]["assessment_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["assessment_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["assessment_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       career_major_relations: {
         Row: {
           career_id: string
@@ -166,6 +274,72 @@ export type Database = {
             columns: ["major_id"]
             isOneToOne: false
             referencedRelation: "majors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_recommendations: {
+        Row: {
+          assessment_id: string
+          career_id: string | null
+          created_at: string
+          description: string
+          education_requirements: string[] | null
+          growth_outlook: string | null
+          id: string
+          match_score: number
+          reasoning: string
+          required_skills: string[] | null
+          salary_range: string | null
+          time_to_entry: string | null
+          title: string
+          work_environment: string | null
+        }
+        Insert: {
+          assessment_id: string
+          career_id?: string | null
+          created_at?: string
+          description: string
+          education_requirements?: string[] | null
+          growth_outlook?: string | null
+          id?: string
+          match_score: number
+          reasoning: string
+          required_skills?: string[] | null
+          salary_range?: string | null
+          time_to_entry?: string | null
+          title: string
+          work_environment?: string | null
+        }
+        Update: {
+          assessment_id?: string
+          career_id?: string | null
+          created_at?: string
+          description?: string
+          education_requirements?: string[] | null
+          growth_outlook?: string | null
+          id?: string
+          match_score?: number
+          reasoning?: string
+          required_skills?: string[] | null
+          salary_range?: string | null
+          time_to_entry?: string | null
+          title?: string
+          work_environment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_recommendations_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "career_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_recommendations_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
             referencedColumns: ["id"]
           },
         ]
@@ -4925,6 +5099,7 @@ export type Database = {
         | "Accepted"
         | "Rejected"
         | "Withdrawn"
+      assessment_status: "in_progress" | "completed"
       audit_action:
         | "member_added"
         | "member_removed"
@@ -5310,6 +5485,7 @@ export type Database = {
         | "likert_scale"
         | "open_ended"
       project_status: "completed" | "in_progress" | "planned" | "on_hold"
+      question_type: "multiple_choice" | "multiple_select" | "scale" | "text"
       recommendation_type: "career" | "major" | "trait"
       resource_access_level: "public" | "members" | "faculty" | "admin"
       resource_type: "document" | "image" | "video" | "audio" | "external_link"
@@ -5701,6 +5877,7 @@ export const Constants = {
         "Rejected",
         "Withdrawn",
       ],
+      assessment_status: ["in_progress", "completed"],
       audit_action: [
         "member_added",
         "member_removed",
@@ -6097,6 +6274,7 @@ export const Constants = {
         "open_ended",
       ],
       project_status: ["completed", "in_progress", "planned", "on_hold"],
+      question_type: ["multiple_choice", "multiple_select", "scale", "text"],
       recommendation_type: ["career", "major", "trait"],
       resource_access_level: ["public", "members", "faculty", "admin"],
       resource_type: ["document", "image", "video", "audio", "external_link"],
