@@ -121,10 +121,24 @@ export function useResourceTracking() {
     });
   };
 
+  // Legacy function names for backward compatibility
+  const trackView = trackResourceView;
+  const trackDownload = trackResourceDownload;
+
+  // Additional functions that some components expect
+  const browserInfo = getBrowserInfo();
+  const processQueue = () => {
+    // No-op for now, could be implemented for batching
+  };
+
   return {
     trackResourceView,
     trackResourceDownload,
     trackResourceInteraction,
+    trackView,
+    trackDownload,
+    browserInfo,
+    processQueue,
     isTracking
   };
 }

@@ -25,8 +25,8 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
       // Only apply type filter if it's not "all" and is defined
       if (filters.type && filters.type !== 'all') {
         console.log('Applying type filter:', filters.type);
-        // Cast to string to avoid type issues
-        query = query.eq('opportunity_type', filters.type as string);
+        // Cast to proper database enum type
+        query = query.eq('opportunity_type', filters.type);
       }
 
       if (filters.search) {

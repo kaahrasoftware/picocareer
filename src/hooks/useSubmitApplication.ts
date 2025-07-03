@@ -30,10 +30,12 @@ export function useSubmitApplication() {
         .eq('id', applicationData.opportunity_id)
         .single();
 
-      await supabase
-        .from('opportunities')
-        .update({ applications_count: (opportunity.applications_count || 0) + 1 })
-        .eq('id', applicationData.opportunity_id);
+      if (opportunity) {
+        await supabase
+          .from('opportunities')
+          .update({ applications_count: (opportunity.applications_count || 0) + 1 })
+          .eq('id', applicationData.opportunity_id);
+      }
     } catch (updateError) {
       console.error("Failed to update applications count:", updateError);
     }

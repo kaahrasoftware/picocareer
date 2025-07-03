@@ -101,6 +101,11 @@ export function useSessionEvents() {
         // Check if current user has provided feedback for this session
         const hasFeedback = feedbackMap.has(session.id);
         
+        const startDate = new Date(session.scheduled_at);
+        const endDate = new Date(
+          startDate.getTime() + (session.session_type?.duration || 60) * 60 * 1000
+        );
+        
         return {
           id: session.id,
           title: `Session with ${
@@ -109,11 +114,8 @@ export function useSessionEvents() {
               : session.mentor.full_name
           }`,
           description: `Mentoring session`,
-          start: session.scheduled_at,
-          end: new Date(
-            new Date(session.scheduled_at).getTime() +
-              (session.session_type?.duration || 60) * 60 * 1000
-          ).toISOString(),
+          start: startDate,
+          end: endDate,
           type: 'session',
           status: session.status,
           session_details: {
