@@ -17,7 +17,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
 
   // Calculate percentages with fallback values
   const memberPercentage = calculatePercentage(summary.activeMembers, summary.memberLimit || 100);
-  const storagePercentage = calculatePercentage(summary.storageUsed, summary.storageLimit);
+  const storagePercentage = calculatePercentage(summary.storageUsage, summary.storageLimit);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -88,7 +88,7 @@ export function AnalyticsSummaryCards({ summary }: AnalyticsSummaryCardsProps) {
             <div>
               <p className="text-sm font-medium">Storage</p>
               <div className="flex items-baseline gap-2">
-                <h4 className="text-2xl font-bold">{formatFileSize(summary.storageUsed)}</h4>
+                <h4 className="text-2xl font-bold">{formatFileSize(summary.storageUsage)}</h4>
                 <span className="text-xs text-muted-foreground">/ {formatFileSize(summary.storageLimit)}</span>
               </div>
               <div className="mt-2 h-2 w-full bg-muted rounded-full overflow-hidden">

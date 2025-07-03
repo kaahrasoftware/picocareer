@@ -33,6 +33,23 @@ export interface AnalyticsSummary {
   storageLimit: number;
 }
 
+// Add missing engagement types
+export interface ResourceEngagement {
+  resource_id: string;
+  resource_title: string;
+  view_count: number;
+  download_count: number;
+  engagement_rate: number;
+}
+
+export interface AnnouncementEngagement {
+  announcement_id: string;
+  announcement_title: string;
+  view_count: number;
+  reaction_count: number;
+  engagement_rate: number;
+}
+
 // Fix: Add missing exports for PicoChat
 export interface CareerChatMessage {
   id: string;
@@ -45,4 +62,41 @@ export interface CareerAnalysisResult {
   recommendations: string[];
   analysis: string;
   confidence: number;
+}
+
+export interface CareerChatSession {
+  id: string;
+  profile_id?: string;
+  status?: string;
+  created_at?: string;
+  session_metadata?: ChatSessionMetadata;
+  progress_data: {
+    [key: string]: number;
+    education: number;
+    skills: number;
+    workstyle: number;
+    goals: number;
+    overall: number;
+  };
+  total_messages?: number;
+  last_active_at?: string;
+  is_suspended?: boolean;
+}
+
+export interface ChatSessionMetadata {
+  title?: string;
+  startedAt?: string;
+  completedAt?: string;
+  overallProgress?: number;
+  currentQuestionIndex?: number;
+  lastCategory?: string;
+  isComplete?: boolean;
+  questionCounts?: {
+    education: number;
+    skills: number;
+    workstyle: number;
+    goals: number;
+    [key: string]: number;
+  };
+  [key: string]: any;
 }

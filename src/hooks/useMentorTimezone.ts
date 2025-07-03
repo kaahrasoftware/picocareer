@@ -13,22 +13,23 @@ export function useMentorTimezone(profileId?: string) {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('timezone')
+        .select('id') // Select only available fields since timezone doesn't exist
         .eq('id', profileId)
         .single();
 
       if (error) {
-        console.error('Error fetching mentor timezone:', error);
+        console.error('Error fetching mentor profile:', error);
         // Fix: Use valid toast variant
         toast({
           title: "Warning",
-          description: "Could not fetch mentor timezone information",
+          description: "Could not fetch mentor profile information",
           variant: "destructive", // Changed from "warning" to "destructive"
         });
         return null;
       }
 
-      return data?.timezone || 'UTC';
+      // Return UTC as default since timezone field doesn't exist in the database
+      return 'UTC';
     },
     enabled: !!profileId,
   });
