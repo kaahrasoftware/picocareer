@@ -1,180 +1,128 @@
 
-import { useState } from 'react';
-import { useTokenOperations } from './useTokenOperations';
-import { useWalletBalance } from './useWalletBalance';
-import { useSessionBookingDebug } from '@/components/booking/SessionBookingHandlerDebug';
-import { MeetingPlatform } from '@/types/calendar';
-import { toast } from 'sonner';
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface SessionPaymentParams {
-  mentorId: string;
-  mentorName: string;
-  menteeName: string;
-  formData: {
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  };
-  onSuccess: () => void;
-  onError: (error: any) => void;
+interface PaymentRequest {
+  sessionId: string;
+  tokenCost: number;
+  description: string;
+}
+
+interface PaymentResult {
+  success: boolean;
+  message: string;
+  transaction_id?: string;
 }
 
 export function useSessionPaymentDebug() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { deductTokens, refundTokens } = useTokenOperations();
-  const { wallet } = useWalletBalance();
-  const handleSessionBooking = useSessionBookingDebug();
-
-  const processPaymentAndBooking = async (params: SessionPaymentParams) => {
-    const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
-    
-    console.log('🚀 Starting session payment and booking process with enhanced debug logging...');
-    console.log('📋 Payment params:', { mentorId, mentorName, menteeName });
-    console.log('📋 Form data:', formData);
-    console.log('💰 Wallet info:', wallet);
-    
-    if (!formData.date || !formData.selectedTime || !formData.sessionType) {
-      const error = new Error('Please select a date, time and session type');
-      console.error('❌ Missing required form data:', { date: formData.date, time: formData.selectedTime, sessionType: formData.sessionType });
-      onError(error);
-      return;
-    }
-
-    if (!wallet) {
-      const error = new Error('Wallet not found');
-      console.error('❌ No wallet found for user');
-      onError(error);
-      return;
-    }
-
-    if (wallet.balance < 25) {
-      const error = new Error('Insufficient tokens. You need 25 tokens to book a session.');
-      console.error('❌ Insufficient balance:', wallet.balance);
-      toast.error('Insufficient tokens. You need 25 tokens to book a session.');
-      onError(error);
-      return;
-    }
-
-    setIsProcessing(true);
-    let transactionId: string | null = null;
-    let bookingSucceeded = false;
-
-    try {
-      console.log('💳 Step 1: Deducting 25 tokens...');
-      
-      // Step 1: Deduct tokens first
-      const tokenResult = await deductTokens.mutateAsync({
-        walletId: wallet.id,
-        amount: 25,
-        description: `Session booking with ${mentorName}`,
-        category: 'session',
-        metadata: {
-          mentor_name: mentorName,
-          mentee_name: menteeName,
-          session_date: formData.date.toISOString(),
-          session_time: formData.selectedTime,
-          meeting_platform: formData.meetingPlatform
-        }
-      });
-
-      if (!tokenResult.success) {
-        console.error('❌ Token deduction failed:', tokenResult.message);
-        throw new Error(tokenResult.message || 'Failed to deduct tokens');
-      }
-
-      transactionId = tokenResult.transaction_id;
-      console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
-
-      console.log('📅 Step 2: Attempting to book session with enhanced debug notification handling...');
-      
-      // Step 2: Book the session using the enhanced debug booking handler
+  const processPayment = useMutation({
+    mutationFn: async ({ sessionId, tokenCost, description }: PaymentRequest): Promise<PaymentResult> => {
       try {
-        await new Promise<void>((resolve, reject) => {
-          handleSessionBooking({
-            mentorId,
-            mentorName,
-            menteeName,
-            formData,
-            onSuccess: () => {
-              console.log('✅ Debug: Session booking handler reported success');
-              bookingSucceeded = true;
-              resolve();
-            },
-            onError: (bookingError) => {
-              console.error('❌ Debug: Session booking handler reported error:', bookingError);
-              reject(bookingError);
-            }
-          });
-        });
-
-        console.log('✅ Session booking completed successfully with debug notifications');
-
-      } catch (bookingError: any) {
-        console.error('❌ Session booking failed, details:', bookingError);
+        console.log('DEBUG: Processing payment for session:', sessionId, 'Cost:', tokenCost);
         
-        // Rollback: Refund the tokens
-        console.log('🔄 Rolling back token deduction...');
-        try {
-          const refundResult = await refundTokens.mutateAsync({
-            walletId: wallet.id,
-            amount: 25,
-            description: `Refund for failed session booking with ${mentorName}`,
-            referenceId: transactionId,
-            metadata: {
-              original_transaction_id: transactionId,
-              refund_reason: 'Session booking failed',
-              mentor_name: mentorName,
-              error_details: bookingError.message
-            }
-          });
-          
-          if (refundResult.success) {
-            console.log('✅ Tokens refunded successfully');
-            toast.info('Tokens have been refunded due to booking failure.');
-          } else {
-            console.error('❌ Token refund failed:', refundResult.message);
-            toast.error('Session booking failed and token refund also failed. Please contact support.');
-          }
-        } catch (refundError) {
-          console.error('❌ Failed to refund tokens:', refundError);
-          toast.error('Session booking failed and token refund also failed. Please contact support.');
-          throw new Error('Session booking failed and token refund also failed. Please contact support.');
+        // Get current user's wallet
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          console.log('DEBUG: User authentication failed:', userError);
+          throw new Error('User not authenticated');
         }
-        
-        throw new Error(bookingError.message || 'Failed to book session');
-      }
 
-      console.log('🎉 Session booking process completed successfully with debug notifications!');
-      
-      toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
-      onSuccess();
-      
-    } catch (error: any) {
-      console.error('💥 Error in session payment process:', error);
-      
-      // Provide specific error messages
-      if (error.message.includes('Insufficient token balance')) {
-        toast.error('Insufficient tokens. You need 25 tokens to book a session.');
-      } else if (error.message.includes('Time slot is already booked')) {
-        toast.error('This time slot is no longer available. Please select a different time.');
-      } else if (error.message.includes('token')) {
-        toast.error(error.message);
-      } else {
-        toast.error(error.message || 'Failed to book session. Please try again.');
+        console.log('DEBUG: User authenticated:', user.id);
+
+        const { data: wallet, error: walletError } = await supabase
+          .from('wallets')
+          .select('id, balance')
+          .eq('profile_id', user.id)
+          .single();
+
+        console.log('DEBUG: Wallet query result:', { wallet, walletError });
+
+        if (walletError) {
+          console.error('DEBUG: Wallet error:', walletError);
+          throw new Error('Failed to retrieve wallet information');
+        }
+
+        if (!wallet) {
+          console.log('DEBUG: No wallet found for user');
+          throw new Error('Wallet not found');
+        }
+
+        console.log('DEBUG: Current wallet balance:', wallet.balance, 'Required:', tokenCost);
+
+        if (wallet.balance < tokenCost) {
+          const insufficientMessage = `Insufficient balance. You have ${wallet.balance} tokens but need ${tokenCost} tokens.`;
+          console.log('DEBUG:', insufficientMessage);
+          return {
+            success: false,
+            message: insufficientMessage
+          };
+        }
+
+        console.log('DEBUG: Calling deduct_tokens function...');
+
+        // Call the deduct_tokens function
+        const { data: result, error: deductError } = await supabase
+          .rpc('deduct_tokens', {
+            p_wallet_id: wallet.id,
+            p_amount: tokenCost,
+            p_description: description,
+            p_category: 'session' as any,
+            p_reference_id: sessionId,
+            p_metadata: { session_id: sessionId }
+          });
+
+        console.log('DEBUG: Deduct tokens result:', result);
+        console.log('DEBUG: Deduct tokens error:', deductError);
+
+        if (deductError) {
+          console.error('DEBUG: Error deducting tokens:', deductError);
+          throw new Error(`Payment failed: ${deductError.message}`);
+        }
+
+        // Parse the result as it comes back as JSONB
+        const parsedResult = result as PaymentResult & { transaction_id?: string };
+        
+        console.log('DEBUG: Parsed result:', parsedResult);
+
+        if (parsedResult.success) {
+          const successMessage = parsedResult.message || 'Payment completed successfully';
+          console.log('DEBUG: Payment successful:', successMessage);
+          toast.success(`Payment successful! ${successMessage}`);
+          return {
+            success: true,
+            message: successMessage,
+            transaction_id: parsedResult.transaction_id
+          };
+        } else {
+          const failureMessage = parsedResult.message || 'Payment failed';
+          console.log('DEBUG: Payment failed:', failureMessage);
+          toast.error(failureMessage);
+          return {
+            success: false,
+            message: failureMessage
+          };
+        }
+
+      } catch (error) {
+        console.error('DEBUG: Payment processing error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown payment error';
+        toast.error(`Payment failed: ${errorMessage}`);
+        return {
+          success: false,
+          message: errorMessage
+        };
       }
-      
-      onError(error);
-    } finally {
-      setIsProcessing(false);
+    },
+    onError: (error) => {
+      console.error('DEBUG: Payment mutation error:', error);
+      toast.error('Payment processing failed');
     }
-  };
+  });
 
   return {
-    processPaymentAndBooking,
-    isProcessing
+    processPayment,
+    isProcessingPayment: processPayment.isPending,
   };
 }

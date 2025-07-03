@@ -1,270 +1,181 @@
 
-import { useState } from 'react';
-import { useTokenOperations } from './useTokenOperations';
-import { useWalletBalance } from './useWalletBalance';
-import { useBookSession } from './useBookSession';
-import { MeetingPlatform } from '@/types/calendar';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { notifyAdmins } from '@/components/booking/AdminNotification';
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface SessionPaymentParams {
-  mentorId: string;
-  mentorName: string;
-  menteeName: string;
-  formData: {
-    date?: Date;
-    selectedTime?: string;
-    sessionType?: string;
-    note: string;
-    meetingPlatform: MeetingPlatform;
-    menteePhoneNumber?: string;
-    menteeTelegramUsername?: string;
-  };
-  onSuccess: () => void;
-  onError: (error: any) => void;
+interface PaymentRequest {
+  sessionId: string;
+  tokenCost: number;
+  description: string;
+}
+
+interface PaymentResult {
+  success: boolean;
+  message: string;
+  transaction_id?: string;
 }
 
 export function useSessionPayment() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { deductTokens, refundTokens } = useTokenOperations();
-  const { wallet } = useWalletBalance();
-  const bookSession = useBookSession();
-
-  const processPaymentAndBooking = async (params: SessionPaymentParams) => {
-    const { mentorId, mentorName, menteeName, formData, onSuccess, onError } = params;
-    
-    console.log('🚀 Starting session payment and booking process...');
-    console.log('📋 Payment params:', { mentorId, mentorName, menteeName });
-    console.log('📋 Form data:', formData);
-    console.log('💰 Wallet info:', wallet);
-    
-    if (!formData.date || !formData.selectedTime || !formData.sessionType) {
-      const error = new Error('Please select a date, time and session type');
-      console.error('❌ Missing required form data:', { date: formData.date, time: formData.selectedTime, sessionType: formData.sessionType });
-      onError(error);
-      return;
-    }
-
-    if (!wallet) {
-      const error = new Error('Wallet not found');
-      console.error('❌ No wallet found for user');
-      onError(error);
-      return;
-    }
-
-    if (wallet.balance < 25) {
-      const error = new Error('Insufficient tokens. You need 25 tokens to book a session.');
-      console.error('❌ Insufficient balance:', wallet.balance);
-      toast.error('Insufficient tokens. You need 25 tokens to book a session.');
-      onError(error);
-      return;
-    }
-
-    setIsProcessing(true);
-    let transactionId: string | null = null;
-    let sessionId: string | null = null;
-
-    try {
-      console.log('💳 Step 1: Deducting 25 tokens...');
-      
-      // Step 1: Deduct tokens first
-      const tokenResult = await deductTokens.mutateAsync({
-        walletId: wallet.id,
-        amount: 25,
-        description: `Session booking with ${mentorName}`,
-        category: 'session',
-        metadata: {
-          mentor_name: mentorName,
-          mentee_name: menteeName,
-          session_date: formData.date.toISOString(),
-          session_time: formData.selectedTime,
-          meeting_platform: formData.meetingPlatform
-        }
-      });
-
-      if (!tokenResult.success) {
-        console.error('❌ Token deduction failed:', tokenResult.message);
-        throw new Error(tokenResult.message || 'Failed to deduct tokens');
-      }
-
-      transactionId = tokenResult.transaction_id;
-      console.log('✅ Tokens deducted successfully, transaction ID:', transactionId);
-
-      console.log('📅 Step 2: Booking session...');
-      
-      // Step 2: Book the session
-      const bookingResult = await bookSession({
-        mentorId,
-        date: formData.date,
-        selectedTime: formData.selectedTime,
-        sessionTypeId: formData.sessionType,
-        note: formData.note,
-        meetingPlatform: formData.meetingPlatform,
-        menteePhoneNumber: formData.menteePhoneNumber,
-        menteeTelegramUsername: formData.menteeTelegramUsername,
-      });
-
-      if (!bookingResult.success) {
-        console.error('❌ Session booking failed, rolling back tokens...');
+  const processPayment = useMutation({
+    mutationFn: async ({ sessionId, tokenCost, description }: PaymentRequest): Promise<PaymentResult> => {
+      try {
+        console.log('Processing payment for session:', sessionId, 'Cost:', tokenCost);
         
-        // Rollback: Refund the tokens
-        try {
-          const refundResult = await refundTokens.mutateAsync({
-            walletId: wallet.id,
-            amount: 25,
-            description: `Refund for failed session booking with ${mentorName}`,
-            referenceId: transactionId,
-            metadata: {
-              original_transaction_id: transactionId,
-              refund_reason: 'Session booking failed',
-              mentor_name: mentorName,
-              error_details: bookingResult.error
-            }
-          });
-          
-          if (refundResult.success) {
-            console.log('✅ Tokens refunded successfully');
-            toast.info('Tokens have been refunded due to booking failure.');
-          } else {
-            console.error('❌ Token refund failed:', refundResult.message);
-            toast.error('Session booking failed and token refund also failed. Please contact support.');
-          }
-        } catch (refundError) {
-          console.error('❌ Failed to refund tokens:', refundError);
-          toast.error('Session booking failed and token refund also failed. Please contact support.');
-          throw new Error('Session booking failed and token refund also failed. Please contact support.');
-        }
+        // Get current user's wallet
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        throw new Error(bookingResult.error || 'Failed to book session');
-      }
-
-      sessionId = bookingResult.sessionId;
-      console.log('✅ Session booked successfully with ID:', sessionId);
-
-      // Step 3: Create notifications and send emails
-      console.log('📧 Step 3: Creating notifications and sending emails...');
-      
-      // Get current user for notifications
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('❌ Could not get current user for notifications:', userError);
-        // Don't fail the entire booking for notification issues
-        console.warn('⚠️ Continuing without notifications due to user auth issue');
-      } else {
-        // Create notifications for both mentor and mentee
-        try {
-          console.log('📤 Creating in-app notifications...');
-          
-          // Create notification for mentor
-          const mentorNotificationData = {
-            profile_id: mentorId,
-            title: "New Session Booking",
-            message: `${menteeName} has booked a session with you for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
-            type: "session_booked" as const,
-            category: "mentorship" as const,
-            action_url: `/sessions/${sessionId}`
-          };
-
-          const { error: mentorNotificationError } = await supabase
-            .from('notifications')
-            .insert(mentorNotificationData);
-
-          if (mentorNotificationError) {
-            console.error('❌ Mentor notification failed:', mentorNotificationError);
-          } else {
-            console.log('✅ Mentor notification created successfully');
-          }
-
-          // Create notification for mentee
-          const menteeNotificationData = {
-            profile_id: user.id,
-            title: "Session Booking Confirmed",
-            message: `Your session with ${mentorName} has been confirmed for ${formData.date.toLocaleDateString()} at ${formData.selectedTime}`,
-            type: "session_booked" as const,
-            category: "mentorship" as const,
-            action_url: `/sessions/${sessionId}`
-          };
-
-          const { error: menteeNotificationError } = await supabase
-            .from('notifications')
-            .insert(menteeNotificationData);
-
-          if (menteeNotificationError) {
-            console.error('❌ Mentee notification failed:', menteeNotificationError);
-          } else {
-            console.log('✅ Mentee notification created successfully');
-          }
-
-          // Notify admins
-          try {
-            await notifyAdmins({
-              mentorName,
-              menteeName,
-              sessionType: formData.sessionType,
-              scheduledAt: formData.date
-            });
-            console.log('✅ Admin notifications sent successfully');
-          } catch (error: any) {
-            console.error('❌ Admin notification failed:', error);
-          }
-
-        } catch (notificationError) {
-          console.error('❌ Error creating notifications:', notificationError);
-          // Don't fail the booking for notification issues
+        if (userError || !user) {
+          throw new Error('User not authenticated');
         }
 
-        // Send email confirmations using the correct edge function
-        try {
-          console.log('📧 Sending email confirmations...');
-          
-          // Call the correct edge function with proper parameters
-          const { error: emailError } = await supabase.functions.invoke('send-session-email', {
-            body: {
-              type: 'confirmation',
-              sessionId: sessionId
-            }
+        const { data: wallet, error: walletError } = await supabase
+          .from('wallets')
+          .select('id, balance')
+          .eq('profile_id', user.id)
+          .single();
+
+        if (walletError) {
+          console.error('Wallet error:', walletError);
+          throw new Error('Failed to retrieve wallet information');
+        }
+
+        if (!wallet) {
+          throw new Error('Wallet not found');
+        }
+
+        if (wallet.balance < tokenCost) {
+          return {
+            success: false,
+            message: `Insufficient balance. You have ${wallet.balance} tokens but need ${tokenCost} tokens.`
+          };
+        }
+
+        // Call the deduct_tokens function
+        const { data: result, error: deductError } = await supabase
+          .rpc('deduct_tokens', {
+            p_wallet_id: wallet.id,
+            p_amount: tokenCost,
+            p_description: description,
+            p_category: 'session' as any,
+            p_reference_id: sessionId,
+            p_metadata: { session_id: sessionId }
           });
 
-          if (emailError) {
-            console.error('❌ Email confirmation failed:', emailError);
-          } else {
-            console.log('✅ Email confirmations sent successfully');
-          }
+        console.log('Deduct tokens result:', result);
 
-        } catch (emailError) {
-          console.error('❌ Error sending emails:', emailError);
-          // Don't fail the booking for email issues
+        if (deductError) {
+          console.error('Error deducting tokens:', deductError);
+          throw new Error(`Payment failed: ${deductError.message}`);
         }
-      }
 
-      console.log('🎉 Session booking process completed successfully!');
-      
-      toast.success(`Session booked successfully with ${mentorName}! 25 tokens have been deducted from your wallet.`);
-      onSuccess();
-      
-    } catch (error: any) {
-      console.error('💥 Error in session payment process:', error);
-      
-      // Provide specific error messages
-      if (error.message.includes('Insufficient token balance')) {
-        toast.error('Insufficient tokens. You need 25 tokens to book a session.');
-      } else if (error.message.includes('Time slot is already booked')) {
-        toast.error('This time slot is no longer available. Please select a different time.');
-      } else if (error.message.includes('token')) {
-        toast.error(error.message);
-      } else {
-        toast.error(error.message || 'Failed to book session. Please try again.');
+        // Parse the result as it comes back as JSONB
+        const parsedResult = result as PaymentResult & { transaction_id?: string };
+        
+        if (parsedResult.success) {
+          toast.success(`Payment successful! ${parsedResult.message || 'Tokens deducted successfully'}`);
+          return {
+            success: true,
+            message: parsedResult.message || 'Payment completed successfully',
+            transaction_id: parsedResult.transaction_id
+          };
+        } else {
+          toast.error(parsedResult.message || 'Payment failed');
+          return {
+            success: false,
+            message: parsedResult.message || 'Payment failed'
+          };
+        }
+
+      } catch (error) {
+        console.error('Payment processing error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown payment error';
+        toast.error(`Payment failed: ${errorMessage}`);
+        return {
+          success: false,
+          message: errorMessage
+        };
       }
-      
-      onError(error);
-    } finally {
-      setIsProcessing(false);
+    },
+    onError: (error) => {
+      console.error('Payment mutation error:', error);
+      toast.error('Payment processing failed');
     }
-  };
+  });
+
+  const refundPayment = useMutation({
+    mutationFn: async ({ sessionId, tokenCost, description }: PaymentRequest): Promise<PaymentResult> => {
+      try {
+        console.log('Processing refund for session:', sessionId, 'Amount:', tokenCost);
+        
+        // Get current user's wallet
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          throw new Error('User not authenticated');
+        }
+
+        const { data: wallet, error: walletError } = await supabase
+          .from('wallets')
+          .select('id')
+          .eq('profile_id', user.id)
+          .single();
+
+        if (walletError || !wallet) {
+          throw new Error('Failed to retrieve wallet information');
+        }
+
+        // Call the refund_tokens function
+        const { data: result, error: refundError } = await supabase
+          .rpc('refund_tokens', {
+            p_wallet_id: wallet.id,
+            p_amount: tokenCost,
+            p_description: description,
+            p_reference_id: sessionId,
+            p_metadata: { session_id: sessionId }
+          });
+
+        if (refundError) {
+          console.error('Error refunding tokens:', refundError);
+          throw new Error(`Refund failed: ${refundError.message}`);
+        }
+
+        // Parse the result as it comes back as JSONB
+        const parsedResult = result as PaymentResult;
+        
+        if (parsedResult.success) {
+          toast.success(`Refund successful! ${parsedResult.message || 'Tokens refunded successfully'}`);
+          return {
+            success: true,
+            message: parsedResult.message || 'Refund completed successfully'
+          };
+        } else {
+          toast.error(parsedResult.message || 'Refund failed');
+          return {
+            success: false,
+            message: parsedResult.message || 'Refund failed'
+          };
+        }
+
+      } catch (error) {
+        console.error('Refund processing error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown refund error';
+        toast.error(`Refund failed: ${errorMessage}`);
+        return {
+          success: false,
+          message: errorMessage
+        };
+      }
+    },
+    onError: (error) => {
+      console.error('Refund mutation error:', error);
+      toast.error('Refund processing failed');
+    }
+  });
 
   return {
-    processPaymentAndBooking,
-    isProcessing
+    processPayment,
+    refundPayment,
+    isProcessingPayment: processPayment.isPending,
+    isProcessingRefund: refundPayment.isPending,
   };
 }

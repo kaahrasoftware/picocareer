@@ -19,10 +19,10 @@ export function useHubAnalytics(hubId: string) {
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Fix: Transform data to match HubStorageMetrics interface - use last_calculated_at as fallback for created_at
+      // Transform data to match HubStorageMetrics interface
       const storageMetrics = data ? {
         ...data,
-        created_at: data.last_calculated_at || new Date().toISOString() // Use last_calculated_at as fallback
+        created_at: data.updated_at || new Date().toISOString() // Use updated_at as fallback
       } as HubStorageMetrics : null;
 
       return { storageMetrics };

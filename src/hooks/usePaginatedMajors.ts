@@ -36,9 +36,9 @@ export function usePaginatedMajors({
       query = query.ilike('title', `%${searchQuery}%`);
     }
 
-    // Apply status filter if provided
+    // Apply status filter if provided - cast to proper type
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('status', status as 'Approved' | 'Pending' | 'Rejected');
     }
 
     // Get total count

@@ -18,17 +18,26 @@ export function useMenteeAcademicRecords(menteeId: string) {
       
       // Transform data to match MenteeAcademicRecord interface using available fields
       return (data || []).map(record => ({
-        ...record,
-        // Map available database fields to interface fields
-        institution_name: record.id, // Placeholder - adjust based on actual database schema
-        degree_type: 'Bachelor', // Placeholder - adjust based on actual database schema  
-        major: 'Computer Science', // Placeholder - adjust based on actual database schema
+        id: record.id,
+        mentee_id: record.mentee_id,
+        // Use placeholder values for fields not in database
+        institution_name: 'Unknown Institution',
+        degree_type: 'Bachelor',
+        major: 'Computer Science',
         minor: null,
         gpa: record.cumulative_gpa || null,
+        semester_gpa: record.semester_gpa,
+        cumulative_gpa: record.cumulative_gpa,
+        credits_attempted: record.credits_attempted,
+        credits_earned: record.credits_earned,
         class_rank: record.class_rank?.toString() || null,
-        graduation_date: null, // Not available in current schema
-        relevant_coursework: [], // Not available in current schema
-        thesis_topic: null, // Not available in current schema
+        graduation_date: null,
+        honors: record.honors || [],
+        awards: record.awards || [],
+        relevant_coursework: [],
+        thesis_topic: null,
+        year: record.year,
+        semester: record.semester,
         created_at: record.created_at,
         updated_at: record.updated_at
       } as MenteeAcademicRecord));
@@ -51,7 +60,6 @@ export function useMenteeProjects(menteeId: string) {
       
       return (data || []).map(project => ({
         ...project,
-        // Fix status mapping to match valid enum values
         status: project.status as 'completed' | 'in_progress' | 'planned' | 'on_hold'
       } as MenteeProject));
     },
@@ -81,27 +89,9 @@ export function useMenteeEssayResponses(menteeId: string) {
   return useQuery({
     queryKey: ['mentee-essay-responses', menteeId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mentee_essays')
-        .select(`
-          *,
-          prompt:essay_prompts(*)
-        `)
-        .eq('mentee_id', menteeId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Transform data to match MenteeEssayResponse interface
-      return (data || []).map(essay => ({
-        ...essay,
-        status: essay.is_draft ? 'draft' : 'completed',
-        prompt_id: essay.prompt_id,
-        response_text: essay.response_text,
-        word_count: essay.word_count,
-        feedback: null,
-        score: null
-      })) as MenteeEssayResponse[];
+      // Since mentee_essays table doesn't exist, return empty array for now
+      // This would need to be implemented when the table is created
+      return [] as MenteeEssayResponse[];
     },
     enabled: !!menteeId,
   });
