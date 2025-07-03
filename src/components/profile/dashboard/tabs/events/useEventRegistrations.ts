@@ -19,20 +19,18 @@ export function useEventRegistrations() {
   const {
     data: registrations,
     isLoading: isRegistrationsLoading,
-    count: totalCount,
+    totalCount,
     page,
     setPage,
     totalPages
   } = usePaginatedQuery<any>({
-    queryKey: ['event-registrations', selectedEvent, searchQuery],
-    tableName: 'event_registrations',
-    paginationOptions: {
-      limit: 15,
-      orderBy: 'created_at',
-      orderDirection: 'desc',
-      searchQuery: searchQuery,
-      searchColumn: 'email'
-    },
+    table: 'event_registrations',
+    page: 1,
+    limit: 15,
+    orderBy: 'created_at',
+    orderDirection: 'desc',
+    searchQuery: searchQuery,
+    searchField: 'email',
     filters: selectedEvent !== 'all' ? { event_id: selectedEvent } : {},
     select: `
       id, first_name, last_name, email, country, 

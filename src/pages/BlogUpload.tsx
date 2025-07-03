@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { categories, subcategories } from "@/components/forms/blog/categories";
+import { categories } from "@/components/forms/blog/categories";
+import { subcategories } from "@/components/forms/blog/subcategories";
 
 export default function BlogUpload() {
   const { session } = useAuthSession();
@@ -46,8 +47,8 @@ export default function BlogUpload() {
         summary,
         content,
         author_id: session.user.id,
-        status: 'Pending' as const, // Cast to the expected enum type
-        categories: selectedCategories,
+        status: 'Pending' as const,
+        categories: selectedCategories as any,
         subcategories: selectedSubcategories,
         cover_image_url: coverImageUrl,
         other_notes: otherNotes,
@@ -177,7 +178,7 @@ export default function BlogUpload() {
         <div>
           <Label>Cover Image</Label>
           <ImageUpload
-            onImageUploaded={setCoverImageUrl}
+            onUpload={setCoverImageUrl}
             currentImageUrl={coverImageUrl}
             bucket="blog_images"
             path="covers"

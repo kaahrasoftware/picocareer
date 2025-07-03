@@ -27,9 +27,10 @@ export function usePaginatedQuery<T = any>({
   select = '*'
 }: PaginatedQueryParams) {
   const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(page);
 
   const fetchData = async (): Promise<T[]> => {
-    const startIndex = (page - 1) * limit;
+    const startIndex = (currentPage - 1) * limit;
     const endIndex = startIndex + limit - 1;
 
     // Use any to bypass strict typing for dynamic table queries
@@ -78,7 +79,7 @@ export function usePaginatedQuery<T = any>({
     error,
     refetch
   } = useQuery({
-    queryKey: [table, page, limit, searchQuery, searchField, orderBy, orderDirection, filters],
+    queryKey: [table, currentPage, limit, searchQuery, searchField, orderBy, orderDirection, filters],
     queryFn: fetchData
   });
 
@@ -88,10 +89,12 @@ export function usePaginatedQuery<T = any>({
     data,
     isLoading,
     error,
-    page,
+    page: currentPage,
     limit,
     totalPages,
     totalCount,
+    count: totalCount, // Add alias for compatibility
+    setPage: setCurrentPage,
     refetch
   };
 }

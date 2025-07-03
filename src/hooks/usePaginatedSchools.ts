@@ -38,19 +38,13 @@ export function usePaginatedSchools(options: SchoolsQueryOptions = {}) {
   if (filters.status) queryFilters.status = filters.status;
 
   return usePaginatedQuery<School>({
-    queryKey: ['schools', sortField, sortDirection, searchQuery, JSON.stringify(filters)],
-    tableName: 'schools',
-    paginationOptions: {
-      limit: pageSize,
-      page,
-      orderBy: sortField,
-      orderDirection: sortDirection,
-      searchQuery,
-      searchColumn
-    },
-    filters: queryFilters,
-    queryOptions: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
+    table: 'schools',
+    page,
+    limit: pageSize,
+    orderBy: sortField,
+    orderDirection: sortDirection,
+    searchQuery,
+    searchField: searchColumn,
+    filters: queryFilters
   });
 }

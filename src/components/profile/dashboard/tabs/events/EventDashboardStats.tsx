@@ -9,11 +9,8 @@ export function EventDashboardStats() {
     data: events = [],
     isLoading
   } = usePaginatedQuery<any>({
-    queryKey: ['admin-events-stats'],
-    tableName: 'events',
-    paginationOptions: {
-      limit: 1000 // Large limit to fetch all events for stats calculation
-    }
+    table: 'events',
+    limit: 1000 // Large limit to fetch all events for stats calculation
   });
 
   // Calculate stats from fetched events
