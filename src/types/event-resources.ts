@@ -11,7 +11,7 @@ export interface EventResource {
   file_size?: number;
   access_level: "public" | "registered" | "participants_only";
   is_downloadable: boolean;
-  sort_order: number;
+  sort_order?: number; // Make this optional to match the database
   view_count: number;
   download_count: number;
   unique_viewers: number;

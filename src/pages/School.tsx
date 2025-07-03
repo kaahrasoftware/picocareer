@@ -32,7 +32,7 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
-    tableName: 'schools',
+    table: 'schools', // Changed from tableName to table
     limit: 20,
     page: 1,
     orderBy: sortField,
