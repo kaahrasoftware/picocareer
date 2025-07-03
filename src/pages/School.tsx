@@ -38,10 +38,7 @@ export default function School() {
     orderBy: sortField,
     orderDirection: sortDirection,
     searchQuery: debouncedSearch,
-    filters: schoolType ? { type: schoolType } : {},
-    queryOptions: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
+    filters: schoolType ? { type: schoolType } : {}
   });
 
   // Debounce search input

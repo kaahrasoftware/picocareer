@@ -3,30 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EventResourcesSection } from "@/components/event/EventResourcesSection";
-
-interface EventResource {
-  id: string;
-  title: string;
-  description?: string;
-  file_url?: string;
-  external_url?: string;
-  resource_type: "document" | "image" | "video" | "audio" | "link" | "presentation" | "other";
-  access_level: "public" | "registered" | "participants_only";
-  is_downloadable: boolean;
-  file_format?: string;
-  file_size?: number;
-  sort_order?: number;
-  view_count?: number;
-  download_count?: number;
-  unique_viewers?: number;
-  unique_downloaders?: number;
-  last_viewed_at?: string;
-  last_downloaded_at?: string;
-  event_id: string;
-  uploaded_by?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { EventResource } from "@/types/event-resources";
 
 export default function ResourceBank() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,11 +26,16 @@ export default function ResourceBank() {
 
       if (error) throw error;
       
-      // Transform the data to match our EventResource interface
+      // Transform the data to match our EventResource interface with proper defaults
       return (data || []).map(resource => ({
         ...resource,
         resource_type: resource.resource_type as EventResource['resource_type'],
-        access_level: resource.access_level as EventResource['access_level']
+        access_level: resource.access_level as EventResource['access_level'],
+        view_count: resource.view_count || 0,
+        download_count: resource.download_count || 0,
+        unique_viewers: resource.unique_viewers || 0,
+        unique_downloaders: resource.unique_downloaders || 0,
+        sort_order: resource.sort_order || 0
       })) as (EventResource & { events?: { id: string; title: string; start_time: string; organized_by?: string; } })[];
     },
   });

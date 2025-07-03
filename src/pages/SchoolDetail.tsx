@@ -26,7 +26,7 @@ export default function SchoolDetail() {
   // Transform the school data to match our School type
   const school: School = {
     ...schoolRaw,
-    author_id: schoolRaw.author_id || undefined, // Handle missing author_id gracefully
+    author_id: (schoolRaw as any).author_id || undefined, // Handle missing author_id gracefully with type assertion
     type: schoolRaw.type as School['type']
   };
 

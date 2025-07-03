@@ -12,10 +12,10 @@ export interface EventResource {
   access_level: "public" | "registered" | "participants_only";
   is_downloadable: boolean;
   sort_order?: number; // Make this optional to match the database
-  view_count: number;
-  download_count: number;
-  unique_viewers: number;
-  unique_downloaders: number;
+  view_count?: number; // Make this optional to match the database
+  download_count?: number; // Make this optional to match the database
+  unique_viewers?: number; // Make this optional to match the database
+  unique_downloaders?: number; // Make this optional to match the database
   last_viewed_at?: string;
   last_downloaded_at?: string;
   uploaded_by?: string;
