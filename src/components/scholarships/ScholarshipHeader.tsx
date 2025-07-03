@@ -1,14 +1,12 @@
-
 import { GraduationCap } from "lucide-react";
 import { ScholarshipScraperButton } from "./ScholarshipScraperButton";
-
 interface ScholarshipHeaderProps {
   onScrapingComplete?: () => void;
 }
-
-export function ScholarshipHeader({ onScrapingComplete }: ScholarshipHeaderProps) {
-  return (
-    <div className="text-center space-y-4">
+export function ScholarshipHeader({
+  onScrapingComplete
+}: ScholarshipHeaderProps) {
+  return <div className="text-center space-y-4">
       <div className="flex justify-center items-center gap-3 mb-4">
         <div className="p-3 bg-blue-100 rounded-full">
           <GraduationCap className="h-8 w-8 text-blue-600" />
@@ -23,9 +21,6 @@ export function ScholarshipHeader({ onScrapingComplete }: ScholarshipHeaderProps
         Find opportunities specifically designed for international students.
       </p>
 
-      <div className="flex justify-center">
-        <ScholarshipScraperButton onScrapingComplete={onScrapingComplete} />
-      </div>
-    </div>
-  );
+      
+    </div>;
 }
