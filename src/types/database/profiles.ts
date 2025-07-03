@@ -11,7 +11,7 @@ export interface Profile {
   avatar_url?: string;
   bio?: string;
   location?: string;
-  user_type: 'mentee' | 'mentor' | 'admin';
+  user_type: 'mentee' | 'mentor' | 'admin' | 'editor';
   highest_degree: 'No Degree' | 'High School' | 'Associate' | 'Bachelor' | 'Master' | 'MD' | 'PhD';
   skills: string[];
   tools_used: string[];

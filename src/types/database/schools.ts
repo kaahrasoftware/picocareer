@@ -25,7 +25,7 @@ export interface School {
   created_at: string;
   updated_at: string;
   status: SchoolStatus;
-  author_id: string;
+  author_id?: string; // Make optional since it's not always required
   featured?: boolean;
   featured_priority?: number;
 }

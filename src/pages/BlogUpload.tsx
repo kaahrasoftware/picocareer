@@ -4,12 +4,10 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { RichTextEditor } from "@/components/forms/RichTextEditor";
-import { ImageUpload } from "@/components/forms/ImageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { categories } from "@/components/forms/blog/categories";
 import { subcategories } from "@/components/forms/blog/subcategories";
@@ -97,6 +95,32 @@ export default function BlogUpload() {
     }
   };
 
+  const handleImageUpload = async (file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog_images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('blog_images')
+        .getPublicUrl(filePath);
+
+      setCoverImageUrl(data.publicUrl);
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error("Failed to upload image");
+    }
+  };
+
   if (!session?.user) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -177,11 +201,24 @@ export default function BlogUpload() {
 
         <div>
           <Label>Cover Image</Label>
-          <ImageUpload
-            onUploadSuccess={setCoverImageUrl}
-            bucket="blog_images"
-            folderPath="covers"
-          />
+          <div className="mt-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file);
+                }
+              }}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
+            />
+            {coverImageUrl && (
+              <div className="mt-2">
+                <img src={coverImageUrl} alt="Cover preview" className="w-32 h-32 object-cover rounded" />
+              </div>
+            )}
+          </div>
         </div>
 
         <div>

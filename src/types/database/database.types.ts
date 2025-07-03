@@ -1,8 +1,10 @@
-
 // Define the types that are referenced but missing
 export type OpportunityType = 'job' | 'internship' | 'fellowship' | 'scholarship' | 'event' | 'grant' | 'competition' | 'volunteer' | 'other';
 export type OpportunityStatus = 'active' | 'inactive' | 'draft' | 'expired';
 export type ApplicationStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+
+// Json type for Supabase
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 // Opportunity interface
 export interface Opportunity {

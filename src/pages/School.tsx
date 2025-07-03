@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +31,6 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
-    tableName: 'schools',
     paginationOptions: {
       limit: 20,
       page: 1,
