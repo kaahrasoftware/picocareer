@@ -1,71 +1,109 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-export interface School {
+// Enhanced fetch utility function with better type safety
+export async function fetchAllFromTable<T extends { id: string }>(
+  tableName: string, 
+  orderField: string
+): Promise<T[]> {
+  try {
+    const allItems: T[] = [];
+    let page = 0;
+    const pageSize = 1000; // Large page size to reduce number of requests
+    let hasMore = true;
+    
+    while (hasMore) {
+      const start = page * pageSize;
+      const end = start + pageSize - 1;
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('status', 'Approved')
+        .range(start, end)
+        .order(orderField);
+      
+      if (error) {
+        console.error(`Error fetching ${tableName}:`, error);
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        allItems.push(...data as T[]);
+        page++;
+      } else {
+        hasMore = false;
+      }
+      
+      // Safety limit to prevent infinite loops
+      if (page > 10) break;
+    }
+    
+    return allItems;
+  } catch (error) {
+    console.error(`Error in fetchAllFromTable for ${tableName}:`, error);
+    return [];
+  }
+}
+
+interface School {
   id: string;
   name: string;
   location?: string;
-  website?: string;
-  logo_url?: string;
 }
 
-export interface Company {
+interface Company {
   id: string;
   name: string;
-  industry?: string;
-  website?: string;
 }
 
-export interface Major {
+interface Major {
   id: string;
   title: string;
-  description?: string;
-  degree_level?: string;
 }
 
-function createReferenceDataQuery<T>(tableName: string, select = '*') {
-  return async (): Promise<T[]> => {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(select);
-    
-    if (error) {
-      console.error(`Error fetching ${tableName}:`, error);
-      throw error;
-    }
-    
-    return (data as T[]) || [];
-  };
+interface Career {
+  id: string;
+  title: string;
 }
 
-export function useAllReferenceData() {
-  const schoolsQuery = useQuery({
-    queryKey: ['all-schools'],
-    queryFn: createReferenceDataQuery<School>('schools', 'id, name, location, website, logo_url'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+export function useAllSchools() {
+  return useQuery<School[]>({
+    queryKey: ['schools-all'],
+    queryFn: () => fetchAllFromTable<School>('schools', 'name'),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000, // 30 minutes
   });
+}
 
-  const companiesQuery = useQuery({
-    queryKey: ['all-companies'],
-    queryFn: createReferenceDataQuery<Company>('companies', 'id, name, industry, website'),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+export function useAllCompanies() {
+  return useQuery<Company[]>({
+    queryKey: ['companies-all'],
+    queryFn: () => fetchAllFromTable<Company>('companies', 'name'),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
   });
+}
 
-  const majorsQuery = useQuery({
-    queryKey: ['all-majors'],
-    queryFn: createReferenceDataQuery<Major>('majors', 'id, title, description'),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+export function useAllMajors() {
+  return useQuery<Major[]>({
+    queryKey: ['majors-all'],
+    queryFn: () => fetchAllFromTable<Major>('majors', 'title'),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
   });
+}
 
-  return {
-    schools: schoolsQuery.data || [],
-    companies: companiesQuery.data || [],
-    majors: majorsQuery.data || [],
-    isLoading: schoolsQuery.isLoading || companiesQuery.isLoading || majorsQuery.isLoading,
-    error: schoolsQuery.error || companiesQuery.error || majorsQuery.error,
-  };
+export function useAllCareers() {
+  return useQuery<Career[]>({
+    queryKey: ['careers-all'],
+    queryFn: () => fetchAllFromTable<Career>('careers', 'title'),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    cacheTime: 30 * 60 * 1000,
+  });
 }
