@@ -25,8 +25,8 @@ export function useOpportunities(filters: OpportunityFilters = {}) {
       // Only apply type filter if it's not "all" and is defined
       if (filters.type && filters.type !== 'all') {
         console.log('Applying type filter:', filters.type);
-        // Cast to string to match database type expectations
-        query = query.eq('opportunity_type', filters.type as string);
+        // Cast to any to bypass strict type checking for dynamic filters
+        query = query.eq('opportunity_type', filters.type as any);
       }
 
       if (filters.search) {

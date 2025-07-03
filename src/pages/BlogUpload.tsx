@@ -1,97 +1,212 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { GenericUploadForm } from "@/components/forms/GenericUploadForm";
-import { blogFormFields } from "@/components/forms/blog/BlogFormFields";
-import { Card } from "@/components/ui/card";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import { RichTextEditor } from "@/components/forms/RichTextEditor";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { categories, subcategories } from "@/components/forms/blog/categories";
 
 export default function BlogUpload() {
-  const { toast } = useToast();
-  const navigate = useNavigate();
   const { session } = useAuthSession();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [content, setContent] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [otherNotes, setOtherNotes] = useState("");
+  const [isRecent, setIsRecent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (data: any) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!session?.user?.id) {
+      toast.error("You must be logged in to upload blogs");
+      return;
+    }
+
+    if (!title || !summary || !content) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      console.log("Submitting blog with data:", data);
-      
-      // Create a properly structured blog object
       const blogData = {
-        title: data.title,
-        summary: data.summary || "",
-        content: data.content || "",
-        author_id: session?.user?.id,
-        status: 'Pending',
-        categories: Array.isArray(data.categories) ? data.categories : 
-                  data.categories ? [data.categories] : [],
-        subcategories: Array.isArray(data.subcategories) ? data.subcategories : 
-                      data.subcategories ? [data.subcategories] : [],
-        cover_image_url: data.cover_image_url || null,
-        other_notes: data.other_notes || null,
-        is_recent: true
+        title,
+        summary,
+        content,
+        author_id: session.user.id,
+        status: 'Pending' as const, // Cast to the expected enum type
+        categories: selectedCategories,
+        subcategories: selectedSubcategories,
+        cover_image_url: coverImageUrl,
+        other_notes: otherNotes,
+        is_recent: isRecent,
       };
 
-      console.log("Formatted blog data:", blogData);
-
-      const { data: insertedBlog, error } = await supabase
+      const { error } = await supabase
         .from('blogs')
-        .insert([blogData])
-        .select();
+        .insert([blogData]);
 
-      if (error) {
-        console.error("Error inserting blog:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Blog successfully inserted:", insertedBlog);
-
-      toast({
-        title: "Success",
-        description: "Blog post has been submitted for review",
-      });
-
-      navigate("/blog");
-    } catch (error: any) {
+      toast.success("Blog submitted successfully! It will be reviewed before publication.");
+      
+      // Reset form
+      setTitle("");
+      setSummary("");
+      setContent("");
+      setSelectedCategories([]);
+      setSelectedSubcategories([]);
+      setCoverImageUrl("");
+      setOtherNotes("");
+      setIsRecent(false);
+      
+    } catch (error) {
       console.error('Error uploading blog:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to upload blog post. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to upload blog. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  if (!session) {
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCategories([...selectedCategories, category]);
+    } else {
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    }
+  };
+
+  const handleSubcategoryChange = (subcategory: string, checked: boolean) => {
+    if (checked) {
+      setSelectedSubcategories([...selectedSubcategories, subcategory]);
+    } else {
+      setSelectedSubcategories(selectedSubcategories.filter(s => s !== subcategory));
+    }
+  };
+
+  if (!session?.user) {
     return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center">
-        <div>Please sign in to upload blog posts</div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Please log in to upload blogs</h1>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Create Blog Post</h1>
-        <p className="text-muted-foreground mt-2">
-          Share your knowledge and experiences with the community
-        </p>
-      </div>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-8">Upload Blog Post</h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Label htmlFor="title">Title *</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter blog title"
+            required
+          />
+        </div>
 
-      <Card className="p-6">
-        <GenericUploadForm 
-          fields={blogFormFields}
-          onSubmit={handleSubmit}
-          buttonText="Submit Blog Post"
-          isSubmitting={isSubmitting}
-        />
-      </Card>
+        <div>
+          <Label htmlFor="summary">Summary *</Label>
+          <Textarea
+            id="summary"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            placeholder="Brief summary of your blog post"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="content">Content *</Label>
+          <RichTextEditor
+            value={content}
+            onChange={setContent}
+            placeholder="Write your blog content here..."
+          />
+        </div>
+
+        <div>
+          <Label>Categories</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+            {categories.map((category) => (
+              <div key={category} className="flex items-center space-x-2">
+                <Checkbox
+                  id={category}
+                  checked={selectedCategories.includes(category)}
+                  onCheckedChange={(checked) => handleCategoryChange(category, checked as boolean)}
+                />
+                <Label htmlFor={category} className="text-sm">{category}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label>Subcategories</Label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+            {subcategories.map((subcategory) => (
+              <div key={subcategory} className="flex items-center space-x-2">
+                <Checkbox
+                  id={subcategory}
+                  checked={selectedSubcategories.includes(subcategory)}
+                  onCheckedChange={(checked) => handleSubcategoryChange(subcategory, checked as boolean)}
+                />
+                <Label htmlFor={subcategory} className="text-sm">{subcategory}</Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label>Cover Image</Label>
+          <ImageUpload
+            onImageUploaded={setCoverImageUrl}
+            currentImageUrl={coverImageUrl}
+            bucket="blog_images"
+            path="covers"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="otherNotes">Additional Notes</Label>
+          <Textarea
+            id="otherNotes"
+            value={otherNotes}
+            onChange={(e) => setOtherNotes(e.target.value)}
+            placeholder="Any additional notes or context"
+          />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isRecent"
+            checked={isRecent}
+            onCheckedChange={(checked) => setIsRecent(checked as boolean)}
+          />
+          <Label htmlFor="isRecent">Mark as recent content</Label>
+        </div>
+
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? "Uploading..." : "Submit Blog Post"}
+        </Button>
+      </form>
     </div>
   );
 }

@@ -118,7 +118,7 @@ export function useUserSettings(profileId?: string) {
         .from('user_settings')
         .select('id')
         .eq('profile_id', profileId)
-        .eq('setting_type', type as string)  // Cast to string for database compatibility
+        .eq('setting_type', type as any)  // Cast to any for database compatibility
         .single();
       
       if (existingSetting) {
@@ -135,7 +135,7 @@ export function useUserSettings(profileId?: string) {
           .from('user_settings')
           .insert({ 
             profile_id: profileId, 
-            setting_type: type as string,  // Cast to string for database compatibility
+            setting_type: type as any,  // Cast to any for database compatibility
             setting_value: value 
           });
           

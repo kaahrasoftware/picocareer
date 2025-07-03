@@ -19,8 +19,8 @@ export function NotificationSection({ profileId }: NotificationSectionProps) {
 
   useEffect(() => {
     try {
-      // Get notification settings from user_settings
-      const notificationSettings = getSetting('notification_settings');
+      // Get notification settings from user_settings using the correct type
+      const notificationSettings = getSetting('notification_preferences');
       if (notificationSettings) {
         const settings = JSON.parse(notificationSettings);
         setEmailNotifications(settings.email_notifications ?? true);
@@ -58,9 +58,9 @@ export function NotificationSection({ profileId }: NotificationSectionProps) {
       session_reminders: type === 'session_reminders' ? value : sessionReminders,
     };
 
-    // Update the settings in the database
+    // Update the settings in the database using the correct type
     updateSetting.mutate({
-      type: 'notification_settings',
+      type: 'notification_preferences',
       value: JSON.stringify(settings)
     });
   };

@@ -1,133 +1,97 @@
 
-import { useQuery, UseQueryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface PaginationOptions {
-  limit?: number;
+interface PaginatedQueryParams {
+  table: string;
   page?: number;
+  limit?: number;
+  searchQuery?: string;
+  searchField?: string;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
-  searchQuery?: string;
-  searchColumn?: string;
-}
-
-interface PaginatedResult<T> {
-  data: T[];
-  count: number;
-  page: number;
-  pageSize: number;
-  isLoading: boolean;
-  error: Error | null;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  setPage: (page: number) => void;
-  totalPages: number;
-}
-
-export function usePaginatedQuery<T>({
-  queryKey,
-  tableName,
-  paginationOptions = {},
-  filters = {},
-  select,
-  queryOptions = {}
-}: {
-  queryKey: string[];
-  tableName: string;
-  paginationOptions?: PaginationOptions;
   filters?: Record<string, any>;
   select?: string;
-  queryOptions?: Omit<UseQueryOptions<any, Error, any, any>, 'queryKey' | 'queryFn'>;
-}): PaginatedResult<T> {
-  const {
-    limit = 10,
-    page = 1,
-    orderBy = 'created_at',
-    orderDirection = 'desc',
-    searchQuery = '',
-    searchColumn
-  } = paginationOptions;
+}
 
-  const [currentPage, setCurrentPage] = useState<number>(page);
-  
-  const startIndex = (currentPage - 1) * limit;
-  const endIndex = startIndex + limit - 1;
+export function usePaginatedQuery<T = any>({
+  table,
+  page = 1,
+  limit = 10,
+  searchQuery = '',
+  searchField = 'title',
+  orderBy = 'created_at',
+  orderDirection = 'desc',
+  filters = {},
+  select = '*'
+}: PaginatedQueryParams) {
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Use tanstack/react-query for data fetching with caching
-  const { data, isLoading, error } = useQuery({
-    queryKey: [...queryKey, currentPage, limit, orderBy, orderDirection, searchQuery, JSON.stringify(filters)],
-    queryFn: async () => {
-      try {
-        // First query for total count
-        let countQuery = supabase
-          .from(tableName)
-          .select('id', { count: 'exact' });
-        
-        // Apply filters
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            countQuery = countQuery.eq(key, value);
-          }
-        });
-        
-        // Apply search if provided
-        if (searchQuery && searchColumn) {
-          countQuery = countQuery.ilike(searchColumn, `%${searchQuery}%`);
-        }
-        
-        const { count: totalCount, error: countError } = await countQuery;
-        
-        if (countError) throw countError;
-        
-        // Query for the actual data with pagination
-        let dataQuery = supabase
-          .from(tableName)
-          .select(select || '*')
-          .order(orderBy, { ascending: orderDirection === 'asc' })
-          .range(startIndex, endIndex);
-        
-        // Apply the same filters
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            dataQuery = dataQuery.eq(key, value);
-          }
-        });
-        
-        // Apply the same search if provided
-        if (searchQuery && searchColumn) {
-          dataQuery = dataQuery.ilike(searchColumn, `%${searchQuery}%`);
-        }
-        
-        const { data: items, error: dataError } = await dataQuery;
-        
-        if (dataError) throw dataError;
-        
-        return {
-          data: items as T[],
-          count: totalCount || 0
-        };
-      } catch (error) {
-        console.error(`Error fetching paginated data from ${tableName}:`, error);
-        throw error;
+  const fetchData = async (): Promise<T[]> => {
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit - 1;
+
+    // Use any to bypass strict typing for dynamic table queries
+    let query = (supabase as any)
+      .from(table)
+      .select(select, { count: 'exact' });
+
+    // Apply search filter if provided
+    if (searchQuery && searchField) {
+      query = query.ilike(searchField, `%${searchQuery}%`);
+    }
+
+    // Apply additional filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        query = query.eq(key, value);
       }
-    },
-    ...queryOptions
+    });
+
+    // Get total count first
+    const { count, error: countError } = await query;
+    
+    if (countError) {
+      throw countError;
+    }
+
+    if (count !== null) {
+      setTotalCount(count);
+    }
+
+    // Execute query with pagination and ordering
+    const { data, error } = await query
+      .order(orderBy, { ascending: orderDirection === 'asc' })
+      .range(startIndex, endIndex);
+
+    if (error) {
+      throw error;
+    }
+
+    return data as T[];
+  };
+
+  const {
+    data = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: [table, page, limit, searchQuery, searchField, orderBy, orderDirection, filters],
+    queryFn: fetchData
   });
 
-  const totalItems = data?.count || 0;
-  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-  
+  const totalPages = Math.ceil(totalCount / limit);
+
   return {
-    data: data?.data || [],
-    count: totalItems,
-    page: currentPage,
-    pageSize: limit,
+    data,
     isLoading,
-    error: error as Error | null,
-    hasNextPage: currentPage < totalPages,
-    hasPreviousPage: currentPage > 1,
-    setPage: setCurrentPage,
-    totalPages
+    error,
+    page,
+    limit,
+    totalPages,
+    totalCount,
+    refetch
   };
 }
