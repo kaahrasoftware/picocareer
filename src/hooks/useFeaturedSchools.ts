@@ -1,7 +1,21 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { School } from "@/types/database/schools";
+
+interface School {
+  id: string;
+  name: string;
+  country: string;
+  status: string;
+  featured: boolean;
+  featured_priority?: number;
+  website?: string;
+  description?: string;
+  image_url?: string;
+  acceptance_rate?: number;
+  admissions_page_url?: string;
+  author_id?: string;
+  // ... other fields as needed
+}
 
 export function useFeaturedSchools(limit: number = 6) {
   return useQuery({
@@ -12,7 +26,7 @@ export function useFeaturedSchools(limit: number = 6) {
         .select('*')
         .eq('status', 'Approved')
         .eq('featured', true)
-        .order('featured_priority', { ascending: true, nullsLast: true })
+        .order('featured_priority', { ascending: true, nullsFirst: false })
         .limit(limit);
       
       if (error) {
@@ -20,7 +34,10 @@ export function useFeaturedSchools(limit: number = 6) {
         throw error;
       }
       
-      return data || [];
+      return (data || []).map(school => ({
+        ...school,
+        author_id: school.author_id || ''
+      })) as School[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

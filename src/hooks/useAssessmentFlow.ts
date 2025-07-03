@@ -3,12 +3,13 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { AssessmentQuestion, QuestionResponse, AssessmentResult } from '@/types/assessment';
+import type { AssessmentQuestion, QuestionResponse } from '@/types/assessment';
 
 export const useAssessmentFlow = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -23,7 +24,17 @@ export const useAssessmentFlow = () => {
         .order('order_index');
       
       if (error) throw error;
-      return data as AssessmentQuestion[];
+      
+      // Map database fields to AssessmentQuestion interface
+      return (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        type: item.type,
+        options: item.options as string[],
+        order: item.order_index,
+        isRequired: item.is_required
+      })) as AssessmentQuestion[];
     }
   });
 
@@ -78,8 +89,8 @@ export const useAssessmentFlow = () => {
     }
   });
 
-  // Process assessment with AI
-  const processAssessment = useMutation({
+  // Generate recommendations using AI
+  const generateRecommendations = useMutation({
     mutationFn: async () => {
       if (!assessmentId || responses.length === 0) {
         throw new Error('Invalid assessment data');
@@ -101,7 +112,8 @@ export const useAssessmentFlow = () => {
 
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setRecommendations(data.recommendations || []);
       queryClient.invalidateQueries({ queryKey: ['career-assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
       toast({
@@ -119,15 +131,7 @@ export const useAssessmentFlow = () => {
     }
   });
 
-  const startAssessment = useCallback(() => {
-    if (!assessmentId) {
-      createAssessment.mutate();
-    }
-    setCurrentQuestionIndex(0);
-    setResponses([]);
-  }, [assessmentId, createAssessment]);
-
-  const answerQuestion = useCallback((answer: string | string[] | number) => {
+  const handleAnswer = useCallback((answer: string | string[] | number) => {
     const currentQuestion = questions[currentQuestionIndex];
     if (!currentQuestion) return;
 
@@ -146,25 +150,19 @@ export const useAssessmentFlow = () => {
     if (assessmentId) {
       saveResponse.mutate({ questionId: currentQuestion.id, answer });
     }
-  }, [currentQuestionIndex, questions, responses, assessmentId, saveResponse]);
 
-  const nextQuestion = useCallback(() => {
+    // Auto-advance to next question
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
-  }, [currentQuestionIndex, questions.length]);
+  }, [currentQuestionIndex, questions, responses, assessmentId, saveResponse]);
 
-  const previousQuestion = useCallback(() => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  }, [currentQuestionIndex]);
-
-  const completeAssessment = useCallback(() => {
-    if (responses.length === questions.length) {
-      processAssessment.mutate();
-    }
-  }, [responses.length, questions.length, processAssessment]);
+  const resetAssessment = useCallback(() => {
+    setCurrentQuestionIndex(0);
+    setResponses([]);
+    setAssessmentId(null);
+    setRecommendations([]);
+  }, []);
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -177,6 +175,7 @@ export const useAssessmentFlow = () => {
     currentQuestion,
     currentQuestionIndex,
     responses,
+    recommendations,
     assessmentId,
     isLastQuestion,
     canProceed,
@@ -184,15 +183,11 @@ export const useAssessmentFlow = () => {
     
     // Loading states
     isLoading,
-    isCreating: createAssessment.isPending,
-    isSaving: saveResponse.isPending,
-    isProcessing: processAssessment.isPending,
+    isGenerating: generateRecommendations.isPending,
     
     // Actions
-    startAssessment,
-    answerQuestion,
-    nextQuestion,
-    previousQuestion,
-    completeAssessment,
+    handleAnswer,
+    generateRecommendations: generateRecommendations.mutate,
+    resetAssessment,
   };
 };

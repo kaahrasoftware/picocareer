@@ -1,238 +1,140 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { format, subMonths, subWeeks, subDays, subYears, parseISO, startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
-import { HubStorageMetrics, HubMemberMetrics, MemberGrowth, AnalyticsSummary } from '@/types/database/analytics';
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { HubStorageMetrics, AnalyticsSummary, MemberGrowth } from '@/types/database/analytics';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 
-export type TimePeriod = 'day' | 'week' | 'month' | 'year';
+export type TimePeriod = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_year' | 'month';
 
-// Define the response type from the refresh_hub_metrics function
-interface RefreshHubMetricsResponse {
-  storage_metrics: {
-    total_storage_bytes: number;
-    file_count: number;
-    resources_count: number;
-    logo_count: number;
-    banner_count: number;
-    announcements_count: number;
-    last_calculated_at: string;
-    storage_limit_bytes: number;
-  };
-  member_metrics: {
-    total_members: number;
-    active_members: number;
-    member_limit: number;
-  };
-}
-
-export function useHubAnalytics(hubId: string, initialPeriod: TimePeriod = 'month') {
-  const [memberGrowth, setMemberGrowth] = useState<MemberGrowth[]>([]);
+export function useHubAnalytics(hubId: string) {
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [storageMetrics, setStorageMetrics] = useState<HubStorageMetrics | null>(null);
-  const [summary, setSummary] = useState<AnalyticsSummary>({
+
+  // Fetch storage metrics
+  const { data: storageMetrics } = useQuery({
+    queryKey: ['hub-storage-metrics', hubId],
+    queryFn: async (): Promise<HubStorageMetrics> => {
+      const { data, error } = await supabase
+        .from('hub_storage_metrics')
+        .select('*')
+        .eq('hub_id', hubId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Calculate summary data
+  const summary: AnalyticsSummary = {
     totalMembers: 0,
     memberLimit: 100,
     activeMembers: 0,
-    resourceCount: 0,
-    announcementCount: 0,
-    storageUsed: 0,
-    storageLimit: 5 * 1024 * 1024 * 1024, // 5GB default
-  });
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>(initialPeriod);
+    resourceCount: storageMetrics?.resources_count || 0,
+    totalResources: storageMetrics?.resources_count || 0,
+    announcementCount: storageMetrics?.announcements_count || 0,
+    totalAnnouncements: storageMetrics?.announcements_count || 0,
+    storageUsed: storageMetrics?.total_storage_bytes || 0,
+    storageLimit: 5368709120 // 5GB in bytes
+  };
 
-  // Format date based on selected period
-  const formatDate = useCallback((dateStr: string, period: TimePeriod): string => {
-    const date = typeof dateStr === 'string' ? parseISO(dateStr) : new Date(dateStr);
-    switch (period) {
-      case 'day':
-        return format(date, 'MMM d, h a');
-      case 'week':
-        return format(date, 'MMM d');
-      case 'month':
-        return format(date, 'MMM yyyy');
-      case 'year':
-        return format(date, 'yyyy');
-      default:
-        return format(date, 'MMM d, yyyy');
-    }
-  }, []);
-
-  const fetchDailyData = useCallback(async () => {
-    if (!hubId) return [];
-    
-    const now = new Date();
-    const startDate = subDays(now, 30); // Show 30 days
-    
-    try {
-      // Fetch all hub members who joined in the last 30 days
-      const { data: memberData, error: memberError } = await supabase
-        .from('hub_members')
-        .select('id, join_date')
-        .eq('hub_id', hubId)
-        .gte('join_date', startOfDay(startDate).toISOString())
-        .lte('join_date', endOfDay(now).toISOString())
-        .order('join_date', { ascending: true });
-        
-      if (memberError) {
-        console.error('Error fetching member data:', memberError);
-        return [];
-      }
-      
-      // Generate an array of all days in the range
-      const daysRange = eachDayOfInterval({ start: startDate, end: now });
-      
-      // Initialize counts for each day
-      const dailyMap: Record<string, number> = {};
-      daysRange.forEach(day => {
-        const dateStr = format(day, 'yyyy-MM-dd');
-        dailyMap[dateStr] = 0;
-      });
-      
-      // Count signups by date
-      if (memberData) {
-        memberData.forEach(member => {
-          const date = format(new Date(member.join_date), 'yyyy-MM-dd');
-          dailyMap[date] = (dailyMap[date] || 0) + 1;
-        });
-      }
-      
-      // Convert map to array of MemberGrowth objects
-      const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
-        hub_id: hubId,
-        date: date,
-        month: date, // For compatibility with existing UI
-        new_members: count
-      })).sort((a, b) => a.date.localeCompare(b.date));
-      
-      return dailyData;
-    } catch (error) {
-      console.error('Error generating daily member growth data:', error);
-      return [];
-    }
-  }, [hubId]);
-
-  const fetchMetrics = useCallback(async () => {
-    if (!hubId) return;
-
-    try {
-      // Calculate time range based on selected period
+  // Fetch member growth data
+  const { data: memberGrowth = [] } = useQuery({
+    queryKey: ['hub-member-growth', hubId, timePeriod],
+    queryFn: async (): Promise<MemberGrowth[]> => {
       const now = new Date();
-      let startDate;
-      let data: MemberGrowth[] = [];
-      
-      // Update to fetch the appropriate amount of data based on timePeriod
+      let startDate: Date;
+      let dateFormat: string;
+
       switch (timePeriod) {
-        case 'day':
-          data = await fetchDailyData();
+        case 'last_7_days':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          dateFormat = 'yyyy-MM-dd';
           break;
-        case 'week':
-          startDate = subWeeks(now, 12); // Show 12 weeks
-          const { data: weekData, error: weekError } = await supabase
-            .from('hub_member_growth')
-            .select('*')
-            .eq('hub_id', hubId)
-            .gte('month', startDate.toISOString())
-            .order('month', { ascending: true });
-            
-          if (weekError) throw weekError;
-          data = weekData || [];
+        case 'last_30_days':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          dateFormat = 'yyyy-MM-dd';
           break;
-        case 'month':
-          startDate = subMonths(now, 12); // Show 12 months
-          const { data: monthData, error: monthError } = await supabase
-            .from('hub_member_growth')
-            .select('*')
-            .eq('hub_id', hubId)
-            .gte('month', startDate.toISOString())
-            .order('month', { ascending: true });
-            
-          if (monthError) throw monthError;
-          data = monthData || [];
+        case 'last_90_days':
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          dateFormat = 'yyyy-MM';
           break;
-        case 'year':
-          startDate = subYears(now, 5); // Show 5 years
-          const { data: yearData, error: yearError } = await supabase
-            .from('hub_member_growth')
-            .select('*')
-            .eq('hub_id', hubId)
-            .gte('month', startDate.toISOString())
-            .order('month', { ascending: true });
-            
-          if (yearError) throw yearError;
-          data = yearData || [];
+        case 'last_year':
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          dateFormat = 'yyyy-MM';
           break;
-        default:
-          startDate = subMonths(now, 12);
-          const { data: defaultData, error: defaultError } = await supabase
-            .from('hub_member_growth')
-            .select('*')
-            .eq('hub_id', hubId)
-            .gte('month', startDate.toISOString())
-            .order('month', { ascending: true });
-            
-          if (defaultError) throw defaultError;
-          data = defaultData || [];
+        default: // month
+          startDate = subMonths(now, 11);
+          dateFormat = 'yyyy-MM';
       }
 
-      // Use the refresh_hub_metrics function to get consistent metrics
-      const { data: metricsData, error: metricsError } = await supabase
-        .rpc<RefreshHubMetricsResponse>('refresh_hub_metrics', { _hub_id: hubId });
+      const { data, error } = await supabase
+        .from('hub_members')
+        .select('created_at')
+        .eq('hub_id', hubId)
+        .gte('created_at', startDate.toISOString());
 
-      if (metricsError) throw metricsError;
+      if (error) throw error;
 
-      // Set state with fetched data
-      if (metricsData) {
-        const memberMetrics = metricsData.member_metrics;
-        setSummary({
-          totalMembers: memberMetrics.total_members,
-          memberLimit: memberMetrics.member_limit || 100,
-          activeMembers: memberMetrics.active_members,
-          resourceCount: metricsData.storage_metrics.resources_count,
-          announcementCount: metricsData.storage_metrics.announcements_count,
-          storageUsed: metricsData.storage_metrics.total_storage_bytes,
-          storageLimit: metricsData.storage_metrics.storage_limit_bytes || 5 * 1024 * 1024 * 1024, // Default to 5GB
-        });
+      // Group by time period
+      const groupedData: { [key: string]: number } = {};
+      
+      (data || []).forEach(member => {
+        const date = new Date(member.created_at);
+        const key = format(date, dateFormat);
+        groupedData[key] = (groupedData[key] || 0) + 1;
+      });
 
-        setStorageMetrics({
-          total_storage_bytes: metricsData.storage_metrics.total_storage_bytes,
-          file_count: metricsData.storage_metrics.file_count,
-          resources_count: metricsData.storage_metrics.resources_count,
-          logo_count: metricsData.storage_metrics.logo_count,
-          banner_count: metricsData.storage_metrics.banner_count,
-          announcements_count: metricsData.storage_metrics.announcements_count,
-          last_calculated_at: metricsData.storage_metrics.last_calculated_at,
-          storage_limit_bytes: metricsData.storage_metrics.storage_limit_bytes
-        });
-      }
-
-      setMemberGrowth(data || []);
-    } catch (error) {
-      console.error("Error fetching hub analytics:", error);
+      // Convert to array format
+      return Object.entries(groupedData).map(([key, count]) => ({
+        month: key,
+        year: parseInt(key.split('-')[0]),
+        date: key,
+        new_members: count
+      }));
     }
-  }, [hubId, timePeriod, fetchDailyData]);
+  });
 
-  // Initial fetch and refresh when timePeriod changes
-  useEffect(() => {
-    fetchMetrics();
-  }, [fetchMetrics, timePeriod]);
-
-  // Function to manually refresh metrics
-  const refreshMetrics = async () => {
+  const refreshMetrics = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await fetchMetrics();
+      // Call the refresh function
+      await supabase.rpc('refresh_hub_metrics', { _hub_id: hubId });
+      
+      // Invalidate queries to refresh data
+      await Promise.all([
+        // Add query invalidations here if needed
+      ]);
+    } catch (error) {
+      console.error('Error refreshing metrics:', error);
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [hubId]);
+
+  const formatDate = useCallback((dateStr: string, period: TimePeriod) => {
+    const date = new Date(dateStr);
+    switch (period) {
+      case 'last_7_days':
+      case 'last_30_days':
+        return format(date, 'MMM dd');
+      case 'last_90_days':
+      case 'last_year':
+      case 'month':
+        return format(date, 'MMM yyyy');
+      default:
+        return format(date, 'MMM dd');
+    }
+  }, []);
 
   return {
     memberGrowth,
-    isRefreshing,
     storageMetrics,
     summary,
     timePeriod,
     setTimePeriod,
+    isRefreshing,
     refreshMetrics,
     formatDate
   };

@@ -14,16 +14,21 @@ interface CampaignListProps {
   adminId: string;
 }
 
-// Updated filter state interface to match the hook
-interface FilterState {
-  search: string;
-  status: string;
-  contentType: string;
+// Define Campaign type that matches the database
+interface Campaign {
+  id: string;
+  subject: string;
+  content_type: string;
+  status: "planned" | "sent" | "pending" | "failed" | "sending" | "partial" | "draft" | "scheduled";
   frequency: string;
-  dateRange: {
-    from?: Date;
-    to?: Date;
-  };
+  recipients_count: number;
+  sent_count: number;
+  failed_count: number;
+  created_at: string;
+  scheduled_for?: string;
+  sent_at?: string;
+  last_sent?: string;
+  admin_id: string;
 }
 
 export function CampaignList({ adminId }: CampaignListProps) {
@@ -32,7 +37,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
   const {
-    campaigns,
+    campaigns: rawCampaigns,
     totalCount,
     filteredCount,
     loading: campaignsLoading,
@@ -42,6 +47,12 @@ export function CampaignList({ adminId }: CampaignListProps) {
     setPagination,
     refreshCampaigns
   } = useAdvancedCampaignFilters(adminId);
+
+  // Transform raw campaigns to match Campaign interface
+  const campaigns: Campaign[] = rawCampaigns.map(campaign => ({
+    ...campaign,
+    status: (campaign.status as Campaign['status']) || 'draft'
+  }));
 
   const handleSendCampaign = async (campaignId: string) => {
     if (!campaignId) return;

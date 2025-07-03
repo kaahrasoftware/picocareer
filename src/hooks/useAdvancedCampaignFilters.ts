@@ -57,6 +57,14 @@ export function useAdvancedCampaignFilters(adminId: string) {
         query = query.eq('frequency', filters.frequency);
       }
 
+      // Add date range filtering if provided
+      if (filters.dateRange.from) {
+        query = query.gte('created_at', filters.dateRange.from.toISOString());
+      }
+      if (filters.dateRange.to) {
+        query = query.lte('created_at', filters.dateRange.to.toISOString());
+      }
+
       const { data, error, count } = await query
         .range(
           (pagination.currentPage - 1) * pagination.pageSize,

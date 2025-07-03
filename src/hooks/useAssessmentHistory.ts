@@ -17,21 +17,37 @@ export const useAssessmentHistory = () => {
       }
 
       try {
-        const { data, error } = await supabase
+        // Query career_assessments and get recommendations separately
+        const { data: assessmentData, error: assessmentError } = await supabase
           .from('career_assessments')
-          .select('id, completed_at, recommendations, status')
+          .select('id, completed_at, status')
           .eq('user_id', session.user.id)
           .order('completed_at', { ascending: false });
 
-        if (error) throw error;
+        if (assessmentError) throw assessmentError;
 
-        const historyItems: AssessmentHistoryItem[] = data?.map(assessment => ({
-          id: assessment.id,
-          completedAt: assessment.completed_at,
-          recommendationCount: assessment.recommendations?.length || 0,
-          topRecommendation: assessment.recommendations?.[0]?.title || 'No recommendations',
-          status: assessment.status
-        })) || [];
+        const historyItems: AssessmentHistoryItem[] = [];
+
+        for (const assessment of assessmentData || []) {
+          // Get recommendations for each assessment
+          const { data: recommendationData, error: recommendationError } = await supabase
+            .from('career_recommendations')
+            .select('title')
+            .eq('assessment_id', assessment.id)
+            .limit(1);
+
+          if (recommendationError) {
+            console.error('Error fetching recommendations:', recommendationError);
+          }
+
+          historyItems.push({
+            id: assessment.id,
+            completedAt: assessment.completed_at || new Date().toISOString(),
+            recommendationCount: recommendationData?.length || 0,
+            topRecommendation: recommendationData?.[0]?.title || 'No recommendations',
+            status: assessment.status
+          });
+        }
 
         setAssessments(historyItems);
       } catch (error) {
