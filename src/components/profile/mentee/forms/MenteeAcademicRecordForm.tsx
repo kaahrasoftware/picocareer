@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -42,11 +41,11 @@ export function MenteeAcademicRecordForm({ record, onSubmit, onCancel }: MenteeA
     const formattedData = {
       ...data,
       class_rank: data.class_rank || undefined,
-      gpa: data.gpa ? parseFloat(data.gpa) : undefined,
-      semester_gpa: data.semester_gpa ? parseFloat(data.semester_gpa) : undefined,
-      cumulative_gpa: data.cumulative_gpa ? parseFloat(data.cumulative_gpa) : undefined,
-      credits_attempted: data.credits_attempted ? parseInt(data.credits_attempted) : undefined,
-      credits_earned: data.credits_earned ? parseInt(data.credits_earned) : undefined,
+      gpa: data.gpa ? parseFloat(data.gpa.toString()) : undefined,
+      semester_gpa: data.semester_gpa ? parseFloat(data.semester_gpa.toString()) : undefined,
+      cumulative_gpa: data.cumulative_gpa ? parseFloat(data.cumulative_gpa.toString()) : undefined,
+      credits_attempted: data.credits_attempted ? parseInt(data.credits_attempted.toString()) : undefined,
+      credits_earned: data.credits_earned ? parseInt(data.credits_earned.toString()) : undefined,
       honors: data.honors ? data.honors.split(',').map((h: string) => h.trim()).filter(Boolean) : [],
       awards: data.awards ? data.awards.split(',').map((a: string) => a.trim()).filter(Boolean) : [],
       relevant_coursework: data.relevant_coursework ? data.relevant_coursework.split(',').map((c: string) => c.trim()).filter(Boolean) : [],

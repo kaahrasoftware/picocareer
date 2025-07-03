@@ -78,8 +78,13 @@ export function useMenteeDataMutationsEnhanced() {
       const { data, error } = await supabase
         .from('mentee_interests')
         .insert({
-          ...interestData,
-          category: interestData.category as string
+          mentee_id: interestData.mentee_id,
+          category: interestData.category,
+          interest_name: interestData.interest_name,
+          description: interestData.description,
+          proficiency_level: interestData.proficiency_level,
+          related_career_id: interestData.related_career_id,
+          related_major_id: interestData.related_major_id,
         })
         .select()
         .single();
@@ -102,8 +107,12 @@ export function useMenteeDataMutationsEnhanced() {
       const { data, error } = await supabase
         .from('mentee_interests')
         .update({
-          ...updateData,
-          category: updateData.category as string
+          category: updateData.category,
+          interest_name: updateData.interest_name,
+          description: updateData.description,
+          proficiency_level: updateData.proficiency_level,
+          related_career_id: updateData.related_career_id,
+          related_major_id: updateData.related_major_id,
         })
         .eq('id', id)
         .select()

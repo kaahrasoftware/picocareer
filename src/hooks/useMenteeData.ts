@@ -74,7 +74,7 @@ export function useMenteeAcademicRecords(menteeId?: string) {
         cumulative_gpa: record.cumulative_gpa,
         credits_attempted: record.credits_attempted,
         credits_earned: record.credits_earned,
-        class_rank: record.class_rank,
+        class_rank: record.class_rank?.toString() || '',
         graduation_date: record.graduation_date,
         honors: record.honors || [],
         awards: record.awards || [],

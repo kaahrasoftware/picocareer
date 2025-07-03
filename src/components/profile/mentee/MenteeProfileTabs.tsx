@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MenteeBasicInfoTab } from './tabs/MenteeBasicInfoTab';
 import { MenteeEducationTab } from './tabs/MenteeEducationTab';
@@ -16,6 +16,20 @@ interface MenteeProfileTabsProps {
 }
 
 export function MenteeProfileTabs({ profile, isEditing = false }: MenteeProfileTabsProps) {
+  const [editingTab, setEditingTab] = useState<string | null>(null);
+
+  const handleEdit = (tab: string) => {
+    setEditingTab(tab);
+  };
+
+  const handleSave = () => {
+    setEditingTab(null);
+  };
+
+  const handleCancel = () => {
+    setEditingTab(null);
+  };
+
   return (
     <Tabs defaultValue="basic-info" className="w-full">
       <TabsList className="grid w-full grid-cols-7">
@@ -29,7 +43,13 @@ export function MenteeProfileTabs({ profile, isEditing = false }: MenteeProfileT
       </TabsList>
 
       <TabsContent value="basic-info" className="space-y-4">
-        <MenteeBasicInfoTab profile={profile} isEditing={isEditing} />
+        <MenteeBasicInfoTab 
+          profile={profile} 
+          isEditing={editingTab === 'basic-info'} 
+          onEdit={() => handleEdit('basic-info')}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
       </TabsContent>
 
       <TabsContent value="education" className="space-y-4">
@@ -37,7 +57,7 @@ export function MenteeProfileTabs({ profile, isEditing = false }: MenteeProfileT
       </TabsContent>
 
       <TabsContent value="interests" className="space-y-4">
-        <MenteeInterestsTabEnhanced profileId={profile.id} isEditing={isEditing} />
+        <MenteeInterestsTabEnhanced menteeId={profile.id} />
       </TabsContent>
 
       <TabsContent value="academics" className="space-y-4">
