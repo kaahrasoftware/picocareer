@@ -2,11 +2,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { InterestCategory } from "@/types/mentee-profile";
 
 export interface EnhancedMenteeInterest {
   id: string;
   mentee_id: string;
-  category: string;
+  category: InterestCategory;
   interest_name: string;
   description?: string;
   proficiency_level?: string;
@@ -56,6 +57,7 @@ export function useMenteeInterestsEnhanced(menteeId: string) {
         
         return {
           ...interest,
+          category: interest.category as InterestCategory,
           career_title: careerTitle,
           major_title: majorTitle,
           display_name: displayName
@@ -75,7 +77,10 @@ export function useMenteeDataMutationsEnhanced() {
     mutationFn: async (interestData: Omit<EnhancedMenteeInterest, 'id' | 'created_at' | 'updated_at' | 'career_title' | 'major_title' | 'display_name'>) => {
       const { data, error } = await supabase
         .from('mentee_interests')
-        .insert(interestData)
+        .insert({
+          ...interestData,
+          category: interestData.category as string
+        })
         .select()
         .single();
       
@@ -96,7 +101,10 @@ export function useMenteeDataMutationsEnhanced() {
     mutationFn: async ({ id, ...updateData }: Partial<EnhancedMenteeInterest> & { id: string }) => {
       const { data, error } = await supabase
         .from('mentee_interests')
-        .update(updateData)
+        .update({
+          ...updateData,
+          category: updateData.category as string
+        })
         .eq('id', id)
         .select()
         .single();

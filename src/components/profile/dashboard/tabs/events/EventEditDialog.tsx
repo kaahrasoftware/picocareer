@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ interface Event {
   start_time: string;
   end_time: string;
   event_type: "Coffee Time" | "Hackathon" | "Panel" | "Webinar" | "Workshop";
-  platform: string;
+  platform: "Google Meet" | "Zoom";
   meeting_link?: string;
   max_attendees?: number;
   organized_by?: string;
@@ -37,7 +38,7 @@ export function EventEditDialog({ event, open, onOpenChange, onEventUpdated }: E
     start_time: event.start_time,
     end_time: event.end_time,
     event_type: event.event_type || "Webinar" as const,
-    platform: event.platform,
+    platform: event.platform || "Google Meet" as "Google Meet" | "Zoom",
     meeting_link: event.meeting_link || "",
     max_attendees: event.max_attendees || 0,
     organized_by: event.organized_by || "",
@@ -142,12 +143,20 @@ export function EventEditDialog({ event, open, onOpenChange, onEventUpdated }: E
 
           <div>
             <Label htmlFor="platform">Platform</Label>
-            <Input
-              id="platform"
+            <Select
               value={formData.platform}
-              onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
-              required
-            />
+              onValueChange={(value: "Google Meet" | "Zoom") => 
+                setFormData({ ...formData, platform: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Google Meet">Google Meet</SelectItem>
+                <SelectItem value="Zoom">Zoom</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

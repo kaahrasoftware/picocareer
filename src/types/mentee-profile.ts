@@ -23,7 +23,7 @@ export interface MenteeProject {
   description: string;
   start_date: string;
   end_date?: string;
-  status: 'ongoing' | 'completed' | 'paused';
+  status: 'completed' | 'in_progress' | 'planned' | 'on_hold';
   technologies?: string[];
   role?: string;
   achievements?: string;
@@ -96,7 +96,7 @@ export interface MenteeEssayResponse {
   prompt?: EssayPrompt;
 }
 
-// Add missing type definitions
+// Type definitions
 export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
 export type AcademicStatus = 'undergraduate' | 'graduate' | 'postgraduate' | 'high_school';
 export type InterestCategory = 'career' | 'academic' | 'extracurricular' | 'hobby' | 'industry' | 'skill';

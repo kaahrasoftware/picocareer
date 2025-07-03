@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -61,7 +60,31 @@ export function useMenteeAcademicRecords(menteeId?: string) {
         .order('semester');
       
       if (error) throw error;
-      return data as MenteeAcademicRecord[];
+      
+      // Transform data to match MenteeAcademicRecord interface
+      return (data || []).map(record => ({
+        id: record.id,
+        mentee_id: record.mentee_id,
+        institution_name: record.institution_name || '',
+        degree_type: record.degree_type || '',
+        major: record.major || '',
+        minor: record.minor,
+        gpa: record.gpa,
+        semester_gpa: record.semester_gpa,
+        cumulative_gpa: record.cumulative_gpa,
+        credits_attempted: record.credits_attempted,
+        credits_earned: record.credits_earned,
+        class_rank: record.class_rank,
+        graduation_date: record.graduation_date,
+        honors: record.honors || [],
+        awards: record.awards || [],
+        relevant_coursework: record.relevant_coursework || [],
+        thesis_topic: record.thesis_topic,
+        year: record.year || new Date().getFullYear(),
+        semester: record.semester || 'Fall',
+        created_at: record.created_at,
+        updated_at: record.updated_at
+      })) as MenteeAcademicRecord[];
     },
     enabled: !!menteeId,
   });
@@ -116,7 +139,12 @@ export function useMenteeEssayResponses(menteeId?: string) {
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
-      return data as MenteeEssayResponse[];
+      
+      // Transform data to match MenteeEssayResponse interface
+      return (data || []).map(response => ({
+        ...response,
+        status: response.is_draft ? 'draft' : 'completed'
+      })) as MenteeEssayResponse[];
     },
     enabled: !!menteeId,
   });
@@ -191,7 +219,10 @@ export function useMenteeDataMutations() {
     mutationFn: async (project: Omit<MenteeProject, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('mentee_projects')
-        .insert([project])
+        .insert([{
+          ...project,
+          status: project.status === 'ongoing' ? 'in_progress' : project.status
+        }])
         .select()
         .single();
       
@@ -209,9 +240,14 @@ export function useMenteeDataMutations() {
 
   const updateProject = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<MenteeProject> & { id: string }) => {
+      const transformedUpdates = {
+        ...updates,
+        status: updates.status === 'ongoing' ? 'in_progress' : updates.status
+      };
+      
       const { data, error } = await supabase
         .from('mentee_projects')
-        .update(updates)
+        .update(transformedUpdates)
         .eq('id', id)
         .select()
         .single();
