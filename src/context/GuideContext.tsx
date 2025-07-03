@@ -1,80 +1,52 @@
 
-import React, { createContext, useContext, useState } from 'react';
-
-export interface Guide {
-  id: string;
-  title: string;
-  description: string;
-  steps: GuideStep[];
-}
-
-export interface GuideStep {
-  id: string;
-  title: string;
-  description: string;
-  targetElement?: string;
-  content: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
-  action?: () => void;
-}
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface GuideContextType {
-  currentGuide: Guide | null;
+  isGuideActive: boolean;
   currentStep: number;
-  isActive: boolean;
-  startGuide: (guide: Guide) => void;
+  startGuide: (route?: string) => void;
   nextStep: () => void;
-  prevStep: () => void;
   endGuide: () => void;
-  setCurrentStep: (step: number) => void;
+  hasSeenGuide: (route: string) => boolean;
 }
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
 
-export function GuideProvider({ children }: { children: React.ReactNode }) {
-  const [currentGuide, setCurrentGuide] = useState<Guide | null>(null);
+export function GuideProvider({ children }: { children: ReactNode }) {
+  const [isGuideActive, setIsGuideActive] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [isActive, setIsActive] = useState(false);
+  const [seenGuides, setSeenGuides] = useState<string[]>([]);
 
-  const startGuide = (guide: Guide) => {
-    setCurrentGuide(guide);
+  const startGuide = (route?: string) => {
+    setIsGuideActive(true);
     setCurrentStep(0);
-    setIsActive(true);
+    if (route && !seenGuides.includes(route)) {
+      setSeenGuides(prev => [...prev, route]);
+    }
   };
 
   const nextStep = () => {
-    if (currentGuide && currentStep < currentGuide.steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      endGuide();
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
+    setCurrentStep(prev => prev + 1);
   };
 
   const endGuide = () => {
-    setCurrentGuide(null);
+    setIsGuideActive(false);
     setCurrentStep(0);
-    setIsActive(false);
+  };
+
+  const hasSeenGuide = (route: string) => {
+    return seenGuides.includes(route);
   };
 
   return (
-    <GuideContext.Provider
-      value={{
-        currentGuide,
-        currentStep,
-        isActive,
-        startGuide,
-        nextStep,
-        prevStep,
-        endGuide,
-        setCurrentStep,
-      }}
-    >
+    <GuideContext.Provider value={{
+      isGuideActive,
+      currentStep,
+      startGuide,
+      nextStep,
+      endGuide,
+      hasSeenGuide
+    }}>
       {children}
     </GuideContext.Provider>
   );

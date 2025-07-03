@@ -1,327 +1,428 @@
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { 
+  RefreshCcw, 
+  Download, 
+  Filter,
+  Search as SearchIcon,
+  PlusCircle
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { CareersDataTable } from './CareersDataTable';
+import { useAdminCareersQuery } from '@/hooks/useAdminCareersQuery';
+import { CareerMetricCards } from './CareerMetricCards';
+import { CareerDetailsDialog } from './CareerDetailsDialog';
+import { CareerFormDialog } from './CareerFormDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 import { Badge } from '@/components/ui/badge';
-import { ContentList } from '../../content/ContentList';
-import { ContentStatusFilter } from '../../content/ContentStatusFilter';
-import { StandardPagination } from '@/components/common/StandardPagination';
-import { Search, Plus, BarChart3, TrendingUp, Award, Building, CheckCircle } from 'lucide-react';
-import type { ContentStatus } from '../../types';
-import type { AdminCareersFilters, CareerStats } from './types';
-
-const ITEMS_PER_PAGE = 10;
+import { useDebounce } from '@/hooks/useDebounce';
+import { supabase } from '@/integrations/supabase/client';
+import { Status } from '@/types/database/enums';
 
 export function CareersManagementTab() {
-  const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<AdminCareersFilters>({
-    searchQuery: '',
-    statusFilter: 'all',
-    industryFilter: 'all',
-    featuredFilter: 'all',
-    completeFilter: 'all'
+  // State for filters and pagination
+  const [statusFilter, setStatusFilter] = useState<Status | 'all'>("all");
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [industryFilter, setIndustryFilter] = useState<string>('all');
+  
+  // State for career details dialog
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [selectedCareer, setSelectedCareer] = useState<any>(null);
+  const [isCareerLoading, setIsCareerLoading] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [isAddCareerOpen, setIsAddCareerOpen] = useState(false);
+  const [editingCareer, setEditingCareer] = useState<any>(null);
+
+  // Toast notification
+  const { toast } = useToast();
+  
+  // Fetch careers data
+  const { 
+    data: careersData, 
+    isLoading, 
+    isError, 
+    error, 
+    refetch,
+    isRefetching
+  } = useAdminCareersQuery({
+    statusFilter,
+    industryFilter,
+    page,
+    pageSize,
+    startDate: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
+    endDate: dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined,
+    searchTerm: debouncedSearchTerm,
+    sortBy,
+    sortDirection
   });
 
-  const { data: careersData, isLoading } = useQuery({
-    queryKey: ['admin-careers', currentPage, filters],
-    queryFn: async () => {
-      let query = supabase
-        .from('careers')
-        .select(`
-          *,
-          profiles!careers_author_id_fkey (
-            id,
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false });
+  // Handlers
+  const handleRefresh = useCallback(() => {
+    refetch();
+    toast({
+      title: "Data refreshed",
+      description: "Career data has been refreshed.",
+    });
+  }, [refetch, toast]);
 
-      // Apply filters
-      if (filters.searchQuery) {
-        query = query.or(`title.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
-      }
+  const handleViewDetails = useCallback((careerId: string) => {
+    setSelectedCareerId(careerId);
+  }, []);
 
-      if (filters.statusFilter !== 'all') {
-        query = query.eq('status', filters.statusFilter);
-      }
+  const handleCloseDetailsDialog = useCallback(() => {
+    setSelectedCareerId(null);
+  }, []);
 
-      if (filters.industryFilter !== 'all') {
-        query = query.eq('industry', filters.industryFilter);
-      }
+  const handleExport = () => {
+    toast({
+      title: "Export started",
+      description: "Your career data is being prepared for download.",
+    });
+  };
 
-      if (filters.featuredFilter !== 'all') {
-        const isFeatured = filters.featuredFilter === 'featured';
-        query = query.eq('featured', isFeatured);
-      }
+  const handleFilterChange = (status: Status | 'all') => {
+    setStatusFilter(status);
+    setPage(1);
+  };
 
-      if (filters.completeFilter !== 'all') {
-        const isComplete = filters.completeFilter === 'complete';
-        query = query.eq('complete_career', isComplete);
-      }
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setPage(1);
+  };
 
-      // Get count for pagination
-      const { count } = await supabase
-        .from('careers')
-        .select('*', { count: 'exact', head: true });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+  };
 
-      // Apply pagination
-      const from = (currentPage - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-      query = query.range(from, to);
+  const handleIndustryFilterChange = (industry: string) => {
+    setIndustryFilter(industry);
+    setPage(1);
+  };
 
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return {
-        careers: data || [],
-        totalCount: count || 0,
-        totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE)
-      };
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('desc');
     }
-  });
+  };
 
-  const { data: statsData } = useQuery({
-    queryKey: ['careers-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('careers')
-        .select('status, industry, featured, complete_career');
-      
-      if (error) throw error;
-
-      const stats: CareerStats = {
-        totalCount: data.length,
-        approvedCount: data.filter(c => c.status === 'Approved').length,
-        pendingCount: data.filter(c => c.status === 'Pending').length,
-        featuredCount: data.filter(c => c.featured).length,
-        completedCount: data.filter(c => c.complete_career).length,
-        industryBreakdown: {}
-      };
-
-      // Calculate industry breakdown
-      data.forEach(career => {
-        if (career.industry) {
-          stats.industryBreakdown[career.industry] = (stats.industryBreakdown[career.industry] || 0) + 1;
-        }
-      });
-
-      return stats;
-    }
-  });
-
-  const updateCareerStatus = useMutation({
-    mutationFn: async ({ careerId, newStatus }: { careerId: string; newStatus: ContentStatus }) => {
+  // CRUD Operations
+  const handleApproveCareer = async (careerId: string) => {
+    try {
       const { error } = await supabase
         .from('careers')
-        .update({ status: newStatus })
+        .update({ status: 'Approved' })
         .eq('id', careerId);
-      
+
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-careers'] });
-      queryClient.invalidateQueries({ queryKey: ['careers-stats'] });
-    },
-  });
 
-  const handleStatusChange = async (itemId: string, newStatus: ContentStatus) => {
-    await updateCareerStatus.mutateAsync({ careerId: itemId, newStatus });
-  };
-
-  const getStatusColor = (status: ContentStatus) => {
-    switch (status) {
-      case 'Approved':
-        return 'border-green-200 bg-green-50';
-      case 'Pending':
-        return 'border-yellow-200 bg-yellow-50';
-      case 'Rejected':
-        return 'border-red-200 bg-red-50';
-      default:
-        return 'border-gray-200 bg-gray-50';
+      toast({
+        title: 'Career Approved',
+        description: 'The career has been approved successfully.',
+      });
+      
+      handleCloseDetailsDialog();
+      refetch();
+    } catch (err) {
+      console.error('Error approving career:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to approve career',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleSearchChange = (value: string) => {
-    setFilters(prev => ({ ...prev, searchQuery: value }));
-    setCurrentPage(1);
+  const handleRejectCareer = async (careerId: string) => {
+    try {
+      const { error } = await supabase
+        .from('careers')
+        .update({ status: 'Rejected' })
+        .eq('id', careerId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Career Rejected',
+        description: 'The career has been rejected.',
+      });
+      
+      handleCloseDetailsDialog();
+      refetch();
+    } catch (err) {
+      console.error('Error rejecting career:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to reject career',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleStatusFilterChange = (status: ContentStatus | "all") => {
-    setFilters(prev => ({ ...prev, statusFilter: status }));
-    setCurrentPage(1);
+  const handleToggleFeature = async (careerId: string, currentFeatured: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('careers')
+        .update({ featured: !currentFeatured })
+        .eq('id', careerId);
+
+      if (error) throw error;
+
+      toast({
+        title: currentFeatured ? 'Career Unfeatured' : 'Career Featured',
+        description: currentFeatured 
+          ? 'The career has been removed from featured list.' 
+          : 'The career has been added to featured list.',
+      });
+      
+      refetch();
+      
+      if (selectedCareerId === careerId) {
+        setSelectedCareer(prev => prev ? {
+          ...prev,
+          featured: !currentFeatured
+        } : null);
+      }
+    } catch (err) {
+      console.error('Error toggling feature status:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to update feature status',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleFilterChange = (key: keyof AdminCareersFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-    setCurrentPage(1);
+  const handleEditCareer = (career: any) => {
+    setEditingCareer(career);
+    setIsAddCareerOpen(true);
   };
 
-  // Calculate stats with fallback values
-  const stats = statsData || {
-    totalCount: 0,
-    approvedCount: 0,
-    pendingCount: 0,
-    featuredCount: 0,
-    completedCount: 0,
-    industryBreakdown: {}
+  const handleDeleteCareer = async (careerId: string) => {
+    if (!confirm('Are you sure you want to delete this career? This cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('careers')
+        .delete()
+        .eq('id', careerId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Career Deleted',
+        description: 'The career has been permanently deleted.',
+      });
+      
+      handleCloseDetailsDialog();
+      refetch();
+    } catch (err) {
+      console.error('Error deleting career:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete career',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAddNewCareer = () => {
+    setEditingCareer(null);
+    setIsAddCareerOpen(true);
+  };
+
+  const handleCareerFormSuccess = () => {
+    setIsAddCareerOpen(false);
+    setEditingCareer(null);
+    refetch();
+  };
+
+  // Calculate stats for metric cards
+  const careerStats = {
+    totalCount: careersData?.totalCount || 0,
+    approvedCount: careersData?.approvedCount || 0,
+    pendingCount: careersData?.pendingCount || 0,
+    featuredCount: careersData?.featuredCount || 0,
+    completedCount: careersData?.completedCount || 0,
+    industryBreakdown: careersData?.industryBreakdown || []
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Career Management</h2>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Career
-        </Button>
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <h2 className="text-2xl font-bold">Careers Management</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFilterDialogOpen(true)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+            {(dateRange || statusFilter !== "all" || industryFilter !== 'all') && (
+              <Badge variant="secondary" className="ml-2">
+                Active
+              </Badge>
+            )}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefetching}
+          >
+            <RefreshCcw className={`mr-2 h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleAddNewCareer}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add New
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Careers</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCount}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.approvedCount}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <TrendingUp className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pendingCount}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Featured</CardTitle>
-            <Award className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.featuredCount}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Complete</CardTitle>
-            <Building className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats.completedCount}</div>
-          </CardContent>
-        </Card>
+      <div className="rounded-lg border p-2">
+        <div className="flex items-center gap-2 p-2">
+          <SearchIcon className="h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search careers..."
+            className="h-9 w-[250px] lg:w-[300px]"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
       </div>
 
-      {/* Filters */}
+      <CareerMetricCards stats={careerStats} isLoading={isLoading} />
+
       <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search careers..."
-                  value={filters.searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-            <ContentStatusFilter
-              statusFilter={filters.statusFilter}
-              onStatusFilterChange={handleStatusFilterChange}
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={filters.industryFilter}
-              onChange={(e) => handleFilterChange('industryFilter', e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="all">All Industries</option>
-              {Object.keys(stats.industryBreakdown).map(industry => (
-                <option key={industry} value={industry}>
-                  {industry} ({stats.industryBreakdown[industry]})
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={filters.featuredFilter}
-              onChange={(e) => handleFilterChange('featuredFilter', e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="all">All Featured Status</option>
-              <option value="featured">Featured Only</option>
-              <option value="not_featured">Not Featured</option>
-            </select>
-
-            <select
-              value={filters.completeFilter}
-              onChange={(e) => handleFilterChange('completeFilter', e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="all">All Completion Status</option>
-              <option value="complete">Complete Only</option>
-              <option value="incomplete">Incomplete</option>
-            </select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Careers List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Careers ({careersData?.totalCount || 0})</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle>Careers List</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContentList
-            items={careersData?.careers || []}
-            isLoading={isLoading}
-            contentType="careers"
-            statusFilter={filters.statusFilter}
-            handleStatusChange={handleStatusChange}
-            getStatusColor={getStatusColor}
-          />
-          
-          {careersData && careersData.totalPages > 1 && (
-            <div className="mt-6">
-              <StandardPagination
-                currentPage={currentPage}
-                totalPages={careersData.totalPages}
-                onPageChange={setCurrentPage}
+          <Tabs value={statusFilter} onValueChange={(value) => handleFilterChange(value as Status | 'all')}>
+            <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="Pending">Pending</TabsTrigger>
+              <TabsTrigger value="Approved">Approved</TabsTrigger>
+              <TabsTrigger value="Rejected">Rejected</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={statusFilter} className="mt-0">
+              <CareersDataTable 
+                careers={careersData?.careers || []} 
+                isLoading={isLoading}
+                isError={isError}
+                error={error as Error}
+                page={page}
+                setPage={setPage}
+                totalPages={careersData?.totalPages || 1}
+                onViewDetails={handleViewDetails}
+                onApprove={(id) => handleApproveCareer(id)}
+                onReject={(id) => handleRejectCareer(id)}
+                onToggleFeature={handleToggleFeature}
+                onEdit={handleEditCareer}
+                onDelete={handleDeleteCareer}
+                onSort={handleSort}
+                currentSortColumn={sortBy}
+                currentSortDirection={sortDirection}
               />
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
+
+      {/* Career Details Dialog */}
+      <CareerDetailsDialog 
+        career={selectedCareer}
+        careerId={selectedCareerId}
+        isOpen={!!selectedCareerId}
+        isLoading={isCareerLoading}
+        onClose={handleCloseDetailsDialog}
+        onEdit={() => selectedCareer && handleEditCareer(selectedCareer)}
+        onApprove={() => selectedCareer && handleApproveCareer(selectedCareer.id)}
+        onReject={() => selectedCareer && handleRejectCareer(selectedCareer.id)}
+        onDelete={() => selectedCareer && handleDeleteCareer(selectedCareer.id)}
+        onToggleFeature={() => selectedCareer && handleToggleFeature(
+          selectedCareer.id, 
+          !!selectedCareer.featured
+        )}
+      />
+
+      {/* Career Form Dialog */}
+      <CareerFormDialog
+        open={isAddCareerOpen}
+        onClose={() => {
+          setIsAddCareerOpen(false);
+          setEditingCareer(null);
+        }}
+        onSuccess={handleCareerFormSuccess}
+        career={editingCareer}
+      />
+
+      {/* Filter Dialog */}
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filter Careers</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Industry</h3>
+              <Tabs value={industryFilter} onValueChange={handleIndustryFilterChange}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="technology">Technology</TabsTrigger>
+                  <TabsTrigger value="healthcare">Healthcare</TabsTrigger>
+                  <TabsTrigger value="finance">Finance</TabsTrigger>
+                  <TabsTrigger value="education">Education</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Date Range</h3>
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={handleDateRangeChange}
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Calendar, Edit2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { MenteeEssayForm } from '@/components/profile/mentee/essay/MenteeEssayForm';
 import { formatDistanceToNow } from 'date-fns';
 
 interface MenteeEssaysTabProps {
@@ -13,9 +13,9 @@ interface MenteeEssaysTabProps {
 
 interface MenteeEssayResponse {
   id: string;
-  prompt_id: string;
+  essay_prompt_id: string;
   response_text: string;
-  is_draft: boolean;
+  status: 'draft' | 'submitted' | 'reviewed';
   created_at: string;
   updated_at: string;
   essay_prompts: {
@@ -44,7 +44,7 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
             word_limit
           )
         `)
-        .eq('mentee_id', profileId)
+        .eq('profile_id', profileId)
         .order('updated_at', { ascending: false });
       
       if (error) throw error;
@@ -69,10 +69,10 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
         const { error } = await supabase
           .from('mentee_essay_responses')
           .insert({
-            mentee_id: profileId,
-            prompt_id: response.prompt_id,
+            profile_id: profileId,
+            essay_prompt_id: response.essay_prompt_id,
             response_text: response.response_text,
-            is_draft: response.is_draft || true
+            status: response.status || 'draft'
           });
         if (error) throw error;
       }
@@ -84,16 +84,30 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
     }
   };
 
-  const getStatusIcon = (is_draft: boolean) => {
-    return is_draft ? (
-      <Clock className="h-4 w-4 text-yellow-500" />
-    ) : (
-      <CheckCircle className="h-4 w-4 text-green-500" />
-    );
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'submitted':
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      case 'reviewed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      default:
+        return <XCircle className="h-4 w-4 text-gray-400" />;
+    }
   };
 
-  const getStatusColor = (is_draft: boolean) => {
-    return is_draft ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'submitted':
+        return 'bg-blue-100 text-blue-800';
+      case 'reviewed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (isLoading) {
@@ -102,12 +116,15 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
 
   if (showForm) {
     return (
-      <div className="p-4">
-        <h3>Essay Form Coming Soon</h3>
-        <Button onClick={() => setShowForm(false)} variant="outline">
-          Back to Essays
-        </Button>
-      </div>
+      <MenteeEssayForm
+        menteeId={profileId}
+        essay={selectedEssay}
+        onClose={() => {
+          setShowForm(false);
+          setSelectedEssay(null);
+        }}
+        onSubmit={handleSaveEssay}
+      />
     );
   }
 
@@ -133,9 +150,9 @@ export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
                       {essay.essay_prompts.title}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(essay.is_draft)}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(essay.is_draft)}`}>
-                        {essay.is_draft ? 'Draft' : 'Completed'}
+                      {getStatusIcon(essay.status)}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(essay.status)}`}>
+                        {essay.status.charAt(0).toUpperCase() + essay.status.slice(1)}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         {essay.essay_prompts.category}

@@ -2,8 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Building, GraduationCap, Briefcase } from 'lucide-react';
-import { ProfileAvatar } from '@/components/profile-details/ProfileAvatar';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, MapPin, Users, DollarSign } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ProfileAvatar } from '@/components/ui/ProfileAvatar';
 
 interface SearchResultCardProps {
   result: {
@@ -16,63 +18,107 @@ interface SearchResultCardProps {
     status?: string;
     metadata?: any;
   };
-  onClick?: () => void;
 }
 
-export const SearchResultCard = ({ result, onClick }: SearchResultCardProps) => {
-  const getIcon = () => {
+export function SearchResultCard({ result }: SearchResultCardProps) {
+  const getResultPath = () => {
+    const typeMap: { [key: string]: string } = {
+      'school': '/schools',
+      'major': '/majors',
+      'career': '/careers',
+      'opportunity': '/opportunities',
+      'scholarship': '/scholarships',
+      'mentor': '/mentors',
+      'blog': '/blogs',
+      'event': '/events'
+    };
+    return `${typeMap[result.type] || '/'}/${result.id}`;
+  };
+
+  const getResultIcon = () => {
     switch (result.type) {
-      case 'school':
-        return <Building className="h-5 w-5" />;
-      case 'major':
-        return <GraduationCap className="h-5 w-5" />;
-      case 'career':
-        return <Briefcase className="h-5 w-5" />;
       case 'mentor':
-        return <ProfileAvatar avatarUrl={result.metadata?.avatar_url} size="sm" />;
+        return (
+          <ProfileAvatar
+            avatarUrl={result.metadata?.avatar_url || ''}
+            firstName={result.metadata?.first_name || ''}
+            lastName={result.metadata?.last_name || ''}
+            size="sm"
+            editable={false}
+          />
+        );
       default:
-        return <Building className="h-5 w-5" />;
+        return null;
     }
   };
 
   return (
-    <Card 
-      className="hover:shadow-md transition-shadow cursor-pointer"
-      onClick={onClick}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            {getIcon()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{result.title}</CardTitle>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center gap-2">
+              {getResultIcon()}
+              <Link 
+                to={getResultPath()}
+                className="hover:text-primary transition-colors"
+              >
+                {result.title}
+              </Link>
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="capitalize">
                 {result.type}
               </Badge>
               {result.category && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline">
                   {result.category}
+                </Badge>
+              )}
+              {result.status && (
+                <Badge 
+                  variant={result.status === 'active' ? 'default' : 'secondary'}
+                >
+                  {result.status}
                 </Badge>
               )}
             </div>
           </div>
+          <Link to={getResultPath()}>
+            <Button variant="outline" size="sm">
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </CardHeader>
-      
-      <CardContent className="pt-0">
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
+      <CardContent className="space-y-4">
+        <p className="text-muted-foreground">
           {result.description}
         </p>
         
-        {result.location && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            <span>{result.location}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          {result.location && (
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              <span>{result.location}</span>
+            </div>
+          )}
+          
+          {result.metadata?.student_count && (
+            <div className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span>{result.metadata.student_count} students</span>
+            </div>
+          )}
+          
+          {result.metadata?.salary_range && (
+            <div className="flex items-center gap-1">
+              <DollarSign className="h-4 w-4" />
+              <span>{result.metadata.salary_range}</span>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
-};
+}

@@ -49,9 +49,8 @@ export function WalletButton({ className, showBalance = true }: WalletButtonProp
       </Button>
 
       <WalletDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        profileId="placeholder-id"
+        isOpen={isDialogOpen} 
+        onClose={() => setIsDialogOpen(false)} 
       />
     </>
   );

@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -165,9 +166,8 @@ export function UserMenu() {
       </DropdownMenu>
 
       <WalletDialog 
-        open={isWalletDialogOpen} 
-        onOpenChange={setIsWalletDialogOpen}
-        profileId={profile.id}
+        isOpen={isWalletDialogOpen} 
+        onClose={() => setIsWalletDialogOpen(false)} 
       />
     </>
   );
