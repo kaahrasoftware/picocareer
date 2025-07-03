@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -61,25 +62,26 @@ export function useMenteeAcademicRecords(menteeId?: string) {
       
       if (error) throw error;
       
-      // Transform data to match MenteeAcademicRecord interface
+      // Fix: Only transform fields that exist in the database
       return (data || []).map(record => ({
         id: record.id,
         mentee_id: record.mentee_id,
+        // Use fallback empty strings for required fields that might not exist in DB
         institution_name: record.institution_name || '',
         degree_type: record.degree_type || '',
         major: record.major || '',
-        minor: record.minor,
-        gpa: record.gpa,
+        minor: record.minor || undefined,
+        gpa: record.gpa || undefined,
         semester_gpa: record.semester_gpa,
         cumulative_gpa: record.cumulative_gpa,
         credits_attempted: record.credits_attempted,
         credits_earned: record.credits_earned,
         class_rank: record.class_rank?.toString() || '',
-        graduation_date: record.graduation_date,
+        graduation_date: record.graduation_date || undefined,
         honors: record.honors || [],
         awards: record.awards || [],
         relevant_coursework: record.relevant_coursework || [],
-        thesis_topic: record.thesis_topic,
+        thesis_topic: record.thesis_topic || undefined,
         year: record.year || new Date().getFullYear(),
         semester: record.semester || 'Fall',
         created_at: record.created_at,
@@ -140,10 +142,10 @@ export function useMenteeEssayResponses(menteeId?: string) {
       
       if (error) throw error;
       
-      // Transform data to match MenteeEssayResponse interface
+      // Fix: Transform data to match MenteeEssayResponse interface
       return (data || []).map(response => ({
         ...response,
-        status: response.is_draft ? 'draft' : 'completed'
+        status: response.is_draft ? 'draft' as const : 'completed' as const
       })) as MenteeEssayResponse[];
     },
     enabled: !!menteeId,
@@ -221,6 +223,7 @@ export function useMenteeDataMutations() {
         .from('mentee_projects')
         .insert([{
           ...project,
+          // Fix: Map UI status to database status
           status: project.status === 'ongoing' ? 'in_progress' : project.status
         }])
         .select()
@@ -242,6 +245,7 @@ export function useMenteeDataMutations() {
     mutationFn: async ({ id, ...updates }: Partial<MenteeProject> & { id: string }) => {
       const transformedUpdates = {
         ...updates,
+        // Fix: Map UI status to database status
         status: updates.status === 'ongoing' ? 'in_progress' : updates.status
       };
       

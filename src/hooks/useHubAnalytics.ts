@@ -19,7 +19,7 @@ export function useHubAnalytics(hubId: string) {
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Transform data to match HubStorageMetrics interface
+      // Fix: Transform data to match HubStorageMetrics interface with created_at fallback
       const storageMetrics = data ? {
         ...data,
         created_at: data.created_at || data.last_calculated_at || new Date().toISOString()
@@ -43,16 +43,22 @@ export function useHubAnalytics(hubId: string) {
 
   // Mock data for member growth - replace with actual query when available
   const memberGrowth = [
-    { date: '2024-01-01', members: 10, active: 8 },
-    { date: '2024-02-01', members: 15, active: 12 },
-    { date: '2024-03-01', members: 22, active: 18 },
+    { month: '2024-01', new_members: 5, total_members: 10 },
+    { month: '2024-02', new_members: 8, total_members: 18 },
+    { month: '2024-03', new_members: 12, total_members: 30 },
   ];
 
   const summary = {
-    totalMembers: 22,
-    activeMembers: 18,
+    totalMembers: 30,
+    activeMembers: 25,
     totalStorage: query.data?.storageMetrics?.total_storage_bytes || 0,
     totalResources: query.data?.storageMetrics?.resources_count || 0,
+    memberLimit: 100,
+    resourceCount: query.data?.storageMetrics?.resources_count || 0,
+    announcementCount: query.data?.storageMetrics?.announcements_count || 0,
+    totalAnnouncements: query.data?.storageMetrics?.announcements_count || 0,
+    storageUsage: query.data?.storageMetrics?.total_storage_bytes || 0,
+    storageLimit: 5368709120, // 5GB in bytes
   };
 
   return {

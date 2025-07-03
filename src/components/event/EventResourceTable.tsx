@@ -97,7 +97,8 @@ export function EventResourceTable({ eventId, resources }: EventResourceTablePro
 
   const confirmDelete = () => {
     if (selectedResource) {
-      deleteResource(selectedResource.id);
+      // Fix: Call mutate method instead of calling mutation object directly
+      deleteResource.mutate(selectedResource.id);
       setDeleteDialogOpen(false);
       setSelectedResource(null);
     }

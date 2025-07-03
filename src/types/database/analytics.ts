@@ -10,49 +10,39 @@ export interface HubStorageMetrics {
   banner_count: number;
   announcements_count: number;
   last_calculated_at: string;
-  created_at: string;
+  created_at: string; // Added missing property
   updated_at: string;
-}
-
-export interface HubMemberMetrics {
-  hub_id: string;
-  total_members: number;
-  active_members: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AnalyticsSummary {
-  totalMembers: number;
-  memberLimit: number;
-  activeMembers: number;
-  resourceCount: number;
-  totalResources: number;
-  announcementCount: number;
-  totalAnnouncements: number;
-  storageUsed: number;
-  storageLimit: number;
 }
 
 export interface MemberGrowth {
   month: string;
-  year: number;
-  date: string;
   new_members: number;
+  total_members: number;
 }
 
-export interface ResourceEngagement {
-  resource_id: string;
-  resource_title: string;
-  view_count: number;
-  download_count: number;
-  engagement_rate: number;
+export interface AnalyticsSummary {
+  totalMembers: number;
+  activeMembers: number;
+  totalStorage: number;
+  totalResources: number;
+  memberLimit: number;
+  resourceCount: number;
+  announcementCount: number;
+  totalAnnouncements: number;
+  storageUsage: number;
+  storageLimit: number;
 }
 
-export interface AnnouncementEngagement {
-  announcement_id: string;
-  announcement_title: string;
-  view_count: number;
-  reaction_count: number;
-  engagement_rate: number;
+// Fix: Add missing exports for PicoChat
+export interface CareerChatMessage {
+  id: string;
+  message: string;
+  timestamp: string;
+  sender: 'user' | 'assistant';
+}
+
+export interface CareerAnalysisResult {
+  recommendations: string[];
+  analysis: string;
+  confidence: number;
 }
