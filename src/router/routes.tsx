@@ -1,7 +1,7 @@
 
 import { Routes, Route } from 'react-router-dom';
 import Home from '@/pages/Home';
-import Schools from '@/pages/Schools';
+import School from '@/pages/School';
 import Majors from '@/pages/Majors';
 import Careers from '@/pages/Careers';
 import Opportunities from '@/pages/Opportunities';
@@ -30,7 +30,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/schools" element={<Schools />} />
+      <Route path="/schools" element={<School />} />
       <Route path="/schools/:id" element={<SchoolDetails />} />
       <Route path="/majors" element={<Majors />} />
       <Route path="/majors/:id" element={<MajorDetails />} />
