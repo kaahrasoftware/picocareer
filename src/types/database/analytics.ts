@@ -10,7 +10,7 @@ export interface HubStorageMetrics {
   banner_count: number;
   announcements_count: number;
   last_calculated_at: string;
-  created_at: string; // Added missing property
+  created_at: string;
   updated_at: string;
 }
 
@@ -56,12 +56,18 @@ export interface CareerChatMessage {
   message: string;
   timestamp: string;
   sender: 'user' | 'assistant';
+  session_id?: string;
+  message_type?: string;
+  content?: string;
+  metadata?: any;
+  created_at?: string;
 }
 
 export interface CareerAnalysisResult {
   recommendations: string[];
   analysis: string;
   confidence: number;
+  summary?: string;
 }
 
 export interface CareerChatSession {
