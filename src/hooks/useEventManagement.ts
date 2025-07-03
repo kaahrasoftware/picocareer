@@ -88,9 +88,11 @@ export function useEventManagement() {
         }
       });
 
-      // Enhance events with counts
+      // Enhance events with counts and ensure proper typing
       return eventsData?.map(event => ({
         ...event,
+        status: (event.status as EnhancedEvent['status']) || 'Pending',
+        event_type: (event.event_type as EnhancedEvent['event_type']) || 'Webinar',
         resources_count: resourceCountsMap[event.id] || 0,
         registrations_count: registrationCountsMap[event.id] || 0,
       })) || [];
@@ -190,8 +192,10 @@ export function useEventManagement() {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ eventIds, status }: { eventIds: string[]; status: string }) => {
       // Ensure status is properly typed
-      const validStatuses = ["Rejected", "Pending", "Approved"];
-      const finalStatus = validStatuses.includes(status) ? status : "Pending";
+      const validStatuses: EnhancedEvent['status'][] = ["Rejected", "Pending", "Approved"];
+      const finalStatus = validStatuses.includes(status as EnhancedEvent['status']) 
+        ? (status as EnhancedEvent['status']) 
+        : "Pending";
 
       const { error } = await supabase
         .from('events')

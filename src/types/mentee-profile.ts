@@ -10,6 +10,8 @@ export interface MenteeCourse {
   year: number;
   institution?: string;
   description?: string;
+  status: CourseStatus;
+  instructor_name?: string;
   created_at: string;
   updated_at: string;
 }
@@ -39,8 +41,14 @@ export interface MenteeAcademicRecord {
   major: string;
   minor?: string;
   gpa?: number;
+  semester_gpa?: number;
+  cumulative_gpa?: number;
+  credits_attempted?: number;
+  credits_earned?: number;
+  class_rank?: string;
   graduation_date?: string;
-  honors?: string;
+  honors?: string[];
+  awards?: string[];
   relevant_coursework?: string[];
   thesis_topic?: string;
   year: number;
@@ -52,7 +60,7 @@ export interface MenteeAcademicRecord {
 export interface MenteeInterest {
   id: string;
   mentee_id: string;
-  category: 'career' | 'academic' | 'extracurricular' | 'hobby' | 'industry' | 'skill';
+  category: InterestCategory;
   interest_name: string;
   description?: string;
   proficiency_level?: string;
@@ -87,3 +95,8 @@ export interface MenteeEssayResponse {
   updated_at: string;
   prompt?: EssayPrompt;
 }
+
+// Add missing type definitions
+export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
+export type AcademicStatus = 'undergraduate' | 'graduate' | 'postgraduate' | 'high_school';
+export type InterestCategory = 'career' | 'academic' | 'extracurricular' | 'hobby' | 'industry' | 'skill';

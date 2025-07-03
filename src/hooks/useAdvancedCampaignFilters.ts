@@ -9,8 +9,8 @@ export interface CampaignFilters {
   contentType: string;
   frequency: string;
   dateRange: {
-    from?: Date;
-    to?: Date;
+    from: Date;
+    to: Date;
   };
 }
 
@@ -25,7 +25,10 @@ export function useAdvancedCampaignFilters(adminId: string) {
     status: 'all',
     contentType: 'all',
     frequency: 'all',
-    dateRange: {}
+    dateRange: {
+      from: new Date(new Date().getFullYear(), 0, 1), // Start of current year
+      to: new Date() // Current date
+    }
   });
 
   const [pagination, setPagination] = useState<CampaignPagination>({
@@ -57,7 +60,7 @@ export function useAdvancedCampaignFilters(adminId: string) {
         query = query.eq('frequency', filters.frequency);
       }
 
-      // Add date range filtering if both dates are provided
+      // Add date range filtering
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query.gte('created_at', filters.dateRange.from.toISOString());
         query = query.lte('created_at', filters.dateRange.to.toISOString());

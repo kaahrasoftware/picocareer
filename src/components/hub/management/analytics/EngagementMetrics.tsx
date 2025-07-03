@@ -39,8 +39,26 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
 
         if (announcementError) throw announcementError;
 
-        setResourceEngagement(resourceData || []);
-        setAnnouncementEngagement(announcementData || []);
+        // Map resource data to match ResourceEngagement interface
+        const mappedResourceData: ResourceEngagement[] = (resourceData || []).map(item => ({
+          resource_id: item.resource_id || item.id,
+          resource_title: item.title || 'Untitled Resource',
+          view_count: item.view_count || 0,
+          download_count: item.download_count || 0,
+          engagement_rate: item.view_count > 0 ? ((item.download_count || 0) / item.view_count * 100) : 0
+        }));
+
+        // Map announcement data to match AnnouncementEngagement interface
+        const mappedAnnouncementData: AnnouncementEngagement[] = (announcementData || []).map(item => ({
+          announcement_id: item.announcement_id || item.id,
+          announcement_title: item.title || 'Untitled Announcement',
+          view_count: item.view_count || 0,
+          reaction_count: item.reaction_count || 0,
+          engagement_rate: item.view_count > 0 ? ((item.reaction_count || 0) / item.view_count * 100) : 0
+        }));
+
+        setResourceEngagement(mappedResourceData);
+        setAnnouncementEngagement(mappedAnnouncementData);
       } catch (error) {
         console.error("Error fetching engagement metrics:", error);
       } finally {
@@ -76,7 +94,7 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis 
-                    dataKey="title" 
+                    dataKey="resource_title" 
                     type="category" 
                     width={150}
                     tick={{ fontSize: 12 }}
@@ -84,7 +102,6 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
                   <Tooltip />
                   <Bar dataKey="view_count" name="Views" fill="#8884d8" />
                   <Bar dataKey="download_count" name="Downloads" fill="#82ca9d" />
-                  <Bar dataKey="share_count" name="Shares" fill="#ffc658" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -105,7 +122,7 @@ export function EngagementMetrics({ hubId }: EngagementMetricsProps) {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
                   <YAxis 
-                    dataKey="title" 
+                    dataKey="announcement_title" 
                     type="category" 
                     width={150}
                     tick={{ fontSize: 12 }}

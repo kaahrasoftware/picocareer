@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ interface Campaign {
   subject: string;
   content_type: string;
   status: "planned" | "sent" | "pending" | "failed" | "sending" | "partial" | "draft" | "scheduled";
-  frequency: string;
+  frequency: "once" | "daily" | "weekly" | "monthly";
   recipients_count: number;
   sent_count: number;
   failed_count: number;
@@ -60,6 +59,7 @@ export function CampaignList({ adminId }: CampaignListProps) {
   const campaigns: Campaign[] = rawCampaigns.map(campaign => ({
     ...campaign,
     status: (campaign.status as Campaign['status']) || 'draft',
+    frequency: (campaign.frequency as Campaign['frequency']) || 'once',
     recipient_type: campaign.recipient_type || 'all',
     updated_at: campaign.updated_at || campaign.created_at
   }));
