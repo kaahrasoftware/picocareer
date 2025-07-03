@@ -9,18 +9,26 @@ import { SchoolOverviewTab } from "@/components/schools/SchoolOverviewTab";
 import { SchoolTuitionTab } from "@/components/schools/SchoolTuitionTab";
 import { SchoolDetailSkeleton } from "@/components/schools/SchoolDetailSkeleton";
 import { SchoolDetailErrorState } from "@/components/schools/SchoolDetailErrorState";
+import type { School } from "@/types/database/schools";
 
 export default function SchoolDetail() {
   const { id } = useParams<{ id: string }>();
-  const { data: school, isLoading: isSchoolLoading, error } = useSchoolById(id);
+  const { data: schoolRaw, isLoading: isSchoolLoading, error } = useSchoolById(id);
 
   if (isSchoolLoading) {
     return <SchoolDetailSkeleton />;
   }
 
-  if (error || !school) {
+  if (error || !schoolRaw) {
     return <SchoolDetailErrorState />;
   }
+
+  // Transform the school data to match our School type
+  const school: School = {
+    ...schoolRaw,
+    author_id: schoolRaw.author_id || undefined,
+    type: schoolRaw.type as School['type']
+  };
 
   return (
     <div className="container mx-auto py-8">

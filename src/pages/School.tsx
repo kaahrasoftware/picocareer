@@ -31,14 +31,12 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
-    paginationOptions: {
-      limit: 20,
-      page: 1,
-      orderBy: sortField,
-      orderDirection: sortDirection,
-      searchQuery: debouncedSearch,
-      searchColumn: 'name'
-    },
+    limit: 20,
+    page: 1,
+    orderBy: sortField,
+    orderDirection: sortDirection,
+    searchQuery: debouncedSearch,
+    searchColumn: 'name',
     filters: schoolType ? { type: schoolType } : {},
     queryOptions: {
       staleTime: 5 * 60 * 1000, // 5 minutes

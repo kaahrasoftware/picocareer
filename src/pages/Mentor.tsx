@@ -1,403 +1,250 @@
-
-import { Home, BookOpen, Users, RefreshCw, Search, GraduationCap, Award, ChevronRight, FileText } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { MenuSidebar } from "@/components/MenuSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { MentorGrid } from "@/components/community/MentorGrid";
-import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { MentorCard } from '@/components/MentorCard';
+import { MentorFilters } from '@/components/mentor/MentorFilters';
+import { MentorSearch } from '@/components/mentor/MentorSearch';
+import { MentorStats } from '@/components/mentor/MentorStats';
+import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
+import { MentorHero } from '@/components/mentor/MentorHero';
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { addDays } from "date-fns";
-import { MentorFilters } from "@/components/mentors/MentorFilters";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { FeedUploadDialog } from "@/components/forms/feed/FeedUploadDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BookPlus, FileBox } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export default function Mentor() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [locationFilter, setLocationFilter] = useState<string>("all");
-  const [companyFilter, setCompanyFilter] = useState<string>("all");
-  const [schoolFilter, setSchoolFilter] = useState<string>("all");
-  const [majorFilter, setMajorFilter] = useState<string>("all");
-  const [educationFilter, setEducationFilter] = useState<string>("all");
-  const [experienceFilter, setExperienceFilter] = useState<string>("all");
-  const [ratingFilter, setRatingFilter] = useState<string>("all");
-  const [sessionFilter, setSessionFilter] = useState<string>("all");
-  const [hasAvailabilityFilter, setHasAvailabilityFilter] = useState(false);
-  const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
-  const [feedDialogOpen, setFeedDialogOpen] = useState(false);
-  const [createContentDialogOpen, setCreateContentDialogOpen] = useState(false);
-  const profileId = searchParams.get('profileId');
-  const showDialog = searchParams.get('dialog') === 'true';
-  const { session } = useAuthSession();
-  const { data: userProfile } = useUserProfile(session);
-  const isMentor = userProfile?.user_type === 'mentor';
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (profileId && showDialog) {
-      setIsProfileDialogOpen(true);
+  // Check if the dialog should be open on initial load
+  const initialDialogState = searchParams.get('dialog') === 'true' && searchParams.get('profileId');
+  const [open, setOpen] = useState(initialDialogState);
+
+  const handleOpenChange = (newState: boolean) => {
+    setOpen(newState);
+    if (!newState) {
+      // Clear the dialog params from the URL
+      setSearchParams({});
     }
-  }, [profileId, showDialog]);
+  };
 
-  const { data: profiles = [], isLoading, error } = useQuery({
-    queryKey: [
-      'profiles', 
-      searchQuery, 
-      selectedSkills, 
-      locationFilter, 
-      companyFilter, 
-      schoolFilter, 
-      majorFilter,
-      educationFilter,
-      experienceFilter,
-      ratingFilter,
-      sessionFilter,  
-      hasAvailabilityFilter
-    ],
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState({
+    skills: [] as string[],
+    keywords: [] as string[],
+    location: '',
+    yearsExperience: '',
+    education: '',
+    hourlyRate: '',
+    rating: '',
+    topMentor: false
+  });
+
+  const { data: mentors = [], isLoading, error } = useQuery({
+    queryKey: ['mentors'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
-          *,
-          company:companies(name),
-          school:schools(name),
-          academic_major:majors!profiles_academic_major_id_fkey(title),
-          career:careers!profiles_position_fkey(title, id)
+          id,
+          full_name,
+          avatar_url,
+          bio,
+          location,
+          position,
+          years_of_experience,
+          skills,
+          tools_used,
+          keywords,
+          fields_of_interest,
+          highest_degree,
+          user_type,
+          top_mentor,
+          total_booked_sessions,
+          company_id,
+          school_id,
+          academic_major_id,
+          companies:company_id(name),
+          schools:school_id(name),
+          majors:academic_major_id(title)
         `)
         .eq('user_type', 'mentor')
-        .eq('onboarding_status', 'Approved');
-
-      if (hasAvailabilityFilter) {
-        const now = new Date();
-        
-        const { data: availableMentors, error: availabilityError } = await supabase
-          .from('mentor_availability')
-          .select('profile_id')
-          .eq('is_available', true)
-          .is('booked_session_id', null)
-          .or(
-            `and(recurring.eq.true),` +
-            `and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`
-          );
-
-        if (availabilityError) {
-          console.error('Error fetching availabilities:', availabilityError);
-          throw availabilityError;
-        }
-
-        const uniqueMentorIds = [...new Set(availableMentors?.map(m => m.profile_id) || [])];
-        
-        if (uniqueMentorIds.length > 0) {
-          query = query.in('id', uniqueMentorIds);
-        } else {
-          return [];
-        }
-      }
-
-      if (searchQuery) {
-        query = query.or(
-          `first_name.ilike.%${searchQuery}%,` +
-          `last_name.ilike.%${searchQuery}%,` +
-          `full_name.ilike.%${searchQuery}%,` +
-          `bio.ilike.%${searchQuery}%,` +
-          `skills.cs.{${searchQuery}},` +
-          `tools_used.cs.{${searchQuery}},` +
-          `keywords.cs.{${searchQuery}},` +
-          `fields_of_interest.cs.{${searchQuery}}`
-        );
-      }
-
-      if (locationFilter && locationFilter !== "all") {
-        query = query.eq('location', locationFilter);
-      }
-
-      if (companyFilter && companyFilter !== "all") {
-        query = query.eq('company_id', companyFilter);
-      }
-
-      if (schoolFilter && schoolFilter !== "all") {
-        query = query.eq('school_id', schoolFilter);
-      }
+        .order('top_mentor', { ascending: false })
+        .order('total_booked_sessions', { ascending: false });
       
-      if (majorFilter && majorFilter !== "all") {
-        query = query.eq('academic_major_id', majorFilter);
-      }
-      
-      if (educationFilter && educationFilter !== "all") {
-        query = query.eq('highest_degree', educationFilter);
-      }
-      
-      if (experienceFilter && experienceFilter !== "all") {
-        // Parse ranges like "1-3", "4-7", "8-10", "10+"
-        if (experienceFilter === "10+") {
-          query = query.gte('years_of_experience', 10);
-        } else {
-          const [min, max] = experienceFilter.split('-').map(Number);
-          query = query.gte('years_of_experience', min).lte('years_of_experience', max);
-        }
-      }
-
-      if (sessionFilter && sessionFilter !== "all") {
-        // Parse values like "10+", "50+", "100+"
-        const minSessions = parseInt(sessionFilter.replace('+', ''));
-        query = query.gte('total_booked_sessions', minSessions);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching profiles:', error);
-        throw error;
-      }
-
-      const now = new Date();
-      const { data: availabilities } = await supabase
-        .from('mentor_availability')
-        .select('profile_id')
-        .eq('is_available', true)
-        .is('booked_session_id', null)
-        .or(
-          `and(recurring.eq.true),` +
-          `and(recurring.eq.false,start_date_time.gt.${now.toISOString()})`
-        );
-
-      const mentorsWithAvailability = new Set(availabilities?.map(a => a.profile_id) || []);
-      
-      // Handle rating filter for the client-side (since ratings might be in another table)
-      let filteredData = data;
-      if (ratingFilter && ratingFilter !== "all") {
-        const minRating = parseFloat(ratingFilter.replace('+', ''));
-        // This is a placeholder - in a real app, you'd join with ratings table
-        // For now, we'll simulate by filtering randomly
-        filteredData = data.filter(profile => {
-          // This is a placeholder simulation - replace with actual rating logic
-          const rating = (profile.id.charCodeAt(0) % 5) + 1; // Random rating between 1-5
-          return rating >= minRating;
-        });
-      }
-
-      return filteredData.map((profile: any) => ({
-        ...profile,
-        company_name: profile.company?.name,
-        school_name: profile.school?.name,
-        academic_major: profile.academic_major?.title,
-        career_title: profile.career?.title,
-        hasAvailability: mentorsWithAvailability.has(profile.id),
-        // Placeholder for rating, replace with actual ratings from your system
-        rating: (profile.id.charCodeAt(0) % 5) + 1,
-        totalRatings: profile.id.charCodeAt(1) % 100
-      }));
+      if (error) throw error;
+      return data;
     }
   });
 
-  const handleCloseDialog = () => {
-    setIsProfileDialogOpen(false);
-    searchParams.delete('dialog');
-    searchParams.delete('profileId');
-    setSearchParams(searchParams);
-  };
+  // Filter mentors based on search and filters
+  const filteredMentors = useMemo(() => {
+    return mentors.filter((mentor) => {
+      // Search filter
+      const matchesSearch = 
+        mentor.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mentor.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mentor.companies?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mentor.schools?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        mentor.majors?.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleAddContent = () => {
-    setCreateContentDialogOpen(true);
-  };
+      // Skills filter
+      const matchesSkills = selectedFilters.skills.length === 0 || 
+        selectedFilters.skills.some(skill => 
+          mentor.skills?.includes(skill) || 
+          mentor.tools_used?.includes(skill)
+        );
 
-  const handleOptionClick = (action: string) => {
-    setCreateContentDialogOpen(false);
-    
-    if (action === "blog") {
-      navigate("/blog/upload");
-    } else if (action === "resource") {
-      setFeedDialogOpen(true);
+      // Keywords filter
+      const matchesKeywords = selectedFilters.keywords.length === 0 || 
+        selectedFilters.keywords.some(keyword => 
+          mentor.keywords?.includes(keyword) || 
+          mentor.fields_of_interest?.includes(keyword)
+        );
+
+      // Location filter
+      const matchesLocation = !selectedFilters.location || 
+        mentor.location?.toLowerCase().includes(selectedFilters.location.toLowerCase());
+
+      // Years of experience filter
+      const matchesExperience = !selectedFilters.yearsExperience || 
+        (mentor.years_of_experience && checkExperienceRange(mentor.years_of_experience, selectedFilters.yearsExperience));
+
+      // Education filter - Fix type issue by checking if degree is valid
+      const matchesEducation = !selectedFilters.education || 
+        (mentor.highest_degree && isValidDegree(mentor.highest_degree) && mentor.highest_degree === selectedFilters.education);
+
+      // Top mentor filter
+      const matchesTopMentor = !selectedFilters.topMentor || mentor.top_mentor;
+
+      return matchesSearch && matchesSkills && matchesKeywords && 
+             matchesLocation && matchesExperience && matchesEducation && matchesTopMentor;
+    });
+  }, [mentors, searchQuery, selectedFilters]);
+
+  const checkExperienceRange = (experience: number, range: string) => {
+    switch (range) {
+      case '0-2': return experience >= 0 && experience <= 2;
+      case '3-5': return experience >= 3 && experience <= 5;
+      case '6-10': return experience >= 6 && experience <= 10;
+      case '10+': return experience > 10;
+      default: return true;
     }
   };
 
-  return (
-    <SidebarProvider>
-      <div className="app-layout">
-        <MenuSidebar />
-        <div className="main-content">
-          <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-            <div className="space-y-12">
-              <div className="relative overflow-hidden rounded-xl mb-12 shadow-lg">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 opacity-90"></div>
-                
-                <div className="relative p-6 md:p-8 lg:p-10 flex flex-col md:flex-row gap-8 items-center">
-                  <div className="flex-1 z-10">
-                    <span className="inline-flex items-center gap-2 text-white/90 font-medium px-3 py-1.5 rounded-full bg-white/20 w-fit mb-3">
-                      <GraduationCap className="h-4 w-4" /> Join Our Mentor Community
-                    </span>
-                    
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight mb-3">
-                      Share Your Expertise as a Mentor
-                    </h2>
-                    
-                    <p className="text-white/90 text-base sm:text-lg max-w-lg mb-4">
-                      Guide aspiring professionals, build your network, and make a meaningful impact 
-                      while enhancing your own leadership skills.
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-4 mb-6">
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
-                        <Award className="h-5 w-5 text-yellow-300" />
-                        <span className="text-white font-medium">Build Your Reputation</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
-                        <Users className="h-5 w-5 text-blue-200" />
-                        <span className="text-white font-medium">Expand Your Network</span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg">
-                        <BookOpen className="h-5 w-5 text-green-200" />
-                        <span className="text-white font-medium">Share Knowledge</span>
-                      </div>
-                    </div>
-                    
-                    {isMentor ? (
-                      <Button 
-                        onClick={handleAddContent}
-                        size="lg" 
-                        className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
-                      >
-                        Add Content
-                        <FileText className="h-5 w-5" />
-                      </Button>
-                    ) : (
-                      <Button 
-                        asChild 
-                        size="lg" 
-                        className="bg-white text-blue-700 hover:bg-blue-50 font-semibold gap-2"
-                      >
-                        <Link to="/mentor-registration">
-                          Become a Mentor
-                          <ChevronRight className="h-5 w-5" />
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="md:w-1/3 lg:w-2/5 relative h-56 md:h-64 lg:h-72 z-10">
-                    <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
-                      <div className="w-full max-w-md aspect-video relative">
-                        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl rotate-3 animate-float">
-                          <img 
-                            src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
-                            alt="Mentor teaching programming" 
-                            className="w-full h-full object-cover opacity-90"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl -rotate-3 animate-float" style={{animationDelay: "0.5s"}}>
-                          <img 
-                            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
-                            alt="Person mentoring" 
-                            className="w-full h-full object-cover opacity-90"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  const isValidDegree = (degree: string): degree is "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD" => {
+    return ["No Degree", "High School", "Associate", "Bachelor", "Master", "MD", "PhD"].includes(degree);
+  };
 
-              <h1 className="text-3xl font-bold">PicoCareer Mentors</h1>
+  const stats = useMemo(() => {
+    const totalMentors = mentors.length;
+    const topMentors = mentors.filter(m => m.top_mentor).length;
+    const avgExperience = mentors.reduce((sum, m) => sum + (m.years_of_experience || 0), 0) / totalMentors;
+    const totalSessions = mentors.reduce((sum, m) => sum + (m.total_booked_sessions || 0), 0);
 
-              <div className="bg-card border rounded-lg shadow-sm">
-                <MentorFilters
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  companyFilter={companyFilter}
-                  setCompanyFilter={setCompanyFilter}
-                  educationFilter={educationFilter}
-                  setEducationFilter={setEducationFilter}
-                  experienceFilter={experienceFilter}
-                  setExperienceFilter={setExperienceFilter}
-                  sessionFilter={sessionFilter}
-                  setSessionFilter={setSessionFilter}
-                  majorFilter={majorFilter}
-                  setMajorFilter={setMajorFilter}
-                  schoolFilter={schoolFilter}
-                  setSchoolFilter={setSchoolFilter}
-                  ratingFilter={ratingFilter}
-                  setRatingFilter={setRatingFilter}
-                  availabilityFilter={hasAvailabilityFilter}
-                  setAvailabilityFilter={setHasAvailabilityFilter}
-                  locationFilter={locationFilter}
-                  setLocationFilter={setLocationFilter}
-                />
-              </div>
-              
-              {error ? (
-                <div className="text-center py-8">
-                  <p className="text-destructive">Failed to load community profiles.</p>
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="mt-4 text-primary hover:underline"
-                  >
-                    Try refreshing the page
-                  </button>
-                </div>
-              ) : (
-                <MentorGrid 
-                  profiles={profiles} 
-                  isLoading={isLoading} 
-                />
-              )}
-            </div>
+    return { totalMentors, topMentors, avgExperience, totalSessions };
+  }, [mentors]);
+
+  const openMentorDialog = (mentorId: string) => {
+    setSelectedMentorId(mentorId);
+    setSearchParams({ dialog: 'true', profileId: mentorId });
+  };
+
+  const closeMentorDialog = () => {
+    setSelectedMentorId(null);
+    setSearchParams({});
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container py-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-32 bg-gray-200 rounded-lg"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="p-6">
+                <Skeleton className="h-16 w-16 rounded-full mb-4" />
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </Card>
+            ))}
           </div>
         </div>
       </div>
+    );
+  }
 
-      {profileId && (
-        <ProfileDetailsDialog
-          userId={profileId}
-          open={isProfileDialogOpen}
-          onOpenChange={handleCloseDialog}
+  if (error) {
+    return (
+      <div className="container py-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Mentors</h2>
+          <p className="text-muted-foreground">There was an error loading the mentors. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-6 space-y-6">
+      <MentorHero />
+      
+      <MentorStats stats={stats} />
+      
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="lg:w-80">
+          <MentorFilters 
+            filters={selectedFilters}
+            onFiltersChange={setSelectedFilters}
+            mentors={mentors}
+          />
+        </div>
+        
+        <div className="flex-1 space-y-6">
+          <MentorSearch 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            totalMentors={filteredMentors.length}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredMentors.map((mentor) => (
+              <MentorCard
+                key={mentor.id}
+                id={mentor.id}
+                name={mentor.full_name || ''}
+                position={mentor.position}
+                company={mentor.companies?.name}
+                location={mentor.location}
+                skills={mentor.skills || []}
+                keywords={mentor.keywords || []}
+                avatarUrl={mentor.avatar_url}
+                education={mentor.majors?.title}
+                topMentor={mentor.top_mentor}
+                onClick={() => openMentorDialog(mentor.id)}
+              />
+            ))}
+          </div>
+          
+          {filteredMentors.length === 0 && (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No mentors found</h3>
+              <p className="text-gray-500">
+                Try adjusting your search criteria or filters
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedMentorId && (
+        <ProfileDetailsDialog 
+          userId={selectedMentorId}
+          open={!!selectedMentorId}
+          onOpenChange={closeMentorDialog}
         />
       )}
-
-      {/* Create Content Dialog */}
-      <Dialog open={createContentDialogOpen} onOpenChange={setCreateContentDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-center text-xl font-semibold">Create New Content</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-6">
-            <Button 
-              onClick={() => handleOptionClick("blog")}
-              className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
-              variant="outline"
-            >
-              <BookPlus className="h-12 w-12 text-primary" />
-              <span className="text-lg font-medium">Blog Post</span>
-            </Button>
-            
-            <Button 
-              onClick={() => handleOptionClick("resource")}
-              className="flex flex-col items-center justify-center h-36 w-full p-4 gap-3 hover:bg-primary/10 transition-colors"
-              variant="outline"
-            >
-              <FileBox className="h-12 w-12 text-primary" />
-              <span className="text-lg font-medium">Resource</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Resource Upload Dialog */}
-      <FeedUploadDialog 
-        open={feedDialogOpen}
-        onOpenChange={setFeedDialogOpen}
-      />
-    </SidebarProvider>
+    </div>
   );
 }

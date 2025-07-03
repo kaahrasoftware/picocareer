@@ -47,4 +47,7 @@ export type SchoolType =
   | "Business School"
   | "Medical School"
   | "Law School"
+  | "High School"
+  | "University"
+  | "College"
   | "Other";

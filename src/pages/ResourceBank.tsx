@@ -4,6 +4,30 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EventResourcesSection } from "@/components/event/EventResourcesSection";
 
+interface EventResource {
+  id: string;
+  title: string;
+  description?: string;
+  file_url?: string;
+  external_url?: string;
+  resource_type: "document" | "image" | "video" | "audio" | "link" | "presentation" | "other";
+  access_level: string;
+  is_downloadable: boolean;
+  file_format?: string;
+  file_size?: number;
+  sort_order?: number;
+  view_count?: number;
+  download_count?: number;
+  unique_viewers?: number;
+  unique_downloaders?: number;
+  last_viewed_at?: string;
+  last_downloaded_at?: string;
+  event_id: string;
+  uploaded_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function ResourceBank() {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -24,7 +48,12 @@ export default function ResourceBank() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // Transform the data to match our EventResource interface
+      return (data || []).map(resource => ({
+        ...resource,
+        resource_type: resource.resource_type as EventResource['resource_type']
+      })) as (EventResource & { events?: { id: string; title: string; start_time: string; organized_by?: string; } })[];
     },
   });
 

@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Search, Users, GraduationCap, Star, MapPin } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EnhancedMenteeCard } from '@/components/mentees/EnhancedMenteeCard';
 import { MenteeFilters } from '@/components/mentees/MenteeFilters';
-import { MenteeProfileDialog } from '@/components/mentees/MenteeProfileDialog';
+import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 
 interface MenteeProfile {
   id: string;
@@ -293,11 +292,13 @@ export default function Mentees() {
       )}
 
       {/* Profile Dialog */}
-      <MenteeProfileDialog
-        menteeId={selectedMenteeId}
-        open={!!selectedMenteeId}
-        onOpenChange={() => setSelectedMenteeId(null)}
-      />
+      {selectedMenteeId && (
+        <ProfileDetailsDialog
+          userId={selectedMenteeId}
+          open={!!selectedMenteeId}
+          onOpenChange={() => setSelectedMenteeId(null)}
+        />
+      )}
     </div>
   );
 }

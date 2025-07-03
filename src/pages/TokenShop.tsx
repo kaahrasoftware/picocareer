@@ -78,11 +78,11 @@ export default function TokenShop() {
       return data.map(pkg => ({
         id: pkg.id,
         name: pkg.name,
-        description: pkg.description || undefined,
+        description: undefined, // Set to undefined if not available in database
         token_amount: pkg.token_amount,
         price_usd: Number(pkg.price_usd),
         default_price: pkg.default_price,
-        image_url: pkg.image_url || undefined
+        image_url: undefined // Set to undefined if not available in database
       })) as TokenPackage[];
     }
   });

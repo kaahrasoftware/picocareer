@@ -66,7 +66,34 @@ export default function Majors() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {majors?.map((major) => (
-          <MajorCard key={major.id} major={major} />
+          <MajorCard 
+            key={major.id} 
+            id={major.id}
+            title={major.title}
+            description={major.description}
+            potential_salary={major.potential_salary}
+            skill_match={major.skill_match}
+            tools_knowledge={major.tools_knowledge}
+            common_courses={major.common_courses}
+            profiles_count={major.profiles_count}
+            degree_levels={major.degree_levels}
+            learning_objectives={major.learning_objectives}
+            interdisciplinary_connections={major.interdisciplinary_connections}
+            job_prospects={major.job_prospects}
+            certifications_to_consider={major.certifications_to_consider}
+            affiliated_programs={major.affiliated_programs}
+            gpa_expectations={major.gpa_expectations}
+            transferable_skills={major.transferable_skills}
+            passion_for_subject={major.passion_for_subject}
+            professional_associations={major.professional_associations}
+            global_applicability={major.global_applicability}
+            common_difficulties={major.common_difficulties}
+            career_opportunities={major.career_opportunities}
+            intensity={major.intensity}
+            stress_level={major.stress_level}
+            dropout_rates={major.dropout_rates}
+            majors_to_consider_switching_to={major.majors_to_consider_switching_to}
+          />
         ))}
       </div>
     </div>

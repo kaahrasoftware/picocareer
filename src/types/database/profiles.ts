@@ -25,7 +25,7 @@ export interface Profile {
   company_id?: string;
   academic_major_id?: string;
   position?: string;
-  onboarding_status: 'Pending' | 'Completed';
+  onboarding_status: 'Pending' | 'Completed' | 'Approved' | 'Rejected' | 'Under Review' | 'Consent Signed';
   total_booked_sessions: number;
   top_mentor: boolean;
   created_at: string;
