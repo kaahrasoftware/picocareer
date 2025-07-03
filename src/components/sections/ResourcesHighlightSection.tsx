@@ -16,8 +16,8 @@ export function ResourcesHighlightSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('careers')
-        .select('id, title, description, salary_range, growth_outlook')
-        .eq('status', 'Active')
+        .select('id, title, description, salary_range')
+        .eq('status', 'Approved')
         .limit(3);
       
       if (error) throw error;
@@ -31,8 +31,8 @@ export function ResourcesHighlightSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('majors')
-        .select('id, title, description, degree_level')
-        .eq('status', 'Active')
+        .select('id, title, description')
+        .eq('status', 'Approved')
         .limit(3);
       
       if (error) throw error;
@@ -62,7 +62,7 @@ export function ResourcesHighlightSection() {
       const { data, error } = await supabase
         .from('opportunities')
         .select('id, title, description')
-        .eq('status', 'Active')
+        .eq('status', 'Approved')
         .order('created_at', { ascending: false })
         .limit(3);
       
@@ -148,7 +148,7 @@ export function ResourcesHighlightSection() {
               ))}
             </div>
             <Button asChild className="w-full mt-4">
-              <Link to="/mentors">Find Mentors</Link>
+              <Link to="/mentor">Find Mentors</Link>
             </Button>
           </Card>
 
@@ -159,7 +159,7 @@ export function ResourcesHighlightSection() {
                 <BookOpen className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold">Popular Majors</h3>
+                <h3 className="text-xl font-semibold">Popular Programs</h3>
                 <p className="text-gray-600">Discover academic programs</p>
               </div>
             </div>
@@ -173,17 +173,12 @@ export function ResourcesHighlightSection() {
                         {major.description}
                       </p>
                     </div>
-                    {major.degree_level && (
-                      <Badge variant="outline" className="ml-2">
-                        {major.degree_level}
-                      </Badge>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
             <Button asChild className="w-full mt-4">
-              <Link to="/majors">Explore Majors</Link>
+              <Link to="/program">Explore Programs</Link>
             </Button>
           </Card>
 

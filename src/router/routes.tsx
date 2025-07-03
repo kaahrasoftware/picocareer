@@ -3,20 +3,18 @@ import { createBrowserRouter } from "react-router-dom";
 import { MainLayout, AuthLayout } from "./layouts";
 import Home from '@/pages/Home';
 import School from '@/pages/School';
-import Majors from '@/pages/Majors';
+import Program from '@/pages/Program';
 import Careers from '@/pages/Careers';
 import Opportunities from '@/pages/Opportunities';
 import MentorProfile from '@/pages/MentorProfile';
 import Profile from '@/pages/Profile';
-import Search from '@/pages/Search';
 import Scholarships from '@/pages/Scholarships';
 import Events from '@/pages/Events';
-import Hubs from '@/pages/Hubs';
 import SchoolDetails from '@/pages/SchoolDetails';
 import OpportunityDetails from '@/pages/OpportunityDetails';
 import Auth from '@/pages/Auth';
-import Admin from '@/pages/Admin';
-import Mentors from '@/pages/Mentors';
+import Dashboard from '@/pages/Dashboard';
+import Mentor from '@/pages/Mentor';
 import CareerAssessment from '@/pages/CareerAssessment';
 
 export const router = createBrowserRouter([
@@ -25,20 +23,18 @@ export const router = createBrowserRouter([
     element: <MainLayout />,
     children: [
       { index: true, element: <Home /> },
-      { path: "schools", element: <School /> },
+      { path: "school", element: <School /> },
       { path: "schools/:id", element: <SchoolDetails /> },
-      { path: "majors", element: <Majors /> },
+      { path: "program", element: <Program /> },
       { path: "careers", element: <Careers /> },
       { path: "opportunities", element: <Opportunities /> },
       { path: "opportunities/:id", element: <OpportunityDetails /> },
       { path: "scholarships", element: <Scholarships /> },
-      { path: "mentors", element: <Mentors /> },
+      { path: "mentor", element: <Mentor /> },
       { path: "mentors/:id", element: <MentorProfile /> },
-      { path: "search", element: <Search /> },
       { path: "profile", element: <Profile /> },
       { path: "events", element: <Events /> },
-      { path: "hubs", element: <Hubs /> },
-      { path: "admin", element: <Admin /> },
+      { path: "dashboard", element: <Dashboard /> },
       { path: "career-assessment", element: <CareerAssessment /> },
     ],
   },

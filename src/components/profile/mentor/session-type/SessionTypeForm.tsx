@@ -29,7 +29,6 @@ const sessionTypes = [
   'GRE Exam Prep Advice',
   'GMAT Exam Prep Advice',
   'Interview Prep',
-  'Networking Tips',
   'LinkedIn Profile Review',
   'Personal Statement Review',
   'Cover Letter Review',
@@ -71,7 +70,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
-          mentor_id: profileId,
+          profile_id: profileId,
           type: sessionType,
           duration: duration,
           price: cost,

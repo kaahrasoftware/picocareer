@@ -1,12 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { School } from "@/types/database/schools";
 
 export function useAllSchools() {
   return useQuery({
     queryKey: ['schools'],
-    queryFn: async (): Promise<School[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('schools')
         .select('*')
@@ -26,7 +25,7 @@ export function useAllSchools() {
 export function useSchoolById(id: string | undefined) {
   return useQuery({
     queryKey: ['school', id],
-    queryFn: async (): Promise<School | null> => {
+    queryFn: async () => {
       if (!id) return null;
       
       const { data, error } = await supabase
@@ -66,8 +65,7 @@ export function useSchoolMajors(schoolId: string | undefined) {
           majors (
             id,
             title,
-            description,
-            degree_levels
+            description
           )
         `)
         .eq('school_id', schoolId);

@@ -6,7 +6,6 @@ export interface OpportunityWithAnalytics {
   id: string;
   title: string;
   description: string;
-  type: string;
   status: string;
   deadline?: string;
   created_at: string;
@@ -25,7 +24,6 @@ export function useAdminOpportunitiesQuery() {
           id,
           title,
           description,
-          type,
           status,
           deadline,
           created_at
@@ -34,7 +32,12 @@ export function useAdminOpportunitiesQuery() {
 
       if (error) throw error;
 
-      return (data || []) as OpportunityWithAnalytics[];
+      return (data || []).map(item => ({
+        ...item,
+        applications_count: 0,
+        views_count: 0,
+        bookmarks_count: 0
+      })) as OpportunityWithAnalytics[];
     },
   });
 }

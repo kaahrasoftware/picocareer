@@ -9,7 +9,6 @@ import { Loader2, RefreshCw, Mail, Sparkles, TrendingUp, Users, Clock } from "lu
 import { CampaignFilters } from "./campaign-filters/CampaignFilters";
 import { CampaignPagination } from "./campaign-filters/CampaignPagination";
 import { useAdvancedCampaignFilters } from "@/hooks/useAdvancedCampaignFilters";
-import type { Campaign } from "@/types/database/email";
 
 interface CampaignListProps {
   adminId: string;
