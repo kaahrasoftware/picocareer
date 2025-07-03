@@ -16,7 +16,7 @@ interface SessionTypeFormProps {
   onCancel: () => void;
 }
 
-// Updated session types to match the database exactly
+// Updated session types to match the database exactly - only including the ones that exist in DB
 const sessionTypes = [
   'Know About my Career',
   'Resume/CV Review', 
@@ -30,7 +30,6 @@ const sessionTypes = [
   'GRE Exam Prep Advice',
   'GMAT Exam Prep Advice',
   'Interview Prep',
-  'Scholarship Applications',
   'Study Abroad Consultation',
   'Networking Tips',
   'LinkedIn Profile Review',
