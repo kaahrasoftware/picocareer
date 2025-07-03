@@ -14,7 +14,7 @@ interface CampaignListProps {
   adminId: string;
 }
 
-// Define Campaign type that matches the database
+// Define Campaign type that matches the database and includes all required fields
 interface Campaign {
   id: string;
   subject: string;
@@ -29,6 +29,14 @@ interface Campaign {
   sent_at?: string;
   last_sent?: string;
   admin_id: string;
+  recipient_type: string;
+  updated_at: string;
+  body?: string;
+  content_id: string;
+  content_ids?: string[];
+  last_error?: string;
+  last_checked_at?: string;
+  recipient_filter?: any;
 }
 
 export function CampaignList({ adminId }: CampaignListProps) {
@@ -51,7 +59,9 @@ export function CampaignList({ adminId }: CampaignListProps) {
   // Transform raw campaigns to match Campaign interface
   const campaigns: Campaign[] = rawCampaigns.map(campaign => ({
     ...campaign,
-    status: (campaign.status as Campaign['status']) || 'draft'
+    status: (campaign.status as Campaign['status']) || 'draft',
+    recipient_type: campaign.recipient_type || 'all',
+    updated_at: campaign.updated_at || campaign.created_at
   }));
 
   const handleSendCampaign = async (campaignId: string) => {

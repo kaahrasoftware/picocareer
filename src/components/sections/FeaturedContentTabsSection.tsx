@@ -1,259 +1,156 @@
 
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "react-router-dom";
-import { Users, Briefcase, GraduationCap, Building } from "lucide-react";
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, MapPin, Briefcase, GraduationCap, Building } from 'lucide-react';
+import { useFeaturedSchools } from '@/hooks/useFeaturedSchools';
 
-// Import existing components and hooks
-import { MentorCard } from "@/components/MentorCard";
-import { CareerCard } from "@/components/CareerCard";
-import { MajorCard } from "@/components/MajorCard";
-import { SchoolCard } from "@/components/SchoolCard";
-import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+// Define simplified interfaces for featured content
+interface FeaturedSchool {
+  id: string;
+  name: string;
+  country: string;
+  status: string;
+  featured: boolean;
+  website?: string;
+  description?: string;
+  image_url?: string;
+  acceptance_rate?: number;
+}
 
-import { useTopRatedMentors } from "@/hooks/useTopRatedMentors";
-import { useFeaturedCareers } from "@/hooks/useFeaturedCareers";
-import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
-import { useFeaturedSchools } from "@/hooks/useFeaturedSchools";
+interface FeaturedCareer {
+  id: string;
+  title: string;
+  description: string;
+  salary_range?: string;
+  image_url?: string;
+  industry?: string;
+  featured: boolean;
+}
 
-export const FeaturedContentTabsSection = () => {
-  const [activeTab, setActiveTab] = useState("mentors");
-  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
-  const [isCareerDialogOpen, setIsCareerDialogOpen] = useState(false);
+interface FeaturedMajor {
+  id: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  featured: boolean;
+}
 
-  // Data hooks
-  const { data: mentors = [], isLoading: mentorsLoading } = useTopRatedMentors();
-  const { data: careers = [], isLoading: careersLoading } = useFeaturedCareers();
-  const { data: majors = [], isLoading: majorsLoading } = useFeaturedMajors();
-  const { data: schools = [], isLoading: schoolsLoading } = useFeaturedSchools();
+export function FeaturedContentTabsSection() {
+  const [activeTab, setActiveTab] = useState('schools');
+  
+  const { data: schools = [], isLoading: schoolsLoading } = useFeaturedSchools(4);
 
-  const handleCareerClick = (careerId: string) => {
-    setSelectedCareerId(careerId);
-    setIsCareerDialogOpen(true);
-  };
+  // Mock data for careers and majors - in real implementation, these would come from hooks
+  const featuredCareers: FeaturedCareer[] = [];
+  const featuredMajors: FeaturedMajor[] = [];
 
-  const handleCareerDialogOpenChange = (open: boolean) => {
-    setIsCareerDialogOpen(open);
-    if (!open) {
-      setSelectedCareerId(null);
-    }
-  };
-
-  const tabConfig = [
-    {
-      id: "mentors",
-      label: "Top Mentors",
-      icon: Users,
-      gradient: "from-blue-400 to-cyan-400",
-      viewAllLink: "/mentor"
-    },
-    {
-      id: "careers",
-      label: "Featured Careers",
-      icon: Briefcase,
-      gradient: "from-purple-400 to-pink-400",
-      viewAllLink: "/career"
-    },
-    {
-      id: "majors",
-      label: "Featured Majors",
-      icon: GraduationCap,
-      gradient: "from-green-400 to-emerald-400",
-      viewAllLink: "/program"
-    },
-    {
-      id: "schools",
-      label: "Featured Schools",
-      icon: Building,
-      gradient: "from-orange-400 to-red-400",
-      viewAllLink: "/school"
-    }
-  ];
-
-  const LoadingSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[...Array(6)].map((_, index) => (
-        <Card key={index} className="h-64">
-          <CardContent className="p-4">
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4 mb-2" />
-            <Skeleton className="h-20 w-full mb-2" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
+  const featuredSchools = schools as FeaturedSchool[];
 
   return (
-    <section className="py-16 px-4 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-blue-50/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(147,197,253,0.1),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(196,181,253,0.1),transparent_50%)]" />
-      
-      <div className="container mx-auto relative z-10">
+    <section className="py-16 bg-white">
+      <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Explore Featured Content
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Discover top-rated mentors, featured careers, academic majors, and schools to guide your journey.
-          </p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Explore Your Future</h2>
+          <p className="text-lg text-gray-600">Discover schools, careers, and academic programs that match your interests</p>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-7xl mx-auto">
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-card/50 backdrop-blur-sm">
-            {tabConfig.map((tab) => (
-              <TabsTrigger 
-                key={tab.id} 
-                value={tab.id} 
-                className="flex items-center gap-2 text-sm font-medium transition-all duration-300"
-              >
-                <tab.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(' ')[tab.label.split(' ').length - 1]}</span>
-              </TabsTrigger>
-            ))}
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="schools" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              Schools
+            </TabsTrigger>
+            <TabsTrigger value="careers" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              Careers
+            </TabsTrigger>
+            <TabsTrigger value="majors" className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Majors
+            </TabsTrigger>
           </TabsList>
-
-          {/* Mentors Tab */}
-          <TabsContent value="mentors" className="mt-0">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-1 h-8 bg-gradient-to-b from-blue-400 to-cyan-400 rounded-full`} />
-                <h3 className="text-2xl font-bold text-foreground">Top Rated Mentors</h3>
-              </div>
-              <Button asChild variant="outline">
-                <Link to="/mentor">View All</Link>
-              </Button>
-            </div>
-            
-            {mentorsLoading ? (
-              <LoadingSkeleton />
-            ) : mentors.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No mentors available at the moment.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mentors.slice(0, 6).map((mentor) => (
-                  <MentorCard 
-                    key={mentor.id}
-                    id={mentor.id}
-                    name={mentor.name}
-                    position={mentor.career_title}
-                    company={mentor.company}
-                    location={mentor.location}
-                    skills={mentor.skills}
-                    keywords={mentor.keywords}
-                    rating={mentor.rating}
-                    totalRatings={mentor.totalRatings}
-                    avatarUrl={mentor.imageUrl}
-                    topMentor={mentor.top_mentor}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Careers Tab */}
-          <TabsContent value="careers" className="mt-0">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-1 h-8 bg-gradient-to-b from-purple-400 to-pink-400 rounded-full`} />
-                <h3 className="text-2xl font-bold text-foreground">Featured Careers</h3>
-              </div>
-              <Button asChild variant="outline">
-                <Link to="/career">View All</Link>
-              </Button>
-            </div>
-            
-            {careersLoading ? (
-              <LoadingSkeleton />
-            ) : careers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No careers available at the moment.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {careers.slice(0, 6).map((career) => (
-                  <CareerCard 
-                    key={career.id}
-                    {...career}
-                    onClick={() => handleCareerClick(career.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Majors Tab */}
-          <TabsContent value="majors" className="mt-0">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-1 h-8 bg-gradient-to-b from-green-400 to-emerald-400 rounded-full`} />
-                <h3 className="text-2xl font-bold text-foreground">Featured Majors</h3>
-              </div>
-              <Button asChild variant="outline">
-                <Link to="/program">View All</Link>
-              </Button>
-            </div>
-            
-            {majorsLoading ? (
-              <LoadingSkeleton />
-            ) : majors.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No majors available at the moment.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {majors.slice(0, 6).map((major) => (
-                  <MajorCard key={major.id} {...major} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Schools Tab */}
-          <TabsContent value="schools" className="mt-0">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-1 h-8 bg-gradient-to-b from-orange-400 to-red-400 rounded-full`} />
-                <h3 className="text-2xl font-bold text-foreground">Featured Schools</h3>
-              </div>
-              <Button asChild variant="outline">
-                <Link to="/school">View All</Link>
-              </Button>
-            </div>
-            
+          
+          <TabsContent value="schools" className="space-y-6">
             {schoolsLoading ? (
-              <LoadingSkeleton />
-            ) : schools.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No schools available at the moment.
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="h-32 bg-gray-200 rounded mb-3"></div>
+                      <div className="h-5 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {schools.slice(0, 6).map((school) => (
-                  <SchoolCard key={school.id} school={school} />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredSchools.map((school) => (
+                  <Card key={school.id} className="group hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-4">
+                      {school.image_url && (
+                        <img 
+                          src={school.image_url} 
+                          alt={school.name}
+                          className="w-full h-32 object-cover rounded mb-3 group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          {school.name}
+                        </h3>
+                        <Badge variant="outline" className="text-xs">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {school.country}
+                        </Badge>
+                      </div>
+                      {school.description && (
+                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                          {school.description}
+                        </p>
+                      )}
+                      {school.acceptance_rate && (
+                        <p className="text-xs text-gray-500 mb-3">
+                          {school.acceptance_rate}% acceptance rate
+                        </p>
+                      )}
+                      {school.website && (
+                        <Button variant="outline" size="sm" asChild className="w-full">
+                          <a href={school.website} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-3 w-3 mr-2" />
+                            Learn More
+                          </a>
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             )}
+            
+            <div className="text-center">
+              <Button variant="outline" size="lg">
+                View All Schools
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="careers" className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-gray-500">Featured careers coming soon...</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="majors" className="space-y-6">
+            <div className="text-center py-12">
+              <p className="text-gray-500">Featured majors coming soon...</p>
+            </div>
           </TabsContent>
         </Tabs>
-
-        {/* Career Details Dialog */}
-        {selectedCareerId && (
-          <CareerDetailsDialog
-            careerId={selectedCareerId}
-            open={isCareerDialogOpen}
-            onOpenChange={handleCareerDialogOpenChange}
-          />
-        )}
       </div>
     </section>
   );
-};
+}

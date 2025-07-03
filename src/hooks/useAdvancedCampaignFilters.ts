@@ -57,7 +57,7 @@ export function useAdvancedCampaignFilters(adminId: string) {
         query = query.eq('frequency', filters.frequency);
       }
 
-      // Add date range filtering if provided
+      // Add date range filtering if both dates are provided
       if (filters.dateRange.from && filters.dateRange.to) {
         query = query.gte('created_at', filters.dateRange.from.toISOString());
         query = query.lte('created_at', filters.dateRange.to.toISOString());

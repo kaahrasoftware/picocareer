@@ -1,5 +1,6 @@
 
 export interface HubStorageMetrics {
+  id: string;
   hub_id: string;
   bucket_id: string;
   total_storage_bytes: number;

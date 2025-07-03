@@ -3,6 +3,13 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface LoginRewardResult {
+  success?: boolean;
+  tokens_awarded?: number;
+  already_claimed?: boolean;
+  message?: string;
+}
+
 export function useLoginReward() {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -25,13 +32,15 @@ export function useLoginReward() {
 
       console.log('Login reward result:', data);
 
-      if (data?.success) {
-        toast.success(`🎉 Daily login reward: ${data.tokens_awarded} tokens earned!`);
-      } else if (data?.already_claimed) {
+      const result = data as LoginRewardResult;
+
+      if (result?.success) {
+        toast.success(`🎉 Daily login reward: ${result.tokens_awarded} tokens earned!`);
+      } else if (result?.already_claimed) {
         // Don't show toast for already claimed - this is normal behavior
         console.log('Daily reward already claimed today');
       } else {
-        console.error('Login reward failed:', data?.message);
+        console.error('Login reward failed:', result?.message);
       }
       
     } catch (error: any) {

@@ -9,9 +9,9 @@ export interface EnhancedEvent {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: string;
+  event_type: "Coffee Time" | "Hackathon" | "Panel" | "Webinar" | "Workshop";
   platform: string;
-  status: string;
+  status: "Rejected" | "Pending" | "Approved";
   thumbnail_url?: string;
   meeting_link?: string;
   max_attendees?: number;
@@ -31,7 +31,7 @@ export interface EventFormData {
   description: string;
   start_time: string;
   end_time: string;
-  event_type: string;
+  event_type: "Coffee Time" | "Hackathon" | "Panel" | "Webinar" | "Workshop";
   platform: string;
   meeting_link?: string;
   max_attendees?: number;
@@ -99,9 +99,18 @@ export function useEventManagement() {
 
   const updateEventMutation = useMutation({
     mutationFn: async ({ id, ...eventData }: Partial<EventFormData> & { id: string }) => {
+      // Ensure event_type is properly typed
+      const updateData: any = { ...eventData };
+      if (updateData.event_type && typeof updateData.event_type === 'string') {
+        const validTypes = ["Coffee Time", "Hackathon", "Panel", "Webinar", "Workshop"];
+        if (!validTypes.includes(updateData.event_type)) {
+          updateData.event_type = "Webinar"; // Default fallback
+        }
+      }
+
       const { data, error } = await supabase
         .from('events')
-        .update(eventData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -180,9 +189,13 @@ export function useEventManagement() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ eventIds, status }: { eventIds: string[]; status: string }) => {
+      // Ensure status is properly typed
+      const validStatuses = ["Rejected", "Pending", "Approved"];
+      const finalStatus = validStatuses.includes(status) ? status : "Pending";
+
       const { error } = await supabase
         .from('events')
-        .update({ status })
+        .update({ status: finalStatus })
         .in('id', eventIds);
 
       if (error) throw error;

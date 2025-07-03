@@ -1,5 +1,5 @@
 
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Check } from "lucide-react";
 
 export function useMajorSharing() {
@@ -33,7 +33,6 @@ export function useMajorSharing() {
       title: "Link copied",
       description: "Major details copied to clipboard!",
       className: "bg-green-50 border-green-200 dark:bg-green-900/50 dark:border-green-800/60",
-      icon: <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
     });
   };
 

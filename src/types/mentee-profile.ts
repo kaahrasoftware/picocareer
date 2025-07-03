@@ -1,37 +1,32 @@
 
-export interface MenteeEssayResponse {
+export interface MenteeCourse {
   id: string;
-  prompt_id: string;
   mentee_id: string;
-  response_text: string;
-  word_count?: number;
-  is_draft: boolean;
-  version: number;
+  course_name: string;
+  course_code?: string;
+  grade?: string;
+  credits?: number;
+  semester: string;
+  year: number;
+  institution?: string;
+  description?: string;
   created_at: string;
   updated_at: string;
-  prompt?: {
-    id: string;
-    title: string;
-    prompt_text: string;
-    category: EssayPromptCategory;
-    word_limit?: number;
-  };
 }
 
 export interface MenteeProject {
   id: string;
   mentee_id: string;
   title: string;
-  description?: string;
-  status: 'completed' | 'in_progress' | 'planned' | 'on_hold';
-  start_date?: string;
+  description: string;
+  start_date: string;
   end_date?: string;
-  github_url?: string;
-  live_demo_url?: string;
-  image_urls?: string[];
-  collaborators?: string[];
-  skills_used?: string[];
+  status: 'ongoing' | 'completed' | 'paused';
   technologies?: string[];
+  role?: string;
+  achievements?: string;
+  project_url?: string;
+  github_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -39,37 +34,56 @@ export interface MenteeProject {
 export interface MenteeAcademicRecord {
   id: string;
   mentee_id: string;
+  institution_name: string;
+  degree_type: string;
+  major: string;
+  minor?: string;
+  gpa?: number;
+  graduation_date?: string;
+  honors?: string;
+  relevant_coursework?: string[];
+  thesis_topic?: string;
   year: number;
   semester: string;
-  cumulative_gpa?: number;
-  semester_gpa?: number;
-  credits_earned?: number;
-  credits_attempted?: number;
-  class_rank?: number;
-  honors?: string[];
-  awards?: string[];
   created_at: string;
   updated_at: string;
 }
 
-export interface MenteeCourse {
+export interface MenteeInterest {
   id: string;
   mentee_id: string;
-  course_name: string;
-  course_code?: string;
-  semester?: string;
-  year?: number;
-  grade?: string;
-  credits?: number;
-  instructor_name?: string;
+  category: 'career' | 'academic' | 'extracurricular' | 'hobby' | 'industry' | 'skill';
+  interest_name: string;
   description?: string;
-  status: CourseStatus;
+  proficiency_level?: string;
+  related_career_id?: string;
+  related_major_id?: string;
   created_at: string;
   updated_at: string;
 }
 
-export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
-export type ProjectStatus = 'completed' | 'in_progress' | 'planned' | 'on_hold';
-export type EssayPromptCategory = 'personal_statement' | 'supplemental' | 'scholarship' | 'college_application' | 'other';
-export type InterestCategory = 'academic' | 'extracurricular' | 'professional' | 'personal' | 'career';
-export type AcademicStatus = 'freshman' | 'sophomore' | 'junior' | 'senior' | 'graduate' | 'current_student' | 'gap_year' | 'graduated' | 'transfer_student' | 'prospective_student' | 'other';
+export interface EssayPrompt {
+  id: string;
+  title: string;
+  category: 'personal_statement' | 'why_school' | 'why_major' | 'extracurricular' | 'challenge' | 'diversity' | 'other';
+  prompt_text: string;
+  word_limit?: number;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MenteeEssayResponse {
+  id: string;
+  mentee_id: string;
+  prompt_id: string;
+  response_text: string;
+  word_count?: number;
+  status: 'draft' | 'completed' | 'reviewed';
+  feedback?: string;
+  score?: number;
+  created_at: string;
+  updated_at: string;
+  prompt?: EssayPrompt;
+}
