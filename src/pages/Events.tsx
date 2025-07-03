@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
 
 export default function Events() {
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState<"upcoming" | "past">("upcoming");
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],

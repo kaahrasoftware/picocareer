@@ -199,6 +199,7 @@ export default function TokenDeductionDebug() {
           <CardContent>
             <BookingFormDebug
               mentorId="test-mentor-id"
+              mentorName="Test Mentor"
               onFormChange={setFormData}
               onSuccess={() => {
                 console.log('🎉 Session booking completed successfully');

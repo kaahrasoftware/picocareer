@@ -32,7 +32,6 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
-    queryKey: ['schools', schoolType, debouncedSearch],
     tableName: 'schools',
     paginationOptions: {
       limit: 20,

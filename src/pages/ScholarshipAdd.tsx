@@ -51,7 +51,7 @@ export default function ScholarshipAdd() {
           <div className="px-4 md:px-8 py-8 max-w-5xl mx-auto w-full">
             <h1 className="text-3xl font-bold mb-8">Add Scholarship</h1>
             <div className="bg-card border rounded-lg shadow-sm p-6">
-              <ScholarshipForm />
+              <ScholarshipForm onClose={() => navigate("/scholarships")} />
             </div>
           </div>
         </div>

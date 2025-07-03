@@ -42,15 +42,13 @@ export default function CreateOpportunity() {
         status: 'Pending'
       };
       
-      const result = await createOpportunity(opportunityData);
+      await createOpportunity(opportunityData);
       
-      if (result) {
-        toast({
-          title: "Success",
-          description: "Your opportunity has been created and is pending approval",
-        });
-        navigate(`/opportunities`);
-      }
+      toast({
+        title: "Success",
+        description: "Your opportunity has been created and is pending approval",
+      });
+      navigate(`/opportunities`);
     } catch (error: any) {
       console.error("Error creating opportunity:", error);
       setFormError(error.message || "Failed to create opportunity. Please try again.");

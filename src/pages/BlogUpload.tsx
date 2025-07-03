@@ -57,7 +57,7 @@ export default function BlogUpload() {
 
       const { error } = await supabase
         .from('blogs')
-        .insert([blogData]);
+        .insert(blogData);
 
       if (error) throw error;
 
@@ -179,7 +179,6 @@ export default function BlogUpload() {
           <Label>Cover Image</Label>
           <ImageUpload
             onUploadSuccess={setCoverImageUrl}
-            currentImageUrl={coverImageUrl}
             bucket="blog_images"
             folderPath="covers"
           />
