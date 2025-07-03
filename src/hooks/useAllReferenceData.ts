@@ -2,16 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const fetchAllFromTable = async (tableName: string) => {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select('*')
-    .order('name', { ascending: true });
-  
-  if (error) throw error;
-  return data || [];
-};
-
 export const useAllSchools = () => {
   return useQuery({
     queryKey: ['schools'],

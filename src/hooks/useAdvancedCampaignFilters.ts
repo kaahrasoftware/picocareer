@@ -38,7 +38,7 @@ export function useAdvancedCampaignFilters(adminId: string) {
     queryFn: async () => {
       let query = supabase
         .from('email_campaigns')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('admin_id', adminId);
 
       if (filters.search) {

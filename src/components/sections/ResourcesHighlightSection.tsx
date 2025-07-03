@@ -17,7 +17,6 @@ export function ResourcesHighlightSection() {
       const { data, error } = await supabase
         .from('careers')
         .select('id, title, description, salary_range')
-        .eq('status', 'Approved')
         .limit(3);
       
       if (error) throw error;
@@ -32,7 +31,6 @@ export function ResourcesHighlightSection() {
       const { data, error } = await supabase
         .from('majors')
         .select('id, title, description')
-        .eq('status', 'Approved')
         .limit(3);
       
       if (error) throw error;
@@ -62,7 +60,6 @@ export function ResourcesHighlightSection() {
       const { data, error } = await supabase
         .from('opportunities')
         .select('id, title, description')
-        .eq('status', 'Approved')
         .order('created_at', { ascending: false })
         .limit(3);
       

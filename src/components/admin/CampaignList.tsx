@@ -14,6 +14,18 @@ interface CampaignListProps {
   adminId: string;
 }
 
+// Updated filter state interface to match the hook
+interface FilterState {
+  search: string;
+  status: string;
+  contentType: string;
+  frequency: string;
+  dateRange: {
+    from?: Date;
+    to?: Date;
+  };
+}
+
 export function CampaignList({ adminId }: CampaignListProps) {
   const [sendingCampaign, setSendingCampaign] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
