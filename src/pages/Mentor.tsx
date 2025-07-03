@@ -1,15 +1,17 @@
+
 import { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MentorCard } from '@/components/MentorCard';
-import { MentorFilters } from '@/components/mentor/MentorFilters';
-import { MentorSearch } from '@/components/mentor/MentorSearch';
-import { MentorStats } from '@/components/mentor/MentorStats';
+import { MentorFilters } from '@/components/mentors/MentorFilters';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
-import { MentorHero } from '@/components/mentor/MentorHero';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Users, Star, MapPin, Search } from "lucide-react";
 
 export default function Mentor() {
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ export default function Mentor() {
 
   // Check if the dialog should be open on initial load
   const initialDialogState = searchParams.get('dialog') === 'true' && searchParams.get('profileId');
-  const [open, setOpen] = useState(initialDialogState);
+  const [open, setOpen] = useState(!!initialDialogState);
 
   const handleOpenChange = (newState: boolean) => {
     setOpen(newState);
@@ -29,16 +31,15 @@ export default function Mentor() {
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState({
-    skills: [] as string[],
-    keywords: [] as string[],
-    location: '',
-    yearsExperience: '',
-    education: '',
-    hourlyRate: '',
-    rating: '',
-    topMentor: false
-  });
+  const [companyFilter, setCompanyFilter] = useState('all');
+  const [educationFilter, setEducationFilter] = useState('all');
+  const [experienceFilter, setExperienceFilter] = useState('all');
+  const [sessionFilter, setSessionFilter] = useState('all');
+  const [majorFilter, setMajorFilter] = useState('all');
+  const [schoolFilter, setSchoolFilter] = useState('all');
+  const [ratingFilter, setRatingFilter] = useState('all');
+  const [availabilityFilter, setAvailabilityFilter] = useState(false);
+  const [locationFilter, setLocationFilter] = useState('all');
 
   const { data: mentors = [], isLoading, error } = useQuery({
     queryKey: ['mentors'],
@@ -89,46 +90,55 @@ export default function Mentor() {
         mentor.schools?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         mentor.majors?.title?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Skills filter
-      const matchesSkills = selectedFilters.skills.length === 0 || 
-        selectedFilters.skills.some(skill => 
-          mentor.skills?.includes(skill) || 
-          mentor.tools_used?.includes(skill)
-        );
+      // Company filter
+      const matchesCompany = companyFilter === 'all' || mentor.company_id === companyFilter;
 
-      // Keywords filter
-      const matchesKeywords = selectedFilters.keywords.length === 0 || 
-        selectedFilters.keywords.some(keyword => 
-          mentor.keywords?.includes(keyword) || 
-          mentor.fields_of_interest?.includes(keyword)
-        );
+      // Education filter  
+      const matchesEducation = educationFilter === 'all' || 
+        (mentor.highest_degree && isValidDegree(mentor.highest_degree) && mentor.highest_degree === educationFilter);
+
+      // Experience filter
+      const matchesExperience = experienceFilter === 'all' || 
+        (mentor.years_of_experience && checkExperienceRange(mentor.years_of_experience, experienceFilter));
+
+      // Session filter
+      const matchesSession = sessionFilter === 'all' || checkSessionRange(mentor.total_booked_sessions || 0, sessionFilter);
+
+      // Major filter
+      const matchesMajor = majorFilter === 'all' || mentor.academic_major_id === majorFilter;
+
+      // School filter
+      const matchesSchool = schoolFilter === 'all' || mentor.school_id === schoolFilter;
 
       // Location filter
-      const matchesLocation = !selectedFilters.location || 
-        mentor.location?.toLowerCase().includes(selectedFilters.location.toLowerCase());
-
-      // Years of experience filter
-      const matchesExperience = !selectedFilters.yearsExperience || 
-        (mentor.years_of_experience && checkExperienceRange(mentor.years_of_experience, selectedFilters.yearsExperience));
-
-      // Education filter - Fix type issue by checking if degree is valid
-      const matchesEducation = !selectedFilters.education || 
-        (mentor.highest_degree && isValidDegree(mentor.highest_degree) && mentor.highest_degree === selectedFilters.education);
+      const matchesLocation = locationFilter === 'all' || 
+        mentor.location?.toLowerCase().includes(locationFilter.toLowerCase());
 
       // Top mentor filter
-      const matchesTopMentor = !selectedFilters.topMentor || mentor.top_mentor;
+      const matchesTopMentor = !availabilityFilter || mentor.top_mentor;
 
-      return matchesSearch && matchesSkills && matchesKeywords && 
-             matchesLocation && matchesExperience && matchesEducation && matchesTopMentor;
+      return matchesSearch && matchesCompany && matchesEducation && 
+             matchesExperience && matchesSession && matchesMajor && 
+             matchesSchool && matchesLocation && matchesTopMentor;
     });
-  }, [mentors, searchQuery, selectedFilters]);
+  }, [mentors, searchQuery, companyFilter, educationFilter, experienceFilter, 
+      sessionFilter, majorFilter, schoolFilter, ratingFilter, availabilityFilter, locationFilter]);
 
   const checkExperienceRange = (experience: number, range: string) => {
     switch (range) {
-      case '0-2': return experience >= 0 && experience <= 2;
-      case '3-5': return experience >= 3 && experience <= 5;
-      case '6-10': return experience >= 6 && experience <= 10;
+      case '1-3': return experience >= 1 && experience <= 3;
+      case '4-7': return experience >= 4 && experience <= 7;
+      case '8-10': return experience >= 8 && experience <= 10;
       case '10+': return experience > 10;
+      default: return true;
+    }
+  };
+
+  const checkSessionRange = (sessions: number, range: string) => {
+    switch (range) {
+      case '10+': return sessions >= 10;
+      case '50+': return sessions >= 50;
+      case '100+': return sessions >= 100;
       default: return true;
     }
   };
@@ -188,25 +198,89 @@ export default function Mentor() {
 
   return (
     <div className="container py-6 space-y-6">
-      <MentorHero />
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-8 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold mb-4">Find Your Perfect Mentor</h1>
+          <p className="text-lg opacity-90">
+            Connect with experienced professionals who can guide your career journey
+          </p>
+        </div>
+      </div>
       
-      <MentorStats stats={stats} />
+      {/* Stats Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-700">Total Mentors</p>
+              <p className="text-2xl font-bold text-blue-900">{stats.totalMentors}</p>
+            </div>
+            <Users className="h-8 w-8 text-blue-600" />
+          </div>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-700">Top Mentors</p>
+              <p className="text-2xl font-bold text-green-900">{stats.topMentors}</p>
+            </div>
+            <Star className="h-8 w-8 text-green-600" />
+          </div>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-purple-700">Avg Experience</p>
+              <p className="text-2xl font-bold text-purple-900">{stats.avgExperience.toFixed(1)} yrs</p>
+            </div>
+            <MapPin className="h-8 w-8 text-purple-600" />
+          </div>
+        </Card>
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-orange-700">Total Sessions</p>
+              <p className="text-2xl font-bold text-orange-900">{stats.totalSessions}</p>
+            </div>
+            <Star className="h-8 w-8 text-orange-600" />
+          </div>
+        </Card>
+      </div>
       
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-80">
           <MentorFilters 
-            filters={selectedFilters}
-            onFiltersChange={setSelectedFilters}
-            mentors={mentors}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            companyFilter={companyFilter}
+            setCompanyFilter={setCompanyFilter}
+            educationFilter={educationFilter}
+            setEducationFilter={setEducationFilter}
+            experienceFilter={experienceFilter}
+            setExperienceFilter={setExperienceFilter}
+            sessionFilter={sessionFilter}
+            setSessionFilter={setSessionFilter}
+            majorFilter={majorFilter}
+            setMajorFilter={setMajorFilter}
+            schoolFilter={schoolFilter}
+            setSchoolFilter={setSchoolFilter}
+            ratingFilter={ratingFilter}
+            setRatingFilter={setRatingFilter}
+            availabilityFilter={availabilityFilter}
+            setAvailabilityFilter={setAvailabilityFilter}
+            locationFilter={locationFilter}
+            setLocationFilter={setLocationFilter}
           />
         </div>
         
         <div className="flex-1 space-y-6">
-          <MentorSearch 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            totalMentors={filteredMentors.length}
-          />
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              {filteredMentors.length} mentors found
+            </h2>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredMentors.map((mentor) => (

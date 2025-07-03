@@ -21,7 +21,6 @@ export default function Profile() {
       <div className="grid w-full grid-cols-5 mb-6">
         <ProfileTabs 
           profile={profile} 
-          isMentor={isMentor} 
           onTabChange={handleTabChange}
         />
       </div>

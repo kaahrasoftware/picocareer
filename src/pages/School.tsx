@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { usePaginatedQuery } from "@/hooks/usePaginatedQuery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,12 +32,12 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
+    tableName: 'schools',
     limit: 20,
     page: 1,
     orderBy: sortField,
     orderDirection: sortDirection,
     searchQuery: debouncedSearch,
-    searchColumn: 'name',
     filters: schoolType ? { type: schoolType } : {},
     queryOptions: {
       staleTime: 5 * 60 * 1000, // 5 minutes

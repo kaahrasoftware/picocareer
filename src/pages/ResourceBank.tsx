@@ -11,7 +11,7 @@ interface EventResource {
   file_url?: string;
   external_url?: string;
   resource_type: "document" | "image" | "video" | "audio" | "link" | "presentation" | "other";
-  access_level: string;
+  access_level: "public" | "registered" | "participants_only";
   is_downloadable: boolean;
   file_format?: string;
   file_size?: number;
@@ -52,7 +52,8 @@ export default function ResourceBank() {
       // Transform the data to match our EventResource interface
       return (data || []).map(resource => ({
         ...resource,
-        resource_type: resource.resource_type as EventResource['resource_type']
+        resource_type: resource.resource_type as EventResource['resource_type'],
+        access_level: resource.access_level as EventResource['access_level']
       })) as (EventResource & { events?: { id: string; title: string; start_time: string; organized_by?: string; } })[];
     },
   });
