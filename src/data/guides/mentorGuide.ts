@@ -1,13 +1,6 @@
 
 import { Guide } from '@/context/GuideContext';
 
-interface GuideStep {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-}
-
 export const mentorGuide: Guide = {
   id: 'mentor-setup',
   title: 'Mentor Setup Guide',
@@ -17,25 +10,25 @@ export const mentorGuide: Guide = {
       id: 'complete-profile',
       title: 'Complete Your Profile',
       description: 'Add your background, expertise, and experience details',
-      completed: false
+      content: 'Fill out your professional background to attract the right mentees.'
     },
     {
       id: 'set-availability',
       title: 'Set Your Availability',
       description: 'Configure your schedule and available time slots',
-      completed: false
+      content: 'Set up your availability so students can book sessions with you.'
     },
     {
       id: 'define-services',
       title: 'Define Your Services',
       description: 'Set up the types of mentoring sessions you offer',
-      completed: false
+      content: 'Create different types of sessions you can offer to mentees.'
     },
     {
       id: 'first-session',
       title: 'Book Your First Session',
       description: 'Start mentoring by booking your first session with a student',
-      completed: false
+      content: 'Once everything is set up, you can start accepting session requests.'
     }
   ]
 };

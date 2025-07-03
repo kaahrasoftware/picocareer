@@ -1,9 +1,21 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProfileDetailsDialog } from "@/components/ProfileDetailsDialog";
 import { SearchResultCard } from "./SearchResultCard";
 import { SearchPagination } from "./SearchPagination";
-import { SearchResult } from "@/types/search";
+
+// Define proper SearchResult interface
+interface SearchResult {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  location?: string;
+  category?: string;
+  status?: string;
+  metadata?: any;
+}
 
 interface MentorSearchResultsProps {
   results: SearchResult[];
@@ -56,7 +68,7 @@ export const MentorSearchResults = ({ results }: MentorSearchResultsProps) => {
             <SearchResultCard
               key={result.id}
               result={result}
-              onClick={handleResultClick}
+              onClick={() => handleResultClick(result)}
             />
           ))}
         </div>

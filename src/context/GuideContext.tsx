@@ -1,52 +1,90 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+
+export interface Guide {
+  id: string;
+  title: string;
+  description: string;
+  steps: GuideStep[];
+}
+
+export interface GuideStep {
+  id: string;
+  title: string;
+  description: string;
+  targetElement?: string;
+  content: string;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+  action?: () => void;
+}
 
 interface GuideContextType {
-  isGuideActive: boolean;
+  currentGuide: Guide | null;
   currentStep: number;
-  startGuide: (route?: string) => void;
+  isActive: boolean;
+  startGuide: (guide: Guide) => void;
   nextStep: () => void;
+  prevStep: () => void;
   endGuide: () => void;
-  hasSeenGuide: (route: string) => boolean;
+  setCurrentStep: (step: number) => void;
+  hasSeenGuide: (guideId: string) => boolean;
 }
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
 
-export function GuideProvider({ children }: { children: ReactNode }) {
-  const [isGuideActive, setIsGuideActive] = useState(false);
+export function GuideProvider({ children }: { children: React.ReactNode }) {
+  const [currentGuide, setCurrentGuide] = useState<Guide | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [seenGuides, setSeenGuides] = useState<string[]>([]);
+  const [isActive, setIsActive] = useState(false);
+  const [seenGuides, setSeenGuides] = useState<Set<string>>(new Set());
 
-  const startGuide = (route?: string) => {
-    setIsGuideActive(true);
+  const startGuide = (guide: Guide) => {
+    setCurrentGuide(guide);
     setCurrentStep(0);
-    if (route && !seenGuides.includes(route)) {
-      setSeenGuides(prev => [...prev, route]);
-    }
+    setIsActive(true);
   };
 
   const nextStep = () => {
-    setCurrentStep(prev => prev + 1);
+    if (currentGuide && currentStep < currentGuide.steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      endGuide();
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   const endGuide = () => {
-    setIsGuideActive(false);
+    if (currentGuide) {
+      setSeenGuides(prev => new Set(prev).add(currentGuide.id));
+    }
+    setCurrentGuide(null);
     setCurrentStep(0);
+    setIsActive(false);
   };
 
-  const hasSeenGuide = (route: string) => {
-    return seenGuides.includes(route);
+  const hasSeenGuide = (guideId: string) => {
+    return seenGuides.has(guideId);
   };
 
   return (
-    <GuideContext.Provider value={{
-      isGuideActive,
-      currentStep,
-      startGuide,
-      nextStep,
-      endGuide,
-      hasSeenGuide
-    }}>
+    <GuideContext.Provider
+      value={{
+        currentGuide,
+        currentStep,
+        isActive,
+        startGuide,
+        nextStep,
+        prevStep,
+        endGuide,
+        setCurrentStep,
+        hasSeenGuide,
+      }}
+    >
       {children}
     </GuideContext.Provider>
   );

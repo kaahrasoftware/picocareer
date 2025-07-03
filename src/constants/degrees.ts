@@ -26,3 +26,6 @@ export const DEGREE_TYPES = [
   'Doctor of Law (JD)',
   'Doctor of Education (EdD)'
 ];
+
+// Export degreeOptions for backward compatibility
+export const degreeOptions = DEGREE_TYPES;

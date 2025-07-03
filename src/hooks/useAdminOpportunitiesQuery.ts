@@ -2,85 +2,39 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-type OpportunityType = 'scholarship' | 'internship' | 'job' | 'fellowship' | 'grant' | 'competition' | 'volunteer' | 'event' | 'other';
-type OpportunityStatus = 'Active' | 'Pending' | 'Rejected' | 'Expired';
-
-interface AdminOpportunitiesFilters {
-  type?: OpportunityType;
-  status?: OpportunityStatus;
-  search?: string;
-  location?: string;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
+export interface OpportunityWithAnalytics {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  deadline?: string;
+  created_at: string;
+  applications_count?: number;
+  views_count?: number;
+  bookmarks_count?: number;
 }
 
-export function useAdminOpportunitiesQuery(filters: AdminOpportunitiesFilters = {}) {
+export function useAdminOpportunitiesQuery() {
   return useQuery({
-    queryKey: ['admin-opportunities', filters],
+    queryKey: ['admin-opportunities'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('opportunities')
         .select(`
-          *,
-          profiles!opportunities_author_id_fkey (
-            first_name,
-            last_name,
-            email
-          ),
-          companies (
-            name
-          )
+          id,
+          title,
+          description,
+          type,
+          status,
+          deadline,
+          created_at
         `)
         .order('created_at', { ascending: false });
 
-      if (filters.type && filters.type !== 'other') {
-        query = query.eq('type', filters.type);
-      }
-
-      if (filters.status) {
-        query = query.eq('status', filters.status);
-      }
-
-      if (filters.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      }
-
-      if (filters.location) {
-        query = query.ilike('location', `%${filters.location}%`);
-      }
-
-      if (filters.dateRange) {
-        query = query
-          .gte('created_at', filters.dateRange.start.toISOString())
-          .lte('created_at', filters.dateRange.end.toISOString());
-      }
-
-      const { data, error } = await query;
-      
       if (error) throw error;
-      return data || [];
+
+      return (data || []) as OpportunityWithAnalytics[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
-
-export const OPPORTUNITY_TYPES: OpportunityType[] = [
-  'scholarship',
-  'internship', 
-  'job',
-  'fellowship',
-  'grant',
-  'competition',
-  'volunteer',
-  'event',
-  'other'
-];
-
-export const OPPORTUNITY_STATUSES: OpportunityStatus[] = [
-  'Active',
-  'Pending', 
-  'Rejected',
-  'Expired'
-];

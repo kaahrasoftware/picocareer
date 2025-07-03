@@ -16,7 +16,7 @@ interface SessionTypeFormProps {
   onCancel: () => void;
 }
 
-// Use the exact session types from the database enum
+// Updated session types to match the database exactly - only including the ones that exist in DB
 const sessionTypes = [
   'Know About my Career',
   'Resume/CV Review', 
@@ -30,8 +30,6 @@ const sessionTypes = [
   'GRE Exam Prep Advice',
   'GMAT Exam Prep Advice',
   'Interview Prep',
-  'Academic Planning',
-  'Scholarship Applications',
   'Study Abroad Consultation',
   'Networking Tips',
   'LinkedIn Profile Review',
@@ -75,7 +73,7 @@ export function SessionTypeForm({ profileId, onSuccess, onCancel }: SessionTypeF
       const { error } = await supabase
         .from('mentor_session_types')
         .insert({
-          mentor_id: profileId,
+          profile_id: profileId,
           type: sessionType,
           duration: duration,
           price: cost,

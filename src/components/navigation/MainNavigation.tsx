@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, Briefcase, School, Users, Calendar, BookOpen, MessageSquare, Trophy, Search, User } from 'lucide-react';
+import { GraduationCap, Briefcase, School, Users, Calendar, BookOpen, MessageSquare, Trophy, Search, User, Brain } from 'lucide-react';
 
 const navItems = [
   { name: 'Search', path: '/search', icon: Search },
   { name: 'Schools', path: '/schools', icon: School },
   { name: 'Majors', path: '/majors', icon: GraduationCap },
   { name: 'Careers', path: '/careers', icon: Briefcase },
+  { name: 'Assessment', path: '/career-assessment', icon: Brain },
   { name: 'Mentors', path: '/mentors', icon: Users },
   { name: 'Opportunities', path: '/opportunities', icon: Trophy },
   { name: 'Scholarships', path: '/scholarships', icon: BookOpen },

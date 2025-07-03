@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useGuide } from '@/context/GuideContext';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { profileGuide } from '@/data/guides/profileGuide';
 
 export function WelcomeDialog() {
   const [showWelcome, setShowWelcome] = useState(false);
@@ -36,7 +37,7 @@ export function WelcomeDialog() {
 
   const handleStartGuide = () => {
     handleClose();
-    startGuide('/');
+    startGuide(profileGuide);
   };
 
   return (
