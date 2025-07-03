@@ -20,6 +20,13 @@ interface RefundTokensParams {
   metadata?: Record<string, any>;
 }
 
+interface TokenOperationResult {
+  success: boolean;
+  message: string;
+  transaction_id?: string;
+  new_balance?: number;
+}
+
 export function useTokenOperations() {
   const queryClient = useQueryClient();
 
@@ -42,17 +49,18 @@ export function useTokenOperations() {
       }
 
       console.log('✅ Token deduction result:', data);
-      return data;
+      return data as unknown as TokenOperationResult;
     },
     onSuccess: (data, variables) => {
-      if (data.success) {
+      const result = data as TokenOperationResult;
+      if (result.success) {
         console.log(`✅ Successfully deducted ${variables.amount} tokens`);
         toast.success(`${variables.amount} tokens used successfully`);
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
       } else {
-        console.error('❌ Token deduction failed:', data.message);
-        toast.error(data.message || 'Failed to use tokens');
+        console.error('❌ Token deduction failed:', result.message);
+        toast.error(result.message || 'Failed to use tokens');
       }
     },
     onError: (error) => {
@@ -79,17 +87,18 @@ export function useTokenOperations() {
       }
 
       console.log('✅ Token refund result:', data);
-      return data;
+      return data as unknown as TokenOperationResult;
     },
     onSuccess: (data, variables) => {
-      if (data.success) {
+      const result = data as TokenOperationResult;
+      if (result.success) {
         console.log(`✅ Successfully refunded ${variables.amount} tokens`);
         toast.success(`${variables.amount} tokens refunded successfully`);
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
       } else {
-        console.error('❌ Token refund failed:', data.message);
-        toast.error(data.message || 'Failed to refund tokens');
+        console.error('❌ Token refund failed:', result.message);
+        toast.error(result.message || 'Failed to refund tokens');
       }
     },
     onError: (error) => {

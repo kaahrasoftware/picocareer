@@ -106,6 +106,20 @@ export function useSessionEvents() {
           startDate.getTime() + (session.session_type?.duration || 60) * 60 * 1000
         );
         
+        // Map session status to CalendarEvent status type
+        const mapStatus = (status: string): 'scheduled' | 'completed' | 'cancelled' | 'no_show' => {
+          switch (status.toLowerCase()) {
+            case 'completed':
+              return 'completed';
+            case 'cancelled':
+              return 'cancelled';
+            case 'no_show':
+              return 'no_show';
+            default:
+              return 'scheduled';
+          }
+        };
+        
         return {
           id: session.id,
           title: `Session with ${
@@ -117,7 +131,7 @@ export function useSessionEvents() {
           start: startDate,
           end: endDate,
           type: 'session',
-          status: session.status,
+          status: mapStatus(session.status),
           session_details: {
             id: session.id,
             scheduled_at: session.scheduled_at,

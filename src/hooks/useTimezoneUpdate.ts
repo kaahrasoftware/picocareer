@@ -18,7 +18,7 @@ export function useTimezoneUpdate() {
         toast({
           title: "Timezones Updated",
           description: `Successfully updated ${result.updatedCount} mentor timezone offsets. Total DST-aware slots: ${result.totalDSTAwareSlots}.${result.errors?.length ? ' Some updates failed.' : ''}`,
-          variant: result.errors?.length ? "warning" : "default",
+          variant: result.errors?.length ? "destructive" : "default",
         });
         
         // Show additional toast with detailed counts if there were errors
@@ -26,7 +26,7 @@ export function useTimezoneUpdate() {
           toast({
             title: "Update Details",
             description: `Updated ${result.updatedCount} slots successfully. ${result.errors.length} errors occurred. Check console for details.`,
-            variant: "warning",
+            variant: "destructive",
           });
           console.log("Timezone update errors:", result.errors);
         }

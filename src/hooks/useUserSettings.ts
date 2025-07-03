@@ -9,7 +9,7 @@ export type SettingType =
   | 'timezone' 
   | 'theme' 
   | 'language_preference' 
-  | 'notification_settings' 
+  | 'notification_preferences'  // Changed from notification_settings
   | 'privacy_settings' 
   | 'display_settings' 
   | 'session_settings' 
@@ -21,7 +21,7 @@ export interface UISettingType {
     compact_mode: boolean;
   };
   language_preference: string;
-  notification_settings: {
+  notification_preferences: {  // Changed from notification_settings
     email_notifications: boolean;
     app_notifications: boolean;
     mentorship_notifications: boolean;
@@ -118,7 +118,7 @@ export function useUserSettings(profileId?: string) {
         .from('user_settings')
         .select('id')
         .eq('profile_id', profileId)
-        .eq('setting_type', type)
+        .eq('setting_type', type as string)  // Cast to string for database compatibility
         .single();
       
       if (existingSetting) {
@@ -135,7 +135,7 @@ export function useUserSettings(profileId?: string) {
           .from('user_settings')
           .insert({ 
             profile_id: profileId, 
-            setting_type: type, 
+            setting_type: type as string,  // Cast to string for database compatibility
             setting_value: value 
           });
           
