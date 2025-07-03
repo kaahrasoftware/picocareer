@@ -1,59 +1,72 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Bot, Shield } from "lucide-react";
-import { ScholarshipScraperDialog } from "./ScholarshipScraperDialog";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Download, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 interface ScholarshipScraperButtonProps {
   onScrapingComplete?: () => void;
 }
 
 export function ScholarshipScraperButton({ onScrapingComplete }: ScholarshipScraperButtonProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { session, profile } = useAuthSession();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuthSession();
 
-  const handleClick = () => {
-    if (!session) {
+  const handleScrapeScholarships = async () => {
+    if (!session?.user) {
       toast({
         title: "Authentication Required",
-        description: "Please sign in to access the scholarship scraper",
+        description: "Please sign in to scrape scholarships.",
         variant: "destructive",
       });
       return;
     }
 
-    if (profile?.user_type !== 'admin') {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('scrape-scholarships', {
+        body: { userId: session.user.id }
+      });
+
+      if (error) throw error;
+
       toast({
-        title: "Access Denied",
-        description: "Only administrators can access the scholarship scraper",
+        title: "Scraping Complete",
+        description: `Successfully scraped ${data?.count || 0} scholarships.`,
+      });
+
+      if (onScrapingComplete) {
+        onScrapingComplete();
+      }
+    } catch (error: any) {
+      console.error('Error scraping scholarships:', error);
+      toast({
+        title: "Scraping Failed",
+        description: error.message || "Failed to scrape scholarships. Please try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsDialogOpen(true);
   };
 
   return (
-    <>
-      <Button
-        onClick={handleClick}
-        variant="outline"
-        className="flex items-center gap-2"
-      >
-        <Bot className="h-4 w-4" />
-        AI Scholarship Scraper
-        <Shield className="h-3 w-3 text-muted-foreground" />
-      </Button>
-
-      <ScholarshipScraperDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        onScrapingComplete={onScrapingComplete}
-      />
-    </>
+    <Button
+      onClick={handleScrapeScholarships}
+      disabled={isLoading}
+      variant="outline"
+      className="gap-2"
+    >
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Download className="h-4 w-4" />
+      )}
+      {isLoading ? 'Scraping...' : 'Scrape New Scholarships'}
+    </Button>
   );
 }

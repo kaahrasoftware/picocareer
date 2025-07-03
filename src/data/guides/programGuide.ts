@@ -1,68 +1,41 @@
 
-import { GuideStep } from '@/context/GuideContext';
+import { Guide } from '@/context/GuideContext';
 
-const programGuide: GuideStep[] = [
-  {
-    id: 'program-welcome',
-    title: 'Academic Programs',
-    description: 'Discover programs that match your career goals.',
-    position: 'center'
-  },
-  {
-    id: 'program-search',
-    title: 'Find Programs',
-    description: 'Search by name, field, or keywords to find your ideal program.',
-    element: 'input[type="search"]',
-    position: 'bottom',
-    highlightColor: 'gold'
-  },
-  {
-    id: 'program-filters',
-    title: 'Filter Options',
-    description: 'Narrow by discipline, degree level, and duration.',
-    element: '.ProgramFilters',
-    position: 'bottom',
-    highlightColor: 'green',
-    demoAction: {
-      type: 'scroll-to',
-      target: '.CommunityFilters'
-    }
-  },
-  {
-    id: 'program-browse',
-    title: 'Program Cards',
-    description: 'View key information about each academic offering.',
-    element: '.ProgramGrid',
-    position: 'top',
-    highlightColor: 'gold',
-    demoAction: {
-      type: 'scroll-to',
-      target: '.grid'
-    }
-  },
-  {
-    id: 'program-details',
-    title: 'Program Details',
-    description: 'Explore curriculum, requirements, and career outcomes.',
-    position: 'center',
-    demoAction: {
-      type: 'open-dialog',
-      target: 'program-details',
-      data: { id: '1' }  // Show details for a specific program
-    }
-  },
-  {
-    id: 'program-related',
-    title: 'Similar Programs',
-    description: 'Discover related options based on field or career path.',
-    position: 'center'
-  },
-  {
-    id: 'program-complete',
-    title: 'Your Educational Path',
-    description: 'Ready to find programs that match your goals!',
-    position: 'center'
-  }
-];
+interface GuideStep {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}
 
-export default programGuide;
+export const programGuide: Guide = {
+  id: 'program-search',
+  title: 'Program Search Guide',
+  description: 'Find and apply to academic programs that match your goals',
+  steps: [
+    {
+      id: 'explore-programs',
+      title: 'Explore Academic Programs',
+      description: 'Browse universities and programs in your field of interest',
+      completed: false
+    },
+    {
+      id: 'research-requirements',
+      title: 'Research Requirements',
+      description: 'Understand admission requirements and prerequisites',
+      completed: false
+    },
+    {
+      id: 'prepare-applications',
+      title: 'Prepare Applications',
+      description: 'Work on essays, recommendations, and application materials',
+      completed: false
+    },
+    {
+      id: 'submit-applications',
+      title: 'Submit Applications',
+      description: 'Complete and submit your program applications',
+      completed: false
+    }
+  ]
+};

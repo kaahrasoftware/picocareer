@@ -1,78 +1,86 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingCart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { WalletOverview } from "../token-shop/WalletOverview";
-import { EnhancedTransactionHistory } from "./EnhancedTransactionHistory";
-import { WalletAnalytics } from "./WalletAnalytics";
-import { EarnUseTokensTab } from "./EarnUseTokensTab";
-import { ReferralsTab } from "./ReferralsTab";
-import { useWalletBalance } from "@/hooks/useWalletBalance";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { EnhancedTransactionHistory } from './EnhancedTransactionHistory';
+import { WalletAnalytics } from './WalletAnalytics';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Coins } from 'lucide-react';
 
 interface WalletDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  profileId: string;
 }
 
-export function WalletDialog({ isOpen, onClose }: WalletDialogProps) {
-  const { wallet } = useWalletBalance();
-  const { session } = useAuthSession();
-  const navigate = useNavigate();
+export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProps) {
+  const { data: wallet, isLoading } = useQuery({
+    queryKey: ['wallet', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('profile_id', profileId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId && open
+  });
 
-  const handleBuyTokens = () => {
-    onClose();
-    navigate('/token-shop');
-  };
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Wallet</DialogTitle>
+          </DialogHeader>
+          <div>Loading wallet...</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!wallet) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Wallet</DialogTitle>
+          </DialogHeader>
+          <div>No wallet found</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>Wallet</DialogTitle>
-            <Button 
-              onClick={handleBuyTokens}
-              className="flex items-center gap-2"
-              size="sm"
-            >
-              <ShoppingCart className="h-4 w-4" />
-              Buy Tokens
-            </Button>
-          </div>
+          <DialogTitle>Wallet</DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="referrals">Referrals</TabsTrigger>
-            <TabsTrigger value="earn-use">Earn & Use</TabsTrigger>
-          </TabsList>
+        <div className="space-y-6 overflow-y-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Coins className="h-5 w-5" />
+                Token Balance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">
+                {wallet.balance} tokens
+              </div>
+            </CardContent>
+          </Card>
+
+          <WalletAnalytics profileId={profileId} />
           
-          <TabsContent value="overview" className="mt-6">
-            <WalletOverview />
-          </TabsContent>
-          
-          <TabsContent value="transactions" className="mt-6">
-            {session?.user?.id && <EnhancedTransactionHistory profileId={session.user.id} />}
-          </TabsContent>
-          
-          <TabsContent value="analytics" className="mt-6">
-            <WalletAnalytics />
-          </TabsContent>
-          
-          <TabsContent value="referrals" className="mt-6">
-            <ReferralsTab />
-          </TabsContent>
-          
-          <TabsContent value="earn-use" className="mt-6">
-            <EarnUseTokensTab />
-          </TabsContent>
-        </Tabs>
+          <EnhancedTransactionHistory walletId={wallet.id} />
+        </div>
       </DialogContent>
     </Dialog>
   );

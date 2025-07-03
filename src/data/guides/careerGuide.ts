@@ -1,74 +1,41 @@
 
-import { GuideStep } from '@/context/GuideContext';
+import { Guide } from '@/context/GuideContext';
 
-const careerGuide: GuideStep[] = [
-  {
-    id: 'career-welcome',
-    title: 'Career Explorer',
-    description: 'Find your perfect career path with our exploration tools.',
-    position: 'center'
-  },
-  {
-    id: 'career-search',
-    title: 'Search Careers',
-    description: 'Find careers by title, skills, or keywords that interest you.',
-    element: 'input[type="search"]',
-    position: 'bottom',
-    highlightColor: 'gold'
-  },
-  {
-    id: 'career-filters',
-    title: 'Refine Results',
-    description: 'Filter by industry, skills, and more to find your match.',
-    element: '.CareerFilters',
-    position: 'bottom',
-    highlightColor: 'green',
-    demoAction: {
-      type: 'scroll-to',
-      target: '.CareerFilters'
-    }
-  },
-  {
-    id: 'career-results',
-    title: 'Career Listings',
-    description: 'Browse career cards with quick snapshots of each profession.',
-    element: '.CareerResults',
-    position: 'top',
-    highlightColor: 'gold',
-    demoAction: {
-      type: 'scroll-to',
-      target: '.CareerResults'
-    }
-  },
-  {
-    id: 'career-details',
-    title: 'Career Details',
-    description: 'See skills, education paths, and job outlook information.',
-    position: 'center',
-    demoAction: {
-      type: 'open-dialog',
-      target: 'career-details',
-      data: { id: '1' }  // Show details for a specific career
-    }
-  },
-  {
-    id: 'career-related',
-    title: 'Similar Careers',
-    description: 'Discover related careers based on overlapping skills.',
-    position: 'center'
-  },
-  {
-    id: 'career-mentors',
-    title: 'Field Experts',
-    description: 'Connect with mentors who specialize in your chosen field.',
-    position: 'center'
-  },
-  {
-    id: 'career-complete',
-    title: 'Ready to Explore',
-    description: 'Start your career journey now!',
-    position: 'center'
-  }
-];
+interface GuideStep {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}
 
-export default careerGuide;
+export const careerGuide: Guide = {
+  id: 'career-exploration',
+  title: 'Career Exploration Guide',
+  description: 'Discover and explore career paths that match your interests and goals',
+  steps: [
+    {
+      id: 'browse-careers',
+      title: 'Browse Career Options',
+      description: 'Explore different career paths and learn about various professions',
+      completed: false
+    },
+    {
+      id: 'career-assessment',
+      title: 'Take Career Assessment',
+      description: 'Complete assessments to identify careers that match your skills and interests',
+      completed: false
+    },
+    {
+      id: 'research-requirements',
+      title: 'Research Career Requirements',
+      description: 'Learn about education, skills, and experience needed for your target careers',
+      completed: false
+    },
+    {
+      id: 'connect-mentors',
+      title: 'Connect with Mentors',
+      description: 'Find and connect with professionals in your fields of interest',
+      completed: false
+    }
+  ]
+};

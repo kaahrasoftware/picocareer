@@ -1,64 +1,60 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Coins, TrendingUp, Gift } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { EnhancedTransactionHistory } from '@/components/wallet/EnhancedTransactionHistory';
+import { WalletAnalytics } from '@/components/wallet/WalletAnalytics';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WalletAnalytics } from "@/components/wallet/WalletAnalytics";
-import { EarnUseTokensTab } from "@/components/wallet/EarnUseTokensTab";
-import { ReferralsTab } from "@/components/wallet/ReferralsTab";
-import { EnhancedTransactionHistory } from "@/components/wallet/EnhancedTransactionHistory";
-import { ManualReferralProcessor } from "@/components/profile/ManualReferralProcessor";
-import type { Profile } from "@/types/database/profiles";
+export function WalletTab() {
+  const { session } = useAuthSession();
+  const profileId = session?.user?.id;
 
-interface WalletTabProps {
-  profile: Profile | null;
-}
+  const { data: wallet, isLoading } = useQuery({
+    queryKey: ['wallet', profileId],
+    queryFn: async () => {
+      if (!profileId) return null;
+      
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('profile_id', profileId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profileId
+  });
 
-export function WalletTab({ profile }: WalletTabProps) {
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading wallet information...</p>
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading wallet...</div>;
+  }
+
+  if (!wallet) {
+    return <div>No wallet found</div>;
   }
 
   return (
     <div className="space-y-6">
-      <WalletAnalytics profileId={profile.id} />
-      
-      <Tabs defaultValue="earn-use" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="earn-use">Earn & Use</TabsTrigger>
-          <TabsTrigger value="referrals">Referrals</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="refer-friend">Refer Friend</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="earn-use" className="space-y-4">
-          <EarnUseTokensTab />
-        </TabsContent>
-        
-        <TabsContent value="referrals" className="space-y-4">
-          <ReferralsTab />
-        </TabsContent>
-        
-        <TabsContent value="transactions" className="space-y-4">
-          <EnhancedTransactionHistory profileId={profile.id} />
-        </TabsContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5" />
+            Token Balance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-primary">
+            {wallet.balance} tokens
+          </div>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="refer-friend" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Refer a Friend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                If someone referred you to PicoCareer, you can enter their referral code below to help them earn tokens.
-              </p>
-              <ManualReferralProcessor />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <WalletAnalytics profileId={profileId} />
+      
+      <EnhancedTransactionHistory walletId={wallet.id} />
     </div>
   );
 }

@@ -1,230 +1,207 @@
-
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useEssayPrompts, useMenteeEssayResponses, useMenteeDataMutations } from "@/hooks/useMenteeData";
-import { MenteeEssayForm } from "../forms/MenteeEssayForm";
-import type { Profile } from "@/types/database/profiles";
-import type { EssayPromptCategory, MenteeEssayResponse } from "@/types/mentee-profile";
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, FileText, Calendar, Edit2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { MenteeEssayForm } from '@/components/profile/mentee/essay/MenteeEssayForm';
+import { formatDistanceToNow } from 'date-fns';
 
 interface MenteeEssaysTabProps {
   profileId: string;
-  isEditing: boolean;
 }
 
-const categoryColorMapping: Record<EssayPromptCategory, string> = {
-  personal_statement: 'bg-blue-100 text-blue-800 border-blue-200',
-  supplemental: 'bg-green-100 text-green-800 border-green-200',
-  scholarship: 'bg-purple-100 text-purple-800 border-purple-200',
-  college_application: 'bg-red-100 text-red-800 border-red-200',
-  other: 'bg-gray-100 text-gray-800 border-gray-200'
-};
+interface MenteeEssayResponse {
+  id: string;
+  essay_prompt_id: string;
+  response_text: string;
+  status: 'draft' | 'submitted' | 'reviewed';
+  created_at: string;
+  updated_at: string;
+  essay_prompts: {
+    title: string;
+    prompt_text: string;
+    category: string;
+    word_limit?: number;
+  };
+}
 
-export function MenteeEssaysTab({ profileId, isEditing }: MenteeEssaysTabProps) {
+export function MenteeEssaysTab({ profileId }: MenteeEssaysTabProps) {
+  const [selectedEssay, setSelectedEssay] = useState<MenteeEssayResponse | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [editingEssay, setEditingEssay] = useState<MenteeEssayResponse | null>(null);
-  const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
-  
-  const { data: essayResponses = [], isLoading: responsesLoading } = useMenteeEssayResponses(profileId);
-  const { data: prompts = [], isLoading: promptsLoading } = useEssayPrompts();
-  const { deleteEssayResponse, addEssayResponse } = useMenteeDataMutations();
 
-  const handleEdit = (essay: MenteeEssayResponse) => {
-    setEditingEssay(essay);
-    setShowForm(true);
-  };
+  const { data: essays, isLoading, refetch } = useQuery({
+    queryKey: ['mentee-essays', profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mentee_essay_responses')
+        .select(`
+          *,
+          essay_prompts (
+            title,
+            prompt_text,
+            category,
+            word_limit
+          )
+        `)
+        .eq('profile_id', profileId)
+        .order('updated_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as MenteeEssayResponse[];
+    },
+    enabled: !!profileId
+  });
 
-  const handleDelete = async (essayId: string) => {
-    if (window.confirm('Are you sure you want to delete this essay response?')) {
-      deleteEssayResponse.mutate(essayId);
-    }
-  };
+  const handleSaveEssay = async (response: Partial<MenteeEssayResponse>) => {
+    if (!profileId) return;
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingEssay(null);
-    setSelectedPromptId(null);
-  };
-
-  const handleStartWriting = (promptId: string) => {
-    setEditingEssay(null);
-    setSelectedPromptId(promptId);
-    setShowForm(true);
-  };
-
-  const handleAddEssay = () => {
-    setEditingEssay(null);
-    setSelectedPromptId(null);
-    setShowForm(true);
-  };
-
-  const handleSaveResponse = async (response: Partial<MenteeEssayResponse>) => {
     try {
-      const responseData = {
-        mentee_id: profileId,
-        prompt_id: response.prompt_id!,
-        response_text: response.response_text || '',
-        is_draft: response.is_draft ?? true,
-        word_count: response.word_count || 0,
-        version: response.version || 1
-      };
-
-      addEssayResponse.mutate(responseData);
+      if (response.id) {
+        // Update existing essay
+        const { error } = await supabase
+          .from('mentee_essay_responses')
+          .update(response)
+          .eq('id', response.id);
+        if (error) throw error;
+      } else {
+        // Insert new essay
+        const { error } = await supabase
+          .from('mentee_essay_responses')
+          .insert({
+            profile_id: profileId,
+            essay_prompt_id: response.essay_prompt_id,
+            response_text: response.response_text,
+            status: response.status || 'draft'
+          });
+        if (error) throw error;
+      }
+      await refetch();
+      setShowForm(false);
+      setSelectedEssay(null);
     } catch (error) {
-      console.error('Error saving essay response:', error);
+      console.error('Error saving essay:', error);
     }
   };
 
-  if (responsesLoading || promptsLoading) {
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'submitted':
+        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+      case 'reviewed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      default:
+        return <XCircle className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'submitted':
+        return 'bg-blue-100 text-blue-800';
+      case 'reviewed':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
     return <div>Loading essays...</div>;
+  }
+
+  if (showForm) {
+    return (
+      <MenteeEssayForm
+        menteeId={profileId}
+        essay={selectedEssay}
+        onClose={() => {
+          setShowForm(false);
+          setSelectedEssay(null);
+        }}
+        onSubmit={handleSaveEssay}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Essay Responses</h3>
-        {isEditing && (
-          <Button onClick={handleAddEssay} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Write Essay
-          </Button>
-        )}
+        <h2 className="text-2xl font-semibold">My Essays</h2>
+        <Button onClick={() => setShowForm(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Essay
+        </Button>
       </div>
 
-      {/* Available Prompts (when editing) */}
-      {isEditing && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Available Essay Prompts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3">
-              {prompts.map((prompt) => {
-                const hasResponse = essayResponses.some(r => r.prompt_id === prompt.id);
-                return (
-                  <div key={prompt.id} className="flex justify-between items-center p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{prompt.title}</h4>
-                        <Badge className={categoryColorMapping[prompt.category]}>
-                          {prompt.category.replace('_', ' ')}
-                        </Badge>
-                        {prompt.word_limit && (
-                          <Badge variant="outline">{prompt.word_limit} words</Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {prompt.prompt_text}
-                      </p>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      disabled={hasResponse}
-                      onClick={() => handleStartWriting(prompt.id)}
-                    >
-                      {hasResponse ? 'Completed' : 'Start Writing'}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Essay Responses */}
-      {essayResponses.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-            No essay responses yet. {isEditing && "Choose a prompt above to start writing."}
-          </CardContent>
-        </Card>
-      ) : (
+      {essays && essays.length > 0 ? (
         <div className="grid gap-4">
-          {essayResponses.map((response) => (
-            <Card key={response.id}>
-              <CardHeader className="flex flex-row items-start justify-between space-y-0">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CardTitle className="text-lg">{response.prompt?.title}</CardTitle>
-                    <Badge className={categoryColorMapping[response.prompt?.category || 'personal_statement']}>
-                      {response.prompt?.category.replace('_', ' ')}
-                    </Badge>
-                    {response.is_draft && (
-                      <Badge variant="outline">Draft</Badge>
-                    )}
+          {essays.map((essay) => (
+            <Card key={essay.id} className="hover:shadow-md transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5" />
+                      {essay.essay_prompts.title}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(essay.status)}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(essay.status)}`}>
+                        {essay.status.charAt(0).toUpperCase() + essay.status.slice(1)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {essay.essay_prompts.category}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {response.prompt?.prompt_text}
-                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedEssay(essay);
+                      setShowForm(true);
+                    }}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                {isEditing && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(response)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(response.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    <div>
-                      <span className="font-medium">Word Count:</span> {response.word_count}
-                    </div>
-                    {response.prompt?.word_limit && (
-                      <div>
-                        <span className="font-medium">Limit:</span> {response.prompt.word_limit}
-                      </div>
-                    )}
-                    <div>
-                      <span className="font-medium">Version:</span> {response.version}
-                    </div>
-                    <div>
-                      <span className="font-medium">Updated:</span> {new Date(response.updated_at).toLocaleDateString()}
-                    </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {essay.essay_prompts.prompt_text.substring(0, 150)}...
+                </p>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>Updated {formatDistanceToNow(new Date(essay.updated_at))} ago</span>
                   </div>
-                  
-                  {response.response_text && (
-                    <div className="bg-muted p-4 rounded-lg">
-                      <p className="text-sm whitespace-pre-wrap line-clamp-6">
-                        {response.response_text}
-                      </p>
-                      {response.response_text.length > 300 && (
-                        <Button variant="link" size="sm" className="mt-2 p-0">
-                          Read full essay
-                        </Button>
-                      )}
-                    </div>
+                  {essay.essay_prompts.word_limit && (
+                    <span>Limit: {essay.essay_prompts.word_limit} words</span>
                   )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
-
-      {showForm && (
-        <MenteeEssayForm
-          menteeId={profileId}
-          essay={editingEssay}
-          onClose={handleFormClose}
-          onSave={handleSaveResponse}
-        />
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No essays yet</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Start working on your essays to strengthen your applications
+            </p>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Write Your First Essay
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

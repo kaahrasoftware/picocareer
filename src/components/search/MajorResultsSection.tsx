@@ -1,112 +1,138 @@
 
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import type { SearchResult } from "@/types/search";
-import { useState } from "react";
-import { MajorDetails } from "@/components/MajorDetails";
-import { isMajorResult } from "@/types/search";
-import { Users, DollarSign } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { GraduationCap, Users, DollarSign, BookOpen, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface MajorResultsSectionProps {
-  majors: SearchResult[];
+interface MajorSearchResult {
+  id: string;
+  title: string;
+  description: string;
+  category?: string;
+  degree_levels?: string[];
+  popular_careers?: string[];
+  school_count?: number;
+  salary_info?: string;
 }
 
-export const MajorResultsSection = ({ majors }: MajorResultsSectionProps) => {
-  const [selectedMajor, setSelectedMajor] = useState<SearchResult | null>(null);
-  const validMajors = majors.filter(isMajorResult);
+interface MajorResultsSectionProps {
+  results: MajorSearchResult[];
+  isLoading: boolean;
+}
 
-  if (!validMajors.length) return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
-      <p className="text-sm text-muted-foreground">No matching majors found</p>
-    </div>
-  );
+export function MajorResultsSection({ results, isLoading }: MajorResultsSectionProps) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="h-3 bg-muted rounded"></div>
+                <div className="h-3 bg-muted rounded w-5/6"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
-  const shouldUseGrid = validMajors.length > 4;
+  if (results.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No majors found</h3>
+          <p className="text-muted-foreground text-center">
+            Try adjusting your search terms or browse all majors
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="px-4 mt-6">
-      <h3 className="text-lg font-semibold mb-3 text-foreground">Majors</h3>
-      <div className="w-full">
-        <div className={`${shouldUseGrid 
-          ? 'grid grid-cols-3 gap-4 place-items-center' 
-          : 'flex gap-4 justify-center'}`}
-        >
-          {validMajors.map((major) => (
-            <Card 
-              key={major.id}
-              className="flex-shrink-0 flex flex-col p-4 w-[250px] hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => setSelectedMajor(major)}
-            >
-              <div className="flex-1 min-w-0 mb-3">
-                <h4 className="font-medium text-sm mb-1">{major.title}</h4>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {major.description}
-                </p>
+    <div className="space-y-4">
+      {results.map((major) => (
+        <Card key={major.id} className="hover:shadow-md transition-shadow">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
+                  <Link 
+                    to={`/majors/${major.id}`}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {major.title}
+                  </Link>
+                </CardTitle>
+                {major.category && (
+                  <Badge variant="secondary" className="w-fit">
+                    {major.category}
+                  </Badge>
+                )}
               </div>
+              <Link to={`/majors/${major.id}`}>
+                <Button variant="outline" size="sm">
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">{major.description}</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              {major.school_count && (
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span>{major.school_count} schools offer this</span>
+                </div>
+              )}
               
-              <div className="flex flex-wrap gap-2 mb-2">
-                {major.degree_levels && (
-                  <Badge variant="secondary" className="self-start">
-                    {major.degree_levels?.join(", ") || 'Major'}
-                  </Badge>
-                )}
-                
-                {major.profiles_count !== undefined && major.profiles_count > 0 && (
-                  <Badge variant="outline" className="self-start flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {major.profiles_count}
-                  </Badge>
-                )}
-                
-                {major.potential_salary && (
-                  <Badge variant="outline" className="self-start flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
-                    <DollarSign className="h-3 w-3" />
-                    {major.potential_salary}
-                  </Badge>
-                )}
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
+              {major.salary_info && (
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <span>{major.salary_info}</span>
+                </div>
+              )}
+              
+              {major.degree_levels && major.degree_levels.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span>{major.degree_levels.join(', ')}</span>
+                </div>
+              )}
+            </div>
 
-      {selectedMajor && isMajorResult(selectedMajor) && (
-        <MajorDetails
-          major={{
-            id: selectedMajor.id,
-            title: selectedMajor.title,
-            description: selectedMajor.description || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            featured: false,
-            learning_objectives: [],
-            common_courses: selectedMajor.common_courses || [],
-            interdisciplinary_connections: [],
-            job_prospects: null,
-            certifications_to_consider: [],
-            degree_levels: selectedMajor.degree_levels || [],
-            affiliated_programs: [],
-            gpa_expectations: null,
-            transferable_skills: [],
-            tools_knowledge: [],
-            potential_salary: selectedMajor.potential_salary || null,
-            passion_for_subject: null,
-            skill_match: [],
-            professional_associations: [],
-            global_applicability: null,
-            common_difficulties: [],
-            career_opportunities: selectedMajor.career_opportunities || [],
-            intensity: null,
-            stress_level: null,
-            dropout_rates: null,
-            majors_to_consider_switching_to: [],
-            profiles_count: selectedMajor.profiles_count || 0,
-          }}
-          open={!!selectedMajor}
-          onOpenChange={(open) => !open && setSelectedMajor(null)}
-        />
-      )}
+            {major.popular_careers && major.popular_careers.length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Popular Career Paths:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {major.popular_careers.slice(0, 4).map((career, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {career}
+                    </Badge>
+                  ))}
+                  {major.popular_careers.length > 4 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{major.popular_careers.length - 4} more
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
-};
+}
