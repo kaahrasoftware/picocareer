@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { HelpCircle } from 'lucide-react';
 import { useGuide } from '@/context/GuideContext';
 import { useLocation } from 'react-router-dom';
+import { profileGuide } from '@/data/guides/profileGuide';
+import { mentorGuide } from '@/data/guides/mentorGuide';
+import { careerGuide } from '@/data/guides/careerGuide';
+import { programGuide } from '@/data/guides/programGuide';
 
 interface GuideButtonProps {
   className?: string;
@@ -15,30 +19,27 @@ export function GuideButton({ className, floating = false }: GuideButtonProps) {
   const location = useLocation();
   const currentPath = location.pathname;
   
-  // Simplify the path for guide matching
-  const getSimplifiedPath = () => {
-    // For the home page
-    if (currentPath === '/') return '/';
-    
-    // Remove any parameters or sub-paths and get the main section
-    const mainPath = '/' + currentPath.split('/')[1];
-    return mainPath;
+  // Get the appropriate guide for the current path
+  const getGuideForPath = () => {
+    if (currentPath.startsWith('/profile')) return profileGuide;
+    if (currentPath.startsWith('/mentor')) return mentorGuide;
+    if (currentPath.startsWith('/career')) return careerGuide;
+    if (currentPath.startsWith('/program')) return programGuide;
+    return null;
   };
   
   const handleStartGuide = () => {
-    startGuide(getSimplifiedPath());
+    const guide = getGuideForPath();
+    if (guide) {
+      startGuide(guide);
+    }
   };
   
-  // Determine if there's a guide available for this page
-  const isGuideAvailable = () => {
-    const validPaths = ['/', '/mentor', '/career', '/program', '/profile'];
-    return validPaths.includes(getSimplifiedPath());
-  };
-  
-  if (!isGuideAvailable()) return null;
+  const guide = getGuideForPath();
+  if (!guide) return null;
   
   // Check if the user has seen this guide before
-  const hasSeen = hasSeenGuide(getSimplifiedPath());
+  const hasSeen = hasSeenGuide(guide.id);
   
   if (floating) {
     return (

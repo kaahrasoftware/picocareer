@@ -27,6 +27,7 @@ interface GuideContextType {
   prevStep: () => void;
   endGuide: () => void;
   setCurrentStep: (step: number) => void;
+  hasSeenGuide: (guideId: string) => boolean;
 }
 
 const GuideContext = createContext<GuideContextType | undefined>(undefined);
@@ -35,6 +36,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const [currentGuide, setCurrentGuide] = useState<Guide | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isActive, setIsActive] = useState(false);
+  const [seenGuides, setSeenGuides] = useState<Set<string>>(new Set());
 
   const startGuide = (guide: Guide) => {
     setCurrentGuide(guide);
@@ -57,9 +59,16 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   };
 
   const endGuide = () => {
+    if (currentGuide) {
+      setSeenGuides(prev => new Set(prev).add(currentGuide.id));
+    }
     setCurrentGuide(null);
     setCurrentStep(0);
     setIsActive(false);
+  };
+
+  const hasSeenGuide = (guideId: string) => {
+    return seenGuides.has(guideId);
   };
 
   return (
@@ -73,6 +82,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
         prevStep,
         endGuide,
         setCurrentStep,
+        hasSeenGuide,
       }}
     >
       {children}

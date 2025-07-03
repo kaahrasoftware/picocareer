@@ -29,27 +29,27 @@ export function MenteeProfileTabs({ profile, isEditing = false }: MenteeProfileT
       </TabsList>
 
       <TabsContent value="basic-info" className="space-y-4">
-        <MenteeBasicInfoTab profileId={profile.id} />
+        <MenteeBasicInfoTab profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="education" className="space-y-4">
-        <MenteeEducationTab profileId={profile.id} />
+        <MenteeEducationTab profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="interests" className="space-y-4">
-        <MenteeInterestsTabEnhanced profileId={profile.id} />
+        <MenteeInterestsTabEnhanced profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="academics" className="space-y-4">
-        <MenteeAcademicsTab profileId={profile.id} />
+        <MenteeAcademicsTab profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="courses" className="space-y-4">
-        <MenteeCoursesTab profileId={profile.id} />
+        <MenteeCoursesTab profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="projects" className="space-y-4">
-        <MenteeProjectsTab profileId={profile.id} />
+        <MenteeProjectsTab profile={profile} isEditing={isEditing} />
       </TabsContent>
 
       <TabsContent value="essays" className="space-y-4">

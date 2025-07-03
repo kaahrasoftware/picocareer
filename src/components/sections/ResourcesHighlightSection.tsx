@@ -3,21 +3,33 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Users, Award, Calendar, ArrowRight, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ExternalLink, MapPin, BookOpen, Briefcase, GraduationCap, Award } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 
-export function ResourcesHighlightSection() {
-  // Fetch recent blogs
-  const { data: blogs } = useQuery({
-    queryKey: ['recent-blogs'],
+export const ResourcesHighlightSection = () => {
+  const { data: careers, isLoading: careersLoading } = useQuery({
+    queryKey: ['featured-careers'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('blogs')
-        .select('id, title, summary, created_at, author_id, profiles!blogs_author_id_fkey(first_name, last_name)')
+        .from('careers')
+        .select('id, title, description, industry, salary_range')
+        .eq('featured', true)
+        .limit(3);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: majors, isLoading: majorsLoading } = useQuery({
+    queryKey: ['featured-majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title, description, degree_level')
         .eq('status', 'Approved')
-        .order('created_at', { ascending: false })
         .limit(3);
       
       if (error) throw error;
@@ -25,15 +37,14 @@ export function ResourcesHighlightSection() {
     }
   });
 
-  // Fetch upcoming events
-  const { data: events } = useQuery({
-    queryKey: ['upcoming-events'],
+  const { data: scholarships, isLoading: scholarshipsLoading } = useQuery({
+    queryKey: ['featured-scholarships'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('events')
-        .select('id, title, description, start_time, event_type')
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
+        .from('scholarships')
+        .select('id, title, description, amount, deadline')
+        .eq('status', 'Approved')
+        .order('deadline', { ascending: true })
         .limit(3);
       
       if (error) throw error;
@@ -41,212 +52,192 @@ export function ResourcesHighlightSection() {
     }
   });
 
-  // Fetch featured opportunities
-  const { data: opportunities } = useQuery({
-    queryKey: ['featured-opportunities'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('opportunities')
-        .select('id, title, description, type, location, company_id, companies(name)')
-        .eq('status', 'Active')
-        .order('created_at', { ascending: false })
-        .limit(3);
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const isLoading = careersLoading || majorsLoading || scholarshipsLoading;
 
-  // Fetch active mentors count
-  const { data: mentorStats } = useQuery({
-    queryKey: ['mentor-stats'],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_type', 'mentor');
-      
-      return { activeMentors: count || 0 };
-    }
-  });
+  if (isLoading) {
+    return (
+      <section className="py-16 bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Loading Resources...</h2>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <section className="py-16 bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Explore Our Resources
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Access a wealth of information to guide your educational and career journey
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Discover career paths, academic programs, and scholarship opportunities tailored to your goals.
           </p>
         </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <BookOpen className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {blogs?.length || 0}+
-              </div>
-              <div className="text-sm text-gray-600">Recent Articles</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Users className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {mentorStats?.activeMentors || 0}+
-              </div>
-              <div className="text-sm text-gray-600">Active Mentors</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Award className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {opportunities?.length || 0}+
-              </div>
-              <div className="text-sm text-gray-600">New Opportunities</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="text-center">
-            <CardContent className="p-6">
-              <Calendar className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-gray-900">
-                {events?.length || 0}+
-              </div>
-              <div className="text-sm text-gray-600">Upcoming Events</div>
-            </CardContent>
-          </Card>
+        <div className="grid lg:grid-cols-3 gap-8 mb-12">
+          {/* Featured Careers */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Briefcase className="h-6 w-6 text-purple-600" />
+              <h3 className="text-xl font-semibold text-gray-900">Featured Careers</h3>
+            </div>
+            {careers?.map((career) => (
+              <Card key={career.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{career.title}</CardTitle>
+                  {career.industry && (
+                    <Badge variant="secondary" className="w-fit">
+                      {career.industry}
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {career.description}
+                  </p>
+                  {career.salary_range && (
+                    <p className="text-sm font-medium text-green-600 mb-3">
+                      {career.salary_range}
+                    </p>
+                  )}
+                  <Link to={`/career/${career.id}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Learn More <ExternalLink className="ml-2 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+            <Link to="/career">
+              <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                View All Careers
+              </Button>
+            </Link>
+          </div>
+
+          {/* Featured Majors */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <GraduationCap className="h-6 w-6 text-blue-600" />
+              <h3 className="text-xl font-semibold text-gray-900">Academic Programs</h3>
+            </div>
+            {majors?.map((major) => (
+              <Card key={major.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{major.title}</CardTitle>
+                  {major.degree_level && (
+                    <Badge variant="outline" className="w-fit">
+                      {major.degree_level}
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {major.description}
+                  </p>
+                  <Link to={`/program/${major.id}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Explore Program <ExternalLink className="ml-2 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+            <Link to="/majors">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                View All Programs
+              </Button>
+            </Link>
+          </div>
+
+          {/* Featured Scholarships */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-6 w-6 text-green-600" />
+              <h3 className="text-xl font-semibold text-gray-900">Scholarships</h3>
+            </div>
+            {scholarships?.map((scholarship) => (
+              <Card key={scholarship.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{scholarship.title}</CardTitle>
+                  {scholarship.amount && (
+                    <Badge variant="default" className="w-fit bg-green-100 text-green-800">
+                      ${scholarship.amount.toLocaleString()}
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    {scholarship.description}
+                  </p>
+                  {scholarship.deadline && (
+                    <p className="text-sm text-red-600 mb-3">
+                      Deadline: {new Date(scholarship.deadline).toLocaleDateString()}
+                    </p>
+                  )}
+                  <Link to={`/scholarship/${scholarship.id}`}>
+                    <Button variant="outline" size="sm" className="w-full">
+                      View Details <ExternalLink className="ml-2 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+            <Link to="/scholarships">
+              <Button className="w-full bg-green-600 hover:bg-green-700">
+                View All Scholarships
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Resource Categories */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Recent Blog Posts */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-blue-600" />
-                Latest Articles
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {blogs && blogs.length > 0 ? (
-                blogs.map((blog) => (
-                  <div key={blog.id} className="border-b last:border-b-0 pb-3 last:pb-0">
-                    <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                      <Link to={`/blogs/${blog.id}`} className="hover:text-primary">
-                        {blog.title}
-                      </Link>
-                    </h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                      {blog.summary}
-                    </p>
-                    <div className="text-xs text-muted-foreground">
-                      By {blog.profiles?.first_name} {blog.profiles?.last_name}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No recent articles</p>
-              )}
-              <Link to="/blogs">
-                <Button variant="outline" size="sm" className="w-full">
-                  View All Articles <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+        {/* Quick Access Links */}
+        <div className="grid md:grid-cols-4 gap-4">
+          <Link to="/mentors">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <BookOpen className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <h4 className="font-semibold">Find Mentors</h4>
+                <p className="text-sm text-gray-600">Connect with industry experts</p>
+              </CardContent>
+            </Card>
+          </Link>
+          
+          <Link to="/career-assessment">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <Briefcase className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <h4 className="font-semibold">Career Assessment</h4>
+                <p className="text-sm text-gray-600">AI-powered career matching</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          {/* Upcoming Events */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-green-600" />
-                Upcoming Events
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {events && events.length > 0 ? (
-                events.map((event) => (
-                  <div key={event.id} className="border-b last:border-b-0 pb-3 last:pb-0">
-                    <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                      <Link to={`/events/${event.id}`} className="hover:text-primary">
-                        {event.title}
-                      </Link>
-                    </h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                      {event.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {event.event_type}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(event.start_time).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No upcoming events</p>
-              )}
-              <Link to="/events">
-                <Button variant="outline" size="sm" className="w-full">
-                  View All Events <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <Link to="/events">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <GraduationCap className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <h4 className="font-semibold">Events & Webinars</h4>
+                <p className="text-sm text-gray-600">Educational workshops</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          {/* Featured Opportunities */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-                New Opportunities
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {opportunities && opportunities.length > 0 ? (
-                opportunities.map((opportunity) => (
-                  <div key={opportunity.id} className="border-b last:border-b-0 pb-3 last:pb-0">
-                    <h4 className="font-medium text-sm mb-1 line-clamp-2">
-                      <Link to={`/opportunities/${opportunity.id}`} className="hover:text-primary">
-                        {opportunity.title}
-                      </Link>
-                    </h4>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                      {opportunity.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {opportunity.type}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground">
-                        {opportunity.location}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No new opportunities</p>
-              )}
-              <Link to="/opportunities">
-                <Button variant="outline" size="sm" className="w-full">
-                  View All Opportunities <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <Link to="/blog">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-6 text-center">
+                <BookOpen className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <h4 className="font-semibold">Blog & Resources</h4>
+                <p className="text-sm text-gray-600">Latest insights and tips</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </section>
   );
-}
+};
