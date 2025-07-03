@@ -1,6 +1,13 @@
 
 import { Guide } from '@/context/GuideContext';
 
+interface GuideStep {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
 export const programGuide: Guide = {
   id: 'program-search',
   title: 'Program Search Guide',
@@ -10,25 +17,25 @@ export const programGuide: Guide = {
       id: 'explore-programs',
       title: 'Explore Academic Programs',
       description: 'Browse universities and programs in your field of interest',
-      content: 'Discover academic programs that align with your career goals.'
+      completed: false
     },
     {
       id: 'research-requirements',
       title: 'Research Requirements',
       description: 'Understand admission requirements and prerequisites',
-      content: 'Learn what you need to get accepted into your target programs.'
+      completed: false
     },
     {
       id: 'prepare-applications',
       title: 'Prepare Applications',
       description: 'Work on essays, recommendations, and application materials',
-      content: 'Get your application materials ready for submission.'
+      completed: false
     },
     {
       id: 'submit-applications',
       title: 'Submit Applications',
       description: 'Complete and submit your program applications',
-      content: 'Submit your applications and track their progress.'
+      completed: false
     }
   ]
 };
