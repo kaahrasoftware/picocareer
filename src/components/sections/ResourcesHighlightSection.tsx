@@ -1,11 +1,12 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, BookOpen, Users, Trophy } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { BookOpen, Users, Trophy, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function ResourcesHighlightSection() {
@@ -15,9 +16,23 @@ export function ResourcesHighlightSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('careers')
-        .select('id, title, description, industry, featured')
-        .eq('featured', true)
-        .eq('status', 'Approved')
+        .select('id, title, description, salary_range, growth_outlook')
+        .eq('status', 'Active')
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // Fetch featured majors
+  const { data: majors = [] } = useQuery({
+    queryKey: ['featured-majors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('majors')
+        .select('id, title, description, degree_level')
+        .eq('status', 'Active')
         .limit(3);
       
       if (error) throw error;
@@ -31,7 +46,7 @@ export function ResourcesHighlightSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, bio, user_type, avatar_url, current_position')
+        .select('id, first_name, last_name, bio, avatar_url')
         .eq('user_type', 'mentor')
         .limit(3);
       
@@ -46,8 +61,8 @@ export function ResourcesHighlightSection() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('opportunities')
-        .select('id, title, description, type, deadline')
-        .eq('status', 'Approved')
+        .select('id, title, description')
+        .eq('status', 'Active')
         .order('created_at', { ascending: false })
         .limit(3);
       
@@ -57,145 +72,146 @@ export function ResourcesHighlightSection() {
   });
 
   return (
-    <section className="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+    <section className="py-16 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Explore Our Resources
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover career paths, connect with mentors, and find opportunities to advance your future.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Discover career paths, connect with mentors, and find opportunities to advance your journey
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Featured Careers */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Featured Careers</h3>
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Featured Careers</h3>
+                <p className="text-gray-600">Explore high-demand career paths</p>
+              </div>
             </div>
-            
-            {careers.map((career) => (
-              <Card key={career.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{career.title}</CardTitle>
-                  {career.industry && (
-                    <Badge variant="secondary" className="w-fit">
-                      {career.industry}
-                    </Badge>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            <div className="space-y-4">
+              {careers.map((career) => (
+                <div key={career.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <h4 className="font-medium text-gray-900">{career.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {career.description}
                   </p>
-                  <Link to={`/careers/${career.id}`}>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Learn More
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-            
-            <Link to="/careers">
-              <Button className="w-full">View All Careers</Button>
-            </Link>
-          </div>
-
-          {/* Top Mentors */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="h-6 w-6 text-green-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Expert Mentors</h3>
-            </div>
-            
-            {mentors.map((mentor) => (
-              <Card key={mentor.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    {mentor.avatar_url ? (
-                      <img 
-                        src={mentor.avatar_url} 
-                        alt={`${mentor.first_name} ${mentor.last_name}`}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                        <Users className="h-6 w-6 text-gray-500" />
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-semibold text-gray-900">
-                        {mentor.first_name} {mentor.last_name}
-                      </h4>
-                      {mentor.current_position && (
-                        <p className="text-sm text-gray-600">{mentor.current_position}</p>
-                      )}
-                    </div>
-                  </div>
-                  {mentor.bio && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {mentor.bio}
-                    </p>
-                  )}
-                  <Link to={`/mentors/${mentor.id}`}>
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Profile
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-            
-            <Link to="/mentors">
-              <Button className="w-full">Browse All Mentors</Button>
-            </Link>
-          </div>
-
-          {/* Recent Opportunities */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Trophy className="h-6 w-6 text-purple-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Latest Opportunities</h3>
-            </div>
-            
-            {opportunities.map((opportunity) => (
-              <Card key={opportunity.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{opportunity.title}</CardTitle>
-                  {opportunity.type && (
-                    <Badge variant="secondary" className="w-fit">
-                      {opportunity.type}
+                  {career.salary_range && (
+                    <Badge variant="secondary" className="mt-2">
+                      {career.salary_range}
                     </Badge>
                   )}
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                </div>
+              ))}
+            </div>
+            <Button asChild className="w-full mt-4">
+              <Link to="/careers">View All Careers</Link>
+            </Button>
+          </Card>
+
+          {/* Top Mentors */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Users className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Top Mentors</h3>
+                <p className="text-gray-600">Connect with industry experts</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {mentors.map((mentor) => (
+                <div key={mentor.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={mentor.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {mentor.first_name?.[0]}{mentor.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">
+                      {mentor.first_name} {mentor.last_name}
+                    </h4>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {mentor.bio || 'Experienced professional ready to help'}
+                    </p>
+                  </div>
+                  <Star className="h-4 w-4 text-yellow-500" />
+                </div>
+              ))}
+            </div>
+            <Button asChild className="w-full mt-4">
+              <Link to="/mentors">Find Mentors</Link>
+            </Button>
+          </Card>
+
+          {/* Featured Majors */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <BookOpen className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Popular Majors</h3>
+                <p className="text-gray-600">Discover academic programs</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {majors.map((major) => (
+                <div key={major.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">{major.title}</h4>
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {major.description}
+                      </p>
+                    </div>
+                    {major.degree_level && (
+                      <Badge variant="outline" className="ml-2">
+                        {major.degree_level}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button asChild className="w-full mt-4">
+              <Link to="/majors">Explore Majors</Link>
+            </Button>
+          </Card>
+
+          {/* Recent Opportunities */}
+          <Card className="p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Trophy className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold">Latest Opportunities</h3>
+                <p className="text-gray-600">Fresh opportunities await</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {opportunities.map((opportunity) => (
+                <div key={opportunity.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <h4 className="font-medium text-gray-900">{opportunity.title}</h4>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {opportunity.description}
                   </p>
-                  {opportunity.deadline && (
-                    <p className="text-xs text-red-600 mb-3">
-                      Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
-                    </p>
-                  )}
-                  <Link to={`/opportunities/${opportunity.id}`}>
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-            
-            <Link to="/opportunities">
-              <Button className="w-full">View All Opportunities</Button>
-            </Link>
-          </div>
+                </div>
+              ))}
+            </div>
+            <Button asChild className="w-full mt-4">
+              <Link to="/opportunities">View Opportunities</Link>
+            </Button>
+          </Card>
         </div>
       </div>
     </section>

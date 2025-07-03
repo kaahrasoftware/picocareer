@@ -2,70 +2,56 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface School {
-  id: string;
-  name: string;
-  location?: string;
-  website?: string;
-  logo_url?: string;
-}
+export const fetchAllFromTable = async (tableName: string) => {
+  const { data, error } = await supabase
+    .from(tableName)
+    .select('*')
+    .order('title');
+  
+  if (error) throw error;
+  return data || [];
+};
 
-export interface Company {
-  id: string;
-  name: string;
-  industry?: string;
-  website?: string;
-}
-
-export interface Major {
-  id: string;
-  title: string;
-  description?: string;
-  degree_level?: string;
-}
-
-function createReferenceDataQuery<T>(tableName: string, select = '*') {
-  return async (): Promise<T[]> => {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select(select);
-    
-    if (error) {
-      console.error(`Error fetching ${tableName}:`, error);
-      throw error;
-    }
-    
-    return (data as T[]) || [];
-  };
-}
-
-export function useAllReferenceData() {
-  const schoolsQuery = useQuery({
-    queryKey: ['all-schools'],
-    queryFn: createReferenceDataQuery<School>('schools', 'id, name, location, website, logo_url'),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+export const useAllSchools = () => {
+  return useQuery({
+    queryKey: ['schools'],
+    queryFn: () => fetchAllFromTable('schools'),
   });
+};
 
-  const companiesQuery = useQuery({
-    queryKey: ['all-companies'],
-    queryFn: createReferenceDataQuery<Company>('companies', 'id, name, industry, website'),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+export const useAllMajors = () => {
+  return useQuery({
+    queryKey: ['majors'],
+    queryFn: () => fetchAllFromTable('majors'),
   });
+};
 
-  const majorsQuery = useQuery({
-    queryKey: ['all-majors'],
-    queryFn: createReferenceDataQuery<Major>('majors', 'id, title, description'),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+export const useAllCompanies = () => {
+  return useQuery({
+    queryKey: ['companies'],
+    queryFn: () => fetchAllFromTable('companies'),
   });
+};
+
+export const useAllCareers = () => {
+  return useQuery({
+    queryKey: ['careers'],
+    queryFn: () => fetchAllFromTable('careers'),
+  });
+};
+
+export const useAllReferenceData = () => {
+  const schools = useAllSchools();
+  const majors = useAllMajors();
+  const companies = useAllCompanies();
+  const careers = useAllCareers();
 
   return {
-    schools: schoolsQuery.data || [],
-    companies: companiesQuery.data || [],
-    majors: majorsQuery.data || [],
-    isLoading: schoolsQuery.isLoading || companiesQuery.isLoading || majorsQuery.isLoading,
-    error: schoolsQuery.error || companiesQuery.error || majorsQuery.error,
+    schools: schools.data || [],
+    majors: majors.data || [],
+    companies: companies.data || [],
+    careers: careers.data || [],
+    isLoading: schools.isLoading || majors.isLoading || companies.isLoading || careers.isLoading,
+    error: schools.error || majors.error || companies.error || careers.error
   };
-}
+};

@@ -1,22 +1,7 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, startOfDay, endOfDay } from 'date-fns';
-
-export interface Campaign {
-  id: string;
-  subject: string;
-  content_type: string;
-  status: string;
-  frequency: string;
-  recipient_type: string;
-  scheduled_for?: string;
-  created_at: string;
-  sent_count: number;
-  recipients_count: number;
-  admin_id: string;
-}
 
 export interface CampaignFilters {
   search: string;
@@ -27,100 +12,80 @@ export interface CampaignFilters {
     from?: Date;
     to?: Date;
   };
-  page: number;
+}
+
+export interface CampaignPagination {
+  currentPage: number;
   pageSize: number;
 }
 
-const DEFAULT_FILTERS: CampaignFilters = {
-  search: '',
-  status: 'all',
-  contentType: 'all',
-  frequency: 'all',
-  dateRange: {},
-  page: 1,
-  pageSize: 10,
-};
+export function useAdvancedCampaignFilters(adminId: string) {
+  const [filters, setFilters] = useState<CampaignFilters>({
+    search: '',
+    status: 'all',
+    contentType: 'all',
+    frequency: 'all',
+    dateRange: {}
+  });
 
-export function useAdvancedCampaignFilters() {
-  const [filters, setFilters] = useState<CampaignFilters>(DEFAULT_FILTERS);
+  const [pagination, setPagination] = useState<CampaignPagination>({
+    currentPage: 1,
+    pageSize: 10
+  });
 
-  const { data: campaigns = [], isLoading, error } = useQuery({
-    queryKey: ['email-campaigns', filters],
+  const { data: campaignsData, isLoading, refetch } = useQuery({
+    queryKey: ['campaigns', adminId, filters, pagination],
     queryFn: async () => {
       let query = supabase
         .from('email_campaigns')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('admin_id', adminId);
 
-      // Apply search filter
       if (filters.search) {
         query = query.ilike('subject', `%${filters.search}%`);
       }
 
-      // Apply status filter
       if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
       }
 
-      // Apply content type filter
       if (filters.contentType !== 'all') {
         query = query.eq('content_type', filters.contentType);
       }
 
-      // Apply frequency filter
       if (filters.frequency !== 'all') {
         query = query.eq('frequency', filters.frequency);
       }
 
-      // Apply date range filter
-      if (filters.dateRange.from) {
-        query = query.gte('created_at', startOfDay(filters.dateRange.from).toISOString());
-      }
-      if (filters.dateRange.to) {
-        query = query.lte('created_at', endOfDay(filters.dateRange.to).toISOString());
-      }
+      const { data, error, count } = await query
+        .range(
+          (pagination.currentPage - 1) * pagination.pageSize,
+          pagination.currentPage * pagination.pageSize - 1
+        )
+        .order('created_at', { ascending: false });
 
-      const { data, error } = await query;
-      
       if (error) throw error;
-      return data || [];
-    },
+
+      return {
+        campaigns: data || [],
+        totalCount: count || 0
+      };
+    }
   });
 
-  const filteredCampaigns = useMemo(() => {
-    const startIndex = (filters.page - 1) * filters.pageSize;
-    const endIndex = startIndex + filters.pageSize;
-    return campaigns.slice(startIndex, endIndex);
-  }, [campaigns, filters.page, filters.pageSize]);
-
-  const totalPages = Math.ceil(campaigns.length / filters.pageSize);
-
-  const updateFilters = (newFilters: Partial<CampaignFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters,
-      page: newFilters.page ?? 1, // Reset to page 1 when other filters change
-    }));
-  };
-
-  const resetFilters = () => {
-    setFilters(DEFAULT_FILTERS);
+  const refreshCampaigns = () => {
+    refetch();
   };
 
   return {
-    campaigns: filteredCampaigns,
-    totalCampaigns: campaigns.length,
+    campaigns: campaignsData?.campaigns || [],
+    totalCount: campaignsData?.totalCount || 0,
+    filteredCount: campaignsData?.totalCount || 0,
+    loading: isLoading,
     filters,
-    updateFilters,
-    resetFilters,
-    isLoading,
-    error,
-    pagination: {
-      currentPage: filters.page,
-      totalPages,
-      pageSize: filters.pageSize,
-      hasNextPage: filters.page < totalPages,
-      hasPreviousPage: filters.page > 1,
-    },
+    pagination,
+    setFilters,
+    setPagination,
+    refreshCampaigns
   };
 }
