@@ -49,7 +49,7 @@ export default function BlogUpload() {
         author_id: session.user.id,
         status: 'Pending' as const,
         categories: selectedCategories as any,
-        subcategories: selectedSubcategories,
+        subcategories: selectedSubcategories as any,
         cover_image_url: coverImageUrl,
         other_notes: otherNotes,
         is_recent: isRecent,
@@ -178,10 +178,10 @@ export default function BlogUpload() {
         <div>
           <Label>Cover Image</Label>
           <ImageUpload
-            onUpload={setCoverImageUrl}
+            onUploadSuccess={setCoverImageUrl}
             currentImageUrl={coverImageUrl}
             bucket="blog_images"
-            path="covers"
+            folderPath="covers"
           />
         </div>
 

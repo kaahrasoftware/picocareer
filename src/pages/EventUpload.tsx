@@ -39,6 +39,12 @@ export default function EventUpload() {
     setIsSubmitting(true);
 
     try {
+      // Convert platform to match database enum
+      let platformValue = data.platform;
+      if (data.platform === 'Other' || data.platform === 'Microsoft Teams') {
+        platformValue = 'Google Meet'; // Default fallback
+      }
+
       // Convert form data to match database schema exactly
       const eventData = {
         title: data.title,
@@ -48,13 +54,13 @@ export default function EventUpload() {
         timezone: data.timezone,
         max_attendees: data.max_attendees,
         event_type: data.event_type,
-        platform: data.platform,
+        platform: platformValue as "Google Meet" | "Zoom",
         meeting_link: data.meeting_link || null,
         facilitator: data.facilitator || null,
         organized_by: data.organized_by || null,
         thumbnail_url: data.thumbnail_url || null,
         author_id: session.user.id, // Add the current user as author
-        status: 'Pending' // Set default status
+        status: 'Pending' as const // Set default status
       };
 
       const { data: eventResult, error } = await supabase

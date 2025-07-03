@@ -93,7 +93,7 @@ export default function FeedUpload() {
   };
 
   // Check if user is logged in and is a mentor
-  const isMentor = profile?.role === 'mentor' || profile?.is_mentor;
+  const isMentor = profile?.user_type === 'mentor' || (profile as any)?.is_mentor;
 
   if (!session) {
     return (

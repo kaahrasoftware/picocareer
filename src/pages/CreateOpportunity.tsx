@@ -44,12 +44,12 @@ export default function CreateOpportunity() {
       
       const result = await createOpportunity(opportunityData);
       
-      if (result?.id) {
+      if (result) {
         toast({
           title: "Success",
           description: "Your opportunity has been created and is pending approval",
         });
-        navigate(`/opportunities/${result.id}`);
+        navigate(`/opportunities`);
       }
     } catch (error: any) {
       console.error("Error creating opportunity:", error);

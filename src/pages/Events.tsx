@@ -4,8 +4,11 @@ import { EventHeader } from '@/components/event/EventHeader';
 import { EventCard } from '@/components/event/EventCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
 
 export default function Events() {
+  const [filter, setFilter] = useState("");
+
   const { data: events = [], isLoading } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
@@ -19,9 +22,17 @@ export default function Events() {
     }
   });
 
+  const handleRegister = (eventId: string) => {
+    console.log('Register for event:', eventId);
+  };
+
+  const handleViewDetails = (eventId: string) => {
+    console.log('View details for event:', eventId);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <EventHeader />
+      <EventHeader filter={filter} onFilterChange={setFilter} />
       
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
@@ -32,7 +43,12 @@ export default function Events() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard 
+              key={event.id} 
+              event={event}
+              onRegister={handleRegister}
+              onViewDetails={handleViewDetails}
+            />
           ))}
         </div>
       )}

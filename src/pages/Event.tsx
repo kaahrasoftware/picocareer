@@ -20,6 +20,7 @@ export default function Event() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
   const [registeringEvent, setRegisteringEvent] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -120,7 +121,7 @@ export default function Event() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <EventHeader />
+      <EventHeader filter={filter} onFilterChange={setFilter} />
       
       <Card className="mb-6">
         <CardContent className="p-6">

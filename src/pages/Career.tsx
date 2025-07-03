@@ -61,7 +61,7 @@ export default function Career() {
   return (
     <div className="container mx-auto px-4 py-8">
       <CareerDetailsDialog
-        career={career}
+        careerId={career.id}
         open={isDialogOpen}
         onOpenChange={(open) => {
           setIsDialogOpen(open);

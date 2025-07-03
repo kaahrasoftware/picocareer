@@ -45,6 +45,12 @@ export default function CareerAssessment() {
     setCurrentPhase('history');
   };
 
+  const handleAnswerWrapper = (response: any) => {
+    // Convert the response to the expected format
+    const answer = typeof response === 'object' && response.answer ? response.answer : response;
+    handleAnswer(answer);
+  };
+
   if (!session) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -104,7 +110,7 @@ export default function CareerAssessment() {
       {currentPhase === 'questions' && currentQuestion && (
         <QuestionRenderer
           question={currentQuestion}
-          onAnswer={handleAnswer}
+          onAnswer={handleAnswerWrapper}
           onComplete={handleCompleteAssessment}
           isGenerating={isGenerating}
         />
