@@ -15,7 +15,7 @@ export function FeaturedContentHubSection() {
     <section className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 bg-[#00A6D4]/10 text-[#00A6D4] px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Users className="w-4 h-4" />
             Curated for Your Success
           </div>
@@ -29,21 +29,21 @@ export function FeaturedContentHubSection() {
           <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-12 h-14 bg-gray-100 rounded-2xl p-2">
             <TabsTrigger 
               value="schools" 
-              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium transition-all duration-200"
+              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#00A6D4] font-medium transition-all duration-200"
             >
               <Building className="h-5 w-5" />
               <span className="hidden sm:inline">Schools</span>
             </TabsTrigger>
             <TabsTrigger 
               value="careers" 
-              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium transition-all duration-200"
+              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#00A6D4] font-medium transition-all duration-200"
             >
               <Briefcase className="h-5 w-5" />
               <span className="hidden sm:inline">Careers</span>
             </TabsTrigger>
             <TabsTrigger 
               value="majors" 
-              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium transition-all duration-200"
+              className="flex items-center gap-3 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#00A6D4] font-medium transition-all duration-200"
             >
               <GraduationCap className="h-5 w-5" />
               <span className="hidden sm:inline">Majors</span>
@@ -53,7 +53,7 @@ export function FeaturedContentHubSection() {
           <TabsContent value="schools" className="space-y-8">
             <FeaturedSchoolsSection />
             <div className="text-center">
-              <Button asChild size="lg" variant="outline" className="group">
+              <Button asChild size="lg" variant="outline" className="group border-[#00A6D4]/20 text-[#00A6D4] hover:bg-[#00A6D4]/5 hover:border-[#00A6D4]/30">
                 <Link to="/school" className="flex items-center gap-2">
                   View All Schools
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -65,7 +65,7 @@ export function FeaturedContentHubSection() {
           <TabsContent value="careers" className="space-y-8">
             <FeaturedCareersSection />
             <div className="text-center">
-              <Button asChild size="lg" variant="outline" className="group">
+              <Button asChild size="lg" variant="outline" className="group border-[#00A6D4]/20 text-[#00A6D4] hover:bg-[#00A6D4]/5 hover:border-[#00A6D4]/30">
                 <Link to="/career" className="flex items-center gap-2">
                   View All Careers
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -77,7 +77,7 @@ export function FeaturedContentHubSection() {
           <TabsContent value="majors" className="space-y-8">
             <FeaturedMajorsSection />
             <div className="text-center">
-              <Button asChild size="lg" variant="outline" className="group">
+              <Button asChild size="lg" variant="outline" className="group border-[#00A6D4]/20 text-[#00A6D4] hover:bg-[#00A6D4]/5 hover:border-[#00A6D4]/30">
                 <Link to="/program" className="flex items-center gap-2">
                   View All Programs
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
