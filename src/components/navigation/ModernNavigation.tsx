@@ -1,46 +1,198 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { GraduationCap, Briefcase, School, Users, Calendar, BookOpen, MessageSquare, Trophy, Search, User, Brain } from 'lucide-react';
-
-const navItems = [
-  { name: 'Search', path: '/search', icon: Search },
-  { name: 'Schools', path: '/schools', icon: School },
-  { name: 'Majors', path: '/majors', icon: GraduationCap },
-  { name: 'Careers', path: '/careers', icon: Briefcase },
-  { name: 'Assessment', path: '/career-assessment', icon: Brain },
-  { name: 'Mentors', path: '/mentors', icon: Users },
-  { name: 'Opportunities', path: '/opportunities', icon: Trophy },
-  { name: 'Scholarships', path: '/scholarships', icon: BookOpen },
-  { name: 'Events', path: '/events', icon: Calendar },
-  { name: 'Hubs', path: '/hubs', icon: MessageSquare },
-  { name: 'Profile', path: '/profile', icon: User },
-];
+import { cn } from '@/lib/utils';
+import { ModernMegaMenu } from './ModernMegaMenu';
 
 export function ModernNavigation() {
-  const location = useLocation();
+  let location;
+  try {
+    location = useLocation();
+  } catch (error) {
+    location = { pathname: "/" };
+  }
+  
+  const currentPath = location?.pathname || "/";
+
+  const isActive = (path: string) => {
+    if (path === "/" && currentPath !== "/") return false;
+    return currentPath.startsWith(path);
+  };
+
+  // Career Tools mega menu
+  const careerToolsItems = [
+    {
+      title: "Academic & Career Paths",
+      items: [
+        { 
+          title: "Career Paths", 
+          href: "/careers",
+          description: "Explore various career opportunities and paths"
+        },
+        { 
+          title: "Academic Majors", 
+          href: "/program",
+          description: "Discover fields of study and degree programs"
+        }
+      ]
+    },
+    {
+      title: "Discovery Tools",
+      items: [
+        { 
+          title: "Schools Directory", 
+          href: "/school",
+          description: "Find colleges and universities"
+        },
+        { 
+          title: "Career Assessment", 
+          href: "/career-assessment",
+          description: "Take our assessment to find your ideal career"
+        }
+      ]
+    }
+  ];
+
+  // Pico Resources mega menu
+  const picoResourcesItems = [
+    {
+      title: "Learning Resources",
+      items: [
+        { 
+          title: "Scholarships", 
+          href: "/scholarships",
+          description: "Financial aid opportunities for students"
+        },
+        { 
+          title: "Opportunities", 
+          href: "/opportunities",
+          description: "Internships and job openings"
+        }
+      ]
+    },
+    {
+      title: "Community & Content",
+      items: [
+        { 
+          title: "Resource Bank", 
+          href: "/resource-bank",
+          description: "Educational resources from events"
+        },
+        { 
+          title: "Events", 
+          href: "/events",
+          description: "Career fairs and workshops"
+        }
+      ]
+    }
+  ];
+
+  // Company mega menu
+  const companyItems = [
+    {
+      title: "About PicoCareer",
+      items: [
+        { 
+          title: "About Us", 
+          href: "/about",
+          description: "Our mission and values"
+        },
+        { 
+          title: "Work with Us", 
+          href: "/careers",
+          description: "Join our team and make a difference"
+        }
+      ]
+    }
+  ];
 
   return (
-    <nav className="flex items-center space-x-6">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const isActive = location.pathname === item.path;
-        
-        return (
-          <Link
-            key={item.name}
-            to={item.path}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              isActive 
-                ? 'text-primary bg-primary/10 shadow-sm' 
-                : 'text-gray-600 hover:text-primary hover:bg-gray-50'
-            }`}
-          >
-            <Icon className="h-4 w-4" />
-            <span>{item.name}</span>
-          </Link>
-        );
-      })}
+    <nav className="flex items-center space-x-8">
+      {/* Home Link */}
+      <Link
+        to="/"
+        className={cn(
+          "relative px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm",
+          "hover:bg-muted/80 hover:text-primary",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50",
+          "before:absolute before:inset-x-4 before:bottom-0 before:h-0.5 before:bg-primary before:rounded-full",
+          "before:scale-x-0 before:transition-transform before:duration-200",
+          isActive("/")
+            ? "text-primary bg-primary/10 before:scale-x-100" 
+            : "text-muted-foreground hover:before:scale-x-100"
+        )}
+      >
+        Home
+      </Link>
+
+      {/* Career Tools Mega Menu */}
+      <ModernMegaMenu 
+        sections={careerToolsItems} 
+        trigger="Career Tools" 
+      />
+
+      {/* Mentorship Link */}
+      <Link
+        to="/mentor"
+        className={cn(
+          "relative px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm",
+          "hover:bg-muted/80 hover:text-primary",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50",
+          "before:absolute before:inset-x-4 before:bottom-0 before:h-0.5 before:bg-primary before:rounded-full",
+          "before:scale-x-0 before:transition-transform before:duration-200",
+          isActive("/mentor")
+            ? "text-primary bg-primary/10 before:scale-x-100" 
+            : "text-muted-foreground hover:before:scale-x-100"
+        )}
+      >
+        Mentorship
+      </Link>
+
+      {/* Partnerships Link */}
+      <Link
+        to="/partnerships"
+        className={cn(
+          "relative px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm",
+          "hover:bg-muted/80 hover:text-primary",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50",
+          "before:absolute before:inset-x-4 before:bottom-0 before:h-0.5 before:bg-primary before:rounded-full",
+          "before:scale-x-0 before:transition-transform before:duration-200",
+          isActive("/partnerships")
+            ? "text-primary bg-primary/10 before:scale-x-100" 
+            : "text-muted-foreground hover:before:scale-x-100"
+        )}
+      >
+        Partnerships
+      </Link>
+
+      {/* Hubs Link */}
+      <Link
+        to="/hubs"
+        className={cn(
+          "relative px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm",
+          "hover:bg-muted/80 hover:text-primary",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50",
+          "before:absolute before:inset-x-4 before:bottom-0 before:h-0.5 before:bg-primary before:rounded-full",
+          "before:scale-x-0 before:transition-transform before:duration-200",
+          isActive("/hubs")
+            ? "text-primary bg-primary/10 before:scale-x-100" 
+            : "text-muted-foreground hover:before:scale-x-100"
+        )}
+      >
+        Hubs
+      </Link>
+
+      {/* Pico Resources Mega Menu */}
+      <ModernMegaMenu 
+        sections={picoResourcesItems} 
+        trigger="Pico Resources" 
+      />
+
+      {/* Company Mega Menu */}
+      <ModernMegaMenu 
+        sections={companyItems} 
+        trigger="Company" 
+      />
     </nav>
   );
 }

@@ -43,32 +43,42 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
     );
   };
 
-  // Career Guide Tools mega menu
-  const careerGuideItems = [
+  // Career Tools mega menu
+  const careerToolsItems = [
     {
       title: "Academic & Career Paths",
       items: [
         { 
-          title: "Academic Programs", 
-          href: "/program",
-          description: "Explore fields of study and degree programs"
-        },
-        { 
           title: "Career Paths", 
-          href: "/career",
-          description: "Discover various career opportunities"
+          href: "/careers",
+          description: "Explore various career opportunities"
         },
         { 
-          title: "Schools", 
+          title: "Academic Majors", 
+          href: "/program",
+          description: "Discover fields of study and degree programs"
+        }
+      ]
+    },
+    {
+      title: "Discovery Tools",
+      items: [
+        { 
+          title: "Schools Directory", 
           href: "/school",
           description: "Find colleges and universities"
+        },
+        { 
+          title: "Career Assessment", 
+          href: "/career-assessment",
+          description: "Take our assessment to find your ideal career"
         }
       ]
     }
   ];
 
-  // Resources mega menu
-  const resourceItems = [
+  // Pico Resources mega menu
+  const picoResourcesItems = [
     {
       title: "Learning Resources",
       items: [
@@ -88,14 +98,14 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       title: "Community & Content",
       items: [
         { 
-          title: "Events", 
-          href: "/event",
-          description: "Career fairs and workshops"
+          title: "Resource Bank", 
+          href: "/resource-bank",
+          description: "Educational resources from events"
         },
         { 
-          title: "Blogs and Guides", 
-          href: "/blog",
-          description: "Career advice and insights"
+          title: "Events", 
+          href: "/events",
+          description: "Career fairs and workshops"
         }
       ]
     }
@@ -127,8 +137,8 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       type: "link" as const 
     },
     { 
-      label: "Career Guide Tools", 
-      sections: careerGuideItems, 
+      label: "Career Tools", 
+      sections: careerToolsItems, 
       type: "mega" as const 
     },
     { 
@@ -147,8 +157,8 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       type: "link" as const 
     },
     { 
-      label: "Resources", 
-      sections: resourceItems, 
+      label: "Pico Resources", 
+      sections: picoResourcesItems, 
       type: "mega" as const 
     },
     { 

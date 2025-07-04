@@ -15,6 +15,7 @@ import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
 import Mentor from '@/pages/Mentor';
 import CareerAssessment from '@/pages/CareerAssessment';
+import ResourceBank from '@/pages/ResourceBank';
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +35,7 @@ export const router = createBrowserRouter([
       { path: "events", element: <Events /> },
       { path: "dashboard", element: <Dashboard /> },
       { path: "career-assessment", element: <CareerAssessment /> },
+      { path: "resource-bank", element: <ResourceBank /> },
     ],
   },
   {
