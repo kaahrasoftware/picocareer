@@ -6,6 +6,7 @@ import { Users, Target, Trophy, ArrowRight, Sparkles, Zap } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 import { cn } from "@/lib/utils";
+
 export const ModernHeroSection = () => {
   const {
     session
@@ -15,6 +16,7 @@ export const ModernHeroSection = () => {
   const isLoggedIn = !!session?.user;
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+  
   const handleBecomeMentorClick = () => {
     if (isLoggedIn) {
       navigate('/mentor-registration');
@@ -22,6 +24,7 @@ export const ModernHeroSection = () => {
       setIsAuthDialogOpen(true);
     }
   };
+  
   const handleBecomeMenteeClick = () => {
     if (isLoggedIn) {
       navigate('/mentor');
@@ -34,6 +37,7 @@ export const ModernHeroSection = () => {
       }
     }
   };
+  
   return <div className="relative isolate overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 -z-10">
@@ -47,7 +51,7 @@ export const ModernHeroSection = () => {
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
             <Zap className="w-4 h-4" />
-            Built for Ambitious Students
+            Built for Students by Students
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent leading-tight">
