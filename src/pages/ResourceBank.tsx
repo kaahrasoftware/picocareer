@@ -62,8 +62,6 @@ export default function ResourceBank() {
 
       <EventResourcesSection 
         resources={allResources || []}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
       />
     </div>
   );
