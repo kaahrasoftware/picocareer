@@ -7,6 +7,7 @@ import { RouterProvider } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { router } from "./router/routes";
 import { GuideProvider } from "@/context/GuideContext";
+import { AuthProvider } from "@/context/AuthContext";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -15,11 +16,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <TooltipProvider>
-        <GuideProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-          <Sonner />
-        </GuideProvider>
+        <AuthProvider>
+          <GuideProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+            <Sonner />
+          </GuideProvider>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

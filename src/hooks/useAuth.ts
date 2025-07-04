@@ -1,90 +1,114 @@
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { AuthError } from "@supabase/supabase-js";
-import { useAuth as useAuthContext } from "@/context/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { AuthError } from '@supabase/supabase-js';
 
 export function useAuth() {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { session, user, signOut } = useAuthContext();
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const signIn = async (email: string, password: string) => {
-    if (isLoading) return; // Prevent multiple concurrent sign-in attempts
-    
     setIsLoading(true);
-    console.log('Attempting sign in for:', email);
-
     try {
-      // Use direct auth operation for better reliability
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
+        email,
         password,
       });
 
-      if (error) throw error;
-
-      // First ensure the session is properly stored
-      if (data.session) {
-        await supabase.auth.setSession(data.session);
-        
-        // Then invalidate queries to refresh data
-        queryClient.invalidateQueries({ queryKey: ['profile', data.session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['notifications', data.session.user.id] });
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-        
-        console.log('Sign in successful, refreshing page');
-        
-        // Show success toast
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
-        });
-        
-        // Force a full page refresh to ensure clean state
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 100); // Small delay to allow toast to show
+      if (error) {
+        throw error;
       }
 
-      return data;
-    } catch (error) {
-      console.error('Sign in error details:', error);
+      console.log('Sign in successful:', data.user?.id);
+      
+      // Show success message
+      toast({
+        title: "Welcome back!",
+        description: "You have been signed in successfully.",
+      });
+
+      // Force a page refresh to ensure proper state initialization
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      
+      let errorMessage = "An error occurred during sign in.";
       
       if (error instanceof AuthError) {
-        // Handle specific auth errors
         if (error.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Login failed",
-            description: "The email or password you entered is incorrect.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes("rate limit")) {
-          toast({
-            title: "Too many attempts",
-            description: "Please wait a moment before trying again.",
-            variant: "destructive",
-          });
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Please check your email and click the confirmation link before signing in.";
+        } else if (error.message.includes("Too many requests")) {
+          errorMessage = "Too many login attempts. Please wait a moment before trying again.";
         } else {
-          toast({
-            title: "Login error",
-            description: error.message,
-            variant: "destructive",
-          });
+          errorMessage = error.message;
         }
-        throw error;
-      } else {
-        console.error('Sign in error:', error);
-        toast({
-          title: "Login error",
-          description: "An unexpected error occurred. Please try again.",
-          variant: "destructive",
-        });
-        throw new Error("An unexpected error occurred.");
       }
+
+      toast({
+        title: "Sign in failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      return { data: null, error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: metadata,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Sign up successful:', data.user?.id);
+      
+      toast({
+        title: "Account created!",
+        description: "Please check your email to confirm your account.",
+      });
+
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      
+      let errorMessage = "An error occurred during sign up.";
+      
+      if (error instanceof AuthError) {
+        if (error.message.includes("User already registered")) {
+          errorMessage = "An account with this email already exists. Please sign in instead.";
+        } else if (error.message.includes("Password should be at least")) {
+          errorMessage = "Password should be at least 6 characters long.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      toast({
+        title: "Sign up failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      return { data: null, error };
     } finally {
       setIsLoading(false);
     }
@@ -92,10 +116,7 @@ export function useAuth() {
 
   return {
     signIn,
+    signUp,
     isLoading,
-    signOut,
-    user,
-    session,
-    isAuthenticated: !!session?.user,
   };
 }

@@ -7,7 +7,6 @@ import { ResetPasswordButton } from "./ResetPasswordButton";
 import { SocialSignIn } from "./SocialSignIn";
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AuthError } from "@supabase/supabase-js";
 
 export function SignInForm() {
   const { signIn, isLoading } = useAuth();
@@ -31,21 +30,16 @@ export function SignInForm() {
     e.preventDefault();
     
     if (isLoading) {
-      // Prevent multiple submission attempts
       console.log('Sign in already in progress, ignoring additional submit');
       return;
     }
     
-    try {
-      console.log('Submitting sign in form');
-      await signIn(formData.email, formData.password);
-      // The useAuth hook now handles navigation with page refresh
-    } catch (err) {
-      // Error handling is already done in the useAuth hook
-      console.error("Authentication error caught in SignInForm:", err);
-      
-      // Set specific UI errors if needed beyond what's in the hook
-      if (err instanceof AuthError && err.message.includes("rate limit")) {
+    console.log('Submitting sign in form');
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (error) {
+      console.error("Authentication error:", error);
+      if (error.message.includes("rate limit")) {
         setError("You've attempted to sign in too many times. Please wait a moment before trying again.");
       }
     }

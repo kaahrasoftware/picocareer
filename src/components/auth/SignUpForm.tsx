@@ -2,19 +2,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gift } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 export function SignUpForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, isLoading } = useAuth();
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -57,90 +57,20 @@ export function SignUpForm() {
       return;
     }
 
-    setIsLoading(true);
+    const metadata = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+    };
 
-    try {
-      // First, check if email already exists
-      const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formData.email.toLowerCase())
-        .maybeSingle();
+    // Add referral code to metadata if present
+    if (referralCode) {
+      metadata.referral_code = referralCode;
+    }
 
-      if (profileError) {
-        setIsLoading(false);
-        console.error('Error checking existing profile:', profileError);
-        toast({
-          title: "Error",
-          description: "An error occurred while checking your email. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (existingProfile) {
-        setIsLoading(false);
-        toast({
-          title: "Account already exists",
-          description: "Please sign in instead.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Starting signup process with referral code:', referralCode);
-
-      // Proceed with signup, including referral code in metadata
-      const signUpData: any = {
-        email: formData.email.toLowerCase(),
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-          },
-        },
-      };
-
-      // Add referral code to metadata if present
-      if (referralCode) {
-        signUpData.options.data.referral_code = referralCode;
-      }
-
-      const { data: authData, error: signUpError } = await supabase.auth.signUp(signUpData);
-
-      if (signUpError) {
-        setIsLoading(false);
-        console.error('Signup error:', signUpError);
-        if (signUpError.message.includes("Password")) {
-          toast({
-            title: "Invalid password",
-            description: "Password should be at least 6 characters long.",
-            variant: "destructive",
-          });
-          return;
-        }
-        throw signUpError;
-      }
-
-      console.log('Signup successful:', authData.user?.id);
-
-      toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link. Please check your spam folder if you don't see it.",
-      });
-      
+    const { data, error } = await signUp(formData.email, formData.password, metadata);
+    
+    if (!error && data) {
       navigate("/");
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
