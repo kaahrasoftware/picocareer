@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -7,15 +6,15 @@ import { Users, Target, Trophy, ArrowRight, Sparkles, Zap } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 import { cn } from "@/lib/utils";
-
 export const ModernHeroSection = () => {
-  const { session } = useAuthSession();
+  const {
+    session
+  } = useAuthSession();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isLoggedIn = !!session?.user;
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-
   const handleBecomeMentorClick = () => {
     if (isLoggedIn) {
       navigate('/mentor-registration');
@@ -23,7 +22,6 @@ export const ModernHeroSection = () => {
       setIsAuthDialogOpen(true);
     }
   };
-
   const handleBecomeMenteeClick = () => {
     if (isLoggedIn) {
       navigate('/mentor');
@@ -36,9 +34,7 @@ export const ModernHeroSection = () => {
       }
     }
   };
-
-  return (
-    <div className="relative isolate overflow-hidden">
+  return <div className="relative isolate overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
@@ -60,10 +56,7 @@ export const ModernHeroSection = () => {
             <span className="text-[#00A6D4]">Career Platform</span>
           </h1>
           
-          <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
-            We're building the platform ambitious students actually need. Real opportunities, 
-            expert mentorship, and a community that gets it. No fluff, just results.
-          </p>
+          <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">The all-in-one platform for mentorship, academic guidance, and professional development.</p>
           
           {/* Quick Stats */}
           <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm">
@@ -85,31 +78,17 @@ export const ModernHeroSection = () => {
 
       {/* Enhanced Search Section */}
       <section className="mb-12">
-        <div 
-          className={cn(
-            "max-w-4xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-white/20 transition-all duration-300",
-            isSearchDialogOpen && "scale-105 shadow-2xl"
-          )}
-        >
+        <div className={cn("max-w-4xl mx-auto bg-white/80 backdrop-blur-lg rounded-2xl p-8 shadow-xl border border-white/20 transition-all duration-300", isSearchDialogOpen && "scale-105 shadow-2xl")}>
           <div className="flex items-center gap-3 mb-4">
             <Target className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-gray-900">Find Your Perfect Match</h3>
           </div>
-          <SearchBar 
-            placeholder="Search mentors, universities, career paths, scholarships, programs..." 
-            isSearchDialogOpen={isSearchDialogOpen}
-            onSearchDialogChange={setIsSearchDialogOpen}
-          />
+          <SearchBar placeholder="Search mentors, universities, career paths, scholarships, programs..." isSearchDialogOpen={isSearchDialogOpen} onSearchDialogChange={setIsSearchDialogOpen} />
         </div>
       </section>
       
       {/* Enhanced CTA Section */}
-      <section className={cn(
-        "mb-16 transition-all duration-300 ease-in-out",
-        isSearchDialogOpen 
-          ? "opacity-0 pointer-events-none translate-y-4" 
-          : "opacity-100 pointer-events-auto translate-y-0"
-      )}>
+      <section className={cn("mb-16 transition-all duration-300 ease-in-out", isSearchDialogOpen ? "opacity-0 pointer-events-none translate-y-4" : "opacity-100 pointer-events-auto translate-y-0")}>
         <div className="max-w-6xl mx-auto">
           <div className="bg-gradient-to-r from-white via-white to-blue-50/50 rounded-3xl border border-gray-100/50 shadow-lg overflow-hidden">
             <div className="p-8 md:p-12">
@@ -168,36 +147,19 @@ export const ModernHeroSection = () => {
               {/* Enhanced CTA */}
               <div className="text-center">
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  {isLoggedIn ? (
-                    <Button
-                      asChild
-                      size="lg"
-                      className="bg-gradient-to-r from-[#00A6D4] to-[#0095c1] hover:from-[#0095c1] hover:to-[#008bb5] text-white font-semibold px-8 py-6 h-auto text-lg shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
-                    >
+                  {isLoggedIn ? <Button asChild size="lg" className="bg-gradient-to-r from-[#00A6D4] to-[#0095c1] hover:from-[#0095c1] hover:to-[#008bb5] text-white font-semibold px-8 py-6 h-auto text-lg shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
                       <Link to="/mentor" className="flex items-center gap-2">
                         Find Your Mentor
                         <ArrowRight className="w-5 h-5" />
                       </Link>
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleBecomeMenteeClick}
-                      size="lg"
-                      className="bg-gradient-to-r from-[#00A6D4] to-[#0095c1] hover:from-[#0095c1] hover:to-[#008bb5] text-white font-semibold px-8 py-6 h-auto text-lg shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
-                    >
+                    </Button> : <Button onClick={handleBecomeMenteeClick} size="lg" className="bg-gradient-to-r from-[#00A6D4] to-[#0095c1] hover:from-[#0095c1] hover:to-[#008bb5] text-white font-semibold px-8 py-6 h-auto text-lg shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
                       <div className="flex items-center gap-2">
                         Start Building Your Future
                         <ArrowRight className="w-5 h-5" />
                       </div>
-                    </Button>
-                  )}
+                    </Button>}
                   
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleBecomeMentorClick}
-                    className="border-2 border-primary/20 hover:border-primary/40 text-primary font-semibold px-8 py-6 h-auto text-lg hover:bg-primary/5 transition-all duration-300 rounded-xl"
-                  >
+                  <Button variant="outline" size="lg" onClick={handleBecomeMentorClick} className="border-2 border-primary/20 hover:border-primary/40 text-primary font-semibold px-8 py-6 h-auto text-lg hover:bg-primary/5 transition-all duration-300 rounded-xl">
                     Share Your Experience
                   </Button>
                 </div>
@@ -211,13 +173,6 @@ export const ModernHeroSection = () => {
         </div>
       </section>
 
-      <AuthPromptDialog
-        isOpen={isAuthDialogOpen}
-        onClose={() => setIsAuthDialogOpen(false)}
-        title="Join Our Community"
-        description="Create an account or sign in to connect with mentors and access real opportunities."
-        redirectUrl="/mentor"
-      />
-    </div>
-  );
+      <AuthPromptDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} title="Join Our Community" description="Create an account or sign in to connect with mentors and access real opportunities." redirectUrl="/mentor" />
+    </div>;
 };
