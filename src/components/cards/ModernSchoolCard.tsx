@@ -66,12 +66,6 @@ export function ModernSchoolCard({ school }: ModernSchoolCardProps) {
               {school.type || 'University'}
             </Badge>
           </div>
-
-          {school.description && (
-            <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-              {school.description}
-            </p>
-          )}
           
           <div className="grid grid-cols-2 gap-3">
             {school.acceptance_rate && (

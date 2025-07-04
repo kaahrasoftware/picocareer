@@ -1,20 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface School {
-  id: string;
-  name: string;
-  country: string;
-  status: string;
-  featured: boolean;
-  featured_priority?: number;
-  website?: string;
-  description?: string;
-  image_url?: string;
-  acceptance_rate?: number;
-  admissions_page_url?: string;
-}
+import type { School } from "@/types/database/schools";
 
 export function useFeaturedSchools(limit: number = 6) {
   return useQuery({
