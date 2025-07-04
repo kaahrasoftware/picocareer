@@ -1,9 +1,9 @@
+
 import { useState } from "react";
-import { MajorCard } from "@/components/MajorCard";
+import { ModernMajorCard } from "@/components/cards/ModernMajorCard";
 import { MajorListDialog } from "@/components/MajorListDialog";
 import { useFeaturedMajors } from "@/hooks/useFeaturedMajors";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -17,7 +17,6 @@ export const FeaturedMajorsSection = () => {
   const { toast } = useToast();
   const { data: majors = [], isLoading, error } = useFeaturedMajors();
 
-  // Show error toast only when component mounts or when error changes
   if (error) {
     toast({
       title: "Error",
@@ -28,52 +27,50 @@ export const FeaturedMajorsSection = () => {
 
   if (isLoading) {
     return (
-      <section className="mb-16">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
+      <div className="text-center py-12">
+        <div className="flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <div className="flex items-center justify-center p-8">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </section>
+        <p className="text-gray-500 mt-4">Loading featured programs...</p>
+      </div>
+    );
+  }
+
+  if (majors.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500">No featured programs available at the moment.</p>
+      </div>
     );
   }
 
   return (
-    <section className="mb-16">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Featured Fields of Study</h2>
-        <Link 
-          to="/program"
-          className="text-primary hover:text-primary/80 transition-colors"
-        >
-          View all
-        </Link>
-      </div>
-      <div className="relative -mx-8">
+    <>
+      <div className="relative">
         <Carousel
           opts={{
             align: "start",
             loop: true,
           }}
-          className="w-full px-8"
+          className="w-full"
         >
           <CarouselContent className="-ml-4">
             {majors.map((major) => (
-              <CarouselItem key={major.id} className="pl-4 basis-full md:basis-1/3">
-                <MajorCard {...major} />
+              <CarouselItem key={major.id} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                <ModernMajorCard {...major} />
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 h-8 w-8" />
-          <CarouselNext className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8" />
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
         </Carousel>
       </div>
+      
       <MajorListDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         majors={majors}
       />
-    </section>
+    </>
   );
 };
