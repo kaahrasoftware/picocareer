@@ -3,6 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ModernMegaMenu } from './ModernMegaMenu';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 export function ModernNavigation() {
   let location;
@@ -13,6 +14,7 @@ export function ModernNavigation() {
   }
   
   const currentPath = location?.pathname || "/";
+  const { isAdmin, isLoading } = useIsAdmin();
 
   const isActive = (path: string) => {
     if (path === "/" && currentPath !== "/") return false;
@@ -26,7 +28,7 @@ export function ModernNavigation() {
       items: [
         { 
           title: "Career Paths", 
-          href: "/careers",
+          href: "/career",
           description: "Explore various career opportunities and paths"
         },
         { 
@@ -101,6 +103,60 @@ export function ModernNavigation() {
           title: "Work with Us", 
           href: "/careers",
           description: "Join our team and make a difference"
+        }
+      ]
+    }
+  ];
+
+  // Admin mega menu - only shown to admin users
+  const adminItems = [
+    {
+      title: "Content Management",
+      items: [
+        { 
+          title: "Dashboard", 
+          href: "/dashboard",
+          description: "Admin dashboard and analytics"
+        },
+        { 
+          title: "Career Upload", 
+          href: "/career-upload",
+          description: "Add new career information"
+        },
+        { 
+          title: "Majors Upload", 
+          href: "/major-upload",
+          description: "Add new academic majors"
+        },
+        { 
+          title: "Event Upload", 
+          href: "/event-upload",
+          description: "Create and manage events"
+        },
+        { 
+          title: "School Upload", 
+          href: "/school-upload",
+          description: "Add new schools and universities"
+        },
+        { 
+          title: "Company Upload", 
+          href: "/company-upload",
+          description: "Add new company information"
+        }
+      ]
+    },
+    {
+      title: "Operations & Tools",
+      items: [
+        { 
+          title: "Scholarship Add", 
+          href: "/scholarship-add",
+          description: "Add new scholarship opportunities"
+        },
+        { 
+          title: "Opportunities Create", 
+          href: "/create-opportunity",
+          description: "Create job and internship listings"
         }
       ]
     }
@@ -187,6 +243,14 @@ export function ModernNavigation() {
         sections={picoResourcesItems} 
         trigger="Pico Resources" 
       />
+
+      {/* Admin Mega Menu - Only show to admin users */}
+      {!isLoading && isAdmin && (
+        <ModernMegaMenu 
+          sections={adminItems} 
+          trigger="Admin" 
+        />
+      )}
 
       {/* Company Mega Menu */}
       <ModernMegaMenu 

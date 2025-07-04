@@ -16,6 +16,13 @@ import Dashboard from '@/pages/Dashboard';
 import Mentor from '@/pages/Mentor';
 import CareerAssessment from '@/pages/CareerAssessment';
 import ResourceBank from '@/pages/ResourceBank';
+import CareerUpload from '@/pages/CareerUpload';
+import MajorUpload from '@/pages/MajorUpload';
+import EventUpload from '@/pages/EventUpload';
+import SchoolUploadPage from '@/pages/SchoolUploadPage';
+import CompanyUploadPage from '@/pages/CompanyUploadPage';
+import ScholarshipAdd from '@/pages/ScholarshipAdd';
+import CreateOpportunity from '@/pages/CreateOpportunity';
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +33,7 @@ export const router = createBrowserRouter([
       { path: "school", element: <School /> },
       { path: "schools/:id", element: <SchoolDetail /> },
       { path: "program", element: <Program /> },
+      { path: "career", element: <Careers /> },
       { path: "careers", element: <Careers /> },
       { path: "opportunities", element: <Opportunities /> },
       { path: "opportunities/:id", element: <OpportunityDetails /> },
@@ -36,6 +44,14 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <Dashboard /> },
       { path: "career-assessment", element: <CareerAssessment /> },
       { path: "resource-bank", element: <ResourceBank /> },
+      // Admin routes
+      { path: "career-upload", element: <CareerUpload /> },
+      { path: "major-upload", element: <MajorUpload /> },
+      { path: "event-upload", element: <EventUpload /> },
+      { path: "school-upload", element: <SchoolUploadPage /> },
+      { path: "company-upload", element: <CompanyUploadPage /> },
+      { path: "scholarship-add", element: <ScholarshipAdd /> },
+      { path: "create-opportunity", element: <CreateOpportunity /> },
     ],
   },
   {

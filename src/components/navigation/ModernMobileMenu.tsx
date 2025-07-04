@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 interface MobileMenuSection {
   title: string;
@@ -20,6 +21,7 @@ interface ModernMobileMenuProps {
 
 export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const { isAdmin, isLoading } = useIsAdmin();
 
   let location;
   try {
@@ -50,7 +52,7 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       items: [
         { 
           title: "Career Paths", 
-          href: "/careers",
+          href: "/career",
           description: "Explore various career opportunities"
         },
         { 
@@ -130,6 +132,60 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
     }
   ];
 
+  // Admin mega menu - only shown to admin users
+  const adminItems = [
+    {
+      title: "Content Management",
+      items: [
+        { 
+          title: "Dashboard", 
+          href: "/dashboard",
+          description: "Admin dashboard and analytics"
+        },
+        { 
+          title: "Career Upload", 
+          href: "/career-upload",
+          description: "Add new career information"
+        },
+        { 
+          title: "Majors Upload", 
+          href: "/major-upload",
+          description: "Add new academic majors"
+        },
+        { 
+          title: "Event Upload", 
+          href: "/event-upload",
+          description: "Create and manage events"
+        },
+        { 
+          title: "School Upload", 
+          href: "/school-upload",
+          description: "Add new schools and universities"
+        },
+        { 
+          title: "Company Upload", 
+          href: "/company-upload",
+          description: "Add new company information"
+        }
+      ]
+    },
+    {
+      title: "Operations & Tools",
+      items: [
+        { 
+          title: "Scholarship Add", 
+          href: "/scholarship-add",
+          description: "Add new scholarship opportunities"
+        },
+        { 
+          title: "Opportunities Create", 
+          href: "/create-opportunity",
+          description: "Create job and internship listings"
+        }
+      ]
+    }
+  ];
+
   const navItems = [
     { 
       label: "Home", 
@@ -161,6 +217,12 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       sections: picoResourcesItems, 
       type: "mega" as const 
     },
+    // Admin menu - only add if user is admin
+    ...(!isLoading && isAdmin ? [{ 
+      label: "Admin", 
+      sections: adminItems, 
+      type: "mega" as const 
+    }] : []),
     { 
       label: "Company", 
       sections: companyItems, 
