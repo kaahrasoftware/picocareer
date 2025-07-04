@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Users, Heart, Trophy, ArrowRight, Sparkles, Target } from "lucide-react";
+import { Users, Target, Trophy, ArrowRight, Sparkles, Zap } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 import { cn } from "@/lib/utils";
@@ -50,26 +50,26 @@ export const ModernHeroSection = () => {
       <section className="text-center mb-16 pt-8">
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
-            <Sparkles className="w-4 h-4" />
-            Empowering 10,000+ Students Worldwide
+            <Zap className="w-4 h-4" />
+            Built for Ambitious Students
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent leading-tight">
-            Your Journey to Success
+            The Student-First
             <br />
-            <span className="text-[#00A6D4]">Starts Here</span>
+            <span className="text-[#00A6D4]">Career Platform</span>
           </h1>
           
           <p className="text-muted-foreground text-xl max-w-3xl mx-auto leading-relaxed">
-            Navigate your educational and career journey with confidence through expert mentorship, 
-            comprehensive resources, and personalized guidance tailored just for you.
+            We're building the platform ambitious students actually need. Real opportunities, 
+            expert mentorship, and a community that gets it. No fluff, just results.
           </p>
           
           {/* Quick Stats */}
           <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-muted-foreground">500+ Expert Mentors</span>
+              <span className="text-muted-foreground">500+ Real Mentors</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
@@ -116,10 +116,10 @@ export const ModernHeroSection = () => {
               {/* Header */}
               <div className="text-center mb-10">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                  Connect with Expert Mentors
+                  Connect with Real Mentors
                 </h2>
                 <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
-                  Get personalized guidance from professionals who've achieved what you aspire to accomplish
+                  Get genuine guidance from professionals who've actually walked the path you want to take
                 </p>
               </div>
 
@@ -131,11 +131,11 @@ export const ModernHeroSection = () => {
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Expert Guidance</h4>
-                      <p className="text-sm text-gray-600">1-on-1 mentorship</p>
+                      <h4 className="font-semibold text-gray-900">Real Mentorship</h4>
+                      <p className="text-sm text-gray-600">Actual industry pros</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">Get personalized advice from industry professionals</p>
+                  <p className="text-sm text-gray-600">Connect with mentors who've been where you want to go</p>
                 </div>
                 
                 <div className="group p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl hover:shadow-md transition-all duration-300">
@@ -144,24 +144,24 @@ export const ModernHeroSection = () => {
                       <Trophy className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Career Success</h4>
-                      <p className="text-sm text-gray-600">Proven results</p>
+                      <h4 className="font-semibold text-gray-900">Actual Results</h4>
+                      <p className="text-sm text-gray-600">Track record matters</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">Join thousands who've achieved their goals</p>
+                  <p className="text-sm text-gray-600">Join students who've landed dream internships and jobs</p>
                 </div>
                 
                 <div className="group p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl hover:shadow-md transition-all duration-300">
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <Heart className="w-6 h-6 text-white" />
+                      <Sparkles className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Personal Support</h4>
-                      <p className="text-sm text-gray-600">Always there for you</p>
+                      <h4 className="font-semibold text-gray-900">Student Community</h4>
+                      <p className="text-sm text-gray-600">People who get it</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600">Ongoing support throughout your journey</p>
+                  <p className="text-sm text-gray-600">Connect with ambitious students building their futures</p>
                 </div>
               </div>
 
@@ -186,7 +186,7 @@ export const ModernHeroSection = () => {
                       className="bg-gradient-to-r from-[#00A6D4] to-[#0095c1] hover:from-[#0095c1] hover:to-[#008bb5] text-white font-semibold px-8 py-6 h-auto text-lg shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
                     >
                       <div className="flex items-center gap-2">
-                        Start Your Journey
+                        Start Building Your Future
                         <ArrowRight className="w-5 h-5" />
                       </div>
                     </Button>
@@ -198,12 +198,12 @@ export const ModernHeroSection = () => {
                     onClick={handleBecomeMentorClick}
                     className="border-2 border-primary/20 hover:border-primary/40 text-primary font-semibold px-8 py-6 h-auto text-lg hover:bg-primary/5 transition-all duration-300 rounded-xl"
                   >
-                    Become a Mentor
+                    Share Your Experience
                   </Button>
                 </div>
                 
                 <p className="text-gray-500 text-sm mt-6">
-                  {isLoggedIn ? "Browse our expert mentors" : "Free to join • Start your journey today • No commitment required"}
+                  {isLoggedIn ? "Connect with real mentors today" : "Join ambitious students • Real opportunities • Actual results"}
                 </p>
               </div>
             </div>
@@ -215,7 +215,7 @@ export const ModernHeroSection = () => {
         isOpen={isAuthDialogOpen}
         onClose={() => setIsAuthDialogOpen(false)}
         title="Join Our Community"
-        description="Create an account or sign in to connect with mentors and access personalized resources."
+        description="Create an account or sign in to connect with mentors and access real opportunities."
         redirectUrl="/mentor"
       />
     </div>
