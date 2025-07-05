@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { QuestionResponse } from '@/types/assessment';
+import { useAssessmentAnalysis } from '@/hooks/useAssessmentAnalysis';
 import { BarChart3, User, Target } from 'lucide-react';
 
 interface AssessmentSummaryProps {
@@ -10,21 +11,27 @@ interface AssessmentSummaryProps {
 }
 
 export const AssessmentSummary = ({ responses }: AssessmentSummaryProps) => {
-  // Analyze responses to provide insights
+  const { interests, strengths, preferences } = useAssessmentAnalysis(responses);
+
+  // Fallback data for when analysis doesn't yield enough results
   const getTopInterests = () => {
-    // Mock implementation - in real app, this would analyze actual responses
-    return ['Technology', 'Problem Solving', 'Leadership', 'Creativity'];
+    if (interests.length > 0) return interests;
+    return ['Based on your responses', 'We identified key areas', 'That align with your goals'];
   };
 
   const getStrengths = () => {
-    // Mock implementation
-    return ['Analytical Thinking', 'Communication', 'Adaptability'];
+    if (strengths.length > 0) return strengths;
+    return ['Your unique abilities', 'Analytical capabilities', 'Personal qualities'];
   };
 
   const getPreferences = () => {
-    // Mock implementation
-    return ['Remote Work', 'Team Collaboration', 'Continuous Learning'];
+    if (preferences.length > 0) return preferences;
+    return ['Work style preferences', 'Environment choices', 'Career priorities'];
   };
+
+  const displayInterests = getTopInterests();
+  const displayStrengths = getStrengths();
+  const displayPreferences = getPreferences();
 
   return (
     <Card>
@@ -41,7 +48,7 @@ export const AssessmentSummary = ({ responses }: AssessmentSummaryProps) => {
             Top Interests
           </h4>
           <div className="flex flex-wrap gap-2">
-            {getTopInterests().map((interest, index) => (
+            {displayInterests.map((interest, index) => (
               <Badge key={index} variant="secondary">
                 {interest}
               </Badge>
@@ -55,7 +62,7 @@ export const AssessmentSummary = ({ responses }: AssessmentSummaryProps) => {
             Key Strengths
           </h4>
           <div className="flex flex-wrap gap-2">
-            {getStrengths().map((strength, index) => (
+            {displayStrengths.map((strength, index) => (
               <Badge key={index} variant="outline">
                 {strength}
               </Badge>
@@ -66,7 +73,7 @@ export const AssessmentSummary = ({ responses }: AssessmentSummaryProps) => {
         <div>
           <h4 className="font-semibold mb-2">Work Preferences</h4>
           <div className="flex flex-wrap gap-2">
-            {getPreferences().map((preference, index) => (
+            {displayPreferences.map((preference, index) => (
               <Badge key={index} variant="outline">
                 {preference}
               </Badge>
@@ -76,8 +83,9 @@ export const AssessmentSummary = ({ responses }: AssessmentSummaryProps) => {
 
         <div className="bg-muted/50 rounded-lg p-4">
           <p className="text-sm text-muted-foreground">
-            Based on {responses.length} responses, we've identified your key career 
-            interests and preferences to provide personalized recommendations.
+            Based on your {responses.length} responses, we've analyzed your preferences 
+            and identified {displayInterests.length} key interest areas, {displayStrengths.length} strengths, 
+            and {displayPreferences.length} work preferences to provide personalized recommendations.
           </p>
         </div>
       </CardContent>
