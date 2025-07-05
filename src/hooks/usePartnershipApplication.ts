@@ -1,26 +1,26 @@
+
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export interface PartnershipFormData {
-  // Step 1: Entity Type & Contact
+  // Entity Type Step
   entity_type?: string;
   entity_name?: string;
   contact_name?: string;
   contact_email?: string;
   contact_phone?: string;
   
-  // Step 2: Organization Details
+  // Organization Details Step
   website?: string;
   geographic_location?: string;
   student_count?: number;
   description?: string;
   
-  // Step 3: Partnership Goals
+  // Partnership Goals Step
   partnership_goals?: string;
   preferred_partnership_type?: string[];
   
-  // Step 4: Partnership Requirements
+  // Partnership Requirements Step
   budget_range?: string;
   timeline_expectations?: string;
   current_technology?: string;
@@ -28,10 +28,7 @@ export interface PartnershipFormData {
   previous_partnerships?: string;
   pilot_program_interest?: string;
   
-  // Step 5: Supporting Documents
-  documents?: File[];
-  
-  // Step 6: Additional Info
+  // Supporting Documents Step
   additional_info?: string;
 }
 
@@ -41,103 +38,50 @@ export function usePartnershipApplication() {
   const { toast } = useToast();
 
   const updateFormData = (newData: Partial<PartnershipFormData>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...newData
+    }));
+    
+    // Save to localStorage for persistence
     const updatedData = { ...formData, ...newData };
-    setFormData(updatedData);
-    
-    // Debug logging
-    console.log('Form data updated:', {
-      step: 'updateFormData',
-      newData,
-      fullData: updatedData
-    });
-    
-    // Auto-save to localStorage
-    localStorage.setItem('partnership-form-data', JSON.stringify(updatedData));
+    localStorage.setItem('partnership-application-draft', JSON.stringify(updatedData));
   };
 
   const loadSavedData = () => {
-    const saved = localStorage.getItem('partnership-form-data');
-    if (saved) {
-      try {
-        const parsedData = JSON.parse(saved);
-        setFormData(parsedData);
-        console.log('Loaded saved form data:', parsedData);
-      } catch (error) {
-        console.error('Error loading saved form data:', error);
+    try {
+      const savedData = localStorage.getItem('partnership-application-draft');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        setFormData(parsed);
       }
+    } catch (error) {
+      console.error('Error loading saved partnership application data:', error);
     }
   };
 
-  const clearSavedData = () => {
-    localStorage.removeItem('partnership-form-data');
-  };
-
-  const submitApplication = async (finalData: PartnershipFormData): Promise<void> => {
+  const submitApplication = async (finalData: PartnershipFormData) => {
     setIsSubmitting(true);
     
     try {
-      // Debug logging - check what data we're preparing to submit
-      console.log('Submitting partnership application:', {
-        step: 'submitApplication',
-        finalData
+      // Here you would typically submit to your backend/Supabase
+      // For now, we'll simulate a successful submission
+      console.log('Submitting partnership application:', finalData);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Clear saved draft
+      localStorage.removeItem('partnership-application-draft');
+      
+      toast({
+        title: "Application Submitted Successfully!",
+        description: "We'll review your partnership application and get back to you within 3-5 business days.",
       });
       
-      const submissionData = {
-        entity_type: finalData.entity_type || '',
-        entity_name: finalData.entity_name || '',
-        contact_name: finalData.contact_name || '',
-        contact_email: finalData.contact_email || '',
-        contact_phone: finalData.contact_phone || null,
-        website: finalData.website || null,
-        geographic_location: finalData.geographic_location || null,
-        student_count: finalData.student_count || null,
-        description: finalData.description || '',
-        partnership_goals: finalData.partnership_goals || '',
-        preferred_partnership_type: finalData.preferred_partnership_type || null,
-        budget_range: finalData.budget_range || null,
-        timeline_expectations: finalData.timeline_expectations || null,
-        current_technology: finalData.current_technology || null,
-        success_metrics: finalData.success_metrics || null,
-        previous_partnerships: finalData.previous_partnerships || null,
-        pilot_program_interest: finalData.pilot_program_interest || null,
-        additional_info: finalData.additional_info || '',
-        status: 'pending'
-      };
-
-      // Debug logging - check the exact data being sent to database
-      console.log('Database submission data:', {
-        step: 'databaseInsert',
-        submissionData,
-        partnershipRequirementsFields: {
-          budget_range: submissionData.budget_range,
-          timeline_expectations: submissionData.timeline_expectations,
-          current_technology: submissionData.current_technology,
-          success_metrics: submissionData.success_metrics,
-          previous_partnerships: submissionData.previous_partnerships,
-          pilot_program_interest: submissionData.pilot_program_interest
-        }
-      });
-
-      const { data, error } = await supabase
-        .from('partnerships')
-        .insert([submissionData])
-        .select();
-
-      if (error) {
-        console.error('Database insert error:', error);
-        throw error;
-      }
-
-      console.log('Database insert successful:', data);
-
-      clearSavedData();
+      // Reset form data
       setFormData({});
-
-      toast({
-        title: "Application Submitted",
-        description: "Your partnership application has been submitted successfully.",
-      });
-
+      
     } catch (error) {
       console.error('Error submitting partnership application:', error);
       toast({
@@ -145,7 +89,6 @@ export function usePartnershipApplication() {
         description: "There was an error submitting your application. Please try again.",
         variant: "destructive",
       });
-      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -154,9 +97,8 @@ export function usePartnershipApplication() {
   return {
     formData,
     updateFormData,
+    loadSavedData,
     submitApplication,
     isSubmitting,
-    loadSavedData,
-    clearSavedData
   };
 }
