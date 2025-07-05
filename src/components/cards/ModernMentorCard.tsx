@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,8 +22,9 @@ export function ModernMentorCard({
   education,
   hourlyRate,
   onClick,
-  topMentor = false
-}: MentorCardProps) {
+  topMentor = false,
+  careerTitle
+}: MentorCardProps & { careerTitle?: string }) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const displayAvatarUrl = avatarUrl || imageUrl;
 
@@ -39,6 +39,9 @@ export function ModernMentorCard({
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
+
+  // Use career title if available, otherwise fall back to position
+  const displayPosition = careerTitle || position;
 
   return (
     <>
@@ -73,10 +76,10 @@ export function ModernMentorCard({
               <h3 className="text-lg font-bold group-hover:text-cyan-600 transition-colors duration-300 line-clamp-1">
                 {name}
               </h3>
-              {position && (
+              {displayPosition && (
                 <p className="text-sm text-gray-600 flex items-center gap-1 line-clamp-1">
                   <Briefcase className="h-3 w-3 flex-shrink-0" />
-                  {position}{company && ` at ${company}`}
+                  {displayPosition}{company && ` at ${company}`}
                 </p>
               )}
               {location && (

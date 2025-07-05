@@ -47,6 +47,7 @@ export function MentorGrid({ mentors, isLoading }: MentorGridProps) {
           avatarUrl={mentor.avatar_url}
           education={mentor.education}
           topMentor={mentor.top_mentor}
+          careerTitle={mentor.career_title}
         />
       ))}
     </div>
