@@ -37,7 +37,8 @@ export const useMentors = () => {
           keywords,
           avatar_url,
           bio,
-          user_type
+          user_type,
+          companies!inner(name)
         `)
         .eq("user_type", "mentor");
 
@@ -53,7 +54,7 @@ export const useMentors = () => {
         last_name: mentor.last_name || "",
         position: mentor.position,
         career_title: mentor.position,
-        company_name: mentor.company_id, // This might need to be joined with companies table later
+        company_name: mentor.companies?.name || undefined,
         location: mentor.location,
         skills: mentor.skills || [],
         keywords: mentor.keywords || [],
