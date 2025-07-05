@@ -23,7 +23,19 @@ export const QuestionRenderer = ({
   onComplete, 
   isGenerating 
 }: QuestionRendererProps) => {
-  const [answer, setAnswer] = useState<any>('');
+  // Initialize state based on question type
+  const getInitialAnswer = () => {
+    switch (question.type) {
+      case 'scale':
+        return [5]; // Array for slider
+      case 'multiple_select':
+        return [];
+      default:
+        return '';
+    }
+  };
+
+  const [answer, setAnswer] = useState<any>(getInitialAnswer());
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
   const handleSubmit = () => {
@@ -32,7 +44,8 @@ export const QuestionRenderer = ({
     if (question.type === 'multiple_select') {
       responseValue = selectedOptions;
     } else if (question.type === 'scale') {
-      responseValue = answer[0] || 5;
+      // Extract the number from the array
+      responseValue = Array.isArray(answer) ? answer[0] : answer;
     }
 
     const response: QuestionResponse = {
@@ -43,8 +56,8 @@ export const QuestionRenderer = ({
 
     onAnswer(response);
     
-    // Reset for next question
-    setAnswer('');
+    // Reset for next question based on the next question type
+    setAnswer(getInitialAnswer());
     setSelectedOptions([]);
   };
 
@@ -61,9 +74,12 @@ export const QuestionRenderer = ({
       return selectedOptions.length > 0;
     }
     if (question.type === 'scale') {
-      return answer.length > 0;
+      return Array.isArray(answer) && answer.length > 0;
     }
-    return answer.trim() !== '';
+    if (question.type === 'text') {
+      return typeof answer === 'string' && answer.trim() !== '';
+    }
+    return answer !== '' && answer != null;
   };
 
   const renderQuestionInput = () => {
@@ -99,11 +115,12 @@ export const QuestionRenderer = ({
         );
 
       case 'scale':
+        const currentValue = Array.isArray(answer) ? answer[0] : 5;
         return (
           <div className="space-y-4">
             <div className="px-2">
               <Slider
-                value={answer}
+                value={Array.isArray(answer) ? answer : [5]}
                 onValueChange={setAnswer}
                 max={10}
                 min={1}
@@ -113,7 +130,7 @@ export const QuestionRenderer = ({
             </div>
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Not at all (1)</span>
-              <span>Current: {answer[0] || 5}</span>
+              <span>Current: {currentValue}</span>
               <span>Extremely (10)</span>
             </div>
           </div>
@@ -122,7 +139,7 @@ export const QuestionRenderer = ({
       case 'text':
         return (
           <Textarea
-            value={answer}
+            value={typeof answer === 'string' ? answer : ''}
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="Share your thoughts..."
             className="min-h-[120px]"
