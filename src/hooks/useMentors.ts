@@ -42,7 +42,7 @@ export const useMentors = () => {
           avatar_url,
           bio,
           user_type,
-          companies!inner(name),
+          companies(name),
           careers!profiles_position_fkey(title)
         `)
         .eq("user_type", "mentor");
@@ -98,7 +98,6 @@ export const useMentors = () => {
       });
 
       // For now, set default rating values since we need to check the correct table structure
-      // We'll update this once we confirm the correct column names
       const defaultRating = 0;
       const defaultTotalRatings = 0;
 
@@ -108,7 +107,7 @@ export const useMentors = () => {
         first_name: mentor.first_name || "",
         last_name: mentor.last_name || "",
         position: mentor.position,
-        career_title: mentor.careers?.title || mentor.position, // Use career title if available, fallback to position
+        career_title: mentor.careers?.title || mentor.position,
         company_name: mentor.companies?.name || undefined,
         location: mentor.location,
         skills: mentor.skills || [],
