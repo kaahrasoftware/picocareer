@@ -13,7 +13,6 @@ export function MentorStatsSection({
   const totalMentors = mentors.length;
   const countries = [...new Set(mentors.map(m => m.location?.split(',').pop()?.trim()).filter(Boolean))];
   const companies = [...new Set(mentors.map(m => m.company_name).filter(Boolean))];
-  const topCountries = countries.slice(0, 12);
 
   return (
     <div className="mb-12 space-y-8">
@@ -43,27 +42,30 @@ export function MentorStatsSection({
         )}
       </Card>
 
-      {/* Top Countries */}
+      {/* Mentor Locations with Auto-Scroll */}
       <Card className="p-6 border-0">
         <div className="flex items-center gap-3 mb-4">
-          <MapPin className="w-5 h-5 text-[#00A6D4]" />
+          <MapPin className="w-5 h-5 text-[#33b3d9]" />
           <h3 className="text-lg font-semibold text-gray-900">Mentor Locations</h3>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {topCountries.map((country, index) => (
-            <span 
-              key={country} 
-              className="px-3 py-1 bg-[#33b3d9]/10 text-[#33b3d9] rounded-full text-sm font-medium hover:bg-[#33b3d9]/20 transition-colors duration-200 cursor-pointer"
-            >
-              {country}
-            </span>
-          ))}
-          {countries.length > 12 && (
-            <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
-              +{countries.length - 12} more
-            </span>
-          )}
+        <div className="relative overflow-hidden bg-gradient-to-r from-[#33b3d9]/5 to-[#00A6D4]/5 rounded-lg p-3">
+          <div className="flex animate-scroll-horizontal space-x-4 whitespace-nowrap">
+            {/* Duplicate countries for seamless loop */}
+            {[...countries, ...countries].map((country, index) => (
+              <span 
+                key={`${country}-${index}`} 
+                className="inline-block px-4 py-2 bg-[#33b3d9]/10 text-[#33b3d9] rounded-full text-sm font-medium hover:bg-[#33b3d9]/20 transition-colors duration-200 cursor-pointer flex-shrink-0"
+              >
+                {country}
+              </span>
+            ))}
+          </div>
         </div>
+        {countries.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            {countries.length} countries • Auto-scrolling
+          </p>
+        )}
       </Card>
     </div>
   );
