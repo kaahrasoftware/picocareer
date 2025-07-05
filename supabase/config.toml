@@ -46,6 +46,9 @@ jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 security_update_password_require_reauthentication = true
 
+[functions.ai-career-assessment]
+verify_jwt = true
+
 [functions.fetch-school-data]
 verify_jwt = true
 
