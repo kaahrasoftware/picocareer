@@ -1,5 +1,5 @@
 
-import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileEditForm } from "./ProfileEditForm";
@@ -46,13 +46,6 @@ export function ProfileDialogContent({
   return (
     <DialogContent className="w-[95vw] sm:w-[90vw] md:max-w-4xl max-h-[90vh] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/95 p-2 sm:p-4 md:p-6 overflow-auto">
       <DialogHeader className="pb-2">
-        <DialogTitle className="sr-only">
-          {profile?.full_name || 'User Profile'} - Profile Details
-        </DialogTitle>
-        <DialogDescription className="sr-only">
-          View detailed information about {profile?.full_name || 'this user'}, including their background, experience, and availability for mentoring sessions.
-        </DialogDescription>
-        
         <ProfileHeader 
           profile={profile} 
           session={session} 
