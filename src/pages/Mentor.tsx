@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMentors } from "@/hooks/useMentors";
@@ -8,6 +9,7 @@ import { MentorStatsSection } from "@/components/mentors/MentorStatsSection";
 import { MentorPagination } from "@/components/mentors/MentorPagination";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Users, Globe, Building } from "lucide-react";
+
 export default function Mentor() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,9 +58,11 @@ export default function Mentor() {
     });
     setSearchParams(newParams);
   };
+
   if (isLoading) {
     return <PageLoader isLoading={true} />;
   }
+
   if (error) {
     return <div className="container mx-auto px-4 py-8">
         <div className="text-center text-red-600">
@@ -66,18 +70,12 @@ export default function Mentor() {
         </div>
       </div>;
   }
+
   return <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
       <section className="bg-white border-b border-gray-100">
         
       </section>
-
-      {/* Horizontal Filters */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <MentorHorizontalFilters searchQuery={searchQuery} companyFilter={companyFilter} locationFilter={locationFilter} skillsFilter={skillsFilter} onFiltersChange={updateFilters} mentors={mentors} />
-        </div>
-      </div>
 
       <div className="container mx-auto px-4 py-8">
         {/* CTA Section */}
@@ -85,6 +83,18 @@ export default function Mentor() {
 
         {/* Stats Section */}
         <MentorStatsSection mentors={mentors} />
+
+        {/* Horizontal Filters - moved below stats section */}
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100 mb-8">
+          <MentorHorizontalFilters 
+            searchQuery={searchQuery} 
+            companyFilter={companyFilter} 
+            locationFilter={locationFilter} 
+            skillsFilter={skillsFilter} 
+            onFiltersChange={updateFilters} 
+            mentors={mentors} 
+          />
+        </div>
 
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
