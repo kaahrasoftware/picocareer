@@ -40,7 +40,9 @@ export const useMentors = () => {
           avatar_url,
           bio,
           user_type,
-          companies!inner(name)
+          career_id,
+          companies!inner(name),
+          careers(title)
         `)
         .eq("user_type", "mentor");
 
@@ -102,8 +104,8 @@ export const useMentors = () => {
         id: mentor.id,
         first_name: mentor.first_name || "",
         last_name: mentor.last_name || "",
-        position: mentor.position,
-        career_title: mentor.position,
+        position: mentor.careers?.title || mentor.position,
+        career_title: mentor.careers?.title || mentor.position,
         company_name: mentor.companies?.name || undefined,
         location: mentor.location,
         skills: mentor.skills || [],
