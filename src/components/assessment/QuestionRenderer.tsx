@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -24,8 +24,8 @@ export const QuestionRenderer = ({
   isGenerating 
 }: QuestionRendererProps) => {
   // Initialize state based on question type
-  const getInitialAnswer = () => {
-    switch (question.type) {
+  const getInitialAnswer = (questionType: string) => {
+    switch (questionType) {
       case 'scale':
         return [5]; // Array for slider
       case 'multiple_select':
@@ -35,8 +35,15 @@ export const QuestionRenderer = ({
     }
   };
 
-  const [answer, setAnswer] = useState<any>(getInitialAnswer());
+  const [answer, setAnswer] = useState<any>(() => getInitialAnswer(question.type));
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+
+  // Reset state when question changes
+  useEffect(() => {
+    console.log('Question changed, resetting state for type:', question.type);
+    setAnswer(getInitialAnswer(question.type));
+    setSelectedOptions([]);
+  }, [question.id, question.type]);
 
   const handleSubmit = () => {
     let responseValue = answer;
@@ -48,6 +55,8 @@ export const QuestionRenderer = ({
       responseValue = Array.isArray(answer) ? answer[0] : answer;
     }
 
+    console.log('Submitting answer:', responseValue, 'for question type:', question.type);
+
     const response: QuestionResponse = {
       questionId: question.id,
       answer: responseValue,
@@ -56,9 +65,7 @@ export const QuestionRenderer = ({
 
     onAnswer(response);
     
-    // Reset for next question based on the next question type
-    setAnswer(getInitialAnswer());
-    setSelectedOptions([]);
+    // Don't reset state here - let useEffect handle it when the next question loads
   };
 
   const handleMultipleSelect = (option: string, checked: boolean) => {
@@ -115,13 +122,21 @@ export const QuestionRenderer = ({
         );
 
       case 'scale':
+        // Ensure we always have an array for the slider
         const currentValue = Array.isArray(answer) ? answer[0] : 5;
+        const sliderValue = Array.isArray(answer) ? answer : [5];
+        
+        console.log('Rendering slider with value:', sliderValue, 'currentValue:', currentValue);
+        
         return (
           <div className="space-y-4">
             <div className="px-2">
               <Slider
-                value={Array.isArray(answer) ? answer : [5]}
-                onValueChange={setAnswer}
+                value={sliderValue}
+                onValueChange={(newValue) => {
+                  console.log('Slider value changed to:', newValue);
+                  setAnswer(newValue);
+                }}
                 max={10}
                 min={1}
                 step={1}
