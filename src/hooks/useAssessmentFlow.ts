@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -68,6 +68,13 @@ export const useAssessmentFlow = () => {
       console.error('Error creating assessment:', error);
     }
   });
+
+  // Auto-create assessment when first question is answered
+  useEffect(() => {
+    if (responses.length === 1 && !assessmentId) {
+      createAssessment.mutate();
+    }
+  }, [responses.length, assessmentId, createAssessment]);
 
   // Save individual response
   const saveResponse = useMutation({

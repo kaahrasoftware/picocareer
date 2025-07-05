@@ -15,13 +15,15 @@ interface QuestionRendererProps {
   onAnswer: (response: QuestionResponse) => void;
   onComplete: () => void;
   isGenerating: boolean;
+  isLastQuestion?: boolean;
 }
 
 export const QuestionRenderer = ({ 
   question, 
   onAnswer, 
   onComplete, 
-  isGenerating 
+  isGenerating,
+  isLastQuestion = false
 }: QuestionRendererProps) => {
   // Initialize state based on question type
   const getInitialAnswer = (questionType: string) => {
@@ -183,7 +185,7 @@ export const QuestionRenderer = ({
         {renderQuestionInput()}
         
         <div className="flex justify-end">
-          {question.isLast ? (
+          {isLastQuestion ? (
             <Button 
               onClick={onComplete}
               disabled={!isAnswerValid() || isGenerating}

@@ -22,6 +22,7 @@ export default function CareerAssessment() {
     recommendations,
     isGenerating,
     progress,
+    isLastQuestion,
     handleAnswer,
     generateRecommendations,
     resetAssessment
@@ -113,6 +114,7 @@ export default function CareerAssessment() {
           onAnswer={handleAnswerWrapper}
           onComplete={handleCompleteAssessment}
           isGenerating={isGenerating}
+          isLastQuestion={isLastQuestion}
         />
       )}
 
