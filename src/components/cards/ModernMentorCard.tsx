@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Briefcase, MapPin, BookOpen, Star, Tag, Award, Clock, MessageCircle } from 'lucide-react';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 import { MentorCardProps } from '@/components/MentorCard';
+
 export function ModernMentorCard({
   id,
   name,
@@ -21,10 +23,12 @@ export function ModernMentorCard({
   education,
   hourlyRate,
   onClick,
-  topMentor = false
+  topMentor = false,
+  careerTitle // Now this prop is properly included
 }: MentorCardProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const displayAvatarUrl = avatarUrl || imageUrl;
+
   const handleViewProfile = () => {
     if (onClick) {
       onClick();
@@ -32,9 +36,11 @@ export function ModernMentorCard({
       setShowProfileDialog(true);
     }
   };
+
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
+
   return <>
       <Card className="h-full flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br from-white via-white to-cyan-50 group">
         {/* Top accent line */}
@@ -52,12 +58,28 @@ export function ModernMentorCard({
             <div className="relative">
               <Avatar className="h-16 w-16 ring-2 ring-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <AvatarImage src={displayAvatarUrl} alt={name} />
-                
+                <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-semibold">
+                  {getInitials(name)}
+                </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-cyan-500 rounded-full border-2 border-white shadow-sm" title="Available" />
             </div>
             
-            
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">{name}</h3>
+              {position && (
+                <p className="text-sm text-blue-700 font-medium mb-1 flex items-center gap-1 line-clamp-1">
+                  <Briefcase className="h-3 w-3 flex-shrink-0" />
+                  {position} {company && `at ${company}`}
+                </p>
+              )}
+              {location && (
+                <p className="text-xs text-gray-600 flex items-center gap-1 line-clamp-1">
+                  <MapPin className="h-3 w-3 flex-shrink-0" />
+                  {location}
+                </p>
+              )}
+            </div>
           </div>
         </CardHeader>
 
