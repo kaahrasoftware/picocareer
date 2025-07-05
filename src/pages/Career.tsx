@@ -1,9 +1,10 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
+import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -12,12 +13,27 @@ interface ScoredCareer extends Tables<"careers"> {
 }
 
 const Career = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState("all");
+
+  // Dialog state management
+  const dialogOpen = searchParams.get("dialog") === "true";
+  const selectedCareerId = searchParams.get("careerId");
+
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      // Remove dialog parameters when closing
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete("dialog");
+      newSearchParams.delete("careerId");
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  };
 
   // Fetch careers
   const { data: careers = [], isLoading } = useQuery({
@@ -240,6 +256,15 @@ const Career = () => {
           />
         </motion.div>
       </div>
+
+      {/* Career Details Dialog */}
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={dialogOpen}
+          onOpenChange={handleDialogOpenChange}
+        />
+      )}
     </div>
   );
 };
