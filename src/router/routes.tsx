@@ -23,6 +23,7 @@ import SchoolUploadPage from '@/pages/SchoolUploadPage';
 import CompanyUploadPage from '@/pages/CompanyUploadPage';
 import ScholarshipAdd from '@/pages/ScholarshipAdd';
 import CreateOpportunity from '@/pages/CreateOpportunity';
+import MentorRegistration from '@/pages/MentorRegistration';
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "opportunities/:id", element: <OpportunityDetails /> },
       { path: "scholarships", element: <Scholarships /> },
       { path: "mentor", element: <Mentor /> },
+      { path: "mentor-registration", element: <MentorRegistration /> },
       { path: "profile", element: <Profile /> },
       { path: "events", element: <Events /> },
       { path: "dashboard", element: <Dashboard /> },
