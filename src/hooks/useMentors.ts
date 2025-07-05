@@ -36,7 +36,6 @@ export const useMentors = () => {
           skills,
           keywords,
           avatar_url,
-          education,
           bio,
           user_type
         `)
@@ -61,7 +60,7 @@ export const useMentors = () => {
         rating: 0, // Default rating since we don't have this data yet
         totalRatings: 0, // Default total ratings
         avatar_url: mentor.avatar_url,
-        education: mentor.education,
+        education: undefined, // Not available in the current schema
         top_mentor: false, // Default value
         bio: mentor.bio,
       }));
