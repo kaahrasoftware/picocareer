@@ -11,11 +11,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { RecommendationCareerView } from '@/components/assessment/RecommendationCareerView';
 import { SimilarCareersSection } from '@/components/assessment/SimilarCareersSection';
+import { DialogContent as ComprehensiveDialogContent } from '@/components/career-details/DialogContent';
 import { useSimilarCareers } from '@/hooks/useSimilarCareers';
 import type { CareerRecommendation } from '@/types/assessment';
 import type { Tables } from '@/integrations/supabase/types';
 
-type Career = Tables<"careers">;
+type CareerWithMajors = Tables<"careers"> & {
+  career_major_relations: {
+    major: {
+      title: string;
+      id: string;
+    };
+  }[];
+};
 
 interface CareerDetailsDialogProps {
   careerId: string;
@@ -30,7 +38,7 @@ export function CareerDetailsDialog({
   onOpenChange,
   recommendationData
 }: CareerDetailsDialogProps) {
-  const [career, setCareer] = useState<Career | null>(null);
+  const [career, setCareer] = useState<CareerWithMajors | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [careerNotFound, setCareerNotFound] = useState(false);
 
@@ -55,7 +63,15 @@ export function CareerDetailsDialog({
       try {
         const { data, error } = await supabase
           .from('careers')
-          .select('*')
+          .select(`
+            *,
+            career_major_relations (
+              major: majors (
+                title,
+                id
+              )
+            )
+          `)
           .eq('id', careerId)
           .eq('status', 'Approved')
           .single();
@@ -85,10 +101,18 @@ export function CareerDetailsDialog({
     setCareerNotFound(false);
     setIsLoading(true);
     
-    // Fetch the selected career details
+    // Fetch the selected career details with relations
     supabase
       .from('careers')
-      .select('*')
+      .select(`
+        *,
+        career_major_relations (
+          major: majors (
+            title,
+            id
+          )
+        )
+      `)
       .eq('id', selectedCareerId)
       .eq('status', 'Approved')
       .single()
@@ -138,40 +162,8 @@ export function CareerDetailsDialog({
               </div>
             </div>
           ) : career ? (
-            // Display existing career from database
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">About This Career</h3>
-                <p className="text-muted-foreground">{career.description}</p>
-              </div>
-              
-              {career.salary_range && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Salary Range</h3>
-                  <p className="text-green-600 font-medium">{career.salary_range}</p>
-                </div>
-              )}
-              
-              {career.required_skills && career.required_skills.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Required Skills</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {career.required_skills.map((skill, index) => (
-                      <span key={index} className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {career.work_environment && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Work Environment</h3>
-                  <p className="text-muted-foreground">{career.work_environment}</p>
-                </div>
-              )}
-            </div>
+            // Use the comprehensive DialogContent component
+            <ComprehensiveDialogContent career={career} />
           ) : careerNotFound && recommendationData ? (
             // Display recommendation data with similar careers
             <div className="space-y-8">
