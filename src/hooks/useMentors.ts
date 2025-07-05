@@ -26,6 +26,8 @@ export const useMentors = () => {
   return useQuery({
     queryKey: ["mentors"],
     queryFn: async (): Promise<Mentor[]> => {
+      console.log("Fetching mentors...");
+      
       const { data, error } = await supabase
         .from("profiles")
         .select(`
@@ -41,7 +43,7 @@ export const useMentors = () => {
           bio,
           user_type,
           companies!inner(name),
-          careers(title)
+          careers!profiles_position_fkey(title)
         `)
         .eq("user_type", "mentor");
 
@@ -49,6 +51,8 @@ export const useMentors = () => {
         console.error("Error fetching mentors:", error);
         throw error;
       }
+
+      console.log("Fetched mentors data:", data);
 
       // Get all mentor IDs for subsequent queries
       const mentorIds = data?.map(m => m.id) || [];
