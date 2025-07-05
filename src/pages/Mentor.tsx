@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMentors } from "@/hooks/useMentors";
@@ -9,37 +8,28 @@ import { MentorStatsSection } from "@/components/mentors/MentorStatsSection";
 import { MentorPagination } from "@/components/mentors/MentorPagination";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Users, Globe, Building } from "lucide-react";
-
 export default function Mentor() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
-  
+
   // Get filters from URL params
   const searchQuery = searchParams.get("search") || "";
   const companyFilter = searchParams.get("company") || "all";
   const locationFilter = searchParams.get("location") || "all";
   const skillsFilter = searchParams.get("skills") || "all";
-
-  const { data: mentors = [], isLoading, error } = useMentors();
+  const {
+    data: mentors = [],
+    isLoading,
+    error
+  } = useMentors();
 
   // Filter mentors based on current filters
-  const filteredMentors = mentors.filter((mentor) => {
-    const matchesSearch = 
-      mentor.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mentor.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mentor.bio?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCompany = companyFilter === "all" || 
-      mentor.company_name?.toLowerCase().includes(companyFilter.toLowerCase());
-    
-    const matchesLocation = locationFilter === "all" || 
-      mentor.location?.toLowerCase().includes(locationFilter.toLowerCase());
-    
-    const matchesSkills = skillsFilter === "all" || 
-      mentor.skills?.some(skill => skill.toLowerCase().includes(skillsFilter.toLowerCase()));
-
+  const filteredMentors = mentors.filter(mentor => {
+    const matchesSearch = mentor.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.bio?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCompany = companyFilter === "all" || mentor.company_name?.toLowerCase().includes(companyFilter.toLowerCase());
+    const matchesLocation = locationFilter === "all" || mentor.location?.toLowerCase().includes(locationFilter.toLowerCase());
+    const matchesSkills = skillsFilter === "all" || mentor.skills?.some(skill => skill.toLowerCase().includes(skillsFilter.toLowerCase()));
     return matchesSearch && matchesCompany && matchesLocation && matchesSkills;
   });
 
@@ -66,66 +56,26 @@ export default function Mentor() {
     });
     setSearchParams(newParams);
   };
-
   if (isLoading) {
     return <PageLoader isLoading={true} />;
   }
-
   if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
+    return <div className="container mx-auto px-4 py-8">
         <div className="text-center text-red-600">
           Error loading mentors. Please try again later.
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
       <section className="bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4 py-12">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-[#00A6D4]/10 text-[#00A6D4] px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Users className="w-4 h-4" />
-              Expert Mentors
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Connect with Industry Experts
-            </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get personalized guidance from professionals who've walked the path you want to take
-            </p>
-            <div className="flex items-center justify-center gap-8 mt-8 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-[#00A6D4] rounded-full animate-pulse" />
-                <span>{totalMentors} Active Mentors</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                <span>50+ Countries</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Building className="w-4 h-4" />
-                <span>500+ Companies</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </section>
 
       {/* Horizontal Filters */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="container mx-auto px-4">
-          <MentorHorizontalFilters
-            searchQuery={searchQuery}
-            companyFilter={companyFilter}
-            locationFilter={locationFilter}
-            skillsFilter={skillsFilter}
-            onFiltersChange={updateFilters}
-            mentors={mentors}
-          />
+          <MentorHorizontalFilters searchQuery={searchQuery} companyFilter={companyFilter} locationFilter={locationFilter} skillsFilter={skillsFilter} onFiltersChange={updateFilters} mentors={mentors} />
         </div>
       </div>
 
@@ -148,14 +98,10 @@ export default function Mentor() {
           </div>
           <div className="flex items-center gap-4">
             <label className="text-sm text-gray-600">Show:</label>
-            <select 
-              value={itemsPerPage} 
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="border border-gray-200 rounded-lg px-3 py-1 text-sm"
-            >
+            <select value={itemsPerPage} onChange={e => {
+            setItemsPerPage(Number(e.target.value));
+            setCurrentPage(1);
+          }} className="border border-gray-200 rounded-lg px-3 py-1 text-sm">
               <option value={12}>12</option>
               <option value={24}>24</option>
               <option value={48}>48</option>
@@ -167,16 +113,7 @@ export default function Mentor() {
         <MentorGrid mentors={paginatedMentors} isLoading={isLoading} />
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <MentorPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            totalItems={totalMentors}
-            itemsPerPage={itemsPerPage}
-          />
-        )}
+        {totalPages > 1 && <MentorPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={totalMentors} itemsPerPage={itemsPerPage} />}
       </div>
-    </div>
-  );
+    </div>;
 }
