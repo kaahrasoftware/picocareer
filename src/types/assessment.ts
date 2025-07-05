@@ -8,6 +8,10 @@ export interface AssessmentQuestion {
   order: number;
   isRequired: boolean;
   isLast?: boolean;
+  profileType?: string[];
+  targetAudience?: string[];
+  prerequisites?: any;
+  conditionalLogic?: any;
 }
 
 export interface QuestionResponse {
@@ -45,6 +49,8 @@ export interface AssessmentResult {
   recommendations: CareerRecommendation[];
   completedAt: string;
   status: 'completed' | 'in_progress';
+  detectedProfileType?: 'middle_school' | 'high_school' | 'college' | 'career_professional';
+  profileDetectionCompleted?: boolean;
 }
 
 export interface AssessmentHistoryItem {
@@ -54,3 +60,5 @@ export interface AssessmentHistoryItem {
   topRecommendation: string;
   status: 'completed' | 'in_progress';
 }
+
+export type ProfileType = 'middle_school' | 'high_school' | 'college' | 'career_professional';

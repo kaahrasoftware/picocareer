@@ -3,18 +3,21 @@ import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { AssessmentQuestion, QuestionResponse } from '@/types/assessment';
+import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
+import type { AssessmentQuestion, QuestionResponse, ProfileType } from '@/types/assessment';
 
 export const useAssessmentFlow = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
+  const [profileDetectionCompleted, setProfileDetectionCompleted] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch assessment questions
-  const { data: questions = [], isLoading } = useQuery({
+  // Fetch assessment questions with conditional logic support
+  const { data: allQuestions = [], isLoading } = useQuery({
     queryKey: ['assessment-questions'],
     queryFn: async () => {
       console.log('Fetching assessment questions...');
@@ -39,10 +42,19 @@ export const useAssessmentFlow = () => {
         type: item.type,
         options: item.options as string[],
         order: item.order_index,
-        isRequired: item.is_required
+        isRequired: item.is_required,
+        profileType: item.profile_type,
+        targetAudience: item.target_audience,
+        prerequisites: item.prerequisites,
+        conditionalLogic: item.conditional_logic
       })) as AssessmentQuestion[];
     }
   });
+
+  // Filter questions based on detected profile type
+  const filteredQuestions = allQuestions.filter(question => 
+    shouldShowQuestion(question, detectedProfileType, currentQuestionIndex)
+  );
 
   // Create new assessment - now happens immediately when component mounts
   const createAssessment = useMutation({
@@ -85,13 +97,46 @@ export const useAssessmentFlow = () => {
     }
   });
 
+  // Update assessment with detected profile type
+  const updateAssessmentProfile = useMutation({
+    mutationFn: async (profileType: ProfileType) => {
+      if (!assessmentId) return;
+
+      const { error } = await supabase
+        .from('career_assessments')
+        .update({
+          detected_profile_type: profileType,
+          profile_detection_completed: true
+        })
+        .eq('id', assessmentId);
+
+      if (error) {
+        console.error('Error updating assessment profile:', error);
+        throw error;
+      }
+    }
+  });
+
   // Create assessment immediately when questions are loaded
   useEffect(() => {
-    if (questions.length > 0 && !assessmentId && !createAssessment.isPending) {
-      console.log('Auto-creating assessment with', questions.length, 'questions available');
+    if (allQuestions.length > 0 && !assessmentId && !createAssessment.isPending) {
+      console.log('Auto-creating assessment with', allQuestions.length, 'questions available');
       createAssessment.mutate();
     }
-  }, [questions.length, assessmentId, createAssessment]);
+  }, [allQuestions.length, assessmentId, createAssessment]);
+
+  // Detect profile type from responses
+  useEffect(() => {
+    if (responses.length >= 1 && !profileDetectionCompleted) {
+      const detected = detectProfileType(responses);
+      if (detected) {
+        console.log('Profile type detected:', detected);
+        setDetectedProfileType(detected);
+        setProfileDetectionCompleted(true);
+        updateAssessmentProfile.mutate(detected);
+      }
+    }
+  }, [responses, profileDetectionCompleted, updateAssessmentProfile]);
 
   // Save individual response
   const saveResponse = useMutation({
@@ -129,16 +174,11 @@ export const useAssessmentFlow = () => {
       console.log('Generating recommendations...');
       console.log('Assessment ID:', assessmentId);
       console.log('Responses count:', responses.length);
-      console.log('Responses data:', responses);
+      console.log('Detected profile type:', detectedProfileType);
 
       if (!assessmentId || responses.length === 0) {
         console.error('Invalid assessment data - Assessment ID:', assessmentId, 'Responses:', responses.length);
         throw new Error('Invalid assessment data');
-      }
-
-      // Validate that we have responses for all questions
-      if (responses.length !== questions.length) {
-        console.warn('Response count mismatch - Expected:', questions.length, 'Got:', responses.length);
       }
 
       const requestPayload = {
@@ -146,7 +186,8 @@ export const useAssessmentFlow = () => {
         responses: responses.map(r => ({
           questionId: r.questionId,
           answer: r.answer
-        }))
+        })),
+        profileType: detectedProfileType
       };
 
       console.log('Calling ai-career-assessment function with payload:', requestPayload);
@@ -186,7 +227,7 @@ export const useAssessmentFlow = () => {
   });
 
   const handleAnswer = useCallback((answer: string | string[] | number) => {
-    const currentQuestion = questions[currentQuestionIndex];
+    const currentQuestion = filteredQuestions[currentQuestionIndex];
     if (!currentQuestion) {
       console.error('No current question available');
       return;
@@ -215,13 +256,13 @@ export const useAssessmentFlow = () => {
     }
 
     // Auto-advance to next question
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < filteredQuestions.length - 1) {
       console.log('Advancing to next question:', currentQuestionIndex + 1);
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
       console.log('Reached last question');
     }
-  }, [currentQuestionIndex, questions, responses, assessmentId, saveResponse]);
+  }, [currentQuestionIndex, filteredQuestions, responses, assessmentId, saveResponse]);
 
   const resetAssessment = useCallback(() => {
     console.log('Resetting assessment');
@@ -229,21 +270,26 @@ export const useAssessmentFlow = () => {
     setResponses([]);
     setAssessmentId(null);
     setRecommendations([]);
+    setDetectedProfileType(null);
+    setProfileDetectionCompleted(false);
   }, []);
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const currentQuestion = filteredQuestions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === filteredQuestions.length - 1;
   const canProceed = responses.some(r => r.questionId === currentQuestion?.id);
-  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const progress = filteredQuestions.length > 0 ? ((currentQuestionIndex + 1) / filteredQuestions.length) * 100 : 0;
 
   // Add assessment ready state
-  const isAssessmentReady = Boolean(assessmentId && questions.length > 0);
+  const isAssessmentReady = Boolean(assessmentId && filteredQuestions.length > 0);
 
   console.log('Assessment Flow State:', {
     currentQuestionIndex,
-    questionsCount: questions.length,
+    filteredQuestionsCount: filteredQuestions.length,
+    allQuestionsCount: allQuestions.length,
     responsesCount: responses.length,
     assessmentId,
+    detectedProfileType,
+    profileDetectionCompleted,
     isLastQuestion,
     isAssessmentReady,
     progress
@@ -251,12 +297,14 @@ export const useAssessmentFlow = () => {
 
   return {
     // State
-    questions,
+    questions: filteredQuestions,
     currentQuestion,
     currentQuestionIndex,
     responses,
     recommendations,
     assessmentId,
+    detectedProfileType,
+    profileDetectionCompleted,
     isLastQuestion,
     canProceed,
     progress,
