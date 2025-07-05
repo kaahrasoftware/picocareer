@@ -26,6 +26,9 @@ import ScholarshipAdd from '@/pages/ScholarshipAdd';
 import CreateOpportunity from '@/pages/CreateOpportunity';
 import MentorRegistration from '@/pages/MentorRegistration';
 import Partnerships from '@/pages/Partnerships';
+import Hubs from '@/pages/Hubs';
+import Hub from '@/pages/Hub';
+import HubInviteResponse from '@/pages/HubInviteResponse';
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +52,9 @@ export const router = createBrowserRouter([
       { path: "career-assessment", element: <CareerAssessment /> },
       { path: "resource-bank", element: <ResourceBank /> },
       { path: "partnerships", element: <Partnerships /> },
+      { path: "hubs", element: <Hubs /> },
+      { path: "hubs/:id", element: <Hub /> },
+      { path: "hub-invite-response", element: <HubInviteResponse /> },
       // Admin routes
       { path: "career-upload", element: <CareerUpload /> },
       { path: "major-upload", element: <MajorUpload /> },
