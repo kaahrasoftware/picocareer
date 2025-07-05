@@ -4,6 +4,7 @@ import { MainLayout, AuthLayout } from "./layouts";
 import Home from '@/pages/Home';
 import School from '@/pages/School';
 import Program from '@/pages/Program';
+import Career from '@/pages/Career';
 import Careers from '@/pages/Careers';
 import Opportunities from '@/pages/Opportunities';
 import Profile from '@/pages/Profile';
@@ -34,7 +35,7 @@ export const router = createBrowserRouter([
       { path: "school", element: <School /> },
       { path: "schools/:id", element: <SchoolDetail /> },
       { path: "program", element: <Program /> },
-      { path: "career", element: <Careers /> },
+      { path: "career", element: <Career /> },
       { path: "careers", element: <Careers /> },
       { path: "opportunities", element: <Opportunities /> },
       { path: "opportunities/:id", element: <OpportunityDetails /> },
