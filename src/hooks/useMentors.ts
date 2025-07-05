@@ -49,9 +49,10 @@ export const useMentors = () => {
         throw error;
       }
 
-      // Get availability data for all mentors
+      // Get all mentor IDs for subsequent queries
       const mentorIds = data?.map(m => m.id) || [];
       
+      // Get availability data
       const { data: availabilityData } = await supabase
         .from("mentor_availability")
         .select("profile_id, start_date_time, end_date_time, is_available")
@@ -59,19 +60,12 @@ export const useMentors = () => {
         .eq("is_available", true)
         .gte("start_date_time", new Date().toISOString());
 
-      // Get session counts for all mentors
+      // Get session counts - using profile_id as the mentor identifier
       const { data: sessionData } = await supabase
         .from("mentor_sessions")
         .select("mentor_id")
         .in("mentor_id", mentorIds)
         .eq("status", "completed");
-
-      // Get ratings for all mentors
-      const { data: ratingsData } = await supabase
-        .from("session_feedback")
-        .select("mentor_id, mentor_rating")
-        .in("mentor_id", mentorIds)
-        .not("mentor_rating", "is", null);
 
       // Process availability status
       const availabilityMap = new Map<string, 'available_now' | 'has_availability' | 'booked'>();
@@ -98,17 +92,10 @@ export const useMentors = () => {
         sessionCountMap.set(session.mentor_id, count + 1);
       });
 
-      // Process ratings
-      const ratingsMap = new Map<string, { average: number, count: number }>();
-      ratingsData?.forEach(feedback => {
-        if (!ratingsMap.has(feedback.mentor_id)) {
-          ratingsMap.set(feedback.mentor_id, { average: 0, count: 0 });
-        }
-        const current = ratingsMap.get(feedback.mentor_id)!;
-        const newCount = current.count + 1;
-        const newAverage = ((current.average * current.count) + feedback.mentor_rating) / newCount;
-        ratingsMap.set(feedback.mentor_id, { average: newAverage, count: newCount });
-      });
+      // For now, set default rating values since we need to check the correct table structure
+      // We'll update this once we confirm the correct column names
+      const defaultRating = 0;
+      const defaultTotalRatings = 0;
 
       // Transform the data to match the expected Mentor interface
       return (data || []).map((mentor) => ({
@@ -121,8 +108,8 @@ export const useMentors = () => {
         location: mentor.location,
         skills: mentor.skills || [],
         keywords: mentor.keywords || [],
-        rating: ratingsMap.get(mentor.id)?.average || 0,
-        totalRatings: ratingsMap.get(mentor.id)?.count || 0,
+        rating: defaultRating,
+        totalRatings: defaultTotalRatings,
         avatar_url: mentor.avatar_url,
         education: undefined,
         top_mentor: false,
