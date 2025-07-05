@@ -20,7 +20,7 @@ export function MentorStatsSection({
         <div className="relative overflow-hidden bg-gradient-to-r from-[#00A6D4]/5 to-[#33b3d9]/5 rounded-lg p-3">
           <div className="flex animate-scroll-horizontal space-x-4 whitespace-nowrap">
             {/* Duplicate companies for seamless loop */}
-            {[...companies, ...companies].map((company, index) => <span key={`${company}-${index}`} className="inline-block px-4 py-2 bg-[#00A6D4]/10 text-[#00A6D4] rounded-full text-sm font-medium hover:bg-[#00A6D4]/20 transition-colors duration-200 cursor-pointer flex-shrink-0">
+            {[...companies, ...companies].map((company, index) => <span key={`${company}-${index}`} className="inline-block px-4 py-2 bg-[#00A6D4]/10 rounded-full text-sm font-medium hover:bg-[#00A6D4]/20 inline-block duration-200 cursor-pointer flex-shrink-0 text-gray-950">
                 {company}
               </span>)}
           </div>
