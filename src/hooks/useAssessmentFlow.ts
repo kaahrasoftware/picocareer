@@ -17,13 +17,19 @@ export const useAssessmentFlow = () => {
   const { data: questions = [], isLoading } = useQuery({
     queryKey: ['assessment-questions'],
     queryFn: async () => {
+      console.log('Fetching assessment questions...');
       const { data, error } = await supabase
         .from('assessment_questions')
         .select('*')
         .eq('is_active', true)
         .order('order_index');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching questions:', error);
+        throw error;
+      }
+      
+      console.log('Fetched questions:', data?.length || 0);
       
       // Map database fields to AssessmentQuestion interface
       return (data || []).map(item => ({
@@ -38,11 +44,15 @@ export const useAssessmentFlow = () => {
     }
   });
 
-  // Create new assessment
+  // Create new assessment - now happens immediately when component mounts
   const createAssessment = useMutation({
     mutationFn: async () => {
+      console.log('Creating new assessment...');
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        console.error('User not authenticated for assessment creation');
+        throw new Error('User not authenticated');
+      }
 
       const { data, error } = await supabase
         .from('career_assessments')
@@ -53,33 +63,45 @@ export const useAssessmentFlow = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating assessment:', error);
+        throw error;
+      }
+      
+      console.log('Assessment created successfully:', data.id);
       return data;
     },
     onSuccess: (data) => {
       setAssessmentId(data.id);
+      console.log('Assessment ID set:', data.id);
     },
     onError: (error) => {
+      console.error('Assessment creation failed:', error);
       toast({
         title: "Error",
         description: "Failed to start assessment. Please try again.",
         variant: "destructive",
       });
-      console.error('Error creating assessment:', error);
     }
   });
 
-  // Auto-create assessment when first question is answered
+  // Create assessment immediately when questions are loaded
   useEffect(() => {
-    if (responses.length === 1 && !assessmentId) {
+    if (questions.length > 0 && !assessmentId && !createAssessment.isPending) {
+      console.log('Auto-creating assessment with', questions.length, 'questions available');
       createAssessment.mutate();
     }
-  }, [responses.length, assessmentId, createAssessment]);
+  }, [questions.length, assessmentId, createAssessment]);
 
   // Save individual response
   const saveResponse = useMutation({
     mutationFn: async ({ questionId, answer }: { questionId: string; answer: any }) => {
-      if (!assessmentId) throw new Error('No active assessment');
+      if (!assessmentId) {
+        console.error('Cannot save response: No assessment ID');
+        throw new Error('No active assessment');
+      }
+
+      console.log('Saving response for question:', questionId, 'Answer:', answer);
 
       const { error } = await supabase
         .from('assessment_responses')
@@ -89,7 +111,12 @@ export const useAssessmentFlow = () => {
           answer: JSON.stringify(answer)
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving response:', error);
+        throw error;
+      }
+      
+      console.log('Response saved successfully');
     },
     onError: (error) => {
       console.error('Error saving response:', error);
@@ -99,27 +126,47 @@ export const useAssessmentFlow = () => {
   // Generate recommendations using AI
   const generateRecommendations = useMutation({
     mutationFn: async () => {
+      console.log('Generating recommendations...');
+      console.log('Assessment ID:', assessmentId);
+      console.log('Responses count:', responses.length);
+      console.log('Responses data:', responses);
+
       if (!assessmentId || responses.length === 0) {
+        console.error('Invalid assessment data - Assessment ID:', assessmentId, 'Responses:', responses.length);
         throw new Error('Invalid assessment data');
       }
 
+      // Validate that we have responses for all questions
+      if (responses.length !== questions.length) {
+        console.warn('Response count mismatch - Expected:', questions.length, 'Got:', responses.length);
+      }
+
+      const requestPayload = {
+        assessmentId,
+        responses: responses.map(r => ({
+          questionId: r.questionId,
+          answer: r.answer
+        }))
+      };
+
+      console.log('Calling ai-career-assessment function with payload:', requestPayload);
+
       const response = await supabase.functions.invoke('ai-career-assessment', {
-        body: {
-          assessmentId,
-          responses: responses.map(r => ({
-            questionId: r.questionId,
-            answer: r.answer
-          }))
-        }
+        body: requestPayload
       });
 
+      console.log('Edge function response:', response);
+
       if (response.error) {
+        console.error('Edge function error:', response.error);
         throw new Error(response.error.message || 'Failed to process assessment');
       }
 
+      console.log('Recommendations generated successfully:', response.data);
       return response.data;
     },
     onSuccess: (data) => {
+      console.log('Recommendations processing completed:', data);
       setRecommendations(data.recommendations || []);
       queryClient.invalidateQueries({ queryKey: ['career-assessments'] });
       queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
@@ -129,18 +176,23 @@ export const useAssessmentFlow = () => {
       });
     },
     onError: (error) => {
+      console.error('Error processing assessment:', error);
       toast({
         title: "Processing Error",
-        description: "Failed to generate recommendations. Please try again.",
+        description: `Failed to generate recommendations: ${error.message}. Please try again.`,
         variant: "destructive",
       });
-      console.error('Error processing assessment:', error);
     }
   });
 
   const handleAnswer = useCallback((answer: string | string[] | number) => {
     const currentQuestion = questions[currentQuestionIndex];
-    if (!currentQuestion) return;
+    if (!currentQuestion) {
+      console.error('No current question available');
+      return;
+    }
+
+    console.log('Handling answer for question:', currentQuestion.id, 'Answer:', answer);
 
     const newResponse: QuestionResponse = {
       questionId: currentQuestion.id,
@@ -152,19 +204,27 @@ export const useAssessmentFlow = () => {
     const updatedResponses = responses.filter(r => r.questionId !== currentQuestion.id);
     updatedResponses.push(newResponse);
     setResponses(updatedResponses);
+    
+    console.log('Updated responses count:', updatedResponses.length);
 
-    // Save to database
+    // Save to database if assessment exists
     if (assessmentId) {
       saveResponse.mutate({ questionId: currentQuestion.id, answer });
+    } else {
+      console.warn('Cannot save response: Assessment not created yet');
     }
 
     // Auto-advance to next question
     if (currentQuestionIndex < questions.length - 1) {
+      console.log('Advancing to next question:', currentQuestionIndex + 1);
       setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      console.log('Reached last question');
     }
   }, [currentQuestionIndex, questions, responses, assessmentId, saveResponse]);
 
   const resetAssessment = useCallback(() => {
+    console.log('Resetting assessment');
     setCurrentQuestionIndex(0);
     setResponses([]);
     setAssessmentId(null);
@@ -175,6 +235,19 @@ export const useAssessmentFlow = () => {
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const canProceed = responses.some(r => r.questionId === currentQuestion?.id);
   const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+
+  // Add assessment ready state
+  const isAssessmentReady = Boolean(assessmentId && questions.length > 0);
+
+  console.log('Assessment Flow State:', {
+    currentQuestionIndex,
+    questionsCount: questions.length,
+    responsesCount: responses.length,
+    assessmentId,
+    isLastQuestion,
+    isAssessmentReady,
+    progress
+  });
 
   return {
     // State
@@ -187,10 +260,12 @@ export const useAssessmentFlow = () => {
     isLastQuestion,
     canProceed,
     progress,
+    isAssessmentReady,
     
     // Loading states
     isLoading,
     isGenerating: generateRecommendations.isPending,
+    isCreatingAssessment: createAssessment.isPending,
     
     // Actions
     handleAnswer,

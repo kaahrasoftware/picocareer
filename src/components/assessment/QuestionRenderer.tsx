@@ -42,7 +42,7 @@ export const QuestionRenderer = ({
 
   // Reset state when question changes
   useEffect(() => {
-    console.log('Question changed, resetting state for type:', question.type);
+    console.log('Question changed, resetting state for type:', question.type, 'Question ID:', question.id);
     setAnswer(getInitialAnswer(question.type));
     setSelectedOptions([]);
   }, [question.id, question.type]);
@@ -57,7 +57,7 @@ export const QuestionRenderer = ({
       responseValue = Array.isArray(answer) ? answer[0] : answer;
     }
 
-    console.log('Submitting answer:', responseValue, 'for question type:', question.type);
+    console.log('Submitting answer:', responseValue, 'for question type:', question.type, 'Question ID:', question.id);
 
     const response: QuestionResponse = {
       questionId: question.id,

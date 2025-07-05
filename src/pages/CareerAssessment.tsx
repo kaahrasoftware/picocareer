@@ -9,7 +9,7 @@ import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { AssessmentHistory } from '@/components/assessment/AssessmentHistory';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
-import { Brain, ArrowLeft } from 'lucide-react';
+import { Brain, ArrowLeft, Loader2 } from 'lucide-react';
 
 type AssessmentPhase = 'intro' | 'questions' | 'results' | 'history';
 
@@ -23,21 +23,41 @@ export default function CareerAssessment() {
     isGenerating,
     progress,
     isLastQuestion,
+    isAssessmentReady,
+    isCreatingAssessment,
     handleAnswer,
     generateRecommendations,
     resetAssessment
   } = useAssessmentFlow();
 
   const handleStartAssessment = () => {
+    if (!isAssessmentReady && !isCreatingAssessment) {
+      console.log('Assessment not ready yet, please wait...');
+      return;
+    }
+    console.log('Starting assessment phase');
     setCurrentPhase('questions');
   };
 
   const handleCompleteAssessment = async () => {
-    await generateRecommendations();
-    setCurrentPhase('results');
+    console.log('Completing assessment with', responses.length, 'responses');
+    
+    if (responses.length === 0) {
+      console.error('No responses to process');
+      return;
+    }
+    
+    try {
+      await generateRecommendations();
+      setCurrentPhase('results');
+    } catch (error) {
+      console.error('Failed to complete assessment:', error);
+      // Error is already handled in the hook
+    }
   };
 
   const handleBackToIntro = () => {
+    console.log('Returning to intro and resetting assessment');
     resetAssessment();
     setCurrentPhase('intro');
   };
@@ -49,6 +69,7 @@ export default function CareerAssessment() {
   const handleAnswerWrapper = (response: any) => {
     // Convert the response to the expected format
     const answer = typeof response === 'object' && response.answer ? response.answer : response;
+    console.log('Answer wrapper received:', response, 'Converted to:', answer);
     handleAnswer(answer);
   };
 
@@ -99,13 +120,34 @@ export default function CareerAssessment() {
             </p>
           </div>
         )}
+
+        {/* Debug info for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+            <p>Debug: Assessment Ready: {isAssessmentReady ? 'Yes' : 'No'}</p>
+            <p>Creating Assessment: {isCreatingAssessment ? 'Yes' : 'No'}</p>
+            <p>Responses Count: {responses.length}</p>
+          </div>
+        )}
       </div>
 
       {currentPhase === 'intro' && (
-        <AssessmentIntro 
-          onStart={handleStartAssessment}
-          onViewHistory={handleViewHistory}
-        />
+        <div>
+          <AssessmentIntro 
+            onStart={handleStartAssessment}
+            onViewHistory={handleViewHistory}
+          />
+          {isCreatingAssessment && (
+            <Card className="mt-4">
+              <CardContent className="py-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Preparing your assessment...</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {currentPhase === 'questions' && currentQuestion && (
