@@ -62,11 +62,28 @@ export const useAssessmentResults = (assessmentId: string | null) => {
           workEnvironment: rec.work_environment
         })) || [];
 
-        const transformedResponses: QuestionResponse[] = responsesData?.map(response => ({
-          questionId: response.question_id,
-          answer: response.answer,
-          timestamp: new Date().toISOString() // Use current timestamp as fallback
-        })) || [];
+        // Transform responses with proper type handling for the answer field
+        const transformedResponses: QuestionResponse[] = responsesData?.map(response => {
+          // Handle the Json type conversion properly
+          let answer: string | string[] | number;
+          
+          if (Array.isArray(response.answer)) {
+            answer = response.answer as string[];
+          } else if (typeof response.answer === 'string') {
+            answer = response.answer;
+          } else if (typeof response.answer === 'number') {
+            answer = response.answer;
+          } else {
+            // Convert other types (including boolean) to string
+            answer = String(response.answer);
+          }
+
+          return {
+            questionId: response.question_id,
+            answer: answer,
+            timestamp: new Date().toISOString() // Use current timestamp as fallback
+          };
+        }) || [];
 
         setRecommendations(transformedRecommendations);
         setResponses(transformedResponses);
