@@ -16,6 +16,13 @@ export interface QuestionResponse {
   timestamp: string;
 }
 
+export interface RelatedCareer {
+  id: string;
+  title: string;
+  matchReason: string;
+  similarityScore: number;
+}
+
 export interface CareerRecommendation {
   careerId: string;
   title: string;
@@ -28,6 +35,7 @@ export interface CareerRecommendation {
   requiredSkills?: string[];
   educationRequirements?: string[];
   workEnvironment?: string;
+  relatedCareers?: RelatedCareer[];
 }
 
 export interface AssessmentResult {

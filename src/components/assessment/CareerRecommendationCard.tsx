@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CareerRecommendation } from '@/types/assessment';
 import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
+import { RelatedCareersSection } from './RelatedCareersSection';
 import { 
   Briefcase, 
   TrendingUp, 
@@ -24,14 +26,21 @@ export const CareerRecommendationCard = ({
   rank 
 }: CareerRecommendationCardProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCareerId, setSelectedCareerId] = useState<string>('');
 
   const handleViewCareer = () => {
+    setSelectedCareerId(recommendation.careerId || '');
     setDialogOpen(true);
   };
 
   const handleBookmark = () => {
     // Implementation for bookmarking career
     console.log('Bookmarking career:', recommendation.careerId);
+  };
+
+  const handleRelatedCareerSelect = (careerId: string) => {
+    setSelectedCareerId(careerId);
+    setDialogOpen(true);
   };
 
   return (
@@ -113,11 +122,21 @@ export const CareerRecommendationCard = ({
               Find Mentors
             </Button>
           </div>
+
+          {/* Related Careers Section */}
+          <div className="mt-6">
+            <RelatedCareersSection
+              careerId={recommendation.careerId || ''}
+              careerTitle={recommendation.title}
+              requiredSkills={recommendation.requiredSkills}
+              onCareerSelect={handleRelatedCareerSelect}
+            />
+          </div>
         </CardContent>
       </Card>
 
       <CareerDetailsDialog
-        careerId={recommendation.careerId || ''}
+        careerId={selectedCareerId}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         recommendationData={recommendation}
