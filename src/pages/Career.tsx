@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -5,12 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { StandardPagination } from "@/components/common/StandardPagination";
 import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface ScoredCareer extends Tables<"careers"> {
   relevanceScore?: number;
 }
+
+const ITEMS_PER_PAGE = 12;
 
 const Career = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +24,7 @@ const Career = () => {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Dialog state management
   const dialogOpen = searchParams.get("dialog") === "true";
@@ -194,6 +199,26 @@ const Career = () => {
     return filtered.sort((a, b) => a.title.localeCompare(b.title));
   }, [careers, searchQuery, industryFilter, selectedSkills, popularFilter]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCareers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentItems = filteredCareers.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, industryFilter, selectedSkills, popularFilter]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Calculate display range for results counter
+  const displayStart = filteredCareers.length === 0 ? 0 : startIndex + 1;
+  const displayEnd = Math.min(endIndex, filteredCareers.length);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto px-4 py-8">
@@ -242,7 +267,7 @@ const Career = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="mb-4 text-sm text-gray-600">
-            Showing {filteredCareers.length} of {careers.length} careers
+            Showing {displayStart}-{displayEnd} of {filteredCareers.length} careers
             {searchQuery && (
               <span className="ml-2 text-blue-600">
                 (sorted by relevance)
@@ -251,9 +276,19 @@ const Career = () => {
           </div>
           
           <CareerResults
-            filteredCareers={filteredCareers}
+            filteredCareers={currentItems}
             isLoading={isLoading}
           />
+
+          {totalPages > 1 && (
+            <div className="mt-8">
+              <StandardPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </motion.div>
       </div>
 
