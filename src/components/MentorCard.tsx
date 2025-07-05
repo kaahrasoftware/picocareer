@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +24,6 @@ export interface MentorCardProps {
   onClick?: () => void;
   imageUrl?: string; // Added for backward compatibility
   topMentor?: boolean;
-  careerTitle?: string; // Added missing property
 }
 
 export function MentorCard({

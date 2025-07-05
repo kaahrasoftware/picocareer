@@ -1,13 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, BookOpen, Star, Tag, Award, Clock, MessageCircle, GraduationCap } from 'lucide-react';
+import { Briefcase, MapPin, BookOpen, Star, Tag, Award, Clock, MessageCircle } from 'lucide-react';
 import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 import { MentorCardProps } from '@/components/MentorCard';
-
 export function ModernMentorCard({
   id,
   name,
@@ -23,12 +21,10 @@ export function ModernMentorCard({
   education,
   hourlyRate,
   onClick,
-  topMentor = false,
-  careerTitle // Now this prop is properly included
+  topMentor = false
 }: MentorCardProps) {
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const displayAvatarUrl = avatarUrl || imageUrl;
-
   const handleViewProfile = () => {
     if (onClick) {
       onClick();
@@ -36,14 +32,9 @@ export function ModernMentorCard({
       setShowProfileDialog(true);
     }
   };
-
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
-
-  // Only show career title if it exists and is different from position
-  const shouldShowCareerTitle = careerTitle && careerTitle !== position;
-
   return <>
       <Card className="h-full flex flex-col overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-gradient-to-br from-white via-white to-cyan-50 group">
         {/* Top accent line */}
@@ -68,34 +59,11 @@ export function ModernMentorCard({
               <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-cyan-500 rounded-full border-2 border-white shadow-sm" title="Available" />
             </div>
             
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">{name}</h3>
-              {position && (
-                <p className="text-sm text-blue-700 font-medium mb-1 flex items-center gap-1 line-clamp-1">
-                  <Briefcase className="h-3 w-3 flex-shrink-0" />
-                  {position} {company && `at ${company}`}
-                </p>
-              )}
-              {location && (
-                <p className="text-xs text-gray-600 flex items-center gap-1 line-clamp-1">
-                  <MapPin className="h-3 w-3 flex-shrink-0" />
-                  {location}
-                </p>
-              )}
-            </div>
+            
           </div>
         </CardHeader>
 
         <CardContent className="flex-1 space-y-4 px-6">
-          {/* Career Title Section */}
-          {shouldShowCareerTitle && <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center gap-2 mb-1">
-                <GraduationCap className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-700">Career Field</span>
-              </div>
-              <p className="text-sm font-medium text-blue-700 line-clamp-1">{careerTitle}</p>
-            </div>}
-
           {education && <div className="bg-cyan-50 rounded-lg p-3 border border-cyan-200">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="h-4 w-4 text-cyan-600" />
