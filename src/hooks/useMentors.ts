@@ -18,6 +18,8 @@ export interface Mentor {
   education?: string;
   top_mentor?: boolean;
   bio?: string;
+  availability_status?: 'available_now' | 'has_availability' | 'booked';
+  session_count?: number;
 }
 
 export const useMentors = () => {
@@ -47,6 +49,67 @@ export const useMentors = () => {
         throw error;
       }
 
+      // Get availability data for all mentors
+      const mentorIds = data?.map(m => m.id) || [];
+      
+      const { data: availabilityData } = await supabase
+        .from("mentor_availability")
+        .select("profile_id, start_date_time, end_date_time, is_available")
+        .in("profile_id", mentorIds)
+        .eq("is_available", true)
+        .gte("start_date_time", new Date().toISOString());
+
+      // Get session counts for all mentors
+      const { data: sessionData } = await supabase
+        .from("mentor_sessions")
+        .select("mentor_id")
+        .in("mentor_id", mentorIds)
+        .eq("status", "completed");
+
+      // Get ratings for all mentors
+      const { data: ratingsData } = await supabase
+        .from("session_feedback")
+        .select("mentor_id, mentor_rating")
+        .in("mentor_id", mentorIds)
+        .not("mentor_rating", "is", null);
+
+      // Process availability status
+      const availabilityMap = new Map<string, 'available_now' | 'has_availability' | 'booked'>();
+      const now = new Date();
+      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      mentorIds.forEach(mentorId => {
+        const mentorAvailability = availabilityData?.filter(a => a.profile_id === mentorId) || [];
+        
+        if (mentorAvailability.length === 0) {
+          availabilityMap.set(mentorId, 'booked');
+        } else {
+          const hasNearTermAvailability = mentorAvailability.some(slot => 
+            new Date(slot.start_date_time) <= thirtyDaysFromNow
+          );
+          availabilityMap.set(mentorId, hasNearTermAvailability ? 'available_now' : 'has_availability');
+        }
+      });
+
+      // Process session counts
+      const sessionCountMap = new Map<string, number>();
+      sessionData?.forEach(session => {
+        const count = sessionCountMap.get(session.mentor_id) || 0;
+        sessionCountMap.set(session.mentor_id, count + 1);
+      });
+
+      // Process ratings
+      const ratingsMap = new Map<string, { average: number, count: number }>();
+      ratingsData?.forEach(feedback => {
+        if (!ratingsMap.has(feedback.mentor_id)) {
+          ratingsMap.set(feedback.mentor_id, { average: 0, count: 0 });
+        }
+        const current = ratingsMap.get(feedback.mentor_id)!;
+        const newCount = current.count + 1;
+        const newAverage = ((current.average * current.count) + feedback.mentor_rating) / newCount;
+        ratingsMap.set(feedback.mentor_id, { average: newAverage, count: newCount });
+      });
+
       // Transform the data to match the expected Mentor interface
       return (data || []).map((mentor) => ({
         id: mentor.id,
@@ -58,12 +121,14 @@ export const useMentors = () => {
         location: mentor.location,
         skills: mentor.skills || [],
         keywords: mentor.keywords || [],
-        rating: 0, // Default rating since we don't have this data yet
-        totalRatings: 0, // Default total ratings
+        rating: ratingsMap.get(mentor.id)?.average || 0,
+        totalRatings: ratingsMap.get(mentor.id)?.count || 0,
         avatar_url: mentor.avatar_url,
-        education: undefined, // Not available in the current schema
-        top_mentor: false, // Default value
+        education: undefined,
+        top_mentor: false,
         bio: mentor.bio,
+        availability_status: availabilityMap.get(mentor.id) || 'booked',
+        session_count: sessionCountMap.get(mentor.id) || 0,
       }));
     },
   });

@@ -21,6 +21,9 @@ interface MentorHorizontalFiltersProps {
   companyFilter: string;
   locationFilter: string;
   skillsFilter: string;
+  availabilityFilter?: string;
+  ratingFilter?: string;
+  experienceFilter?: string;
   onFiltersChange: (filters: Record<string, string>) => void;
   mentors: any[];
 }
@@ -30,6 +33,9 @@ export function MentorHorizontalFilters({
   companyFilter,
   locationFilter,
   skillsFilter,
+  availabilityFilter = "all",
+  ratingFilter = "all",
+  experienceFilter = "all",
   onFiltersChange,
   mentors
 }: MentorHorizontalFiltersProps) {
@@ -53,11 +59,20 @@ export function MentorHorizontalFilters({
       search: "",
       company: "all",
       location: "all",
-      skills: "all"
+      skills: "all",
+      availability: "all",
+      rating: "all",
+      experience: "all"
     });
   };
 
-  const hasActiveFilters = searchQuery || companyFilter !== "all" || locationFilter !== "all" || skillsFilter !== "all";
+  const hasActiveFilters = searchQuery || 
+    companyFilter !== "all" || 
+    locationFilter !== "all" || 
+    skillsFilter !== "all" ||
+    availabilityFilter !== "all" ||
+    ratingFilter !== "all" ||
+    experienceFilter !== "all";
 
   return (
     <div className="py-4">
@@ -149,35 +164,47 @@ export function MentorHorizontalFilters({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">More Companies</label>
-              <Select value={companyFilter} onValueChange={(value) => handleFilterChange("company", value)}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+              <Select value={availabilityFilter} onValueChange={(value) => handleFilterChange("availability", value)}>
                 <SelectTrigger className="border-gray-200">
-                  <SelectValue placeholder="All Companies" />
+                  <SelectValue placeholder="Any Availability" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Companies</SelectItem>
-                  {companies.map((company) => (
-                    <SelectItem key={company} value={company}>
-                      {company}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Any Availability</SelectItem>
+                  <SelectItem value="available_now">Available Now (Next 30 Days)</SelectItem>
+                  <SelectItem value="has_availability">Has Future Availability</SelectItem>
+                  <SelectItem value="booked">Currently Booked</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">More Locations</label>
-              <Select value={locationFilter} onValueChange={(value) => handleFilterChange("location", value)}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+              <Select value={ratingFilter} onValueChange={(value) => handleFilterChange("rating", value)}>
                 <SelectTrigger className="border-gray-200">
-                  <SelectValue placeholder="All Locations" />
+                  <SelectValue placeholder="Any Rating" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map((location) => (
-                    <SelectItem key={location} value={location}>
-                      {location}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="all">Any Rating</SelectItem>
+                  <SelectItem value="5_stars">5 Stars (4.5-5.0)</SelectItem>
+                  <SelectItem value="4_plus">4+ Stars (4.0-4.49)</SelectItem>
+                  <SelectItem value="3_plus">3+ Stars (3.0-3.99)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
+              <Select value={experienceFilter} onValueChange={(value) => handleFilterChange("experience", value)}>
+                <SelectTrigger className="border-gray-200">
+                  <SelectValue placeholder="Any Experience" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Experience</SelectItem>
+                  <SelectItem value="new">New Mentors (0-5 sessions)</SelectItem>
+                  <SelectItem value="experienced">Experienced (6-20 sessions)</SelectItem>
+                  <SelectItem value="highly_experienced">Highly Experienced (21-50 sessions)</SelectItem>
+                  <SelectItem value="expert">Expert (50+ sessions)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

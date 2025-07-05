@@ -20,6 +20,10 @@ export default function Mentor() {
   const companyFilter = searchParams.get("company") || "all";
   const locationFilter = searchParams.get("location") || "all";
   const skillsFilter = searchParams.get("skills") || "all";
+  const availabilityFilter = searchParams.get("availability") || "all";
+  const ratingFilter = searchParams.get("rating") || "all";
+  const experienceFilter = searchParams.get("experience") || "all";
+
   const {
     data: mentors = [],
     isLoading,
@@ -28,11 +32,36 @@ export default function Mentor() {
 
   // Filter mentors based on current filters
   const filteredMentors = mentors.filter(mentor => {
-    const matchesSearch = mentor.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) || mentor.bio?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCompany = companyFilter === "all" || mentor.company_name?.toLowerCase().includes(companyFilter.toLowerCase());
-    const matchesLocation = locationFilter === "all" || mentor.location?.toLowerCase().includes(locationFilter.toLowerCase());
-    const matchesSkills = skillsFilter === "all" || mentor.skills?.some(skill => skill.toLowerCase().includes(skillsFilter.toLowerCase()));
-    return matchesSearch && matchesCompany && matchesLocation && matchesSkills;
+    const matchesSearch = mentor.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         mentor.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         mentor.position?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         mentor.bio?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCompany = companyFilter === "all" || 
+                          mentor.company_name?.toLowerCase().includes(companyFilter.toLowerCase());
+    
+    const matchesLocation = locationFilter === "all" || 
+                           mentor.location?.toLowerCase().includes(locationFilter.toLowerCase());
+    
+    const matchesSkills = skillsFilter === "all" || 
+                         mentor.skills?.some(skill => skill.toLowerCase().includes(skillsFilter.toLowerCase()));
+
+    const matchesAvailability = availabilityFilter === "all" || 
+                               mentor.availability_status === availabilityFilter;
+
+    const matchesRating = ratingFilter === "all" || 
+                         (ratingFilter === "5_stars" && mentor.rating >= 4.5) ||
+                         (ratingFilter === "4_plus" && mentor.rating >= 4.0 && mentor.rating < 4.5) ||
+                         (ratingFilter === "3_plus" && mentor.rating >= 3.0 && mentor.rating < 4.0);
+
+    const matchesExperience = experienceFilter === "all" ||
+                             (experienceFilter === "new" && mentor.session_count <= 5) ||
+                             (experienceFilter === "experienced" && mentor.session_count >= 6 && mentor.session_count <= 20) ||
+                             (experienceFilter === "highly_experienced" && mentor.session_count >= 21 && mentor.session_count <= 50) ||
+                             (experienceFilter === "expert" && mentor.session_count > 50);
+
+    return matchesSearch && matchesCompany && matchesLocation && matchesSkills && 
+           matchesAvailability && matchesRating && matchesExperience;
   });
 
   // Pagination logic
@@ -44,7 +73,7 @@ export default function Mentor() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, companyFilter, locationFilter, skillsFilter]);
+  }, [searchQuery, companyFilter, locationFilter, skillsFilter, availabilityFilter, ratingFilter, experienceFilter]);
 
   // Update URL params when filters change
   const updateFilters = (newFilters: Record<string, string>) => {
@@ -90,7 +119,10 @@ export default function Mentor() {
             searchQuery={searchQuery} 
             companyFilter={companyFilter} 
             locationFilter={locationFilter} 
-            skillsFilter={skillsFilter} 
+            skillsFilter={skillsFilter}
+            availabilityFilter={availabilityFilter}
+            ratingFilter={ratingFilter}
+            experienceFilter={experienceFilter}
             onFiltersChange={updateFilters} 
             mentors={mentors} 
           />
