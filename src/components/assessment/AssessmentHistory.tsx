@@ -10,11 +10,13 @@ import { History, Calendar, Eye, RefreshCw, AlertCircle } from 'lucide-react';
 interface AssessmentHistoryProps {
   onBackToIntro: () => void;
   onRetakeAssessment: () => void;
+  onViewResults: (assessmentId: string) => void;
 }
 
 export const AssessmentHistory = ({ 
   onBackToIntro, 
-  onRetakeAssessment 
+  onRetakeAssessment,
+  onViewResults 
 }: AssessmentHistoryProps) => {
   const { assessments, isLoading, error, refetch } = useAssessmentHistory();
 
@@ -133,10 +135,13 @@ export const AssessmentHistory = ({
                           </p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" disabled>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => onViewResults(assessment.id)}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View Results
-                        <span className="ml-1 text-xs text-muted-foreground">(Coming Soon)</span>
                       </Button>
                     </div>
                   </CardContent>

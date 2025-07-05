@@ -9,13 +9,16 @@ import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { AssessmentHistory } from '@/components/assessment/AssessmentHistory';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
+import { useAssessmentResults } from '@/hooks/useAssessmentResults';
 import { Brain, ArrowLeft, Loader2 } from 'lucide-react';
 
-type AssessmentPhase = 'intro' | 'questions' | 'results' | 'history';
+type AssessmentPhase = 'intro' | 'questions' | 'results' | 'history' | 'view-results';
 
 export default function CareerAssessment() {
   const { session } = useAuthSession();
   const [currentPhase, setCurrentPhase] = useState<AssessmentPhase>('intro');
+  const [viewingAssessmentId, setViewingAssessmentId] = useState<string | null>(null);
+  
   const {
     currentQuestion,
     responses,
@@ -29,6 +32,14 @@ export default function CareerAssessment() {
     generateRecommendations,
     resetAssessment
   } = useAssessmentFlow();
+
+  // Hook for viewing historical results
+  const { 
+    recommendations: historicalRecommendations, 
+    responses: historicalResponses, 
+    isLoading: isLoadingHistorical, 
+    error: historicalError 
+  } = useAssessmentResults(viewingAssessmentId);
 
   const handleStartAssessment = () => {
     if (!isAssessmentReady && !isCreatingAssessment) {
@@ -60,9 +71,21 @@ export default function CareerAssessment() {
     console.log('Returning to intro and resetting assessment');
     resetAssessment();
     setCurrentPhase('intro');
+    setViewingAssessmentId(null);
   };
 
   const handleViewHistory = () => {
+    setCurrentPhase('history');
+  };
+
+  const handleViewResults = (assessmentId: string) => {
+    console.log('Viewing results for assessment:', assessmentId);
+    setViewingAssessmentId(assessmentId);
+    setCurrentPhase('view-results');
+  };
+
+  const handleBackToHistory = () => {
+    setViewingAssessmentId(null);
     setCurrentPhase('history');
   };
 
@@ -104,10 +127,16 @@ export default function CareerAssessment() {
             <Brain className="h-8 w-8 text-primary" />
             AI Career Assessment
           </h1>
-          {currentPhase !== 'intro' && (
+          {(currentPhase !== 'intro' && currentPhase !== 'view-results') && (
             <Button variant="outline" onClick={handleBackToIntro}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Start Over
+            </Button>
+          )}
+          {currentPhase === 'view-results' && (
+            <Button variant="outline" onClick={handleBackToHistory}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to History
             </Button>
           )}
         </div>
@@ -172,7 +201,38 @@ export default function CareerAssessment() {
         <AssessmentHistory 
           onBackToIntro={handleBackToIntro}
           onRetakeAssessment={handleStartAssessment}
+          onViewResults={handleViewResults}
         />
+      )}
+
+      {currentPhase === 'view-results' && (
+        <div>
+          {isLoadingHistorical ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                  <p>Loading assessment results...</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : historicalError ? (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p className="text-destructive mb-4">Error loading results: {historicalError}</p>
+                <Button variant="outline" onClick={handleBackToHistory}>
+                  Back to History
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <ResultsPanel 
+              recommendations={historicalRecommendations}
+              responses={historicalResponses}
+              onRetakeAssessment={handleBackToIntro}
+            />
+          )}
+        </div>
       )}
     </div>
   );
