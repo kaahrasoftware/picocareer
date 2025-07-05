@@ -37,7 +37,7 @@ export function MentorStatsSection({
         <div className="relative overflow-hidden bg-gradient-to-r from-[#33b3d9]/5 to-[#00A6D4]/5 rounded-lg p-3">
           <div className="flex animate-scroll-horizontal space-x-4 whitespace-nowrap">
             {/* Duplicate countries for seamless loop */}
-            {[...countries, ...countries].map((country, index) => <span key={`${country}-${index}`} className="inline-block px-4 py-2 bg-[#33b3d9]/10 text-[#33b3d9] rounded-full text-sm font-medium hover:bg-[#33b3d9]/20 transition-colors duration-200 cursor-pointer flex-shrink-0">
+            {[...countries, ...countries].map((country, index) => <span key={`${country}-${index}`} className="inline-block px-4 py-2 bg-[#33b3d9]/10 rounded-full text-sm font-medium hover:bg-[#33b3d9]/20 transition-colors duration-200 cursor-pointer flex-shrink-0 text-gray-950">
                 {country}
               </span>)}
           </div>
