@@ -62,3 +62,21 @@ export interface AssessmentHistoryItem {
 }
 
 export type ProfileType = 'middle_school' | 'high_school' | 'college' | 'career_professional';
+
+// Database type for raw assessment question from Supabase
+export interface DatabaseAssessmentQuestion {
+  id: string;
+  title: string;
+  description: string | null;
+  type: 'multiple_choice' | 'multiple_select' | 'scale' | 'text';
+  options: any;
+  order_index: number;
+  is_required: boolean;
+  is_active: boolean;
+  profile_type?: string[] | null;
+  target_audience?: string[] | null;
+  prerequisites?: any;
+  conditional_logic?: any;
+  created_at: string;
+  updated_at: string;
+}
