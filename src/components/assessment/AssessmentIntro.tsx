@@ -1,15 +1,21 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Brain, Users, Clock, Target, BookOpen, Briefcase, GraduationCap, User } from 'lucide-react';
 
 interface AssessmentIntroProps {
   onStart: () => void;
-  onViewHistory: () => void;
 }
 
-export const AssessmentIntro = ({ onStart, onViewHistory }: AssessmentIntroProps) => {
+export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
+  const navigate = useNavigate();
+
+  const handleViewHistory = () => {
+    navigate('/career-assessment/history');
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -127,7 +133,7 @@ export const AssessmentIntro = ({ onStart, onViewHistory }: AssessmentIntroProps
         <Button onClick={onStart} size="lg" className="px-8">
           Start Assessment
         </Button>
-        <Button variant="outline" onClick={onViewHistory} size="lg">
+        <Button variant="outline" onClick={handleViewHistory} size="lg">
           View Past Results
         </Button>
       </div>

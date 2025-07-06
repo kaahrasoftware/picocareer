@@ -24,8 +24,7 @@ export default function CareerAssessment() {
     handleAnswer,
     completeAssessment,
     retakeAssessment,
-    startAssessment,
-    viewHistory
+    startAssessment
   } = useAssessmentFlow();
 
   if (isLoading) {
@@ -70,10 +69,7 @@ export default function CareerAssessment() {
               Discover your ideal career path through our personalized 8-question assessment
             </p>
           </div>
-          <AssessmentIntro 
-            onStart={startAssessment} 
-            onViewHistory={viewHistory}
-          />
+          <AssessmentIntro onStart={startAssessment} />
         </div>
       </div>
     );
