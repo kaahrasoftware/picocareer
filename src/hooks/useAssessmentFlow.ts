@@ -34,23 +34,20 @@ export const useAssessmentFlow = () => {
       
       console.log('Fetched questions:', data?.length || 0);
       
-      // Map database fields to AssessmentQuestion interface with type casting
-      return (data || []).map(item => {
-        const rawItem = item as any; // Type assertion to access new fields
-        return {
-          id: item.id,
-          title: item.title,
-          description: item.description,
-          type: item.type,
-          options: item.options as string[],
-          order: item.order_index,
-          isRequired: item.is_required,
-          profileType: rawItem.profile_type as string[] || [],
-          targetAudience: rawItem.target_audience as string[] || [],
-          prerequisites: rawItem.prerequisites,
-          conditionalLogic: rawItem.conditional_logic
-        } as AssessmentQuestion;
-      });
+      // Map database fields to AssessmentQuestion interface
+      return (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        type: item.type,
+        options: item.options as string[],
+        order: item.order_index,
+        isRequired: item.is_required,
+        profileType: item.profile_type as string[] || [],
+        targetAudience: item.target_audience as string[] || [],
+        prerequisites: item.prerequisites,
+        conditionalLogic: item.conditional_logic
+      })) as AssessmentQuestion[];
     }
   });
 
@@ -100,24 +97,27 @@ export const useAssessmentFlow = () => {
     }
   });
 
-  // Update assessment with detected profile type - simplified approach
+  // Update assessment with detected profile type
   const updateAssessmentProfile = useMutation({
     mutationFn: async (profileType: ProfileType) => {
       if (!assessmentId) return;
 
-      // For now, we'll just log the profile type since the schema may not be fully updated
-      console.log('Profile type detected and would be saved:', profileType);
+      console.log('Updating assessment with profile type:', profileType);
       
-      // Simple update to trigger completion
       const { error } = await supabase
         .from('career_assessments')
-        .update({ status: 'in_progress' })
+        .update({
+          detected_profile_type: profileType,
+          profile_detection_completed: true
+        })
         .eq('id', assessmentId);
 
       if (error) {
-        console.error('Error updating assessment:', error);
+        console.error('Error updating assessment profile:', error);
         throw error;
       }
+      
+      console.log('Assessment profile updated successfully');
     }
   });
 
