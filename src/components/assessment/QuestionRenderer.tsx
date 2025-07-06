@@ -197,10 +197,10 @@ export const QuestionRenderer = ({
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Analyzing Your Responses...
+                  Generating Your Results...
                 </>
               ) : (
-                'Complete Assessment'
+                'Complete Step - Analyze Results'
               )}
             </Button>
           ) : (

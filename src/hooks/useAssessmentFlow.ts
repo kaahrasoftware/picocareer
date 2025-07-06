@@ -1,226 +1,272 @@
 
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { detectProfileType } from '@/utils/profileDetection';
+import { useToast } from '@/hooks/use-toast';
+import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
 import type { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
 
-interface AssessmentState {
-  assessmentId: string | null;
-  currentQuestionIndex: number;
-  responses: QuestionResponse[];
-  selectedProfileType: ProfileType | null;
-  isComplete: boolean;
-  isGenerating: boolean;
-}
+type AssessmentStep = 'profile_detection' | 'profile_specific' | 'ai_generation' | 'results';
 
 export const useAssessmentFlow = () => {
-  const queryClient = useQueryClient();
-  
-  const [state, setState] = useState<AssessmentState>({
-    assessmentId: null,
-    currentQuestionIndex: 0,
-    responses: [],
-    selectedProfileType: null,
-    isComplete: false,
-    isGenerating: false,
-  });
+  const [assessmentId, setAssessmentId] = useState<string | null>(null);
+  const [allQuestions, setAllQuestions] = useState<AssessmentQuestion[]>([]);
+  const [currentStep, setCurrentStep] = useState<AssessmentStep>('profile_detection');
+  const [stepQuestions, setStepQuestions] = useState<AssessmentQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [responses, setResponses] = useState<QuestionResponse[]>([]);
+  const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
+  const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
+  const [showProfileResult, setShowProfileResult] = useState(false);
+  const { toast } = useToast();
 
-  // Fetch all questions
-  const { data: allQuestions = [], isLoading: questionsLoading } = useQuery({
-    queryKey: ['assessment-questions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('assessment_questions')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index');
-      
-      if (error) throw error;
-      
-      // Map database fields to TypeScript interface
-      return (data || []).map(q => ({
-        id: q.id,
-        title: q.title,
-        description: q.description,
-        type: q.type,
-        options: q.options as string[],
-        order: q.order_index,
-        isRequired: q.is_required,
-        profileType: q.profile_type as string[],
-        targetAudience: q.target_audience as string[],
-        prerequisites: q.prerequisites,
-        conditionalLogic: q.conditional_logic,
-      })) as AssessmentQuestion[];
-    },
-  });
+  // Load questions and create assessment
+  useEffect(() => {
+    const initializeAssessment = async () => {
+      try {
+        setIsCreatingAssessment(true);
+        
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('assessment_questions')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index');
 
-  // Filter questions based on profile selection
-  const filteredQuestions = useMemo(() => {
-    if (!allQuestions.length) return [];
+        if (questionsError) {
+          console.error('Error fetching questions:', questionsError);
+          toast({
+            title: "Error",
+            description: "Failed to load assessment questions",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('Fetched questions:', questionsData);
+        
+        if (!questionsData || questionsData.length === 0) {
+          toast({
+            title: "No Questions Available",
+            description: "No assessment questions are currently available",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const transformedQuestions: AssessmentQuestion[] = questionsData.map(q => ({
+          id: q.id,
+          title: q.title,
+          description: q.description,
+          type: q.type as 'multiple_choice' | 'multiple_select' | 'scale' | 'text',
+          options: Array.isArray(q.options) ? q.options : (q.options ? Object.values(q.options) : []),
+          order: q.order_index,
+          isRequired: q.is_required,
+          profileType: q.profile_type,
+          targetAudience: q.target_audience,
+          prerequisites: q.prerequisites,
+          conditionalLogic: q.conditional_logic
+        }));
+
+        setAllQuestions(transformedQuestions);
+        
+        // Start with profile detection questions (order 1-2)
+        const profileDetectionQuestions = transformedQuestions.filter(q => q.order <= 2);
+        setStepQuestions(profileDetectionQuestions);
+        console.log('Profile detection questions:', profileDetectionQuestions);
+
+        // Create assessment record
+        const { data: assessmentData, error: assessmentError } = await supabase
+          .from('career_assessments')
+          .insert({
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            status: 'in_progress'
+          })
+          .select()
+          .single();
+
+        if (assessmentError) {
+          console.error('Error creating assessment:', assessmentError);
+          toast({
+            title: "Error",
+            description: "Failed to create assessment",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('Created assessment:', assessmentData);
+        setAssessmentId(assessmentData.id);
+      } catch (error) {
+        console.error('Error initializing assessment:', error);
+        toast({
+          title: "Error",
+          description: "Failed to initialize assessment",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCreatingAssessment(false);
+      }
+    };
+
+    initializeAssessment();
+  }, [toast]);
+
+  const proceedToProfileSpecific = useCallback(() => {
+    if (!detectedProfileType || !allQuestions.length) return;
+
+    console.log('Proceeding to profile-specific questions for:', detectedProfileType);
     
-    const profileQuestion = allQuestions.find(q => q.order === 1);
-    if (!profileQuestion) return [];
+    // Filter questions for the detected profile type (order 10-42)
+    const profileSpecificQuestions = allQuestions.filter(q => 
+      q.profileType && 
+      q.profileType.includes(detectedProfileType) && 
+      q.order >= 10 && 
+      q.order <= 42
+    ).sort((a, b) => a.order - b.order);
     
-    // If no profile selected yet, only show the profile question
-    if (!state.selectedProfileType) {
-      return [profileQuestion];
+    console.log('Profile-specific questions:', profileSpecificQuestions);
+    
+    setStepQuestions(profileSpecificQuestions);
+    setCurrentQuestionIndex(0);
+    setCurrentStep('profile_specific');
+    setShowProfileResult(false);
+  }, [detectedProfileType, allQuestions]);
+
+  const proceedToAiGeneration = useCallback(() => {
+    console.log('Proceeding to AI generation with responses:', responses);
+    setCurrentStep('ai_generation');
+    setIsGenerating(true);
+    
+    // Auto-start generation
+    setTimeout(() => {
+      generateRecommendations();
+    }, 1000);
+  }, [responses]);
+
+  const handleAnswer = useCallback(async (answer: string | string[] | number) => {
+    if (!assessmentId || !stepQuestions[currentQuestionIndex]) {
+      console.error('No assessment ID or current question available');
+      return;
     }
-    
-    // After profile selection, show remaining questions in order
-    const questionSequence = [];
-    
-    // 1. Profile question (already answered)
-    questionSequence.push(profileQuestion);
-    
-    // 2. Universal question 2
-    const universalQ2 = allQuestions.find(q => q.order === 2);
-    if (universalQ2) questionSequence.push(universalQ2);
-    
-    // 3. Profile-specific questions (3 questions)
-    const profileSpecificQuestions = allQuestions
-      .filter(q => 
-        q.profileType?.includes(state.selectedProfileType) && 
-        q.order >= 10 && 
-        q.order < 50
-      )
-      .sort((a, b) => a.order - b.order)
-      .slice(0, 3);
-    
-    questionSequence.push(...profileSpecificQuestions);
-    
-    // 4. Universal questions 50-52
-    const universalEndQuestions = allQuestions
-      .filter(q => 
-        q.order >= 50 && 
-        q.targetAudience?.includes('all') &&
-        // Handle question 52 profile filtering
-        (q.order !== 52 || state.selectedProfileType !== 'middle_school')
-      )
-      .sort((a, b) => a.order - b.order);
-    
-    questionSequence.push(...universalEndQuestions);
-    
-    return questionSequence;
-  }, [allQuestions, state.selectedProfileType]);
 
-  const currentQuestion = filteredQuestions[state.currentQuestionIndex] || null;
-  const totalQuestions = filteredQuestions.length;
-  const isLastQuestion = state.currentQuestionIndex === totalQuestions - 1;
+    const currentQuestion = stepQuestions[currentQuestionIndex];
+    console.log('Processing answer for question:', currentQuestion.id, 'Answer:', answer);
 
-  // Create assessment mutation
-  const createAssessmentMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase
-        .from('career_assessments')
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          status: 'in_progress',
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      setState(prev => ({ ...prev, assessmentId: data.id }));
-    },
-  });
-
-  // Submit response and move to next question
-  const handleQuestionResponse = async (response: QuestionResponse) => {
-    if (!state.assessmentId) return;
+    const response: QuestionResponse = {
+      questionId: currentQuestion.id,
+      answer,
+      timestamp: new Date().toISOString()
+    };
 
     // Save response to database
-    const { error } = await supabase
-      .from('assessment_responses')
-      .insert({
-        assessment_id: state.assessmentId,
-        question_id: response.questionId,
-        answer: response.answer,
-      });
+    try {
+      const { error } = await supabase
+        .from('assessment_responses')
+        .insert({
+          assessment_id: assessmentId,
+          question_id: currentQuestion.id,
+          answer: answer
+        });
 
-    if (error) {
+      if (error) {
+        console.error('Error saving response:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save response",
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch (error) {
       console.error('Error saving response:', error);
       return;
     }
 
-    const updatedResponses = [...state.responses, response];
-    
-    // Check if this is the profile type question (first question)
-    let newProfileType = state.selectedProfileType;
-    if (state.currentQuestionIndex === 0 && typeof response.answer === 'string') {
-      newProfileType = detectProfileType([response]);
-      
-      // Update assessment with detected profile
-      if (newProfileType) {
-        await supabase
-          .from('career_assessments')
-          .update({ 
-            detected_profile_type: newProfileType,
-            profile_detection_completed: true 
-          })
-          .eq('id', state.assessmentId);
+    const newResponses = [...responses, response];
+    setResponses(newResponses);
+
+    // Handle step transitions
+    if (currentStep === 'profile_detection') {
+      // Check if we've completed profile detection (2 questions)
+      if (newResponses.length >= 2) {
+        console.log('Profile detection completed, detecting profile type...');
+        const profileType = detectProfileType(newResponses);
+        console.log('Detected profile type:', profileType);
+        
+        if (profileType) {
+          setDetectedProfileType(profileType);
+          setShowProfileResult(true);
+
+          // Update assessment with detected profile type
+          await supabase
+            .from('career_assessments')
+            .update({
+              detected_profile_type: profileType,
+              profile_detection_completed: true
+            })
+            .eq('id', assessmentId);
+        }
+        return;
       }
     }
 
-    setState(prev => ({
-      ...prev,
-      responses: updatedResponses,
-      selectedProfileType: newProfileType,
-      currentQuestionIndex: prev.currentQuestionIndex + 1,
-    }));
-  };
+    // Move to next question within current step
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < stepQuestions.length) {
+      setCurrentQuestionIndex(nextIndex);
+    } else {
+      // Completed current step
+      if (currentStep === 'profile_specific') {
+        proceedToAiGeneration();
+      }
+    }
+  }, [assessmentId, stepQuestions, currentQuestionIndex, responses, currentStep, toast, proceedToAiGeneration]);
 
-  // Complete assessment and generate recommendations
-  const completeAssessment = async () => {
-    if (!state.assessmentId) return;
+  const generateRecommendations = useCallback(async () => {
+    if (!assessmentId || responses.length === 0) {
+      console.error('No assessment ID or responses available');
+      return;
+    }
 
-    setState(prev => ({ ...prev, isGenerating: true }));
+    console.log('Generating recommendations for assessment:', assessmentId);
 
     try {
       const { data, error } = await supabase.functions.invoke('ai-career-assessment', {
         body: {
-          assessmentId: state.assessmentId,
-          responses: state.responses,
-        },
+          assessmentId,
+          responses: responses.map(r => ({
+            questionId: r.questionId,
+            answer: r.answer
+          }))
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error generating recommendations:', error);
+        toast({
+          title: "Error",
+          description: "Failed to generate career recommendations",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      setState(prev => ({ 
-        ...prev, 
-        isComplete: true, 
-        isGenerating: false 
-      }));
-
-      // Refresh recommendations query
-      queryClient.invalidateQueries({ queryKey: ['career-recommendations', state.assessmentId] });
+      console.log('Recommendations generated:', data);
       
-    } catch (error) {
-      console.error('Error completing assessment:', error);
-      setState(prev => ({ ...prev, isGenerating: false }));
-    }
-  };
-
-  // Fetch recommendations
-  const { data: recommendations = [], isLoading: recommendationsLoading } = useQuery({
-    queryKey: ['career-recommendations', state.assessmentId],
-    queryFn: async () => {
-      if (!state.assessmentId) return [];
-      
-      const { data, error } = await supabase
+      // Fetch the saved recommendations from the database
+      const { data: recommendationsData, error: fetchError } = await supabase
         .from('career_recommendations')
         .select('*')
-        .eq('assessment_id', state.assessmentId)
-        .order('match_score', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Map database fields to TypeScript interface
-      return (data || []).map(rec => ({
-        careerId: rec.career_id || rec.id,
+        .eq('assessment_id', assessmentId);
+
+      if (fetchError) {
+        console.error('Error fetching recommendations:', fetchError);
+        return;
+      }
+
+      const transformedRecommendations: CareerRecommendation[] = recommendationsData.map(rec => ({
+        careerId: rec.career_id || '',
         title: rec.title,
         description: rec.description,
         matchScore: rec.match_score,
@@ -228,59 +274,62 @@ export const useAssessmentFlow = () => {
         salaryRange: rec.salary_range,
         growthOutlook: rec.growth_outlook,
         timeToEntry: rec.time_to_entry,
-        requiredSkills: rec.required_skills,
-        educationRequirements: rec.education_requirements,
-        workEnvironment: rec.work_environment,
-        relatedCareers: [],
-      })) as CareerRecommendation[];
-    },
-    enabled: !!state.assessmentId && state.isComplete,
-  });
+        requiredSkills: rec.required_skills || [],
+        educationRequirements: rec.education_requirements || [],
+        workEnvironment: rec.work_environment
+      }));
 
-  // Reset assessment
-  const resetAssessment = () => {
-    setState({
-      assessmentId: null,
-      currentQuestionIndex: 0,
-      responses: [],
-      selectedProfileType: null,
-      isComplete: false,
-      isGenerating: false,
-    });
-  };
-
-  // Start assessment
-  const startAssessment = () => {
-    if (!state.assessmentId) {
-      createAssessmentMutation.mutate();
+      setRecommendations(transformedRecommendations);
+      setCurrentStep('results');
+    } catch (error) {
+      console.error('Error in generateRecommendations:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while generating recommendations",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
     }
-  };
+  }, [assessmentId, responses, toast]);
 
-  useEffect(() => {
-    startAssessment();
+  const resetAssessment = useCallback(() => {
+    setAssessmentId(null);
+    setAllQuestions([]);
+    setCurrentStep('profile_detection');
+    setStepQuestions([]);
+    setCurrentQuestionIndex(0);
+    setResponses([]);
+    setRecommendations([]);
+    setDetectedProfileType(null);
+    setIsGenerating(false);
+    setShowProfileResult(false);
   }, []);
 
+  const currentQuestion = stepQuestions[currentQuestionIndex] || null;
+  const totalQuestionsInStep = stepQuestions.length;
+  const stepProgress = totalQuestionsInStep > 0 ? ((currentQuestionIndex + 1) / totalQuestionsInStep) * 100 : 0;
+  const isLastQuestionInStep = currentQuestionIndex === totalQuestionsInStep - 1;
+  const isAssessmentReady = !isCreatingAssessment && stepQuestions.length > 0;
+
   return {
-    // State
+    currentStep,
     currentQuestion,
-    currentQuestionIndex: state.currentQuestionIndex,
-    totalQuestions,
-    responses: state.responses,
-    selectedProfileType: state.selectedProfileType,
-    isComplete: state.isComplete,
-    isGenerating: state.isGenerating,
-    isLastQuestion,
-    
-    // Data
+    responses,
     recommendations,
-    
-    // Loading states
-    isLoading: questionsLoading || createAssessmentMutation.isPending,
-    recommendationsLoading,
-    
-    // Actions
-    handleQuestionResponse,
-    completeAssessment,
-    resetAssessment,
+    detectedProfileType,
+    showProfileResult,
+    isGenerating,
+    stepProgress,
+    isLastQuestionInStep,
+    isAssessmentReady,
+    isCreatingAssessment,
+    totalQuestionsInStep,
+    currentQuestionIndex,
+    handleAnswer,
+    proceedToProfileSpecific,
+    proceedToAiGeneration,
+    generateRecommendations,
+    resetAssessment
   };
 };
