@@ -19,13 +19,14 @@ export default function CareerAssessment() {
     isLoading,
     isGenerating,
     showResults,
+    hasStarted,
     isLastQuestion,
     handleAnswer,
     completeAssessment,
-    retakeAssessment
+    retakeAssessment,
+    startAssessment,
+    viewHistory
   } = useAssessmentFlow();
-
-  const hasStarted = currentQuestion !== null || showResults;
 
   if (isLoading) {
     return (
@@ -70,8 +71,8 @@ export default function CareerAssessment() {
             </p>
           </div>
           <AssessmentIntro 
-            onStart={() => {}} 
-            onViewHistory={() => {}}
+            onStart={startAssessment} 
+            onViewHistory={viewHistory}
           />
         </div>
       </div>

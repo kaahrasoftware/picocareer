@@ -16,6 +16,7 @@ export const useAssessmentFlow = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   // Load questions on component mount
   useEffect(() => {
@@ -77,6 +78,75 @@ export const useAssessmentFlow = () => {
       .slice(0, 8);
 
     setQuestions(orderedQuestions);
+  };
+
+  const startAssessment = async () => {
+    console.log('Starting assessment...');
+    setHasStarted(true);
+    setCurrentQuestionIndex(0);
+    setResponses([]);
+    setDetectedProfileType(null);
+    setRecommendations([]);
+    setShowResults(false);
+    
+    // Create assessment record if user is logged in
+    if (session?.user?.id) {
+      await createOrUpdateAssessment();
+    }
+  };
+
+  const viewHistory = async () => {
+    console.log('Viewing assessment history...');
+    // For now, just show a simple message - this could be expanded to show actual history
+    if (!session?.user?.id) {
+      alert('Please sign in to view your assessment history.');
+      return;
+    }
+    
+    try {
+      const { data: assessments, error } = await supabase
+        .from('career_assessments')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (assessments && assessments.length > 0) {
+        // Load the most recent completed assessment
+        const latestAssessment = assessments[0];
+        
+        // Load responses for this assessment
+        const { data: responses, error: responsesError } = await supabase
+          .from('assessment_responses')
+          .select('*')
+          .eq('assessment_id', latestAssessment.id);
+
+        if (responsesError) throw responsesError;
+
+        // Load recommendations for this assessment
+        const { data: recommendations, error: recommendationsError } = await supabase
+          .from('career_recommendations')
+          .select('*')
+          .eq('assessment_id', latestAssessment.id);
+
+        if (recommendationsError) throw recommendationsError;
+
+        // Set the state to show the previous results
+        setResponses(responses || []);
+        setRecommendations(recommendations || []);
+        setDetectedProfileType(latestAssessment.detected_profile_type);
+        setShowResults(true);
+        setHasStarted(true);
+      } else {
+        alert('No previous assessment results found. Take your first assessment!');
+      }
+    } catch (error) {
+      console.error('Error loading assessment history:', error);
+      alert('Failed to load assessment history. Please try again.');
+    }
   };
 
   const handleAnswer = async (response: QuestionResponse) => {
@@ -192,6 +262,7 @@ export const useAssessmentFlow = () => {
     setRecommendations([]);
     setAssessmentId(null);
     setShowResults(false);
+    setHasStarted(false);
     loadQuestions();
   };
 
@@ -214,9 +285,12 @@ export const useAssessmentFlow = () => {
     isLoading,
     isGenerating,
     showResults,
+    hasStarted,
     isLastQuestion: isLastQuestion(),
     handleAnswer,
     completeAssessment: () => completeAssessment(responses),
-    retakeAssessment
+    retakeAssessment,
+    startAssessment,
+    viewHistory
   };
 };
