@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -7,13 +7,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Users, MapPin, Building, Star } from 'lucide-react';
 import { CareerRecommendation } from '@/types/assessment';
+import { Users, MapPin, Building, ExternalLink, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ProfileDetailsDialog } from '@/components/ProfileDetailsDialog';
 
 interface FindMentorsDialogProps {
   open: boolean;
@@ -21,391 +22,363 @@ interface FindMentorsDialogProps {
   recommendation: CareerRecommendation;
 }
 
-interface MentorWithScore {
+interface MentorProfile {
   id: string;
-  first_name: string;
-  last_name: string;
-  avatar_url: string;
-  position: string;
-  company_name: string;
-  location: string;
-  bio: string;
-  skills: string[];
-  keywords: string[];
-  fields_of_interest: string[];
-  tools_used: string[];
-  user_type: string;
-  score: number;
-  matchReasons: string[];
+  first_name: string | null;
+  last_name: string | null;
+  position: string | null;
+  location: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  skills: string[] | null;
+  keywords: string[] | null;
+  fields_of_interest: string[] | null;
+  tools_used: string[] | null;
+  top_mentor: boolean | null;
+  years_of_experience: number | null;
+  company: { name: string } | null;
+  school: { name: string } | null;
 }
 
-export const FindMentorsDialog = ({ 
-  open, 
-  onOpenChange, 
-  recommendation 
-}: FindMentorsDialogProps) => {
+export const FindMentorsDialog = ({ open, onOpenChange, recommendation }: FindMentorsDialogProps) => {
+  const [mentors, setMentors] = useState<MentorProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // Enhanced mentor matching with scoring algorithm
-  const { data: mentors, isLoading, error } = useQuery({
-    queryKey: ['enhanced-career-mentors', recommendation.title, recommendation.requiredSkills],
-    queryFn: async () => {
-      // Fetch all mentors first
-      const { data: allMentors, error } = await supabase
+  const searchMentors = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
         .from('profiles')
         .select(`
           id,
           first_name,
           last_name,
-          avatar_url,
           position,
-          company_name,
           location,
           bio,
+          avatar_url,
           skills,
           keywords,
           fields_of_interest,
           tools_used,
-          user_type
+          top_mentor,
+          years_of_experience,
+          company:companies(name),
+          school:schools(name)
         `)
-        .eq('user_type', 'mentor');
+        .eq('user_type', 'mentor')
+        .limit(20);
 
-      if (error) throw error;
-      if (!allMentors) return [];
+      if (error) {
+        console.error('Error fetching mentors:', error);
+        setMentors([]);
+        return;
+      }
 
-      const scoredMentors: MentorWithScore[] = allMentors.map(mentor => {
+      if (!data) {
+        setMentors([]);
+        return;
+      }
+
+      // Enhanced mentor matching with scoring
+      const scoredMentors = data.map((mentor) => {
         let score = 0;
-        const matchReasons: string[] = [];
+        let matchReasons: string[] = [];
 
-        // Normalize text for better matching
-        const normalizeText = (text: string) => text.toLowerCase().trim();
-        const careerTitle = normalizeText(recommendation.title);
-        const careerDescription = normalizeText(recommendation.description || '');
-        
-        // Extract keywords from career data
-        const careerKeywords = [
-          ...careerTitle.split(/[\s,-]+/),
-          ...(recommendation.requiredSkills || []).map(normalizeText),
-          ...careerDescription.split(/[\s,-]+/).filter(word => word.length > 3)
-        ];
-
-        // 1. Direct career title/position match (highest priority)
+        // Direct career title/position match (highest priority)
         if (mentor.position) {
-          const mentorPosition = normalizeText(mentor.position);
-          if (mentorPosition.includes(careerTitle) || careerTitle.includes(mentorPosition)) {
+          const positionLower = mentor.position.toLowerCase();
+          const titleLower = recommendation.title.toLowerCase();
+          if (positionLower.includes(titleLower) || titleLower.includes(positionLower)) {
             score += 100;
-            matchReasons.push('Exact career match');
-          }
-          
-          // Partial position matching
-          const positionWords = mentorPosition.split(/[\s,-]+/);
-          const titleWords = careerTitle.split(/[\s,-]+/);
-          const commonWords = positionWords.filter(word => 
-            titleWords.some(titleWord => titleWord.includes(word) || word.includes(titleWord))
-          );
-          if (commonWords.length > 0) {
-            score += commonWords.length * 15;
-            matchReasons.push('Similar position');
+            matchReasons.push('Direct career match');
           }
         }
 
-        // 2. Skills matching (high priority)
-        if (recommendation.requiredSkills && mentor.skills) {
-          const mentorSkills = mentor.skills.map(normalizeText);
-          const requiredSkills = recommendation.requiredSkills.map(normalizeText);
+        // Skills matching (high priority)
+        if (mentor.skills && recommendation.requiredSkills) {
+          const mentorSkills = mentor.skills.map(skill => skill.toLowerCase());
+          const requiredSkills = recommendation.requiredSkills.map(skill => skill.toLowerCase());
           
-          let skillMatches = 0;
-          requiredSkills.forEach(skill => {
-            const hasExactMatch = mentorSkills.some(mentorSkill => 
-              mentorSkill === skill || mentorSkill.includes(skill) || skill.includes(mentorSkill)
-            );
-            if (hasExactMatch) {
-              skillMatches++;
-              score += 25;
-            }
-          });
+          const exactMatches = mentorSkills.filter(skill => 
+            requiredSkills.some(reqSkill => 
+              skill.includes(reqSkill) || reqSkill.includes(skill)
+            )
+          ).length;
           
-          if (skillMatches > 0) {
-            matchReasons.push(`${skillMatches} matching skills`);
+          if (exactMatches > 0) {
+            score += exactMatches * 20;
+            matchReasons.push(`${exactMatches} matching skills`);
           }
         }
 
-        // 3. Fields of interest alignment (medium-high priority)
+        // Fields of interest matching (medium-high priority)
         if (mentor.fields_of_interest) {
-          const mentorFields = mentor.fields_of_interest.map(normalizeText);
-          let fieldMatches = 0;
+          const fieldsLower = mentor.fields_of_interest.map(field => field.toLowerCase());
+          const titleWords = recommendation.title.toLowerCase().split(' ');
+          const descWords = recommendation.description.toLowerCase().split(' ');
+          const allWords = [...titleWords, ...descWords];
           
-          careerKeywords.forEach(keyword => {
-            if (mentorFields.some(field => field.includes(keyword) || keyword.includes(field))) {
-              fieldMatches++;
-              score += 20;
-            }
-          });
+          const fieldMatches = fieldsLower.filter(field => 
+            allWords.some(word => field.includes(word) || word.includes(field))
+          ).length;
           
           if (fieldMatches > 0) {
-            matchReasons.push('Related field interests');
+            score += fieldMatches * 15;
+            matchReasons.push('Related field of interest');
           }
         }
 
-        // 4. Tools and technologies matching (medium priority)
+        // Tools/Technology matching (medium priority)
         if (mentor.tools_used && recommendation.requiredSkills) {
-          const mentorTools = mentor.tools_used.map(normalizeText);
-          const requiredSkills = recommendation.requiredSkills.map(normalizeText);
+          const toolsLower = mentor.tools_used.map(tool => tool.toLowerCase());
+          const skillsLower = recommendation.requiredSkills.map(skill => skill.toLowerCase());
           
-          let toolMatches = 0;
-          requiredSkills.forEach(skill => {
-            if (mentorTools.some(tool => tool.includes(skill) || skill.includes(tool))) {
-              toolMatches++;
-              score += 15;
-            }
-          });
+          const toolMatches = toolsLower.filter(tool => 
+            skillsLower.some(skill => tool.includes(skill) || skill.includes(tool))
+          ).length;
           
           if (toolMatches > 0) {
-            matchReasons.push('Matching tools/technologies');
+            score += toolMatches * 10;
+            matchReasons.push('Related tools/technologies');
           }
         }
 
-        // 5. Keywords matching (medium priority)
+        // Keywords matching (medium priority)
         if (mentor.keywords) {
-          const mentorKeywords = mentor.keywords.map(normalizeText);
-          let keywordMatches = 0;
+          const keywordsLower = mentor.keywords.map(keyword => keyword.toLowerCase());
+          const titleLower = recommendation.title.toLowerCase();
+          const descLower = recommendation.description.toLowerCase();
           
-          careerKeywords.forEach(keyword => {
-            if (mentorKeywords.some(mentorKeyword => 
-              mentorKeyword.includes(keyword) || keyword.includes(mentorKeyword)
-            )) {
-              keywordMatches++;
-              score += 10;
-            }
-          });
+          const keywordMatches = keywordsLower.filter(keyword => 
+            titleLower.includes(keyword) || descLower.includes(keyword) ||
+            keyword.includes(titleLower.split(' ')[0])
+          ).length;
           
           if (keywordMatches > 0) {
+            score += keywordMatches * 8;
             matchReasons.push('Relevant keywords');
           }
         }
 
-        // 6. Bio content matching (lower priority)
+        // Bio content matching (lower priority)
         if (mentor.bio) {
-          const mentorBio = normalizeText(mentor.bio);
-          let bioMatches = 0;
-          
-          careerKeywords.forEach(keyword => {
-            if (keyword.length > 3 && mentorBio.includes(keyword)) {
-              bioMatches++;
-              score += 5;
-            }
-          });
+          const bioLower = mentor.bio.toLowerCase();
+          const titleWords = recommendation.title.toLowerCase().split(' ');
+          const bioMatches = titleWords.filter(word => 
+            word.length > 3 && bioLower.includes(word)
+          ).length;
           
           if (bioMatches > 0) {
-            matchReasons.push('Relevant experience');
+            score += bioMatches * 5;
+            matchReasons.push('Bio relevance');
           }
         }
 
-        // 7. Industry/field general matching
-        const industryTerms = [
-          'software', 'engineering', 'developer', 'analyst', 'manager', 'consultant',
-          'designer', 'researcher', 'scientist', 'specialist', 'coordinator', 'director'
-        ];
-        
+        // Industry/position partial matching (bonus points)
         if (mentor.position) {
-          const mentorPosition = normalizeText(mentor.position);
-          industryTerms.forEach(term => {
-            if (careerTitle.includes(term) && mentorPosition.includes(term)) {
-              score += 8;
-              if (!matchReasons.includes('Same industry')) {
-                matchReasons.push('Same industry');
-              }
-            }
-          });
+          const positionWords = mentor.position.toLowerCase().split(' ');
+          const titleWords = recommendation.title.toLowerCase().split(' ');
+          const wordMatches = positionWords.filter(word => 
+            word.length > 3 && titleWords.some(titleWord => titleWord.includes(word) || word.includes(titleWord))
+          ).length;
+          
+          if (wordMatches > 0) {
+            score += wordMatches * 5;
+            matchReasons.push('Related position');
+          }
+        }
+
+        // Bonus for top mentors
+        if (mentor.top_mentor) {
+          score += 10;
+        }
+
+        // Bonus for experienced mentors
+        if (mentor.years_of_experience && mentor.years_of_experience > 5) {
+          score += 5;
         }
 
         return {
           ...mentor,
           score,
-          matchReasons: matchReasons.length > 0 ? matchReasons : ['General experience']
+          matchReasons
         };
       });
 
-      // Filter mentors with meaningful scores and sort by relevance
-      return scoredMentors
+      // Sort by score and filter out mentors with no relevance
+      const relevantMentors = scoredMentors
         .filter(mentor => mentor.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 20); // Limit to top 20 matches
-    },
-    enabled: open,
-  });
+        .sort((a, b) => b.score - a.score);
+
+      setMentors(relevantMentors.slice(0, 12)); // Limit to top 12 matches
+    } catch (error) {
+      console.error('Error in searchMentors:', error);
+      setMentors([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      searchMentors();
+    }
+  }, [open, recommendation]);
 
   const handleMentorClick = (mentorId: string) => {
     setSelectedMentorId(mentorId);
-    console.log('Selected mentor:', mentorId);
+    setProfileDialogOpen(true);
+  };
+
+  const handleBrowseAllMentors = () => {
+    onOpenChange(false);
+    navigate('/mentor');
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-primary" />
-            Find Mentors for {recommendation.title}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Find Mentors for {recommendation.title}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            Discover mentors with relevant experience in {recommendation.title} and related fields
-          </div>
+          <div className="space-y-6">
+            <p className="text-muted-foreground">
+              Connect with experienced mentors who can guide you in your {recommendation.title} career journey.
+            </p>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2">Finding relevant mentors...</span>
-            </div>
-          ) : error ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Unable to load mentors at this time.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.href = '/mentor'}
-                className="mt-4"
-              >
-                Browse All Mentors
-              </Button>
-            </div>
-          ) : !mentors || mentors.length === 0 ? (
-            <div className="text-center py-8 space-y-4">
-              <p className="text-muted-foreground">
-                No mentors found with relevant experience for "{recommendation.title}"
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.href = '/mentor'}
-              >
-                Browse All Mentors
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="text-sm text-muted-foreground mb-4">
-                Found {mentors.length} mentors with relevant experience
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-3 w-full" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                  </div>
+                ))}
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mentors.map((mentor) => (
-                  <Card 
-                    key={mentor.id}
-                    className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-primary/20 hover:border-l-primary"
-                    onClick={() => handleMentorClick(mentor.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
-                        <Avatar className="h-12 w-12 ring-2 ring-primary/10">
-                          <AvatarImage 
-                            src={mentor.avatar_url || ''} 
-                            alt={`${mentor.first_name} ${mentor.last_name}`}
-                          />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {mentor.first_name?.[0]}
-                            {mentor.last_name?.[0]}
+            ) : mentors.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mentors.map((mentor) => (
+                    <div
+                      key={mentor.id}
+                      className="p-4 border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                      onClick={() => handleMentorClick(mentor.id)}
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={mentor.avatar_url || ''} alt={`${mentor.first_name} ${mentor.last_name}`} />
+                          <AvatarFallback>
+                            {mentor.first_name?.[0]}{mentor.last_name?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">
-                            {mentor.first_name} {mentor.last_name}
-                          </h3>
-                          
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold truncate">
+                              {mentor.first_name} {mentor.last_name}
+                            </h3>
+                            {mentor.top_mentor && (
+                              <Badge className="bg-gradient-to-r from-primary/80 to-primary text-white hover:from-primary hover:to-primary/90 flex items-center gap-1">
+                                <Award className="h-3 w-3" />
+                                Top
+                              </Badge>
+                            )}
+                          </div>
                           {mentor.position && (
-                            <p className="text-xs text-muted-foreground truncate mt-1">
+                            <p className="text-sm text-muted-foreground truncate">
                               {mentor.position}
                             </p>
                           )}
-                          
-                          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                            {mentor.company_name && (
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                            {mentor.company?.name && (
                               <div className="flex items-center gap-1">
                                 <Building className="h-3 w-3" />
-                                <span className="truncate max-w-[100px]">{mentor.company_name}</span>
+                                <span className="truncate">{mentor.company.name}</span>
                               </div>
                             )}
                             {mentor.location && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
-                                <span className="truncate max-w-[80px]">{mentor.location}</span>
+                                <span>{mentor.location}</span>
                               </div>
                             )}
                           </div>
-
-                          {/* Match reasons */}
-                          <div className="mt-2">
-                            <div className="flex flex-wrap gap-1">
-                              {mentor.matchReasons.slice(0, 2).map((reason, index) => (
-                                <Badge 
-                                  key={index} 
-                                  variant="secondary" 
-                                  className="text-xs px-2 py-0.5 bg-primary/10 text-primary border-primary/20"
-                                >
-                                  {reason}
-                                </Badge>
-                              ))}
-                              {mentor.matchReasons.length > 2 && (
-                                <Badge 
-                                  variant="outline" 
-                                  className="text-xs px-2 py-0.5"
-                                >
-                                  +{mentor.matchReasons.length - 2} more
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-
-                          {mentor.skills && mentor.skills.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {mentor.skills.slice(0, 3).map((skill, index) => (
-                                <Badge 
-                                  key={index} 
-                                  variant="outline" 
-                                  className="text-xs px-2 py-0.5"
-                                >
-                                  {skill}
-                                </Badge>
-                              ))}
-                              {mentor.skills.length > 3 && (
-                                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                  +{mentor.skills.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Match score indicator */}
-                          <div className="flex items-center gap-1 mt-2">
-                            <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                            <span className="text-xs text-muted-foreground">
-                              {mentor.score > 80 ? 'Excellent' : 
-                               mentor.score > 50 ? 'Good' : 
-                               mentor.score > 20 ? 'Fair' : 'Basic'} match
-                            </span>
-                          </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
 
-              <div className="flex justify-center pt-6 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.location.href = '/mentor'}
-                  className="px-6"
-                >
-                  View All Mentors
+                      {mentor.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                          {mentor.bio}
+                        </p>
+                      )}
+
+                      {mentor.skills && mentor.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {mentor.skills.slice(0, 3).map((skill, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                          {mentor.skills.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{mentor.skills.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center pt-4 border-t">
+                  <Button onClick={handleBrowseAllMentors} variant="outline">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Browse All Mentors
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No specific mentors found</h3>
+                <p className="text-muted-foreground mb-4">
+                  We couldn't find mentors specifically matching "{recommendation.title}", but you can browse all mentors to find someone who can help with your career goals.
+                </p>
+                <Button onClick={handleBrowseAllMentors}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Browse All Mentors
                 </Button>
               </div>
-            </>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {selectedMentorId && (
+        <ProfileDetailsDialog
+          userId={selectedMentorId}
+          open={profileDialogOpen}
+          onOpenChange={setProfileDialogOpen}
+        />
+      )}
+    </>
   );
 };
