@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
@@ -29,13 +28,8 @@ export default function CareerAssessment() {
     startAssessment
   } = useAssessmentFlow();
 
-  // Wrapper function to convert the old signature to the new one
-  const handleQuestionAnswer = (questionId: string, answer: string | string[] | number) => {
-    const response: QuestionResponse = {
-      questionId,
-      answer,
-      timestamp: new Date().toISOString(),
-    };
+  // Wrapper function that matches the QuestionRenderer's expected signature
+  const handleQuestionAnswer = (response: QuestionResponse) => {
     handleAnswer(response);
   };
 
