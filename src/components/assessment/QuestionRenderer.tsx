@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AssessmentQuestion, QuestionResponse } from '@/types/assessment';
+import { QuestionTypeIndicator } from './QuestionTypeIndicator';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 interface QuestionRendererProps {
@@ -16,6 +17,7 @@ interface QuestionRendererProps {
   onComplete: () => void;
   isGenerating: boolean;
   isLastQuestion?: boolean;
+  detectedProfileType?: string | null;
 }
 
 export const QuestionRenderer = ({ 
@@ -23,7 +25,8 @@ export const QuestionRenderer = ({
   onAnswer, 
   onComplete, 
   isGenerating,
-  isLastQuestion = false
+  isLastQuestion = false,
+  detectedProfileType
 }: QuestionRendererProps) => {
   // Initialize state based on question type
   const getInitialAnswer = (questionType: string) => {
@@ -66,8 +69,6 @@ export const QuestionRenderer = ({
     };
 
     onAnswer(response);
-    
-    // Don't reset state here - let useEffect handle it when the next question loads
   };
 
   const handleMultipleSelect = (option: string, checked: boolean) => {
@@ -97,9 +98,11 @@ export const QuestionRenderer = ({
         return (
           <RadioGroup value={answer} onValueChange={setAnswer}>
             {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
+              <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
                 <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`}>{option}</Label>
+                <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
+                  {option}
+                </Label>
               </div>
             ))}
           </RadioGroup>
@@ -109,7 +112,7 @@ export const QuestionRenderer = ({
         return (
           <div className="space-y-3">
             {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
+              <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
                 <Checkbox
                   id={`option-${index}`}
                   checked={selectedOptions.includes(option)}
@@ -117,18 +120,17 @@ export const QuestionRenderer = ({
                     handleMultipleSelect(option, checked as boolean)
                   }
                 />
-                <Label htmlFor={`option-${index}`}>{option}</Label>
+                <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
+                  {option}
+                </Label>
               </div>
             ))}
           </div>
         );
 
       case 'scale':
-        // Ensure we always have an array for the slider
         const currentValue = Array.isArray(answer) ? answer[0] : 5;
         const sliderValue = Array.isArray(answer) ? answer : [5];
-        
-        console.log('Rendering slider with value:', sliderValue, 'currentValue:', currentValue);
         
         return (
           <div className="space-y-4">
@@ -147,7 +149,7 @@ export const QuestionRenderer = ({
             </div>
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Not at all (1)</span>
-              <span>Current: {currentValue}</span>
+              <span className="font-medium">Current: {currentValue}</span>
               <span>Extremely (10)</span>
             </div>
           </div>
@@ -171,11 +173,14 @@ export const QuestionRenderer = ({
   return (
     <Card>
       <CardHeader>
+        <QuestionTypeIndicator
+          questionOrder={question.order}
+          profileType={question.profileType}
+          targetAudience={question.targetAudience}
+          detectedProfileType={detectedProfileType}
+        />
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{question.title}</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            Question {question.order}
-          </div>
+          <CardTitle className="text-xl leading-relaxed">{question.title}</CardTitle>
         </div>
         {question.description && (
           <p className="text-muted-foreground">{question.description}</p>
@@ -184,7 +189,7 @@ export const QuestionRenderer = ({
       <CardContent className="space-y-6">
         {renderQuestionInput()}
         
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4">
           {isLastQuestion ? (
             <Button 
               onClick={onComplete}
@@ -195,7 +200,7 @@ export const QuestionRenderer = ({
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating Results...
+                  Generating Your Results...
                 </>
               ) : (
                 'Complete Assessment'

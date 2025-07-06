@@ -2,48 +2,18 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
 import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { AssessmentHistory } from '@/components/assessment/AssessmentHistory';
+import { QuestionProgress } from '@/components/assessment/QuestionProgress';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
 import { useAssessmentResults } from '@/hooks/useAssessmentResults';
-import { Brain, ArrowLeft, Loader2, User } from 'lucide-react';
+import { Brain, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 
 type AssessmentPhase = 'intro' | 'questions' | 'results' | 'history' | 'view-results';
-
-const getProfileTypeLabel = (profileType: string | null) => {
-  switch (profileType) {
-    case 'middle_school':
-      return 'Middle School Student';
-    case 'high_school':
-      return 'High School Student';
-    case 'college':
-      return 'College Student';
-    case 'career_professional':
-      return 'Career Professional';
-    default:
-      return 'Getting to know you...';
-  }
-};
-
-const getProfileTypeColor = (profileType: string | null) => {
-  switch (profileType) {
-    case 'middle_school':
-      return 'bg-green-100 text-green-800';
-    case 'high_school':
-      return 'bg-blue-100 text-blue-800';
-    case 'college':
-      return 'bg-purple-100 text-purple-800';
-    case 'career_professional':
-      return 'bg-orange-100 text-orange-800';
-    default:
-      return 'bg-gray-100 text-gray-800';
-  }
-};
 
 export default function CareerAssessment() {
   const { session } = useAuthSession();
@@ -174,28 +144,28 @@ export default function CareerAssessment() {
           )}
         </div>
         
-        {currentPhase === 'questions' && (
-          <div className="mt-4 space-y-3">
-            {/* Profile Type Badge */}
-            {detectedProfileType && (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <Badge className={getProfileTypeColor(detectedProfileType)}>
-                  {getProfileTypeLabel(detectedProfileType)}
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  Questions tailored for your stage
-                </span>
+        {/* Enhanced Assessment Status */}
+        {currentPhase === 'questions' && currentQuestion && (
+          <div className="mt-6">
+            <QuestionProgress
+              currentIndex={0} // This will be calculated properly
+              totalQuestions={8} // Estimated total based on flow
+              currentQuestion={currentQuestion}
+              detectedProfileType={detectedProfileType}
+              profileDetectionCompleted={profileDetectionCompleted}
+            />
+            
+            {/* Profile Detection Completion Indicator */}
+            {profileDetectionCompleted && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800">
+                    Profile detected! Questions are now personalized for your stage.
+                  </span>
+                </div>
               </div>
             )}
-            
-            {/* Progress Bar */}
-            <div>
-              <Progress value={progress} className="w-full" />
-              <p className="text-sm text-muted-foreground mt-2">
-                {Math.round(progress)}% Complete
-              </p>
-            </div>
           </div>
         )}
 
@@ -222,7 +192,7 @@ export default function CareerAssessment() {
               <CardContent className="py-6">
                 <div className="flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Preparing your assessment...</span>
+                  <span>Preparing your personalized assessment...</span>
                 </div>
               </CardContent>
             </Card>
@@ -237,6 +207,7 @@ export default function CareerAssessment() {
           onComplete={handleCompleteAssessment}
           isGenerating={isGenerating}
           isLastQuestion={isLastQuestion}
+          detectedProfileType={detectedProfileType}
         />
       )}
 
@@ -245,6 +216,7 @@ export default function CareerAssessment() {
           recommendations={recommendations}
           responses={responses}
           onRetakeAssessment={handleBackToIntro}
+          detectedProfileType={detectedProfileType}
         />
       )}
 
@@ -281,6 +253,7 @@ export default function CareerAssessment() {
               recommendations={historicalRecommendations}
               responses={historicalResponses}
               onRetakeAssessment={handleBackToIntro}
+              detectedProfileType={detectedProfileType}
             />
           )}
         </div>

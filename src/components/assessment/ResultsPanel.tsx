@@ -12,19 +12,54 @@ import {
   Download, 
   Share2,
   BookOpen,
-  Users
+  Users,
+  User,
+  CheckCircle
 } from 'lucide-react';
 
 interface ResultsPanelProps {
   recommendations: CareerRecommendation[];
   responses: QuestionResponse[];
   onRetakeAssessment: () => void;
+  detectedProfileType?: string | null;
 }
+
+const getProfileTypeInfo = (profileType: string | null) => {
+  switch (profileType) {
+    case 'middle_school':
+      return {
+        label: 'Middle School Student',
+        color: 'bg-green-100 text-green-800',
+        description: 'Recommendations tailored for your academic stage'
+      };
+    case 'high_school':
+      return {
+        label: 'High School Student',
+        color: 'bg-blue-100 text-blue-800',
+        description: 'Recommendations focused on college and career preparation'
+      };
+    case 'college':
+      return {
+        label: 'College Student',
+        color: 'bg-purple-100 text-purple-800',
+        description: 'Recommendations for your academic and career transition'
+      };
+    case 'career_professional':
+      return {
+        label: 'Career Professional',
+        color: 'bg-orange-100 text-orange-800',
+        description: 'Recommendations for career advancement and transitions'
+      };
+    default:
+      return null;
+  }
+};
 
 export const ResultsPanel = ({ 
   recommendations, 
   responses, 
-  onRetakeAssessment 
+  onRetakeAssessment,
+  detectedProfileType
 }: ResultsPanelProps) => {
   const handleExportResults = () => {
     // Implementation for exporting results as PDF
@@ -36,16 +71,34 @@ export const ResultsPanel = ({
     console.log('Sharing results...');
   };
 
+  const profileInfo = getProfileTypeInfo(detectedProfileType);
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl flex items-center justify-center gap-2">
             <Target className="h-6 w-6 text-primary" />
-            Your Career Recommendations
+            Your Personalized Career Recommendations
           </CardTitle>
+          
+          {/* Profile Type Display */}
+          {profileInfo && (
+            <div className="flex flex-col items-center space-y-2">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-muted-foreground">Assessment personalized for:</span>
+              </div>
+              <Badge className={profileInfo.color}>
+                <User className="h-3 w-3 mr-1" />
+                {profileInfo.label}
+              </Badge>
+              <p className="text-sm text-muted-foreground">{profileInfo.description}</p>
+            </div>
+          )}
+          
           <p className="text-muted-foreground">
-            Based on your responses, here are careers that match your profile
+            Based on your {responses.length} responses, here are your personalized career matches
           </p>
         </CardHeader>
         <CardContent>
@@ -69,14 +122,24 @@ export const ResultsPanel = ({
       <AssessmentSummary responses={responses} />
 
       <div className="grid gap-6">
-        <h2 className="text-xl font-semibold">Recommended Careers</h2>
-        {recommendations.map((recommendation, index) => (
-          <CareerRecommendationCard
-            key={recommendation.careerId}
-            recommendation={recommendation}
-            rank={index + 1}
-          />
-        ))}
+        <h2 className="text-xl font-semibold">Your Career Matches</h2>
+        {recommendations.length > 0 ? (
+          recommendations.map((recommendation, index) => (
+            <CareerRecommendationCard
+              key={recommendation.careerId}
+              recommendation={recommendation}
+              rank={index + 1}
+            />
+          ))
+        ) : (
+          <Card>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground">
+                No recommendations generated yet. Please try retaking the assessment.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card>
