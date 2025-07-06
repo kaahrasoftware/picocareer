@@ -80,3 +80,16 @@ export interface DatabaseAssessmentQuestion {
   created_at: string;
   updated_at: string;
 }
+
+// Database type for career assessment with new profile detection fields
+export interface DatabaseCareerAssessment {
+  id: string;
+  user_id: string;
+  status: 'in_progress' | 'completed';
+  started_at: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+  detected_profile_type?: 'middle_school' | 'high_school' | 'college' | 'career_professional';
+  profile_detection_completed?: boolean;
+}

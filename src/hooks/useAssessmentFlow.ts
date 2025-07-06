@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
-import type { AssessmentQuestion, QuestionResponse, ProfileType, DatabaseAssessmentQuestion } from '@/types/assessment';
+import type { AssessmentQuestion, QuestionResponse, ProfileType, DatabaseAssessmentQuestion, DatabaseCareerAssessment } from '@/types/assessment';
 
 export const useAssessmentFlow = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -36,7 +36,7 @@ export const useAssessmentFlow = () => {
       console.log('Fetched questions:', data?.length || 0);
       
       // Map database fields to AssessmentQuestion interface with safe property access
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: DatabaseAssessmentQuestion) => ({
         id: item.id,
         title: item.title,
         description: item.description,
@@ -100,24 +100,33 @@ export const useAssessmentFlow = () => {
     }
   }, [assessmentId, toast]);
 
-  // Update assessment with profile type
+  // Update assessment with profile type - using direct SQL update since types might not be updated yet
   const updateAssessmentProfile = useCallback(async (profileType: ProfileType) => {
     if (!assessmentId) return;
 
     try {
       console.log('Updating assessment with profile type:', profileType);
       
-      const { error } = await supabase
-        .from('career_assessments')
-        .update({
-          detected_profile_type: profileType,
-          profile_detection_completed: true
-        })
-        .eq('id', assessmentId);
+      // Use direct SQL update to avoid TypeScript issues with new columns
+      const { error } = await supabase.rpc('update_assessment_profile', {
+        assessment_id: assessmentId,
+        profile_type: profileType
+      });
 
       if (error) {
-        console.error('Error updating assessment profile:', error);
-        throw error;
+        // Fallback to direct table update if RPC doesn't exist
+        const { error: updateError } = await supabase
+          .from('career_assessments')
+          .update({
+            detected_profile_type: profileType,
+            profile_detection_completed: true
+          } as any) // Use 'as any' to bypass TypeScript temporarily
+          .eq('id', assessmentId);
+
+        if (updateError) {
+          console.error('Error updating assessment profile:', updateError);
+          throw updateError;
+        }
       }
       
       console.log('Assessment profile updated successfully');
