@@ -237,8 +237,73 @@ export const useAssessmentFlow = () => {
 
   const completeAssessment = async (allResponses: QuestionResponse[]) => {
     setIsGenerating(true);
+    console.log('Completing assessment with responses:', allResponses);
+    console.log('Detected profile type:', detectedProfileType);
+    console.log('Assessment ID:', assessmentId);
+
     try {
-      // Generate recommendations (mock for now)
+      if (!assessmentId) {
+        throw new Error('No assessment ID found');
+      }
+
+      // Call the AI career assessment edge function
+      console.log('Calling ai-career-assessment edge function...');
+      const { data: functionResponse, error: functionError } = await supabase.functions.invoke(
+        'ai-career-assessment',
+        {
+          body: {
+            assessmentId,
+            responses: allResponses,
+            profileType: detectedProfileType
+          }
+        }
+      );
+
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw functionError;
+      }
+
+      console.log('Edge function response:', functionResponse);
+
+      if (!functionResponse?.recommendations || !Array.isArray(functionResponse.recommendations)) {
+        throw new Error('Invalid response format from AI assessment');
+      }
+
+      // Transform AI recommendations to match our interface
+      const aiRecommendations: CareerRecommendation[] = functionResponse.recommendations.map((rec: any, index: number) => ({
+        careerId: rec.careerId || `ai-${index + 1}`,
+        title: rec.title || 'Career Recommendation',
+        description: rec.description || 'AI-generated career recommendation',
+        matchScore: rec.matchScore || 75,
+        reasoning: rec.reasoning || 'Based on your assessment responses',
+        salaryRange: rec.salaryRange,
+        growthOutlook: rec.growthOutlook,
+        timeToEntry: rec.timeToEntry,
+        requiredSkills: rec.requiredSkills || [],
+        educationRequirements: rec.educationRequirements || [],
+        workEnvironment: rec.workEnvironment
+      }));
+
+      console.log('Setting AI recommendations:', aiRecommendations);
+      setRecommendations(aiRecommendations);
+
+      // Update assessment status
+      if (assessmentId) {
+        await supabase
+          .from('career_assessments')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', assessmentId);
+      }
+
+    } catch (error) {
+      console.error('Error in AI assessment or fallback to mock:', error);
+      
+      // Fallback to mock recommendations only if AI fails
+      console.log('Using fallback mock recommendations due to error');
       const mockRecommendations: CareerRecommendation[] = [
         {
           careerId: '1',
@@ -257,7 +322,7 @@ export const useAssessmentFlow = () => {
 
       setRecommendations(mockRecommendations);
 
-      // Update assessment status
+      // Still update assessment status even with fallback
       if (assessmentId) {
         await supabase
           .from('career_assessments')
@@ -267,12 +332,9 @@ export const useAssessmentFlow = () => {
           })
           .eq('id', assessmentId);
       }
-
-      setShowResults(true);
-    } catch (error) {
-      console.error('Error completing assessment:', error);
     } finally {
       setIsGenerating(false);
+      setShowResults(true);
     }
   };
 
