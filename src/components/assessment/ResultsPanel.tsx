@@ -1,18 +1,21 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CareerRecommendationCard } from './CareerRecommendationCard';
 import { AssessmentSummary } from './AssessmentSummary';
 import { CareerRecommendation, QuestionResponse } from '@/types/assessment';
+import { useSaveRecommendations } from '@/hooks/useSaveRecommendations';
 import { 
   Target, 
   RefreshCw, 
   Download, 
   Share2,
   CheckCircle,
-  User
+  User,
+  BookmarkPlus,
+  Bookmark
 } from 'lucide-react';
 
 interface ResultsPanelProps {
@@ -63,6 +66,24 @@ export const ResultsPanel = ({
   onRetakeAssessment,
   detectedProfileType
 }: ResultsPanelProps) => {
+  // Create a mock assessment ID from responses - in real app this would come from actual assessment
+  const assessmentId = `assessment_${responses.length}_${Date.now()}`;
+  
+  const {
+    saveRecommendations,
+    isSaving,
+    isSaved,
+    checkIfAlreadySaved
+  } = useSaveRecommendations({
+    assessmentId,
+    recommendations
+  });
+
+  useEffect(() => {
+    // Check if recommendations are already saved when component mounts
+    checkIfAlreadySaved();
+  }, [checkIfAlreadySaved]);
+
   const handleExportResults = () => {
     console.log('Exporting results...');
   };
@@ -123,6 +144,28 @@ export const ResultsPanel = ({
             <Button onClick={onRetakeAssessment} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retake Assessment
+            </Button>
+            <Button 
+              onClick={saveRecommendations} 
+              variant="outline"
+              disabled={isSaving || isSaved || recommendations.length === 0}
+            >
+              {isSaving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : isSaved ? (
+                <>
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Saved
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="h-4 w-4 mr-2" />
+                  Save Recommendations
+                </>
+              )}
             </Button>
             <Button onClick={handleExportResults} variant="outline">
               <Download className="h-4 w-4 mr-2" />
