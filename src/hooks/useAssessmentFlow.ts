@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
-import { profileDetection } from '@/utils/profileDetection';
+import { detectProfileType } from '@/utils/profileDetection';
 
 export const useAssessmentFlow = () => {
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
@@ -80,40 +80,34 @@ export const useAssessmentFlow = () => {
         
         setAssessmentId(data.id);
       } else {
-        // Generate a temporary UUID for non-authenticated users
+        // Generate a valid UUID for non-authenticated users
         setAssessmentId(crypto.randomUUID());
       }
       
       setHasStarted(true);
     } catch (error) {
       console.error('Error starting assessment:', error);
-      // Still allow the assessment to continue with a temporary ID
+      // Still allow the assessment to continue with a valid UUID
       setAssessmentId(crypto.randomUUID());
       setHasStarted(true);
     }
   };
 
-  const handleAnswer = useCallback((questionId: string, answer: string | string[] | number) => {
-    const newResponse: QuestionResponse = {
-      questionId,
-      answer,
-      timestamp: new Date().toISOString(),
-    };
-
+  const handleAnswer = useCallback((response: QuestionResponse) => {
     setResponses(prev => {
-      const existingIndex = prev.findIndex(r => r.questionId === questionId);
+      const existingIndex = prev.findIndex(r => r.questionId === response.questionId);
       if (existingIndex >= 0) {
         const updated = [...prev];
-        updated[existingIndex] = newResponse;
+        updated[existingIndex] = response;
         return updated;
       }
-      return [...prev, newResponse];
+      return [...prev, response];
     });
 
     // Detect profile type after first few responses
     if (responses.length >= 2 && !detectedProfileType) {
-      const allResponses = [...responses, newResponse];
-      const profileType = profileDetection.detectProfileType(allResponses);
+      const allResponses = [...responses, response];
+      const profileType = detectProfileType(allResponses);
       setDetectedProfileType(profileType);
     }
 
@@ -127,8 +121,8 @@ export const useAssessmentFlow = () => {
     try {
       setIsGenerating(true);
       
-      // Update assessment status if we have a real assessment ID
-      if (assessmentId && assessmentId.length === 36) { // UUID length check
+      // Update assessment status if we have a real assessment ID (UUID format)
+      if (assessmentId && assessmentId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           await supabase

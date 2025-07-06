@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
@@ -6,6 +7,7 @@ import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { QuestionResponse } from '@/types/assessment';
 
 export default function CareerAssessment() {
   const {
@@ -26,6 +28,16 @@ export default function CareerAssessment() {
     retakeAssessment,
     startAssessment
   } = useAssessmentFlow();
+
+  // Wrapper function to convert the old signature to the new one
+  const handleQuestionAnswer = (questionId: string, answer: string | string[] | number) => {
+    const response: QuestionResponse = {
+      questionId,
+      answer,
+      timestamp: new Date().toISOString(),
+    };
+    handleAnswer(response);
+  };
 
   if (isLoading) {
     return (
@@ -110,7 +122,7 @@ export default function CareerAssessment() {
 
         <QuestionRenderer
           question={currentQuestion}
-          onAnswer={handleAnswer}
+          onAnswer={handleQuestionAnswer}
           onComplete={completeAssessment}
           isGenerating={isGenerating}
           isLastQuestion={isLastQuestion}
