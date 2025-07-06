@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
@@ -73,7 +74,7 @@ export default function CareerAssessment() {
           <div className="text-center space-y-4">
             <h1 className="text-3xl font-bold">Career Assessment</h1>
             <p className="text-muted-foreground text-lg">
-              Discover your ideal career path through our personalized 8-question assessment
+              Discover your ideal career path through our personalized assessment
             </p>
           </div>
           <AssessmentIntro onStart={startAssessment} />
@@ -102,7 +103,7 @@ export default function CareerAssessment() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Career Assessment</h1>
           <p className="text-muted-foreground">
-            Answer {totalQuestions} questions to discover your perfect career match
+            Answer personalized questions to discover your perfect career match
           </p>
         </div>
 

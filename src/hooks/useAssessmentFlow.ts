@@ -1,12 +1,12 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
-import { detectProfileType } from '@/utils/profileDetection';
+import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
 
 export const useAssessmentFlow = () => {
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
+  const [allQuestions, setAllQuestions] = useState<AssessmentQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
@@ -17,6 +17,20 @@ export const useAssessmentFlow = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Dynamically filter questions based on detected profile type
+  const filteredQuestions = useMemo(() => {
+    if (allQuestions.length === 0) return [];
+    
+    return allQuestions.filter(question => 
+      shouldShowQuestion(question, detectedProfileType, currentQuestionIndex)
+    );
+  }, [allQuestions, detectedProfileType, currentQuestionIndex]);
+
+  // Get current question from filtered set
+  const currentQuestion = filteredQuestions[currentQuestionIndex] || null;
+  const totalQuestions = filteredQuestions.length;
+  const isLastQuestion = currentQuestionIndex === filteredQuestions.length - 1;
 
   // Load questions on component mount
   useEffect(() => {
@@ -48,7 +62,7 @@ export const useAssessmentFlow = () => {
         conditionalLogic: q.conditional_logic
       }));
 
-      setQuestions(formattedQuestions);
+      setAllQuestions(formattedQuestions);
     } catch (error) {
       console.error('Error loading questions:', error);
       toast({
@@ -96,26 +110,27 @@ export const useAssessmentFlow = () => {
   const handleAnswer = useCallback((response: QuestionResponse) => {
     setResponses(prev => {
       const existingIndex = prev.findIndex(r => r.questionId === response.questionId);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = response;
-        return updated;
+      const updatedResponses = existingIndex >= 0 
+        ? prev.map((r, i) => i === existingIndex ? response : r)
+        : [...prev, response];
+
+      // Detect profile type after first response (academic status question)
+      if (updatedResponses.length === 1 && !detectedProfileType) {
+        const profileType = detectProfileType(updatedResponses);
+        if (profileType) {
+          console.log('Profile type detected:', profileType);
+          setDetectedProfileType(profileType);
+        }
       }
-      return [...prev, response];
+
+      return updatedResponses;
     });
 
-    // Detect profile type after first few responses
-    if (responses.length >= 2 && !detectedProfileType) {
-      const allResponses = [...responses, response];
-      const profileType = detectProfileType(allResponses);
-      setDetectedProfileType(profileType);
-    }
-
-    // Move to next question
-    if (currentQuestionIndex < questions.length - 1) {
+    // Move to next question in filtered set
+    if (currentQuestionIndex < filteredQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
-  }, [responses, detectedProfileType, currentQuestionIndex, questions.length]);
+  }, [currentQuestionIndex, detectedProfileType, filteredQuestions.length]);
 
   const completeAssessment = async () => {
     try {
@@ -176,13 +191,10 @@ export const useAssessmentFlow = () => {
     setAssessmentId(null);
   };
 
-  const currentQuestion = questions[currentQuestionIndex] || null;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
-
   return {
     currentQuestion,
     currentQuestionIndex,
-    totalQuestions: questions.length,
+    totalQuestions,
     responses,
     detectedProfileType,
     recommendations,
