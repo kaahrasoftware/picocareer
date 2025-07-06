@@ -27,6 +27,11 @@ export default function CareerAssessment() {
     startAssessment
   } = useAssessmentFlow();
 
+  // Create a wrapper function that matches the expected signature
+  const handleQuestionResponse = (answer: string | string[] | number) => {
+    handleAnswer(answer);
+  };
+
   if (isLoading) {
     return (
       <div className="container py-8">
@@ -109,7 +114,7 @@ export default function CareerAssessment() {
 
         <QuestionRenderer
           question={currentQuestion}
-          onAnswer={handleAnswer}
+          onAnswer={handleQuestionResponse}
           onComplete={completeAssessment}
           isGenerating={isGenerating}
           isLastQuestion={isLastQuestion}

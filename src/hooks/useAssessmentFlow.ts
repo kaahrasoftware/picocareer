@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AssessmentQuestion, QuestionResponse, CareerRecommendation, AssessmentResult, ProfileType } from '@/types/assessment';
@@ -34,7 +35,22 @@ export const useAssessmentFlow = () => {
       if (error) throw error;
 
       if (questions && questions.length > 0) {
-        setCurrentQuestion(questions[0]);
+        // Transform database question to match our type
+        const transformedQuestion: AssessmentQuestion = {
+          id: questions[0].id,
+          title: questions[0].title,
+          description: questions[0].description,
+          type: questions[0].type as 'multiple_choice' | 'multiple_select' | 'scale' | 'text',
+          options: questions[0].options as string[] | undefined,
+          order: questions[0].order_index,
+          isRequired: questions[0].is_required,
+          profileType: questions[0].profile_type as string[] | undefined,
+          targetAudience: questions[0].target_audience as string[] | undefined,
+          prerequisites: questions[0].prerequisites,
+          conditionalLogic: questions[0].conditional_logic
+        };
+        
+        setCurrentQuestion(transformedQuestion);
         setTotalQuestions(questions.length);
         setIsLastQuestion(questions.length === 1);
       }
@@ -121,7 +137,24 @@ export const useAssessmentFlow = () => {
 
       if (questions && currentQuestionIndex < questions.length - 1) {
         const nextIndex = currentQuestionIndex + 1;
-        setCurrentQuestion(questions[nextIndex]);
+        const nextQuestion = questions[nextIndex];
+        
+        // Transform database question to match our type
+        const transformedQuestion: AssessmentQuestion = {
+          id: nextQuestion.id,
+          title: nextQuestion.title,
+          description: nextQuestion.description,
+          type: nextQuestion.type as 'multiple_choice' | 'multiple_select' | 'scale' | 'text',
+          options: nextQuestion.options as string[] | undefined,
+          order: nextQuestion.order_index,
+          isRequired: nextQuestion.is_required,
+          profileType: nextQuestion.profile_type as string[] | undefined,
+          targetAudience: nextQuestion.target_audience as string[] | undefined,
+          prerequisites: nextQuestion.prerequisites,
+          conditionalLogic: nextQuestion.conditional_logic
+        };
+        
+        setCurrentQuestion(transformedQuestion);
         setCurrentQuestionIndex(nextIndex);
         setIsLastQuestion(nextIndex === questions.length - 1);
       }
@@ -272,37 +305,67 @@ export const useAssessmentFlow = () => {
         return;
       }
 
-      const { data: latestAssessment } = await supabase
+      // Get the latest completed assessment with its recommendations
+      const { data: latestAssessment, error } = await supabase
         .from('career_assessments')
-        .select(`
-          *,
-          career_recommendations (*)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('status', 'completed')
         .order('completed_at', { ascending: false })
         .limit(1)
         .single();
 
-      if (latestAssessment && latestAssessment.career_recommendations) {
-        const transformedRecommendations: CareerRecommendation[] = latestAssessment.career_recommendations.map((rec: any) => ({
-          careerId: rec.career_id,
-          title: rec.title,
-          description: rec.description,
-          matchScore: rec.match_score,
-          reasoning: rec.reasoning,
-          salaryRange: rec.salary_range,
-          growthOutlook: rec.growth_outlook,
-          timeToEntry: rec.time_to_entry,
-          requiredSkills: rec.required_skills || [],
-          educationRequirements: rec.education_requirements || [],
-          workEnvironment: rec.work_environment,
-          relatedCareers: []
-        }));
+      if (error) {
+        console.error('Error loading assessment:', error);
+        toast({
+          title: "No History Found",
+          description: "You haven't completed any assessments yet.",
+        });
+        return;
+      }
 
-        setRecommendations(transformedRecommendations);
-        setShowResults(true);
-        setHasStarted(true);
+      if (latestAssessment) {
+        // Get the recommendations for this assessment
+        const { data: savedRecommendations, error: recError } = await supabase
+          .from('career_recommendations')
+          .select('*')
+          .eq('assessment_id', latestAssessment.id);
+
+        if (recError) {
+          console.error('Error loading recommendations:', recError);
+          toast({
+            title: "Error",
+            description: "Failed to load assessment recommendations.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (savedRecommendations && savedRecommendations.length > 0) {
+          const transformedRecommendations: CareerRecommendation[] = savedRecommendations.map((rec: any) => ({
+            careerId: rec.career_id,
+            title: rec.title,
+            description: rec.description,
+            matchScore: rec.match_score,
+            reasoning: rec.reasoning,
+            salaryRange: rec.salary_range,
+            growthOutlook: rec.growth_outlook,
+            timeToEntry: rec.time_to_entry,
+            requiredSkills: rec.required_skills || [],
+            educationRequirements: rec.education_requirements || [],
+            workEnvironment: rec.work_environment,
+            relatedCareers: []
+          }));
+
+          setRecommendations(transformedRecommendations);
+          setShowResults(true);
+          setHasStarted(true);
+        } else {
+          toast({
+            title: "No Recommendations Found",
+            description: "No recommendations found for your latest assessment.",
+          });
+        }
       } else {
         toast({
           title: "No History Found",
