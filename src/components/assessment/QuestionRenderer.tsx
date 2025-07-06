@@ -28,11 +28,10 @@ export const QuestionRenderer = ({
   isLastQuestion = false,
   detectedProfileType
 }: QuestionRendererProps) => {
-  // Initialize state based on question type
   const getInitialAnswer = (questionType: string) => {
     switch (questionType) {
       case 'scale':
-        return [5]; // Array for slider
+        return [5];
       case 'multiple_select':
         return [];
       default:
@@ -43,7 +42,6 @@ export const QuestionRenderer = ({
   const [answer, setAnswer] = useState<any>(() => getInitialAnswer(question.type));
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-  // Reset state when question changes
   useEffect(() => {
     console.log('Question changed, resetting state for type:', question.type, 'Question ID:', question.id);
     setAnswer(getInitialAnswer(question.type));
@@ -56,7 +54,6 @@ export const QuestionRenderer = ({
     if (question.type === 'multiple_select') {
       responseValue = selectedOptions;
     } else if (question.type === 'scale') {
-      // Extract the number from the array
       responseValue = Array.isArray(answer) ? answer[0] : answer;
     }
 
@@ -203,7 +200,7 @@ export const QuestionRenderer = ({
                   Generating Your Results...
                 </>
               ) : (
-                'Complete Assessment'
+                'Complete Step - Analyze Results'
               )}
             </Button>
           ) : (

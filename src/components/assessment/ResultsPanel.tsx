@@ -14,7 +14,8 @@ import {
   BookOpen,
   Users,
   User,
-  CheckCircle
+  CheckCircle,
+  Brain
 } from 'lucide-react';
 
 interface ResultsPanelProps {
@@ -30,25 +31,29 @@ const getProfileTypeInfo = (profileType: string | null) => {
       return {
         label: 'Middle School Student',
         color: 'bg-green-100 text-green-800',
-        description: 'Recommendations tailored for your academic stage'
+        description: 'Recommendations tailored for your academic stage',
+        icon: '🎓'
       };
     case 'high_school':
       return {
         label: 'High School Student',
         color: 'bg-blue-100 text-blue-800',
-        description: 'Recommendations focused on college and career preparation'
+        description: 'Recommendations focused on college and career preparation',
+        icon: '📚'
       };
     case 'college':
       return {
         label: 'College Student',
         color: 'bg-purple-100 text-purple-800',
-        description: 'Recommendations for your academic and career transition'
+        description: 'Recommendations for your academic and career transition',
+        icon: '🎯'
       };
     case 'career_professional':
       return {
         label: 'Career Professional',
         color: 'bg-orange-100 text-orange-800',
-        description: 'Recommendations for career advancement and transitions'
+        description: 'Recommendations for career advancement and transitions',
+        icon: '💼'
       };
     default:
       return null;
@@ -62,12 +67,10 @@ export const ResultsPanel = ({
   detectedProfileType
 }: ResultsPanelProps) => {
   const handleExportResults = () => {
-    // Implementation for exporting results as PDF
     console.log('Exporting results...');
   };
 
   const handleShareResults = () => {
-    // Implementation for sharing results
     console.log('Sharing results...');
   };
 
@@ -82,14 +85,47 @@ export const ResultsPanel = ({
             Your Personalized Career Recommendations
           </CardTitle>
           
+          {/* Assessment Journey Summary */}
+          <div className="bg-green-50 rounded-lg p-4 mt-4">
+            <div className="flex items-center justify-center mb-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+              <span className="font-semibold text-green-800">3-Step Assessment Complete!</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <div className="bg-white rounded-lg p-3">
+                  <Brain className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                  <p className="font-medium">Step 1: Profile Detection</p>
+                  <p className="text-muted-foreground">2 questions answered</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="bg-white rounded-lg p-3">
+                  <User className="h-6 w-6 text-purple-600 mx-auto mb-1" />
+                  <p className="font-medium">Step 2: Personalized Questions</p>
+                  <p className="text-muted-foreground">{responses.length - 2} questions answered</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="bg-white rounded-lg p-3">
+                  <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                  <p className="font-medium">Step 3: AI Analysis</p>
+                  <p className="text-muted-foreground">{recommendations.length} recommendations generated</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Profile Type Display */}
           {profileInfo && (
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex flex-col items-center space-y-2 mt-4">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <span className="text-sm text-muted-foreground">Assessment personalized for:</span>
               </div>
               <Badge className={profileInfo.color}>
+                <span className="mr-2">{profileInfo.icon}</span>
                 <User className="h-3 w-3 mr-1" />
                 {profileInfo.label}
               </Badge>
@@ -97,8 +133,8 @@ export const ResultsPanel = ({
             </div>
           )}
           
-          <p className="text-muted-foreground">
-            Based on your {responses.length} responses, here are your personalized career matches
+          <p className="text-muted-foreground mt-4">
+            Based on your {responses.length} responses across our 3-step process, here are your personalized career matches
           </p>
         </CardHeader>
         <CardContent>

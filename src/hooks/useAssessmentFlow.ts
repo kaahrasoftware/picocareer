@@ -1,20 +1,24 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
 import type { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
 
+type AssessmentStep = 'profile_detection' | 'profile_specific' | 'ai_generation' | 'results';
+
 export const useAssessmentFlow = () => {
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [allQuestions, setAllQuestions] = useState<AssessmentQuestion[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<AssessmentQuestion[]>([]);
+  const [currentStep, setCurrentStep] = useState<AssessmentStep>('profile_detection');
+  const [stepQuestions, setStepQuestions] = useState<AssessmentQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
   const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
   const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
-  const [profileDetectionCompleted, setProfileDetectionCompleted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreatingAssessment, setIsCreatingAssessment] = useState(false);
+  const [showProfileResult, setShowProfileResult] = useState(false);
   const { toast } = useToast();
 
   // Load questions and create assessment
@@ -23,7 +27,6 @@ export const useAssessmentFlow = () => {
       try {
         setIsCreatingAssessment(true);
         
-        // Fetch questions
         const { data: questionsData, error: questionsError } = await supabase
           .from('assessment_questions')
           .select('*')
@@ -51,7 +54,6 @@ export const useAssessmentFlow = () => {
           return;
         }
 
-        // Transform questions to match our interface
         const transformedQuestions: AssessmentQuestion[] = questionsData.map(q => ({
           id: q.id,
           title: q.title,
@@ -68,10 +70,10 @@ export const useAssessmentFlow = () => {
 
         setAllQuestions(transformedQuestions);
         
-        // Initially show profile detection questions (order 1-2)
-        const initialQuestions = transformedQuestions.filter(q => q.order <= 2);
-        setFilteredQuestions(initialQuestions);
-        console.log('Initial profile detection questions:', initialQuestions);
+        // Start with profile detection questions (order 1-2)
+        const profileDetectionQuestions = transformedQuestions.filter(q => q.order <= 2);
+        setStepQuestions(profileDetectionQuestions);
+        console.log('Profile detection questions:', profileDetectionQuestions);
 
         // Create assessment record
         const { data: assessmentData, error: assessmentError } = await supabase
@@ -110,13 +112,45 @@ export const useAssessmentFlow = () => {
     initializeAssessment();
   }, [toast]);
 
+  const proceedToProfileSpecific = useCallback(() => {
+    if (!detectedProfileType || !allQuestions.length) return;
+
+    console.log('Proceeding to profile-specific questions for:', detectedProfileType);
+    
+    // Filter questions for the detected profile type (order 10-42)
+    const profileSpecificQuestions = allQuestions.filter(q => 
+      q.profileType && 
+      q.profileType.includes(detectedProfileType) && 
+      q.order >= 10 && 
+      q.order <= 42
+    ).sort((a, b) => a.order - b.order);
+    
+    console.log('Profile-specific questions:', profileSpecificQuestions);
+    
+    setStepQuestions(profileSpecificQuestions);
+    setCurrentQuestionIndex(0);
+    setCurrentStep('profile_specific');
+    setShowProfileResult(false);
+  }, [detectedProfileType, allQuestions]);
+
+  const proceedToAiGeneration = useCallback(() => {
+    console.log('Proceeding to AI generation with responses:', responses);
+    setCurrentStep('ai_generation');
+    setIsGenerating(true);
+    
+    // Auto-start generation
+    setTimeout(() => {
+      generateRecommendations();
+    }, 1000);
+  }, [responses]);
+
   const handleAnswer = useCallback(async (answer: string | string[] | number) => {
-    if (!assessmentId || !filteredQuestions[currentQuestionIndex]) {
+    if (!assessmentId || !stepQuestions[currentQuestionIndex]) {
       console.error('No assessment ID or current question available');
       return;
     }
 
-    const currentQuestion = filteredQuestions[currentQuestionIndex];
+    const currentQuestion = stepQuestions[currentQuestionIndex];
     console.log('Processing answer for question:', currentQuestion.id, 'Answer:', answer);
 
     const response: QuestionResponse = {
@@ -152,51 +186,42 @@ export const useAssessmentFlow = () => {
     const newResponses = [...responses, response];
     setResponses(newResponses);
 
-    // Check if we need to detect profile type (after first 2 questions)
-    if (!profileDetectionCompleted && newResponses.length >= 2) {
-      console.log('Attempting profile detection with responses:', newResponses);
-      const profileType = detectProfileType(newResponses);
-      console.log('Detected profile type:', profileType);
-      
-      if (profileType) {
-        setDetectedProfileType(profileType);
-        setProfileDetectionCompleted(true);
-
-        // Update assessment with detected profile type
-        await supabase
-          .from('career_assessments')
-          .update({
-            detected_profile_type: profileType,
-            profile_detection_completed: true
-          })
-          .eq('id', assessmentId);
-
-        // Filter questions for the detected profile type - include both profile-specific AND universal questions
-        const relevantQuestions = allQuestions.filter(q => 
-          shouldShowQuestion(q, profileType, 0)
-        ).sort((a, b) => a.order - b.order);
+    // Handle step transitions
+    if (currentStep === 'profile_detection') {
+      // Check if we've completed profile detection (2 questions)
+      if (newResponses.length >= 2) {
+        console.log('Profile detection completed, detecting profile type...');
+        const profileType = detectProfileType(newResponses);
+        console.log('Detected profile type:', profileType);
         
-        console.log('All relevant questions for', profileType, ':', relevantQuestions);
-        setFilteredQuestions(relevantQuestions);
-        
-        // Find the next question after profile detection (order > 2)
-        const nextQuestionIndex = relevantQuestions.findIndex(q => q.order > 2);
-        if (nextQuestionIndex !== -1) {
-          setCurrentQuestionIndex(nextQuestionIndex);
-        } else {
-          // If no more questions, we're done
-          setCurrentQuestionIndex(relevantQuestions.length);
+        if (profileType) {
+          setDetectedProfileType(profileType);
+          setShowProfileResult(true);
+
+          // Update assessment with detected profile type
+          await supabase
+            .from('career_assessments')
+            .update({
+              detected_profile_type: profileType,
+              profile_detection_completed: true
+            })
+            .eq('id', assessmentId);
         }
         return;
       }
     }
 
-    // Move to next question
+    // Move to next question within current step
     const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < filteredQuestions.length) {
+    if (nextIndex < stepQuestions.length) {
       setCurrentQuestionIndex(nextIndex);
+    } else {
+      // Completed current step
+      if (currentStep === 'profile_specific') {
+        proceedToAiGeneration();
+      }
     }
-  }, [assessmentId, filteredQuestions, currentQuestionIndex, responses, profileDetectionCompleted, allQuestions, toast]);
+  }, [assessmentId, stepQuestions, currentQuestionIndex, responses, currentStep, toast, proceedToAiGeneration]);
 
   const generateRecommendations = useCallback(async () => {
     if (!assessmentId || responses.length === 0) {
@@ -204,7 +229,6 @@ export const useAssessmentFlow = () => {
       return;
     }
 
-    setIsGenerating(true);
     console.log('Generating recommendations for assessment:', assessmentId);
 
     try {
@@ -256,6 +280,7 @@ export const useAssessmentFlow = () => {
       }));
 
       setRecommendations(transformedRecommendations);
+      setCurrentStep('results');
     } catch (error) {
       console.error('Error in generateRecommendations:', error);
       toast({
@@ -271,32 +296,39 @@ export const useAssessmentFlow = () => {
   const resetAssessment = useCallback(() => {
     setAssessmentId(null);
     setAllQuestions([]);
-    setFilteredQuestions([]);
+    setCurrentStep('profile_detection');
+    setStepQuestions([]);
     setCurrentQuestionIndex(0);
     setResponses([]);
     setRecommendations([]);
     setDetectedProfileType(null);
-    setProfileDetectionCompleted(false);
     setIsGenerating(false);
+    setShowProfileResult(false);
   }, []);
 
-  const currentQuestion = filteredQuestions[currentQuestionIndex] || null;
-  const progress = filteredQuestions.length > 0 ? ((currentQuestionIndex + 1) / filteredQuestions.length) * 100 : 0;
-  const isLastQuestion = currentQuestionIndex === filteredQuestions.length - 1;
-  const isAssessmentReady = !isCreatingAssessment && filteredQuestions.length > 0;
+  const currentQuestion = stepQuestions[currentQuestionIndex] || null;
+  const totalQuestionsInStep = stepQuestions.length;
+  const stepProgress = totalQuestionsInStep > 0 ? ((currentQuestionIndex + 1) / totalQuestionsInStep) * 100 : 0;
+  const isLastQuestionInStep = currentQuestionIndex === totalQuestionsInStep - 1;
+  const isAssessmentReady = !isCreatingAssessment && stepQuestions.length > 0;
 
   return {
+    currentStep,
     currentQuestion,
     responses,
     recommendations,
     detectedProfileType,
-    profileDetectionCompleted,
+    showProfileResult,
     isGenerating,
-    progress,
-    isLastQuestion,
+    stepProgress,
+    isLastQuestionInStep,
     isAssessmentReady,
     isCreatingAssessment,
+    totalQuestionsInStep,
+    currentQuestionIndex,
     handleAnswer,
+    proceedToProfileSpecific,
+    proceedToAiGeneration,
     generateRecommendations,
     resetAssessment
   };

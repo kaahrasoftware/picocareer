@@ -2,18 +2,17 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
 import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { AssessmentHistory } from '@/components/assessment/AssessmentHistory';
-import { QuestionProgress } from '@/components/assessment/QuestionProgress';
+import { ProfileDetectionResult } from '@/components/assessment/ProfileDetectionResult';
 import { useAuthSession } from '@/hooks/useAuthSession';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
 import { useAssessmentResults } from '@/hooks/useAssessmentResults';
 import { Brain, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 
-type AssessmentPhase = 'intro' | 'questions' | 'results' | 'history' | 'view-results';
+type AssessmentPhase = 'intro' | 'assessment' | 'results' | 'history' | 'view-results';
 
 export default function CareerAssessment() {
   const { session } = useAuthSession();
@@ -21,22 +20,25 @@ export default function CareerAssessment() {
   const [viewingAssessmentId, setViewingAssessmentId] = useState<string | null>(null);
   
   const {
+    currentStep,
     currentQuestion,
     responses,
     recommendations,
     detectedProfileType,
-    profileDetectionCompleted,
+    showProfileResult,
     isGenerating,
-    progress,
-    isLastQuestion,
+    stepProgress,
+    isLastQuestionInStep,
     isAssessmentReady,
     isCreatingAssessment,
+    totalQuestionsInStep,
+    currentQuestionIndex,
     handleAnswer,
-    generateRecommendations,
+    proceedToProfileSpecific,
+    proceedToAiGeneration,
     resetAssessment
   } = useAssessmentFlow();
 
-  // Hook for viewing historical results
   const { 
     recommendations: historicalRecommendations, 
     responses: historicalResponses, 
@@ -50,24 +52,7 @@ export default function CareerAssessment() {
       return;
     }
     console.log('Starting assessment phase');
-    setCurrentPhase('questions');
-  };
-
-  const handleCompleteAssessment = async () => {
-    console.log('Completing assessment with', responses.length, 'responses');
-    
-    if (responses.length === 0) {
-      console.error('No responses to process');
-      return;
-    }
-    
-    try {
-      await generateRecommendations();
-      setCurrentPhase('results');
-    } catch (error) {
-      console.error('Failed to complete assessment:', error);
-      // Error is already handled in the hook
-    }
+    setCurrentPhase('assessment');
   };
 
   const handleBackToIntro = () => {
@@ -93,10 +78,24 @@ export default function CareerAssessment() {
   };
 
   const handleAnswerWrapper = (response: any) => {
-    // Convert the response to the expected format
     const answer = typeof response === 'object' && response.answer ? response.answer : response;
     console.log('Answer wrapper received:', response, 'Converted to:', answer);
     handleAnswer(answer);
+  };
+
+  const getStepInfo = () => {
+    switch (currentStep) {
+      case 'profile_detection':
+        return { current: 1, total: 3, label: 'Profile Detection' };
+      case 'profile_specific':
+        return { current: 2, total: 3, label: 'Personalized Questions' };
+      case 'ai_generation':
+        return { current: 3, total: 3, label: 'AI Analysis' };
+      case 'results':
+        return { current: 3, total: 3, label: 'Results' };
+      default:
+        return { current: 1, total: 3, label: 'Assessment' };
+    }
   };
 
   if (!session) {
@@ -144,39 +143,44 @@ export default function CareerAssessment() {
           )}
         </div>
         
-        {/* Enhanced Assessment Status */}
-        {currentPhase === 'questions' && currentQuestion && (
+        {/* Step Progress Display */}
+        {currentPhase === 'assessment' && (
           <div className="mt-6">
-            <QuestionProgress
-              currentIndex={0} // This will be calculated properly
-              totalQuestions={8} // Estimated total based on flow
-              currentQuestion={currentQuestion}
-              detectedProfileType={detectedProfileType}
-              profileDetectionCompleted={profileDetectionCompleted}
-            />
-            
-            {/* Profile Detection Completion Indicator */}
-            {profileDetectionCompleted && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="bg-white rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800">
-                    Profile detected! Questions are now personalized for your stage.
-                  </span>
+                  <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                    {getStepInfo().current}
+                  </div>
+                  <div>
+                    <p className="font-semibold">Step {getStepInfo().current} of {getStepInfo().total}</p>
+                    <p className="text-sm text-muted-foreground">{getStepInfo().label}</p>
+                  </div>
                 </div>
+                
+                {detectedProfileType && (
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-green-700 font-medium">Profile: {detectedProfileType.replace('_', ' ')}</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Debug info for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-            <p>Debug: Assessment Ready: {isAssessmentReady ? 'Yes' : 'No'}</p>
-            <p>Creating Assessment: {isCreatingAssessment ? 'Yes' : 'No'}</p>
-            <p>Responses Count: {responses.length}</p>
-            <p>Profile Type: {detectedProfileType || 'Not detected'}</p>
-            <p>Profile Detection Complete: {profileDetectionCompleted ? 'Yes' : 'No'}</p>
+              
+              {currentQuestion && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm text-muted-foreground">
+                    <span>Question {currentQuestionIndex + 1} of {totalQuestionsInStep}</span>
+                    <span>{Math.round(stepProgress)}% Complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${stepProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -200,24 +204,63 @@ export default function CareerAssessment() {
         </div>
       )}
 
-      {currentPhase === 'questions' && currentQuestion && (
-        <QuestionRenderer
-          question={currentQuestion}
-          onAnswer={handleAnswerWrapper}
-          onComplete={handleCompleteAssessment}
-          isGenerating={isGenerating}
-          isLastQuestion={isLastQuestion}
-          detectedProfileType={detectedProfileType}
-        />
-      )}
+      {currentPhase === 'assessment' && (
+        <div>
+          {/* Profile Detection Result Screen */}
+          {showProfileResult && detectedProfileType && (
+            <ProfileDetectionResult
+              profileType={detectedProfileType}
+              onContinue={proceedToProfileSpecific}
+            />
+          )}
 
-      {currentPhase === 'results' && (
-        <ResultsPanel 
-          recommendations={recommendations}
-          responses={responses}
-          onRetakeAssessment={handleBackToIntro}
-          detectedProfileType={detectedProfileType}
-        />
+          {/* AI Generation Loading Screen */}
+          {currentStep === 'ai_generation' && (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="bg-primary/10 p-4 rounded-full">
+                      <Brain className="h-12 w-12 text-primary animate-pulse" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Analyzing Your Responses</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Our AI is processing your answers to generate personalized career recommendations...
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">This may take a few moments</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Current Question */}
+          {currentQuestion && !showProfileResult && currentStep !== 'ai_generation' && (
+            <QuestionRenderer
+              question={currentQuestion}
+              onAnswer={handleAnswerWrapper}
+              onComplete={proceedToAiGeneration}
+              isGenerating={isGenerating}
+              isLastQuestion={isLastQuestionInStep}
+              detectedProfileType={detectedProfileType}
+            />
+          )}
+
+          {/* Results */}
+          {currentStep === 'results' && (
+            <ResultsPanel 
+              recommendations={recommendations}
+              responses={responses}
+              onRetakeAssessment={handleBackToIntro}
+              detectedProfileType={detectedProfileType}
+            />
+          )}
+        </div>
       )}
 
       {currentPhase === 'history' && (
