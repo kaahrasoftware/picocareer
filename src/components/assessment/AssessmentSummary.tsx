@@ -32,8 +32,5 @@ export const AssessmentSummary = ({
   const displayInterests = getTopInterests();
   const displayStrengths = getStrengths();
   const displayPreferences = getPreferences();
-  return <Card>
-      
-      
-    </Card>;
+  return;
 };
