@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
@@ -7,6 +6,7 @@ import { ResultsPanel } from '@/components/assessment/ResultsPanel';
 import { useAssessmentFlow } from '@/hooks/useAssessmentFlow';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { QuestionResponse } from '@/types/assessment';
 
 export default function CareerAssessment() {
   const {
@@ -28,8 +28,8 @@ export default function CareerAssessment() {
   } = useAssessmentFlow();
 
   // Create a wrapper function that matches the expected signature
-  const handleQuestionResponse = (answer: string | string[] | number) => {
-    handleAnswer(answer);
+  const handleQuestionResponse = (response: QuestionResponse) => {
+    handleAnswer(response.answer);
   };
 
   if (isLoading) {
