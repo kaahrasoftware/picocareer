@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { CareerRecommendation } from '@/types/assessment';
 import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
+import { FindMentorsDialog } from './FindMentorsDialog';
 import { RelatedCareersSection } from './RelatedCareersSection';
 import { 
   Briefcase, 
@@ -13,7 +14,8 @@ import {
   DollarSign, 
   Clock,
   ExternalLink,
-  Bookmark
+  Bookmark,
+  Users
 } from 'lucide-react';
 
 interface CareerRecommendationCardProps {
@@ -26,6 +28,7 @@ export const CareerRecommendationCard = ({
   rank 
 }: CareerRecommendationCardProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mentorsDialogOpen, setMentorsDialogOpen] = useState(false);
   const [selectedCareerId, setSelectedCareerId] = useState<string>('');
 
   const handleViewCareer = () => {
@@ -36,6 +39,10 @@ export const CareerRecommendationCard = ({
   const handleBookmark = () => {
     // Implementation for bookmarking career
     console.log('Bookmarking career:', recommendation.careerId);
+  };
+
+  const handleFindMentors = () => {
+    setMentorsDialogOpen(true);
   };
 
   const handleRelatedCareerSelect = (careerId: string) => {
@@ -118,7 +125,8 @@ export const CareerRecommendationCard = ({
               Learn More
               <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleFindMentors}>
+              <Users className="h-3 w-3 mr-1" />
               Find Mentors
             </Button>
           </div>
@@ -140,6 +148,12 @@ export const CareerRecommendationCard = ({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         recommendationData={recommendation}
+      />
+
+      <FindMentorsDialog
+        open={mentorsDialogOpen}
+        onOpenChange={setMentorsDialogOpen}
+        recommendation={recommendation}
       />
     </>
   );
