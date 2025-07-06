@@ -107,26 +107,18 @@ export const useAssessmentFlow = () => {
     try {
       console.log('Updating assessment with profile type:', profileType);
       
-      // Use direct SQL update to avoid TypeScript issues with new columns
-      const { error } = await supabase.rpc('update_assessment_profile', {
-        assessment_id: assessmentId,
-        profile_type: profileType
-      });
+      // Use direct table update with type assertion to bypass TypeScript temporarily
+      const { error } = await supabase
+        .from('career_assessments')
+        .update({
+          detected_profile_type: profileType,
+          profile_detection_completed: true
+        } as any) // Use 'as any' to bypass TypeScript temporarily
+        .eq('id', assessmentId);
 
       if (error) {
-        // Fallback to direct table update if RPC doesn't exist
-        const { error: updateError } = await supabase
-          .from('career_assessments')
-          .update({
-            detected_profile_type: profileType,
-            profile_detection_completed: true
-          } as any) // Use 'as any' to bypass TypeScript temporarily
-          .eq('id', assessmentId);
-
-        if (updateError) {
-          console.error('Error updating assessment profile:', updateError);
-          throw updateError;
-        }
+        console.error('Error updating assessment profile:', error);
+        throw error;
       }
       
       console.log('Assessment profile updated successfully');
