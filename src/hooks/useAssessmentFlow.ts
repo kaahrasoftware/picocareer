@@ -46,7 +46,7 @@ export const useAssessmentFlow = () => {
         title: q.title,
         description: q.description || undefined,
         type: q.type as AssessmentQuestion['type'],
-        options: q.options || undefined,
+        options: Array.isArray(q.options) ? q.options as string[] : undefined,
         order: q.order_index,
         isRequired: q.is_required,
         profileType: q.profile_type || undefined,
