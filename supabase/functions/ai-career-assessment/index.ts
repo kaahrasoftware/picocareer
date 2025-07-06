@@ -44,7 +44,7 @@ serve(async (req) => {
 
     console.log('Processing assessment:', assessmentId);
 
-    // Get the assessment to verify ownership
+    // Get the assessment to verify ownership and get profile type
     const { data: assessment, error: assessmentError } = await supabase
       .from('career_assessments')
       .select('*')
@@ -55,6 +55,16 @@ serve(async (req) => {
       throw new Error('Assessment not found');
     }
 
+    // Get questions for context
+    const { data: questions, error: questionsError } = await supabase
+      .from('assessment_questions')
+      .select('*')
+      .eq('is_active', true);
+
+    if (questionsError) {
+      console.error('Error fetching questions:', questionsError);
+    }
+
     // Get existing careers data for better recommendations
     const { data: careers } = await supabase
       .from('careers')
@@ -63,10 +73,10 @@ serve(async (req) => {
       .limit(50);
 
     // Process responses to create a user profile
-    const userProfile = processResponses(responses);
+    const userProfile = processResponses(responses, questions || [], assessment.detected_profile_type);
     
     // Generate career recommendations using OpenAI
-    const recommendations = await generateRecommendations(userProfile, careers || []);
+    const recommendations = await generateRecommendations(userProfile, careers || [], assessment.detected_profile_type);
 
     // Save recommendations to database
     const recommendationInserts = recommendations.map(rec => ({
@@ -129,31 +139,40 @@ serve(async (req) => {
   }
 });
 
-function processResponses(responses: AssessmentResponse[]): string {
+function processResponses(responses: AssessmentResponse[], questions: any[], profileType: string | null): string {
+  const questionMap = new Map(questions.map(q => [q.id, q]));
+  
   const profile = responses.map(response => {
+    const question = questionMap.get(response.questionId);
+    const questionText = question ? question.title : `Question ${response.questionId}`;
     const answer = Array.isArray(response.answer) 
       ? response.answer.join(', ') 
       : response.answer.toString();
-    return `Question ${response.questionId}: ${answer}`;
+    return `${questionText}: ${answer}`;
   }).join('\n');
   
-  return profile;
+  const profileContext = profileType ? `\nDetected Profile Type: ${profileType}` : '';
+  
+  return profile + profileContext;
 }
 
 async function generateRecommendations(
   userProfile: string, 
-  existingCareers: any[]
+  existingCareers: any[],
+  profileType: string | null
 ): Promise<CareerRecommendation[]> {
   const careerContext = existingCareers.slice(0, 20).map(career => 
     `${career.title}: ${career.description} (Industry: ${career.industry})`
   ).join('\n');
 
+  const profileContext = profileType ? `\nUser Profile Type: ${profileType}` : '';
+
   const prompt = `
 Based on the following user assessment responses, generate 5 personalized career recommendations. 
-Consider the user's interests, skills, work preferences, and career goals.
+Consider the user's interests, skills, work preferences, career goals, and profile type.
 
 User Profile:
-${userProfile}
+${userProfile}${profileContext}
 
 Available Career Options (for reference):
 ${careerContext}
@@ -177,7 +196,8 @@ Please provide recommendations in the following JSON format:
 }
 
 Ensure match scores are realistic (60-95 range) and reasoning is specific to the user's responses.
-Focus on careers that align with their stated interests, preferred work environment, and skill level.
+Focus on careers that align with their stated interests, preferred work environment, skill level, and profile type.
+${profileType ? `Tailor recommendations specifically for a ${profileType.replace('_', ' ')} student/professional.` : ''}
 `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -213,7 +233,7 @@ Focus on careers that align with their stated interests, preferred work environm
   } catch (parseError) {
     console.error('Failed to parse OpenAI response:', content);
     // Return fallback recommendations
-    return generateFallbackRecommendations();
+    return generateFallbackRecommendations(profileType);
   }
 }
 
@@ -225,8 +245,8 @@ function findMatchingCareerId(title: string, careers: any[]): string | null {
   return match?.id || null;
 }
 
-function generateFallbackRecommendations(): CareerRecommendation[] {
-  return [
+function generateFallbackRecommendations(profileType: string | null): CareerRecommendation[] {
+  const baseRecommendations = [
     {
       title: "Software Developer",
       description: "Design and develop software applications and systems",
@@ -252,4 +272,14 @@ function generateFallbackRecommendations(): CareerRecommendation[] {
       workEnvironment: "Office-based with travel opportunities"
     }
   ];
+
+  // Adjust recommendations based on profile type
+  if (profileType === 'middle_school' || profileType === 'high_school') {
+    baseRecommendations.forEach(rec => {
+      rec.reasoning += ` This career path offers good opportunities for students to explore and develop relevant skills.`;
+      rec.timeToEntry = profileType === 'middle_school' ? "6-8 years" : "4-6 years";
+    });
+  }
+
+  return baseRecommendations;
 }
