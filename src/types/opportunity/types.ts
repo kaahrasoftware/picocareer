@@ -1,5 +1,6 @@
 
-import { OpportunityStatus, OpportunityType, ApplicationStatus } from "@/integrations/supabase/types";
+
+import { OpportunityStatus, OpportunityType, ApplicationStatus } from "@/types/database/enums";
 
 export interface Opportunity {
   id: string;
@@ -72,3 +73,4 @@ export interface OpportunityFilters {
   location?: string;
   deadline?: string; // ISO date string
 }
+
