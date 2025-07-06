@@ -194,6 +194,10 @@ export function CareerDetailsDialog({
     return career?.title || recommendationData?.title || 'Career Details';
   };
 
+  const handleRecommendationBack = () => {
+    handleClose();
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -239,7 +243,10 @@ export function CareerDetailsDialog({
               careerId={careerId}
             />
             <div className="space-y-8">
-              <RecommendationCareerView recommendation={recommendationData} />
+              <RecommendationCareerView 
+                recommendation={recommendationData} 
+                onBack={handleRecommendationBack}
+              />
               
               <SimilarCareersSection
                 careers={similarCareers}

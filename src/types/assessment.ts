@@ -39,6 +39,7 @@ export interface CareerRecommendation {
   requiredSkills?: string[];
   educationRequirements?: string[];
   workEnvironment?: string;
+  industry?: string;
   relatedCareers?: RelatedCareer[];
 }
 

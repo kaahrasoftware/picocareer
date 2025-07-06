@@ -134,9 +134,7 @@ export const CareerRecommendationCard = ({
           {/* Related Careers Section */}
           <div className="mt-6">
             <RelatedCareersSection
-              careerId={recommendation.careerId || ''}
-              careerTitle={recommendation.title}
-              requiredSkills={recommendation.requiredSkills}
+              recommendation={recommendation}
               onCareerSelect={handleRelatedCareerSelect}
             />
           </div>
