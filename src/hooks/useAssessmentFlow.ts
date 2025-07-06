@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthSession } from './useAuthSession';
@@ -47,7 +46,7 @@ export const useAssessmentFlow = () => {
         title: q.title,
         description: q.description || undefined,
         type: q.type as AssessmentQuestion['type'],
-        options: q.options ? JSON.parse(q.options as string) : undefined,
+        options: q.options || undefined,
         order: q.order_index,
         isRequired: q.is_required,
         profileType: q.profile_type || undefined,
