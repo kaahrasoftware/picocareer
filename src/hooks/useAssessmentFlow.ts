@@ -1,38 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthSession } from './useAuthSession';
 import { AssessmentQuestion, QuestionResponse, CareerRecommendation, AssessmentResult, ProfileType } from '@/types/assessment';
-import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
+import { useToast } from '@/hooks/use-toast';
 
 export const useAssessmentFlow = () => {
-  const { session } = useAuthSession();
-  const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<AssessmentQuestion | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(0);
   const [responses, setResponses] = useState<QuestionResponse[]>([]);
-  const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
   const [recommendations, setRecommendations] = useState<CareerRecommendation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [detectedProfileType, setDetectedProfileType] = useState<ProfileType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [assessmentId, setAssessmentId] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isLastQuestion, setIsLastQuestion] = useState(false);
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
+  
+  const { toast } = useToast();
 
-  // Load questions on component mount
   useEffect(() => {
     loadQuestions();
   }, []);
 
-  // Filter questions when profile type is detected
-  useEffect(() => {
-    if (detectedProfileType && questions.length > 0) {
-      filterQuestionsForProfile();
-    }
-  }, [detectedProfileType, questions]);
-
   const loadQuestions = async () => {
-    setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: questions, error } = await supabase
         .from('assessment_questions')
         .select('*')
         .eq('is_active', true)
@@ -40,328 +33,298 @@ export const useAssessmentFlow = () => {
 
       if (error) throw error;
 
-      // Transform database questions to match our types
-      const transformedQuestions: AssessmentQuestion[] = (data || []).map(q => ({
-        id: q.id,
-        title: q.title,
-        description: q.description || undefined,
-        type: q.type as AssessmentQuestion['type'],
-        options: Array.isArray(q.options) ? q.options as string[] : undefined,
-        order: q.order_index,
-        isRequired: q.is_required,
-        profileType: q.profile_type || undefined,
-        targetAudience: q.target_audience || undefined,
-        prerequisites: q.prerequisites || undefined,
-        conditionalLogic: q.conditional_logic || undefined
-      }));
-
-      setQuestions(transformedQuestions);
+      if (questions && questions.length > 0) {
+        setCurrentQuestion(questions[0]);
+        setTotalQuestions(questions.length);
+        setIsLastQuestion(questions.length === 1);
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load assessment questions. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filterQuestionsForProfile = () => {
-    if (!detectedProfileType) return;
-
-    // Get filtered questions based on profile type
-    const filteredQuestions = questions.filter(question => 
-      shouldShowQuestion(question, detectedProfileType, 0)
-    );
-
-    // Ensure we have exactly 8 questions in the right order
-    const orderedQuestions = filteredQuestions
-      .sort((a, b) => a.order - b.order)
-      .slice(0, 8);
-
-    setQuestions(orderedQuestions);
-  };
-
   const startAssessment = async () => {
-    console.log('Starting assessment...');
-    setHasStarted(true);
-    setCurrentQuestionIndex(0);
-    setResponses([]);
-    setDetectedProfileType(null);
-    setRecommendations([]);
-    setShowResults(false);
-    
-    // Create assessment record if user is logged in
-    if (session?.user?.id) {
-      await createOrUpdateAssessment();
-    }
-  };
-
-  const viewHistory = async () => {
-    console.log('Viewing assessment history...');
-    // For now, just show a simple message - this could be expanded to show actual history
-    if (!session?.user?.id) {
-      alert('Please sign in to view your assessment history.');
-      return;
-    }
-    
     try {
-      const { data: assessments, error } = await supabase
-        .from('career_assessments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('status', 'completed')
-        .order('completed_at', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      if (assessments && assessments.length > 0) {
-        // Load the most recent completed assessment
-        const latestAssessment = assessments[0];
-        
-        // Load responses for this assessment
-        const { data: responsesData, error: responsesError } = await supabase
-          .from('assessment_responses')
-          .select('*')
-          .eq('assessment_id', latestAssessment.id);
-
-        if (responsesError) throw responsesError;
-
-        // Load recommendations for this assessment
-        const { data: recommendationsData, error: recommendationsError } = await supabase
-          .from('career_recommendations')
-          .select('*')
-          .eq('assessment_id', latestAssessment.id);
-
-        if (recommendationsError) throw recommendationsError;
-
-        // Transform database responses to match our TypeScript interfaces
-        const transformedResponses: QuestionResponse[] = (responsesData || []).map(dbResponse => ({
-          questionId: dbResponse.question_id,
-          answer: dbResponse.answer as string | string[] | number,
-          timestamp: dbResponse.created_at
-        }));
-
-        // Transform database recommendations to match our TypeScript interfaces
-        const transformedRecommendations: CareerRecommendation[] = (recommendationsData || []).map(dbRec => ({
-          careerId: dbRec.career_id || dbRec.id,
-          title: dbRec.title,
-          description: dbRec.description,
-          matchScore: dbRec.match_score,
-          reasoning: dbRec.reasoning,
-          salaryRange: dbRec.salary_range,
-          growthOutlook: dbRec.growth_outlook,
-          timeToEntry: dbRec.time_to_entry,
-          requiredSkills: dbRec.required_skills || [],
-          educationRequirements: dbRec.education_requirements || [],
-          workEnvironment: dbRec.work_environment
-        }));
-
-        // Set the state to show the previous results
-        setResponses(transformedResponses);
-        setRecommendations(transformedRecommendations);
-        setDetectedProfileType(latestAssessment.detected_profile_type);
-        setShowResults(true);
-        setHasStarted(true);
-      } else {
-        alert('No previous assessment results found. Take your first assessment!');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to start the assessment.",
+          variant: "destructive",
+        });
+        return;
       }
-    } catch (error) {
-      console.error('Error loading assessment history:', error);
-      alert('Failed to load assessment history. Please try again.');
-    }
-  };
 
-  const handleAnswer = async (response: QuestionResponse) => {
-    const newResponses = [...responses, response];
-    setResponses(newResponses);
-
-    // Detect profile type from first question
-    if (currentQuestionIndex === 0 && !detectedProfileType) {
-      const profileType = detectProfileType([response]);
-      if (profileType) {
-        setDetectedProfileType(profileType);
-        // Start or update assessment record
-        await createOrUpdateAssessment(profileType);
-      }
-    }
-
-    // Save response to database
-    if (assessmentId) {
-      await saveResponse(response);
-    }
-
-    // Move to next question or complete assessment
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      await completeAssessment(newResponses);
-    }
-  };
-
-  const createOrUpdateAssessment = async (profileType?: ProfileType) => {
-    if (!session?.user?.id) return;
-
-    try {
-      const { data, error } = await supabase
+      const { data: assessment, error } = await supabase
         .from('career_assessments')
         .insert({
-          user_id: session.user.id,
+          user_id: user.id,
           status: 'in_progress',
-          detected_profile_type: profileType || null,
-          profile_detection_completed: !!profileType
+          started_at: new Date().toISOString()
         })
         .select()
         .single();
 
       if (error) throw error;
-      setAssessmentId(data.id);
+
+      setCurrentAssessmentId(assessment.id);
+      setHasStarted(true);
+      
+      toast({
+        title: "Assessment Started",
+        description: "Good luck! Take your time with each question.",
+      });
     } catch (error) {
-      console.error('Error creating assessment:', error);
+      console.error('Error starting assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start assessment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const saveResponse = async (response: QuestionResponse) => {
-    if (!assessmentId) return;
+  const handleAnswer = async (answer: string | string[] | number) => {
+    if (!currentQuestion || !currentAssessmentId) return;
+
+    const newResponse: QuestionResponse = {
+      questionId: currentQuestion.id,
+      answer,
+      timestamp: new Date().toISOString(),
+    };
 
     try {
       await supabase
         .from('assessment_responses')
         .insert({
-          assessment_id: assessmentId,
-          question_id: response.questionId,
-          answer: response.answer
+          assessment_id: currentAssessmentId,
+          question_id: currentQuestion.id,
+          answer: answer
         });
+
+      const updatedResponses = [...responses, newResponse];
+      setResponses(updatedResponses);
+
+      const { data: questions } = await supabase
+        .from('assessment_questions')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index');
+
+      if (questions && currentQuestionIndex < questions.length - 1) {
+        const nextIndex = currentQuestionIndex + 1;
+        setCurrentQuestion(questions[nextIndex]);
+        setCurrentQuestionIndex(nextIndex);
+        setIsLastQuestion(nextIndex === questions.length - 1);
+      }
     } catch (error) {
       console.error('Error saving response:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save your response. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const completeAssessment = async (allResponses: QuestionResponse[]) => {
+  const completeAssessment = async () => {
+    if (!currentAssessmentId) return;
+
     setIsGenerating(true);
-    console.log('Completing assessment with responses:', allResponses);
-    console.log('Detected profile type:', detectedProfileType);
-    console.log('Assessment ID:', assessmentId);
-
+    
     try {
-      if (!assessmentId) {
-        throw new Error('No assessment ID found');
+      console.log('Completing assessment with responses:', responses);
+
+      // Generate AI recommendations
+      const { data, error } = await supabase.functions.invoke('ai-career-assessment', {
+        body: { responses }
+      });
+
+      if (error) {
+        console.error('Error calling AI function:', error);
+        throw error;
       }
 
-      // Call the AI career assessment edge function
-      console.log('Calling ai-career-assessment edge function...');
-      const { data: functionResponse, error: functionError } = await supabase.functions.invoke(
-        'ai-career-assessment',
-        {
-          body: {
-            assessmentId,
-            responses: allResponses,
-            profileType: detectedProfileType
-          }
-        }
-      );
+      console.log('AI function response:', data);
 
-      if (functionError) {
-        console.error('Edge function error:', functionError);
-        throw functionError;
+      if (!data?.recommendations || !Array.isArray(data.recommendations)) {
+        throw new Error('Invalid response format from AI service');
       }
 
-      console.log('Edge function response:', functionResponse);
+      const aiRecommendations = data.recommendations;
 
-      if (!functionResponse?.recommendations || !Array.isArray(functionResponse.recommendations)) {
-        throw new Error('Invalid response format from AI assessment');
+      // Save recommendations to database
+      const recommendationsToInsert = aiRecommendations.map((rec: any) => ({
+        assessment_id: currentAssessmentId,
+        title: rec.title || 'Untitled Career',
+        description: rec.description || '',
+        match_score: Math.round(rec.matchScore || 0),
+        reasoning: rec.reasoning || '',
+        salary_range: rec.salaryRange || null,
+        growth_outlook: rec.growthOutlook || null,
+        time_to_entry: rec.timeToEntry || null,
+        required_skills: rec.requiredSkills || [],
+        education_requirements: rec.educationRequirements || [],
+        work_environment: rec.workEnvironment || null,
+        career_id: null // We'll implement career matching later if needed
+      }));
+
+      console.log('Inserting recommendations:', recommendationsToInsert);
+
+      const { error: insertError } = await supabase
+        .from('career_recommendations')
+        .insert(recommendationsToInsert);
+
+      if (insertError) {
+        console.error('Error saving recommendations:', insertError);
+        // Don't throw here - we still want to show results even if saving fails
+        toast({
+          title: "Warning",
+          description: "Recommendations generated but not saved. You may need to retake the assessment.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Successfully saved recommendations to database');
       }
 
-      // Transform AI recommendations to match our interface
-      const aiRecommendations: CareerRecommendation[] = functionResponse.recommendations.map((rec: any, index: number) => ({
-        careerId: rec.careerId || `ai-${index + 1}`,
-        title: rec.title || 'Career Recommendation',
-        description: rec.description || 'AI-generated career recommendation',
-        matchScore: rec.matchScore || 75,
-        reasoning: rec.reasoning || 'Based on your assessment responses',
+      // Update assessment status
+      await supabase
+        .from('career_assessments')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', currentAssessmentId);
+
+      // Transform AI recommendations to match our CareerRecommendation type
+      const transformedRecommendations: CareerRecommendation[] = aiRecommendations.map((rec: any) => ({
+        careerId: rec.careerId || null,
+        title: rec.title || 'Untitled Career',
+        description: rec.description || '',
+        matchScore: Math.round(rec.matchScore || 0),
+        reasoning: rec.reasoning || '',
         salaryRange: rec.salaryRange,
         growthOutlook: rec.growthOutlook,
         timeToEntry: rec.timeToEntry,
         requiredSkills: rec.requiredSkills || [],
         educationRequirements: rec.educationRequirements || [],
-        workEnvironment: rec.workEnvironment
+        workEnvironment: rec.workEnvironment,
+        relatedCareers: rec.relatedCareers || []
       }));
 
-      console.log('Setting AI recommendations:', aiRecommendations);
-      setRecommendations(aiRecommendations);
+      setRecommendations(transformedRecommendations);
+      setShowResults(true);
 
-      // Update assessment status
-      if (assessmentId) {
-        await supabase
-          .from('career_assessments')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', assessmentId);
-      }
+      toast({
+        title: "Assessment Complete!",
+        description: `Generated ${transformedRecommendations.length} personalized career recommendations.`,
+      });
 
     } catch (error) {
-      console.error('Error in AI assessment or fallback to mock:', error);
-      
-      // Fallback to mock recommendations only if AI fails
-      console.log('Using fallback mock recommendations due to error');
-      const mockRecommendations: CareerRecommendation[] = [
-        {
-          careerId: '1',
-          title: 'Software Developer',
-          description: 'Design and develop software applications',
-          matchScore: 85,
-          reasoning: 'Based on your interests in technology and problem-solving',
-          salaryRange: '$70,000 - $120,000',
-          growthOutlook: 'Much faster than average',
-          timeToEntry: '2-4 years',
-          requiredSkills: ['Programming', 'Problem Solving', 'Critical Thinking'],
-          educationRequirements: ['Bachelor\'s degree in Computer Science or related field'],
-          workEnvironment: 'Office or remote work environment'
-        }
-      ];
-
-      setRecommendations(mockRecommendations);
-
-      // Still update assessment status even with fallback
-      if (assessmentId) {
-        await supabase
-          .from('career_assessments')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', assessmentId);
-      }
+      console.error('Error completing assessment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate recommendations. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
-      setShowResults(true);
     }
   };
 
   const retakeAssessment = () => {
     setCurrentQuestionIndex(0);
     setResponses([]);
-    setDetectedProfileType(null);
     setRecommendations([]);
-    setAssessmentId(null);
+    setDetectedProfileType(null);
     setShowResults(false);
     setHasStarted(false);
+    setCurrentAssessmentId(null);
+    
+    const firstQuestion = currentQuestion;
+    if (firstQuestion) {
+      setCurrentQuestion(firstQuestion);
+      setIsLastQuestion(totalQuestions === 1);
+    }
+    
     loadQuestions();
   };
 
-  const getCurrentQuestion = () => {
-    return questions[currentQuestionIndex] || null;
-  };
+  const viewHistory = async () => {
+    setIsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to view your assessment history.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-  const isLastQuestion = () => {
-    return currentQuestionIndex === questions.length - 1;
+      const { data: latestAssessment } = await supabase
+        .from('career_assessments')
+        .select(`
+          *,
+          career_recommendations (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (latestAssessment && latestAssessment.career_recommendations) {
+        const transformedRecommendations: CareerRecommendation[] = latestAssessment.career_recommendations.map((rec: any) => ({
+          careerId: rec.career_id,
+          title: rec.title,
+          description: rec.description,
+          matchScore: rec.match_score,
+          reasoning: rec.reasoning,
+          salaryRange: rec.salary_range,
+          growthOutlook: rec.growth_outlook,
+          timeToEntry: rec.time_to_entry,
+          requiredSkills: rec.required_skills || [],
+          educationRequirements: rec.education_requirements || [],
+          workEnvironment: rec.work_environment,
+          relatedCareers: []
+        }));
+
+        setRecommendations(transformedRecommendations);
+        setShowResults(true);
+        setHasStarted(true);
+      } else {
+        toast({
+          title: "No History Found",
+          description: "You haven't completed any assessments yet.",
+        });
+      }
+    } catch (error) {
+      console.error('Error loading assessment history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load assessment history.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return {
-    questions,
-    currentQuestion: getCurrentQuestion(),
+    currentQuestion,
     currentQuestionIndex,
-    totalQuestions: questions.length,
+    totalQuestions,
     responses,
     detectedProfileType,
     recommendations,
@@ -369,9 +332,9 @@ export const useAssessmentFlow = () => {
     isGenerating,
     showResults,
     hasStarted,
-    isLastQuestion: isLastQuestion(),
+    isLastQuestion,
     handleAnswer,
-    completeAssessment: () => completeAssessment(responses),
+    completeAssessment,
     retakeAssessment,
     startAssessment,
     viewHistory
