@@ -119,7 +119,7 @@ export const useAssessmentFlow = () => {
         const latestAssessment = assessments[0];
         
         // Load responses for this assessment
-        const { data: responses, error: responsesError } = await supabase
+        const { data: responsesData, error: responsesError } = await supabase
           .from('assessment_responses')
           .select('*')
           .eq('assessment_id', latestAssessment.id);
@@ -127,16 +127,38 @@ export const useAssessmentFlow = () => {
         if (responsesError) throw responsesError;
 
         // Load recommendations for this assessment
-        const { data: recommendations, error: recommendationsError } = await supabase
+        const { data: recommendationsData, error: recommendationsError } = await supabase
           .from('career_recommendations')
           .select('*')
           .eq('assessment_id', latestAssessment.id);
 
         if (recommendationsError) throw recommendationsError;
 
+        // Transform database responses to match our TypeScript interfaces
+        const transformedResponses: QuestionResponse[] = (responsesData || []).map(dbResponse => ({
+          questionId: dbResponse.question_id,
+          answer: dbResponse.answer as string | string[] | number,
+          timestamp: dbResponse.created_at
+        }));
+
+        // Transform database recommendations to match our TypeScript interfaces
+        const transformedRecommendations: CareerRecommendation[] = (recommendationsData || []).map(dbRec => ({
+          careerId: dbRec.career_id || dbRec.id,
+          title: dbRec.title,
+          description: dbRec.description,
+          matchScore: dbRec.match_score,
+          reasoning: dbRec.reasoning,
+          salaryRange: dbRec.salary_range,
+          growthOutlook: dbRec.growth_outlook,
+          timeToEntry: dbRec.time_to_entry,
+          requiredSkills: dbRec.required_skills || [],
+          educationRequirements: dbRec.education_requirements || [],
+          workEnvironment: dbRec.work_environment
+        }));
+
         // Set the state to show the previous results
-        setResponses(responses || []);
-        setRecommendations(recommendations || []);
+        setResponses(transformedResponses);
+        setRecommendations(transformedRecommendations);
         setDetectedProfileType(latestAssessment.detected_profile_type);
         setShowResults(true);
         setHasStarted(true);
