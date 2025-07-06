@@ -62,34 +62,3 @@ export interface AssessmentHistoryItem {
 }
 
 export type ProfileType = 'middle_school' | 'high_school' | 'college' | 'career_professional';
-
-// Database type for raw assessment question from Supabase
-export interface DatabaseAssessmentQuestion {
-  id: string;
-  title: string;
-  description: string | null;
-  type: 'multiple_choice' | 'multiple_select' | 'scale' | 'text';
-  options: any;
-  order_index: number;
-  is_required: boolean;
-  is_active: boolean;
-  profile_type?: string[] | null;
-  target_audience?: string[] | null;
-  prerequisites?: any;
-  conditional_logic?: any;
-  created_at: string;
-  updated_at: string;
-}
-
-// Database type for career assessment with new profile detection fields
-export interface DatabaseCareerAssessment {
-  id: string;
-  user_id: string;
-  status: 'in_progress' | 'completed';
-  started_at: string;
-  completed_at?: string;
-  created_at: string;
-  updated_at: string;
-  detected_profile_type?: 'middle_school' | 'high_school' | 'college' | 'career_professional';
-  profile_detection_completed?: boolean;
-}

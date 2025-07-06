@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       assessment_questions: {
         Row: {
+          conditional_logic: Json | null
           created_at: string
           description: string | null
           id: string
@@ -18,11 +19,15 @@ export type Database = {
           is_required: boolean
           options: Json | null
           order_index: number
+          prerequisites: Json | null
+          profile_type: string[] | null
+          target_audience: string[] | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at: string
         }
         Insert: {
+          conditional_logic?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -30,11 +35,15 @@ export type Database = {
           is_required?: boolean
           options?: Json | null
           order_index: number
+          prerequisites?: Json | null
+          profile_type?: string[] | null
+          target_audience?: string[] | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at?: string
         }
         Update: {
+          conditional_logic?: Json | null
           created_at?: string
           description?: string | null
           id?: string
@@ -42,6 +51,9 @@ export type Database = {
           is_required?: boolean
           options?: Json | null
           order_index?: number
+          prerequisites?: Json | null
+          profile_type?: string[] | null
+          target_audience?: string[] | null
           title?: string
           type?: Database["public"]["Enums"]["question_type"]
           updated_at?: string
@@ -70,22 +82,7 @@ export type Database = {
           id?: string
           question_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "assessment_responses_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "career_assessments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "assessment_responses_question_id_fkey"
-            columns: ["question_id"]
-            isOneToOne: false
-            referencedRelation: "assessment_questions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       availability_requests: {
         Row: {
@@ -219,7 +216,11 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          detected_profile_type:
+            | Database["public"]["Enums"]["profile_type_enum"]
+            | null
           id: string
+          profile_detection_completed: boolean | null
           started_at: string
           status: Database["public"]["Enums"]["assessment_status"]
           updated_at: string
@@ -228,7 +229,11 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          detected_profile_type?:
+            | Database["public"]["Enums"]["profile_type_enum"]
+            | null
           id?: string
+          profile_detection_completed?: boolean | null
           started_at?: string
           status?: Database["public"]["Enums"]["assessment_status"]
           updated_at?: string
@@ -237,7 +242,11 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          detected_profile_type?:
+            | Database["public"]["Enums"]["profile_type_enum"]
+            | null
           id?: string
+          profile_detection_completed?: boolean | null
           started_at?: string
           status?: Database["public"]["Enums"]["assessment_status"]
           updated_at?: string
@@ -328,13 +337,6 @@ export type Database = {
           work_environment?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "career_recommendations_assessment_id_fkey"
-            columns: ["assessment_id"]
-            isOneToOne: false
-            referencedRelation: "career_assessments"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "career_recommendations_career_id_fkey"
             columns: ["career_id"]
@@ -5484,6 +5486,11 @@ export type Database = {
         | "multiple_choice"
         | "likert_scale"
         | "open_ended"
+      profile_type_enum:
+        | "middle_school"
+        | "high_school"
+        | "college"
+        | "career_professional"
       project_status: "completed" | "in_progress" | "planned" | "on_hold"
       question_type: "multiple_choice" | "multiple_select" | "scale" | "text"
       recommendation_type: "career" | "major" | "trait"
@@ -6272,6 +6279,12 @@ export const Constants = {
         "multiple_choice",
         "likert_scale",
         "open_ended",
+      ],
+      profile_type_enum: [
+        "middle_school",
+        "high_school",
+        "college",
+        "career_professional",
       ],
       project_status: ["completed", "in_progress", "planned", "on_hold"],
       question_type: ["multiple_choice", "multiple_select", "scale", "text"],

@@ -3,7 +3,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
-import type { AssessmentQuestion, QuestionResponse, ProfileType, DatabaseAssessmentQuestion, DatabaseCareerAssessment } from '@/types/assessment';
+import type { AssessmentQuestion, QuestionResponse, ProfileType } from '@/types/assessment';
+
+// Define the database types inline since we're working with the new schema
+type DatabaseAssessmentQuestion = {
+  id: string;
+  title: string;
+  description: string | null;
+  type: 'multiple_choice' | 'multiple_select' | 'scale' | 'text';
+  options: any;
+  order_index: number;
+  is_required: boolean;
+  is_active: boolean;
+  profile_type?: string[] | null;
+  target_audience?: string[] | null;
+  prerequisites?: any;
+  conditional_logic?: any;
+  created_at: string;
+  updated_at: string;
+};
 
 export const useAssessmentFlow = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -100,14 +118,14 @@ export const useAssessmentFlow = () => {
     }
   }, [assessmentId, toast]);
 
-  // Update assessment with profile type - now with proper typing
+  // Update assessment with profile type - using the correct column names
   const updateAssessmentProfile = useCallback(async (profileType: ProfileType) => {
     if (!assessmentId) return;
 
     try {
       console.log('Updating assessment with profile type:', profileType);
       
-      // Direct table update with proper typing now that migration is complete
+      // Use the actual column names from our database schema
       const { error } = await supabase
         .from('career_assessments')
         .update({
@@ -176,6 +194,19 @@ export const useAssessmentFlow = () => {
     const updatedResponses = [...responses, newResponse];
     setResponses(updatedResponses);
 
+    // Save response to database
+    try {
+      await supabase
+        .from('assessment_responses')
+        .insert({
+          assessment_id: assessmentId,
+          question_id: currentQuestion.id,
+          answer: answer
+        });
+    } catch (error) {
+      console.error('Failed to save response:', error);
+    }
+
     // Phase 2: Detect profile type after completing profile detection questions
     if (!profileDetectionCompleted && updatedResponses.length >= 2) {
       const profileType = detectProfileType(updatedResponses);
@@ -209,7 +240,8 @@ export const useAssessmentFlow = () => {
     profileDetectionCompleted,
     allQuestions,
     filterQuestionsForCurrentPhase,
-    updateAssessmentProfile
+    updateAssessmentProfile,
+    assessmentId
   ]);
 
   // Generate recommendations
