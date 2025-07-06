@@ -23,6 +23,7 @@ interface ResultsPanelProps {
   responses: QuestionResponse[];
   onRetakeAssessment: () => void;
   detectedProfileType?: string | null;
+  assessmentId?: string | null;
 }
 
 const getProfileTypeInfo = (profileType: string | null) => {
@@ -64,10 +65,11 @@ export const ResultsPanel = ({
   recommendations, 
   responses, 
   onRetakeAssessment,
-  detectedProfileType
+  detectedProfileType,
+  assessmentId
 }: ResultsPanelProps) => {
-  // Create a mock assessment ID from responses - in real app this would come from actual assessment
-  const assessmentId = `assessment_${responses.length}_${Date.now()}`;
+  // Use the passed assessmentId or generate a fallback UUID
+  const finalAssessmentId = assessmentId || crypto.randomUUID();
   
   const {
     saveRecommendations,
@@ -75,14 +77,16 @@ export const ResultsPanel = ({
     isSaved,
     checkIfAlreadySaved
   } = useSaveRecommendations({
-    assessmentId,
+    assessmentId: finalAssessmentId,
     recommendations
   });
 
   useEffect(() => {
-    // Check if recommendations are already saved when component mounts
-    checkIfAlreadySaved();
-  }, [checkIfAlreadySaved]);
+    // Only check if already saved for real assessment IDs (UUID format)
+    if (finalAssessmentId && finalAssessmentId.length === 36) {
+      checkIfAlreadySaved();
+    }
+  }, [finalAssessmentId, checkIfAlreadySaved]);
 
   const handleExportResults = () => {
     console.log('Exporting results...');

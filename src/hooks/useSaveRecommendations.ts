@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CareerRecommendation } from '@/types/assessment';
@@ -9,12 +9,24 @@ interface UseSaveRecommendationsProps {
   recommendations: CareerRecommendation[];
 }
 
+// Helper function to validate UUID format
+const isValidUUID = (str: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 export const useSaveRecommendations = ({ assessmentId, recommendations }: UseSaveRecommendationsProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { toast } = useToast();
 
-  const checkIfAlreadySaved = async () => {
+  const checkIfAlreadySaved = useCallback(async () => {
+    // Only check for valid UUIDs
+    if (!isValidUUID(assessmentId)) {
+      console.log('Skipping duplicate check for non-UUID assessment ID:', assessmentId);
+      return false;
+    }
+
     try {
       const { data, error } = await supabase
         .from('career_recommendations')
@@ -22,7 +34,10 @@ export const useSaveRecommendations = ({ assessmentId, recommendations }: UseSav
         .eq('assessment_id', assessmentId)
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking saved recommendations:', error);
+        return false;
+      }
       
       const saved = data && data.length > 0;
       setIsSaved(saved);
@@ -31,9 +46,18 @@ export const useSaveRecommendations = ({ assessmentId, recommendations }: UseSav
       console.error('Error checking saved recommendations:', error);
       return false;
     }
-  };
+  }, [assessmentId]);
 
   const saveRecommendations = async () => {
+    if (!isValidUUID(assessmentId)) {
+      toast({
+        title: "Cannot Save",
+        description: "Please complete a full assessment to save recommendations.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -75,12 +99,21 @@ export const useSaveRecommendations = ({ assessmentId, recommendations }: UseSav
         work_environment: rec.workEnvironment || null,
       }));
 
+      console.log('Saving recommendations:', {
+        assessmentId,
+        count: recommendationsToSave.length,
+        userId: user.id
+      });
+
       // Insert recommendations
       const { error } = await supabase
         .from('career_recommendations')
         .insert(recommendationsToSave);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error saving recommendations:', error);
+        throw error;
+      }
 
       setIsSaved(true);
       toast({

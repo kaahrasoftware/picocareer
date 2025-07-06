@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AssessmentIntro } from '@/components/assessment/AssessmentIntro';
 import { QuestionRenderer } from '@/components/assessment/QuestionRenderer';
@@ -21,6 +20,7 @@ export default function CareerAssessment() {
     showResults,
     hasStarted,
     isLastQuestion,
+    assessmentId,
     handleAnswer,
     completeAssessment,
     retakeAssessment,
@@ -53,6 +53,7 @@ export default function CareerAssessment() {
             responses={responses}
             onRetakeAssessment={retakeAssessment}
             detectedProfileType={detectedProfileType}
+            assessmentId={assessmentId}
           />
         </div>
       </div>
