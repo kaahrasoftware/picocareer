@@ -100,20 +100,20 @@ export const useAssessmentFlow = () => {
     }
   }, [assessmentId, toast]);
 
-  // Update assessment with profile type - using direct SQL update since types might not be updated yet
+  // Update assessment with profile type - now with proper typing
   const updateAssessmentProfile = useCallback(async (profileType: ProfileType) => {
     if (!assessmentId) return;
 
     try {
       console.log('Updating assessment with profile type:', profileType);
       
-      // Use direct table update with type assertion to bypass TypeScript temporarily
+      // Direct table update with proper typing now that migration is complete
       const { error } = await supabase
         .from('career_assessments')
         .update({
           detected_profile_type: profileType,
           profile_detection_completed: true
-        } as any) // Use 'as any' to bypass TypeScript temporarily
+        })
         .eq('id', assessmentId);
 
       if (error) {
