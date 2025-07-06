@@ -17,6 +17,7 @@ import Dashboard from '@/pages/Dashboard';
 import Mentor from '@/pages/Mentor';
 import CareerAssessment from '@/pages/CareerAssessment';
 import AssessmentHistoryPage from '@/pages/AssessmentHistoryPage';
+import AssessmentResults from '@/pages/AssessmentResults';
 import ResourceBank from '@/pages/ResourceBank';
 import CareerUpload from '@/pages/CareerUpload';
 import MajorUpload from '@/pages/MajorUpload';
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: "dashboard", element: <Dashboard /> },
       { path: "career-assessment", element: <CareerAssessment /> },
       { path: "career-assessment/history", element: <AssessmentHistoryPage /> },
+      { path: "career-assessment/results/:assessmentId", element: <AssessmentResults /> },
       { path: "resource-bank", element: <ResourceBank /> },
       { path: "partnerships", element: <Partnerships /> },
       { path: "hubs", element: <Hubs /> },

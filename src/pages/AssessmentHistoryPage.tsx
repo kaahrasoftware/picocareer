@@ -15,9 +15,7 @@ export default function AssessmentHistoryPage() {
   };
 
   const handleViewResults = (assessmentId: string) => {
-    // For now, navigate back to main assessment page with state
-    // In the future, this could be enhanced to show specific assessment results
-    navigate('/career-assessment', { state: { viewAssessmentId: assessmentId } });
+    navigate(`/career-assessment/results/${assessmentId}`);
   };
 
   return (
