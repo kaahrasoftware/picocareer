@@ -44,18 +44,22 @@ export function CareerDetailsDialog({
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { toast } = useToast();
 
-  // Use similar careers hook when career is not found
+  // Determine if we should show recommendation data immediately
+  const shouldShowRecommendation = !careerId || (careerNotFound && recommendationData);
+  
+  // Use similar careers hook when showing recommendation data
   const { similarCareers, isLoading: similarCareersLoading, error: similarCareersError } = useSimilarCareers(
-    careerNotFound && recommendationData ? recommendationData.requiredSkills || [] : [],
-    careerNotFound && recommendationData ? recommendationData.title : '',
+    shouldShowRecommendation && recommendationData ? recommendationData.requiredSkills || [] : [],
+    shouldShowRecommendation && recommendationData ? recommendationData.title : '',
     undefined // Don't pass industry since it's not available in CareerRecommendation
   );
 
   useEffect(() => {
     const fetchCareer = async () => {
+      // If no careerId or we have recommendationData, skip database fetch
       if (!careerId || !open) {
         setCareer(null);
-        setCareerNotFound(false);
+        setCareerNotFound(!careerId && !!recommendationData);
         return;
       }
 
@@ -95,7 +99,7 @@ export function CareerDetailsDialog({
     };
 
     fetchCareer();
-  }, [careerId, open]);
+  }, [careerId, open, recommendationData]);
 
   const handleSimilarCareerSelect = (selectedCareerId: string) => {
     // Replace current dialog content with the selected career
@@ -223,7 +227,7 @@ export function CareerDetailsDialog({
             />
             <ComprehensiveDialogContent career={career} />
           </>
-        ) : careerNotFound && recommendationData ? (
+        ) : shouldShowRecommendation && recommendationData ? (
           <>
             <DialogHeaderSection
               title={recommendationData.title}
