@@ -63,7 +63,10 @@ const CareerAssessment = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <AssessmentIntro onStart={() => {}} />
+          <AssessmentIntro 
+            onStart={() => {}} 
+            onViewHistory={() => console.log('View history clicked')}
+          />
         </div>
       </div>
     );

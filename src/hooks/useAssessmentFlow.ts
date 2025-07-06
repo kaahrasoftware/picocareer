@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
+import { detectProfileType } from '@/utils/profileDetection';
 import type { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
 
 interface AssessmentState {
@@ -37,7 +37,21 @@ export const useAssessmentFlow = () => {
         .order('order_index');
       
       if (error) throw error;
-      return data as AssessmentQuestion[];
+      
+      // Map database fields to TypeScript interface
+      return (data || []).map(q => ({
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        type: q.type,
+        options: q.options as string[],
+        order: q.order_index,
+        isRequired: q.is_required,
+        profileType: q.profile_type as string[],
+        targetAudience: q.target_audience as string[],
+        prerequisites: q.prerequisites,
+        conditionalLogic: q.conditional_logic,
+      })) as AssessmentQuestion[];
     },
   });
 
@@ -45,7 +59,7 @@ export const useAssessmentFlow = () => {
   const filteredQuestions = useMemo(() => {
     if (!allQuestions.length) return [];
     
-    const profileQuestion = allQuestions.find(q => q.order_index === 1);
+    const profileQuestion = allQuestions.find(q => q.order === 1);
     if (!profileQuestion) return [];
     
     // If no profile selected yet, only show the profile question
@@ -53,24 +67,24 @@ export const useAssessmentFlow = () => {
       return [profileQuestion];
     }
     
-    // After profile selection, show profile question + universal + profile-specific questions
+    // After profile selection, show remaining questions in order
     const questionSequence = [];
     
     // 1. Profile question (already answered)
     questionSequence.push(profileQuestion);
     
     // 2. Universal question 2
-    const universalQ2 = allQuestions.find(q => q.order_index === 2);
+    const universalQ2 = allQuestions.find(q => q.order === 2);
     if (universalQ2) questionSequence.push(universalQ2);
     
     // 3. Profile-specific questions (3 questions)
     const profileSpecificQuestions = allQuestions
       .filter(q => 
-        q.profile_type?.includes(state.selectedProfileType) && 
-        q.order_index >= 10 && 
-        q.order_index < 50
+        q.profileType?.includes(state.selectedProfileType) && 
+        q.order >= 10 && 
+        q.order < 50
       )
-      .sort((a, b) => a.order_index - b.order_index)
+      .sort((a, b) => a.order - b.order)
       .slice(0, 3);
     
     questionSequence.push(...profileSpecificQuestions);
@@ -78,12 +92,12 @@ export const useAssessmentFlow = () => {
     // 4. Universal questions 50-52
     const universalEndQuestions = allQuestions
       .filter(q => 
-        q.order_index >= 50 && 
-        q.target_audience?.includes('all') &&
+        q.order >= 50 && 
+        q.targetAudience?.includes('all') &&
         // Handle question 52 profile filtering
-        (q.order_index !== 52 || state.selectedProfileType !== 'middle_school')
+        (q.order !== 52 || state.selectedProfileType !== 'middle_school')
       )
-      .sort((a, b) => a.order_index - b.order_index);
+      .sort((a, b) => a.order - b.order);
     
     questionSequence.push(...universalEndQuestions);
     
@@ -100,6 +114,7 @@ export const useAssessmentFlow = () => {
       const { data, error } = await supabase
         .from('career_assessments')
         .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
           status: 'in_progress',
         })
         .select()
@@ -123,7 +138,7 @@ export const useAssessmentFlow = () => {
       .insert({
         assessment_id: state.assessmentId,
         question_id: response.questionId,
-        response_value: response.answer,
+        answer: response.answer,
       });
 
     if (error) {
@@ -202,7 +217,22 @@ export const useAssessmentFlow = () => {
         .order('match_score', { ascending: false });
       
       if (error) throw error;
-      return data as CareerRecommendation[];
+      
+      // Map database fields to TypeScript interface
+      return (data || []).map(rec => ({
+        careerId: rec.career_id || rec.id,
+        title: rec.title,
+        description: rec.description,
+        matchScore: rec.match_score,
+        reasoning: rec.reasoning,
+        salaryRange: rec.salary_range,
+        growthOutlook: rec.growth_outlook,
+        timeToEntry: rec.time_to_entry,
+        requiredSkills: rec.required_skills,
+        educationRequirements: rec.education_requirements,
+        workEnvironment: rec.work_environment,
+        relatedCareers: [],
+      })) as CareerRecommendation[];
     },
     enabled: !!state.assessmentId && state.isComplete,
   });
