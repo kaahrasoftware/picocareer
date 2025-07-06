@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -85,33 +84,26 @@ export const ResultsPanel = ({
             Your Personalized Career Recommendations
           </CardTitle>
           
-          {/* Assessment Journey Summary */}
+          {/* Assessment Completion Summary */}
           <div className="bg-green-50 rounded-lg p-4 mt-4">
             <div className="flex items-center justify-center mb-3">
               <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-semibold text-green-800">3-Step Assessment Complete!</span>
+              <span className="font-semibold text-green-800">Assessment Complete!</span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="text-center">
                 <div className="bg-white rounded-lg p-3">
-                  <Brain className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 1: Profile Detection</p>
-                  <p className="text-muted-foreground">2 questions answered</p>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white rounded-lg p-3">
-                  <User className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 2: Personalized Questions</p>
-                  <p className="text-muted-foreground">{responses.length - 2} questions answered</p>
+                  <User className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                  <p className="font-medium">Profile Selected</p>
+                  <p className="text-muted-foreground">Your academic/career stage</p>
                 </div>
               </div>
               <div className="text-center">
                 <div className="bg-white rounded-lg p-3">
                   <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 3: AI Analysis</p>
-                  <p className="text-muted-foreground">{recommendations.length} recommendations generated</p>
+                  <p className="font-medium">Questions Answered</p>
+                  <p className="text-muted-foreground">{responses.length} personalized questions</p>
                 </div>
               </div>
             </div>
@@ -134,7 +126,7 @@ export const ResultsPanel = ({
           )}
           
           <p className="text-muted-foreground mt-4">
-            Based on your {responses.length} responses across our 3-step process, here are your personalized career matches
+            Based on your {responses.length} responses, here are your personalized career matches
           </p>
         </CardHeader>
         <CardContent>
