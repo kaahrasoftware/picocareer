@@ -55,8 +55,8 @@ export const useAssessmentFlow = () => {
     }
   }, []);
 
-  // Filter questions based on profile type
-  const filterQuestionsForProfile = useCallback((questions: AssessmentQuestion[], profileType: ProfileType | null) => {
+  // Filter questions based on current phase and profile type
+  const filterQuestionsForCurrentPhase = useCallback((questions: AssessmentQuestion[], profileType: ProfileType | null) => {
     console.log('Filtering questions for profile:', profileType);
     
     return questions.filter((question, index) => 
@@ -107,13 +107,12 @@ export const useAssessmentFlow = () => {
     try {
       console.log('Updating assessment with profile type:', profileType);
       
-      // Direct update with proper error handling
       const { error } = await supabase
         .from('career_assessments')
         .update({
-          detected_profile_type: profileType as any,
-          profile_detection_completed: true as any
-        } as any)
+          detected_profile_type: profileType,
+          profile_detection_completed: true
+        })
         .eq('id', assessmentId);
 
       if (error) {
@@ -128,7 +127,7 @@ export const useAssessmentFlow = () => {
     }
   }, [assessmentId]);
 
-  // Initialize assessment
+  // Initialize assessment - show only profile detection questions first
   useEffect(() => {
     const initializeAssessment = async () => {
       try {
@@ -136,9 +135,13 @@ export const useAssessmentFlow = () => {
         const questions = await fetchQuestions();
         setAllQuestions(questions);
         
-        // Show initial profile detection questions
-        const initialQuestions = filterQuestionsForProfile(questions, null);
-        setFilteredQuestions(initialQuestions);
+        // Phase 1: Show only profile detection questions (order 1-2)
+        const profileDetectionQuestions = questions.filter(q => 
+          q.order <= 2 && q.targetAudience?.includes('all')
+        ).sort((a, b) => a.order - b.order);
+        
+        console.log('Initial profile detection questions:', profileDetectionQuestions.length);
+        setFilteredQuestions(profileDetectionQuestions);
         
         await createAssessment();
         setIsAssessmentReady(true);
@@ -154,7 +157,7 @@ export const useAssessmentFlow = () => {
     };
 
     initializeAssessment();
-  }, [fetchQuestions, filterQuestionsForProfile, createAssessment, toast]);
+  }, [fetchQuestions, createAssessment, toast]);
 
   // Handle answer submission
   const handleAnswer = useCallback(async (answer: string | string[] | number) => {
@@ -172,7 +175,7 @@ export const useAssessmentFlow = () => {
     const updatedResponses = [...responses, newResponse];
     setResponses(updatedResponses);
 
-    // Detect profile type after first few questions
+    // Phase 2: Detect profile type after completing profile detection questions
     if (!profileDetectionCompleted && updatedResponses.length >= 2) {
       const profileType = detectProfileType(updatedResponses);
       console.log('Detected profile type:', profileType);
@@ -184,11 +187,15 @@ export const useAssessmentFlow = () => {
         // Update assessment in database
         await updateAssessmentProfile(profileType);
         
-        // Re-filter questions based on detected profile
-        const newFilteredQuestions = filterQuestionsForProfile(allQuestions, profileType);
+        // Phase 3: Add profile-specific questions to the queue
+        const newFilteredQuestions = filterQuestionsForCurrentPhase(allQuestions, profileType);
         setFilteredQuestions(newFilteredQuestions);
         
         console.log('Updated questions for profile:', newFilteredQuestions.length);
+        
+        // Don't increment index yet - we'll handle that below
+        setCurrentQuestionIndex(prev => prev + 1);
+        return;
       }
     }
 
@@ -200,7 +207,7 @@ export const useAssessmentFlow = () => {
     responses,
     profileDetectionCompleted,
     allQuestions,
-    filterQuestionsForProfile,
+    filterQuestionsForCurrentPhase,
     updateAssessmentProfile
   ]);
 
@@ -236,9 +243,9 @@ export const useAssessmentFlow = () => {
       await supabase
         .from('career_assessments')
         .update({ 
-          status: 'completed' as any,
-          completed_at: new Date().toISOString() as any
-        } as any)
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
         .eq('id', assessmentId);
 
     } catch (error) {
@@ -264,10 +271,12 @@ export const useAssessmentFlow = () => {
     setAssessmentId(null);
     setIsAssessmentReady(false);
     
-    // Re-filter questions to show initial profile detection questions
-    const initialQuestions = filterQuestionsForProfile(allQuestions, null);
-    setFilteredQuestions(initialQuestions);
-  }, [allQuestions, filterQuestionsForProfile]);
+    // Reset to show only profile detection questions
+    const profileDetectionQuestions = allQuestions.filter(q => 
+      q.order <= 2 && q.targetAudience?.includes('all')
+    ).sort((a, b) => a.order - b.order);
+    setFilteredQuestions(profileDetectionQuestions);
+  }, [allQuestions]);
 
   // Calculate progress
   const progress = filteredQuestions.length > 0 
