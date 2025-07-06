@@ -1,26 +1,16 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Briefcase, 
-  DollarSign, 
-  TrendingUp, 
-  Clock, 
-  GraduationCap,
-  Wrench,
-  Info
-} from 'lucide-react';
+import { Briefcase, DollarSign, TrendingUp, Clock, GraduationCap, Wrench, Info } from 'lucide-react';
 import type { CareerRecommendation } from '@/types/assessment';
-
 interface RecommendationCareerViewProps {
   recommendation: CareerRecommendation;
 }
-
-export const RecommendationCareerView = ({ recommendation }: RecommendationCareerViewProps) => {
-  return (
-    <div className="space-y-6">
+export const RecommendationCareerView = ({
+  recommendation
+}: RecommendationCareerViewProps) => {
+  return <div className="space-y-6">
       {/* AI-Generated Content Notice */}
       <Alert>
         <Info className="h-4 w-4" />
@@ -46,16 +36,14 @@ export const RecommendationCareerView = ({ recommendation }: RecommendationCaree
             {recommendation.description}
           </p>
           
-          {recommendation.reasoning && (
-            <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg">
-              <h4 className="font-semibold mb-2 text-blue-900 dark:text-blue-100">
+          {recommendation.reasoning && <div className="p-4 rounded-lg bg-blue-200">
+              <h4 className="font-semibold mb-2 text-zinc-950">
                 Why This Career Matches You:
               </h4>
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+              <p className="text-sm text-zinc-950">
                 {recommendation.reasoning}
               </p>
-            </div>
-          )}
+            </div>}
         </CardContent>
       </Card>
 
@@ -70,32 +58,26 @@ export const RecommendationCareerView = ({ recommendation }: RecommendationCaree
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recommendation.salaryRange && (
-              <div>
+            {recommendation.salaryRange && <div>
                 <p className="text-sm text-muted-foreground">Salary Range</p>
                 <p className="font-semibold text-green-600">{recommendation.salaryRange}</p>
-              </div>
-            )}
+              </div>}
             
-            {recommendation.growthOutlook && (
-              <div>
+            {recommendation.growthOutlook && <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <TrendingUp className="h-4 w-4" />
                   Growth Outlook
                 </p>
                 <p className="font-medium">{recommendation.growthOutlook}</p>
-              </div>
-            )}
+              </div>}
             
-            {recommendation.timeToEntry && (
-              <div>
+            {recommendation.timeToEntry && <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   Time to Entry
                 </p>
                 <p className="font-medium">{recommendation.timeToEntry}</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
@@ -108,49 +90,38 @@ export const RecommendationCareerView = ({ recommendation }: RecommendationCaree
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recommendation.educationRequirements && recommendation.educationRequirements.length > 0 && (
-              <div>
+            {recommendation.educationRequirements && recommendation.educationRequirements.length > 0 && <div>
                 <p className="text-sm text-muted-foreground mb-2">Education Requirements</p>
                 <div className="flex flex-wrap gap-2">
-                  {recommendation.educationRequirements.map((edu, index) => (
-                    <Badge key={index} variant="outline">
+                  {recommendation.educationRequirements.map((edu, index) => <Badge key={index} variant="outline">
                       {edu}
-                    </Badge>
-                  ))}
+                    </Badge>)}
                 </div>
-              </div>
-            )}
+              </div>}
             
-            {recommendation.requiredSkills && recommendation.requiredSkills.length > 0 && (
-              <div>
+            {recommendation.requiredSkills && recommendation.requiredSkills.length > 0 && <div>
                 <p className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
                   <Wrench className="h-4 w-4" />
                   Key Skills Needed
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {recommendation.requiredSkills.map((skill, index) => (
-                    <Badge key={index} variant="secondary">
+                  {recommendation.requiredSkills.map((skill, index) => <Badge key={index} variant="secondary">
                       {skill}
-                    </Badge>
-                  ))}
+                    </Badge>)}
                 </div>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
       </div>
 
       {/* Work Environment */}
-      {recommendation.workEnvironment && (
-        <Card>
+      {recommendation.workEnvironment && <Card>
           <CardHeader>
             <CardTitle className="text-lg">Work Environment</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground">{recommendation.workEnvironment}</p>
           </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+        </Card>}
+    </div>;
 };
