@@ -200,7 +200,7 @@ export const QuestionRenderer = ({
                   Generating Your Results...
                 </>
               ) : (
-                'Complete Step - Analyze Results'
+                'Complete Assessment'
               )}
             </Button>
           ) : (

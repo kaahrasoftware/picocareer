@@ -33,23 +33,24 @@ export const shouldShowQuestion = (
   detectedProfileType: ProfileType | null,
   currentQuestionIndex: number
 ): boolean => {
-  // Phase 1: Always show profile detection questions first (order 1-2)
+  // Always show first two questions (profile detection)
   if (question.order <= 2) {
     return question.targetAudience?.includes('all') || false;
   }
 
-  // Phase 2: If no profile type detected yet, don't show profile-specific questions
+  // If no profile type detected yet, don't show profile-specific questions
   if (!detectedProfileType) {
     return false;
   }
 
-  // Phase 3: Show profile-specific questions (order 10-42 based on detected profile)
+  // Show profile-specific questions for the detected profile
   if (question.profileType && question.profileType.length > 0) {
     return question.profileType.includes(detectedProfileType);
   }
 
-  // Phase 4: Show universal questions (order 50-52) that apply to all profile types
+  // Show universal questions that apply to all profile types
   if (question.targetAudience?.includes('all') && question.order >= 50) {
+    // Include all profiles for universal questions (fixing the original issue)
     return true;
   }
 

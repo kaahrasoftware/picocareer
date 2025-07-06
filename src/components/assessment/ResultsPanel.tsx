@@ -11,11 +11,8 @@ import {
   RefreshCw, 
   Download, 
   Share2,
-  BookOpen,
-  Users,
-  User,
   CheckCircle,
-  Brain
+  User
 } from 'lucide-react';
 
 interface ResultsPanelProps {
@@ -85,34 +82,18 @@ export const ResultsPanel = ({
             Your Personalized Career Recommendations
           </CardTitle>
           
-          {/* Assessment Journey Summary */}
+          {/* Assessment Complete Summary */}
           <div className="bg-green-50 rounded-lg p-4 mt-4">
             <div className="flex items-center justify-center mb-3">
               <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-semibold text-green-800">3-Step Assessment Complete!</span>
+              <span className="font-semibold text-green-800">Assessment Complete!</span>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="text-center">
-                <div className="bg-white rounded-lg p-3">
-                  <Brain className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 1: Profile Detection</p>
-                  <p className="text-muted-foreground">2 questions answered</p>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white rounded-lg p-3">
-                  <User className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 2: Personalized Questions</p>
-                  <p className="text-muted-foreground">{responses.length - 2} questions answered</p>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="bg-white rounded-lg p-3">
-                  <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                  <p className="font-medium">Step 3: AI Analysis</p>
-                  <p className="text-muted-foreground">{recommendations.length} recommendations generated</p>
-                </div>
+            <div className="text-center">
+              <div className="bg-white rounded-lg p-3 inline-block">
+                <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                <p className="font-medium">Personalized Analysis</p>
+                <p className="text-muted-foreground">{responses.length} questions answered</p>
               </div>
             </div>
           </div>
@@ -134,7 +115,7 @@ export const ResultsPanel = ({
           )}
           
           <p className="text-muted-foreground mt-4">
-            Based on your {responses.length} responses across our 3-step process, here are your personalized career matches
+            Based on your {responses.length} responses, here are your personalized career matches
           </p>
         </CardHeader>
         <CardContent>
@@ -177,38 +158,6 @@ export const ResultsPanel = ({
           </Card>
         )}
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Next Steps</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Button variant="outline" className="h-auto p-4">
-              <div className="flex items-center space-x-3">
-                <BookOpen className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Explore Programs</div>
-                  <div className="text-sm text-muted-foreground">
-                    Find relevant academic programs
-                  </div>
-                </div>
-              </div>
-            </Button>
-            <Button variant="outline" className="h-auto p-4">
-              <div className="flex items-center space-x-3">
-                <Users className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <div className="font-semibold">Connect with Mentors</div>
-                  <div className="text-sm text-muted-foreground">
-                    Get guidance from professionals
-                  </div>
-                </div>
-              </div>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
