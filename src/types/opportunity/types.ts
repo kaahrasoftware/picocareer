@@ -1,6 +1,5 @@
 
-import { OpportunityStatus, OpportunityType, ApplicationStatus } from "@/types/database/enums";
-import { Json } from "@/types/database/database.types";
+import { OpportunityStatus, OpportunityType, ApplicationStatus } from "@/integrations/supabase/types";
 
 export interface Opportunity {
   id: string;
@@ -61,7 +60,7 @@ export interface OpportunityApplication {
   applied_at: string;
   updated_at: string;
   notes: string | null;
-  application_data: Json | null;
+  application_data: any | null;
 }
 
 export interface OpportunityFilters {
