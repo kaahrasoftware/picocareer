@@ -43,13 +43,13 @@ export const shouldShowQuestion = (
     return false;
   }
 
-  // Phase 3: Show questions for the detected profile type
+  // Phase 3: Show profile-specific questions (order 10-42 based on detected profile)
   if (question.profileType && question.profileType.length > 0) {
     return question.profileType.includes(detectedProfileType);
   }
 
-  // Universal questions (apply to all profile types)
-  if (question.targetAudience?.includes('all')) {
+  // Phase 4: Show universal questions (order 50-52) that apply to all profile types
+  if (question.targetAudience?.includes('all') && question.order >= 50) {
     return true;
   }
 

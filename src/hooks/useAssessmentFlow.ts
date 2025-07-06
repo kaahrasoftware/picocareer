@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -172,16 +171,22 @@ export const useAssessmentFlow = () => {
           })
           .eq('id', assessmentId);
 
-        // Filter questions for the detected profile type
-        const profileSpecificQuestions = allQuestions.filter(q => 
+        // Filter questions for the detected profile type - include both profile-specific AND universal questions
+        const relevantQuestions = allQuestions.filter(q => 
           shouldShowQuestion(q, profileType, 0)
-        );
+        ).sort((a, b) => a.order - b.order);
         
-        console.log('Profile-specific questions:', profileSpecificQuestions);
-        setFilteredQuestions(profileSpecificQuestions);
+        console.log('All relevant questions for', profileType, ':', relevantQuestions);
+        setFilteredQuestions(relevantQuestions);
         
-        // Reset to start of profile-specific questions
-        setCurrentQuestionIndex(0);
+        // Find the next question after profile detection (order > 2)
+        const nextQuestionIndex = relevantQuestions.findIndex(q => q.order > 2);
+        if (nextQuestionIndex !== -1) {
+          setCurrentQuestionIndex(nextQuestionIndex);
+        } else {
+          // If no more questions, we're done
+          setCurrentQuestionIndex(relevantQuestions.length);
+        }
         return;
       }
     }
