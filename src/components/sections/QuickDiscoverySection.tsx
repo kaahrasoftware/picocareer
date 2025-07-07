@@ -16,12 +16,6 @@ import {
   Coins
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
 
 export const QuickDiscoverySection = () => {
   const quickActions = [
@@ -126,6 +120,9 @@ export const QuickDiscoverySection = () => {
     }
   ];
 
+  // Duplicate the actions for seamless infinite scrolling
+  const duplicatedActions = [...quickActions, ...quickActions];
+
   return (
     <section className="py-16 bg-gradient-to-r from-gray-50 to-[#00A6D4]/5">
       <div className="container mx-auto px-4">
@@ -136,58 +133,43 @@ export const QuickDiscoverySection = () => {
           </p>
         </div>
         
-        <div className="max-w-7xl mx-auto">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              direction: "rtl",
-              slidesToScroll: 1,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 4000,
-                stopOnInteraction: true,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-2 md:-ml-4">
-              {quickActions.map((action, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
-                  <Card className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full">
-                    <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
-                      <div className="flex flex-col items-center text-center space-y-4 h-full">
-                        <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                          <action.icon className="w-8 h-8 text-white" />
-                        </div>
-                        
-                        <div className="space-y-2 flex-grow">
-                          <h3 className={`font-semibold text-lg ${action.textColor}`}>
-                            {action.title}
-                          </h3>
-                          <p className="text-gray-600 text-sm leading-relaxed">
-                            {action.description}
-                          </p>
-                        </div>
-                        
-                        <Button 
-                          asChild 
-                          variant="ghost" 
-                          className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300 mt-auto`}
-                        >
-                          <Link to={action.href} className="flex items-center gap-2">
-                            Get Started
-                            <ArrowRight className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+        <div className="max-w-7xl mx-auto overflow-hidden">
+          <div className="flex animate-scroll-horizontal space-x-6">
+            {duplicatedActions.map((action, index) => (
+              <Card 
+                key={index} 
+                className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full flex-shrink-0 w-80"
+              >
+                <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
+                  <div className="flex flex-col items-center text-center space-y-4 h-full">
+                    <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <action.icon className="w-8 h-8 text-white" />
+                    </div>
+                    
+                    <div className="space-y-2 flex-grow">
+                      <h3 className={`font-semibold text-lg ${action.textColor}`}>
+                        {action.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        {action.description}
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      asChild 
+                      variant="ghost" 
+                      className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300 mt-auto`}
+                    >
+                      <Link to={action.href} className="flex items-center gap-2">
+                        Get Started
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     </section>
