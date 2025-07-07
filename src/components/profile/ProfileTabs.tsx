@@ -6,13 +6,22 @@ import { MentorProfileTabs } from './mentor/MentorProfileTabs';
 import type { Profile } from "@/types/database/profiles";
 
 interface ProfileTabsProps {
-  profile: Profile;
+  profile: Profile | null;
   isEditing?: boolean;
   onTabChange?: (value: string) => void;
 }
 
 export function ProfileTabs({ profile, isEditing = false, onTabChange }: ProfileTabsProps) {
-  if (profile?.user_type === 'mentor') {
+  // Add defensive check to prevent rendering if profile is null/undefined
+  if (!profile) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Profile data not available</p>
+      </div>
+    );
+  }
+
+  if (profile.user_type === 'mentor') {
     return <MentorProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
   }
 
