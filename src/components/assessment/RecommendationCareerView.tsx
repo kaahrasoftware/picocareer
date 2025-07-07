@@ -71,12 +71,12 @@ export const RecommendationCareerView = ({
                     </div>
                   </div>}
                 
-                {recommendation.timeToEntry && <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3">
+                {recommendation.timeToEntry && <div className="rounded-lg p-3 bg-slate-50">
                     <div className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center gap-1">
                       <Clock className="h-4 w-4" />
                       Time to Entry
                     </div>
-                    <div className="text-lg font-semibold text-blue-800 dark:text-blue-300">
+                    <div className="text-lg font-semibold text-slate-800 dark:text-slate-300">
                       {recommendation.timeToEntry}
                     </div>
                   </div>}
