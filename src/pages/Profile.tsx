@@ -3,14 +3,23 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { useDefaultAvatar } from "@/hooks/useDefaultAvatar";
-import { ProfileTabs } from "@/components/profile/ProfileTabs";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { ProfileHeader } from "@/components/profile-details/ProfileHeader";
 import { PageLoader } from "@/components/ui/page-loader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileTab } from "@/components/profile/ProfileTab";
+import { CalendarTab } from "@/components/profile/CalendarTab";
+import { DashboardTab } from "@/components/profile/DashboardTab";
+import { SettingsTab } from "@/components/profile/SettingsTab";
+import { MentorTab } from "@/components/profile/MentorTab";
+import { WalletTab } from "@/components/profile/WalletTab";
+import { BookmarksTab } from "@/components/profile/BookmarksTab";
 
 export default function Profile() {
   const { session } = useAuthSession();
   const { data: profile, isLoading, error } = useUserProfile(session);
   const { handleTabChange } = useProfileAnalytics();
+  const { isAdmin } = useIsAdmin();
 
   // Ensure user has a default avatar if they don't have one
   useDefaultAvatar(session?.user?.id, profile?.avatar_url);
@@ -52,13 +61,59 @@ export default function Profile() {
     );
   }
 
+  const isMentor = profile.user_type === 'mentor';
+
   return (
     <div className="container py-6 space-y-6">
       <ProfileHeader profile={profile} session={session} />
-      <ProfileTabs 
-        profile={profile} 
-        onTabChange={handleTabChange}
-      />
+      
+      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1">
+          <TabsTrigger value="profile" className="text-xs lg:text-sm">Profile</TabsTrigger>
+          <TabsTrigger value="calendar" className="text-xs lg:text-sm">Calendar</TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>
+          )}
+          <TabsTrigger value="settings" className="text-xs lg:text-sm">Settings</TabsTrigger>
+          {isMentor && (
+            <TabsTrigger value="mentor" className="text-xs lg:text-sm">Mentor</TabsTrigger>
+          )}
+          <TabsTrigger value="wallet" className="text-xs lg:text-sm">Wallet</TabsTrigger>
+          <TabsTrigger value="bookmarks" className="text-xs lg:text-sm">Bookmarks</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="profile" className="space-y-4 mt-6">
+          <ProfileTab profile={profile} />
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4 mt-6">
+          <CalendarTab profile={profile} />
+        </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="dashboard" className="space-y-4 mt-6">
+            <DashboardTab />
+          </TabsContent>
+        )}
+
+        <TabsContent value="settings" className="space-y-4 mt-6">
+          <SettingsTab />
+        </TabsContent>
+
+        {isMentor && (
+          <TabsContent value="mentor" className="space-y-4 mt-6">
+            <MentorTab profile={profile} />
+          </TabsContent>
+        )}
+
+        <TabsContent value="wallet" className="space-y-4 mt-6">
+          <WalletTab />
+        </TabsContent>
+
+        <TabsContent value="bookmarks" className="space-y-4 mt-6">
+          <BookmarksTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
