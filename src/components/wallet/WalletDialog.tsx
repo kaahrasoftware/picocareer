@@ -67,21 +67,21 @@ export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Wallet</DialogTitle>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+          <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="earn-use">Earn & Use</TabsTrigger>
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
           </TabsList>
           
-          <div className="overflow-y-auto flex-1 mt-4">
-            <TabsContent value="overview" className="space-y-6 mt-0">
+          <div className="flex-1 min-h-0 mt-4">
+            <TabsContent value="overview" className="h-full overflow-y-auto space-y-6 mt-0 pr-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -99,15 +99,15 @@ export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProp
               <WalletAnalytics profileId={profileId} />
             </TabsContent>
 
-            <TabsContent value="transactions" className="mt-0">
+            <TabsContent value="transactions" className="h-full overflow-y-auto mt-0 pr-2">
               <EnhancedTransactionHistory walletId={wallet.id} />
             </TabsContent>
 
-            <TabsContent value="earn-use" className="mt-0">
+            <TabsContent value="earn-use" className="h-full overflow-y-auto mt-0 pr-2">
               <EarnUseTokensTab onNavigateToReferrals={handleNavigateToReferrals} />
             </TabsContent>
 
-            <TabsContent value="referrals" className="mt-0">
+            <TabsContent value="referrals" className="h-full overflow-y-auto mt-0 pr-2">
               <ReferralsTab />
             </TabsContent>
           </div>
