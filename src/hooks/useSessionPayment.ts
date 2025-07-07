@@ -2,6 +2,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useBookSession } from "./useBookSession";
 
 interface PaymentRequest {
   sessionId: string;
@@ -35,6 +36,8 @@ interface ProcessPaymentAndBookingRequest {
 }
 
 export function useSessionPayment() {
+  const bookSession = useBookSession();
+
   const processPayment = useMutation({
     mutationFn: async ({ sessionId, tokenCost, description }: PaymentRequest): Promise<PaymentResult> => {
       try {
@@ -200,14 +203,115 @@ export function useSessionPayment() {
     onError
   }: ProcessPaymentAndBookingRequest) => {
     try {
-      // Simulate the booking process - in real implementation this would integrate with booking logic
-      console.log('Processing payment and booking for:', { mentorId, mentorName, menteeName, formData });
-      
-      // For now, just call onSuccess - this would need to be implemented properly
-      // with actual booking creation logic
+      console.log('🚀 Starting complete payment and booking process...', {
+        mentorId,
+        mentorName,
+        menteeName,
+        formData
+      });
+
+      // Validate required fields
+      if (!formData.date || !formData.selectedTime || !formData.sessionType) {
+        throw new Error('Missing required booking information');
+      }
+
+      // Step 1: Create the session booking first
+      console.log('📅 Creating session booking...');
+      const sessionResult = await bookSession({
+        mentorId,
+        date: formData.date,
+        selectedTime: formData.selectedTime,
+        sessionTypeId: formData.sessionType,
+        note: formData.note,
+        meetingPlatform: formData.meetingPlatform as any,
+        menteePhoneNumber: formData.menteePhoneNumber,
+        menteeTelegramUsername: formData.menteeTelegramUsername,
+      });
+
+      if (!sessionResult.success || !sessionResult.sessionId) {
+        throw new Error(sessionResult.error || 'Failed to create session booking');
+      }
+
+      console.log('✅ Session created successfully:', sessionResult.sessionId);
+
+      // Step 2: Process the token payment
+      console.log('💳 Processing token payment...');
+      const paymentResult = await processPayment.mutateAsync({
+        sessionId: sessionResult.sessionId,
+        tokenCost: 25, // Standard session cost
+        description: `Session booking with ${mentorName}`
+      });
+
+      if (!paymentResult.success) {
+        // Payment failed, we should rollback the session
+        console.error('❌ Payment failed, cleaning up session...');
+        try {
+          // Delete the created session since payment failed
+          await supabase
+            .from('mentor_sessions')
+            .delete()
+            .eq('id', sessionResult.sessionId);
+          console.log('🧹 Session cleaned up after payment failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup session after payment failure:', cleanupError);
+        }
+        
+        throw new Error(paymentResult.message);
+      }
+
+      console.log('✅ Payment processed successfully');
+
+      // Step 3: Handle additional integrations (meeting links, notifications)
+      try {
+        // Create Google Meet link if needed
+        if (formData.meetingPlatform === 'Google Meet') {
+          console.log('🔗 Creating Google Meet link...');
+          const { data: meetData, error: meetError } = await supabase.functions.invoke('create-meet-link', {
+            body: { sessionId: sessionResult.sessionId }
+          });
+
+          if (meetError) {
+            console.error('Meet link error:', meetError);
+            toast.error('Session booked successfully, but there was an issue creating the Google Meet link.');
+          } else if (meetData?.meetLink) {
+            // Update session with meet link
+            await supabase
+              .from('mentor_sessions')
+              .update({ meeting_link: meetData.meetLink })
+              .eq('id', sessionResult.sessionId);
+            console.log('✅ Google Meet link created and saved');
+          }
+        }
+
+        // Send notifications and emails
+        console.log('📧 Sending notifications...');
+        await Promise.all([
+          supabase.functions.invoke('schedule-session-notifications', {
+            body: { sessionId: sessionResult.sessionId }
+          }),
+          supabase.functions.invoke('send-session-email', {
+            body: { 
+              sessionId: sessionResult.sessionId,
+              type: 'confirmation'
+            }
+          })
+        ]);
+        console.log('✅ Notifications sent');
+
+      } catch (integrationError) {
+        console.error('Integration error (non-blocking):', integrationError);
+        toast.error('Session booked successfully, but there was an issue with additional services.');
+      }
+
+      // Success!
+      console.log('🎉 Complete booking process finished successfully');
+      toast.success('Session booked successfully! Check your email for confirmation details.');
       onSuccess();
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    } catch (error: any) {
+      console.error('💥 Booking process failed:', error);
+      const errorMessage = error.message || 'Failed to complete booking';
+      toast.error(`Booking failed: ${errorMessage}`);
       onError(errorMessage);
     }
   };
