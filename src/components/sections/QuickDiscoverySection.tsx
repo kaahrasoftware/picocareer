@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -131,7 +132,7 @@ export const QuickDiscoverySection = () => {
     if (!scrollContainerRef.current) return;
 
     const container = scrollContainerRef.current;
-    const cardWidth = 320; // w-80 = 320px
+    const cardWidth = 288; // Adjusted for better fit
     const gap = 24; // space-x-6 = 24px
     const scrollDistance = cardWidth + gap;
 
@@ -165,7 +166,7 @@ export const QuickDiscoverySection = () => {
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-md"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg"
             onClick={() => handleScroll('left')}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -174,22 +175,23 @@ export const QuickDiscoverySection = () => {
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-md"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg"
             onClick={() => handleScroll('right')}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
 
           {/* Scrolling Container */}
-          <div className="overflow-hidden">
+          <div className="overflow-hidden px-12">
             <div 
               ref={scrollContainerRef}
-              className={`flex space-x-6 ${isPaused ? '' : 'animate-scroll-horizontal'} overflow-x-auto scrollbar-hide`}
+              className={`flex gap-6 ${isPaused ? '' : 'animate-scroll-horizontal'} overflow-x-auto scrollbar-hide`}
+              style={{ width: 'fit-content' }}
             >
               {duplicatedActions.map((action, index) => (
                 <Card 
                   key={index} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full flex-shrink-0 w-80"
+                  className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden flex-shrink-0 w-72"
                 >
                   <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
                     <div className="flex flex-col items-center text-center space-y-4 h-full">
@@ -213,7 +215,7 @@ export const QuickDiscoverySection = () => {
                       >
                         <Link to={action.href} className="flex items-center gap-2">
                           Get Started
-                          <ArrowRight className="w-4 w-4" />
+                          <ArrowRight className="w-4 h-4" />
                         </Link>
                       </Button>
                     </div>

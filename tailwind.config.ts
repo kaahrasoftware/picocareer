@@ -131,12 +131,21 @@ const config = {
             transform: "scale(1)",
             opacity: "1"
           }
+        },
+        "scroll-horizontal": {
+          "0%": {
+            transform: "translateX(0)"
+          },
+          "100%": {
+            transform: "translateX(-50%)"
+          }
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "float": "float 3s ease-in-out infinite",
+        "scroll-horizontal": "scroll-horizontal 30s linear infinite",
       },
     },
   },
@@ -147,6 +156,13 @@ const config = {
         ".text-balance": {
           "text-wrap": "balance",
         },
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+          "&::-webkit-scrollbar": {
+            display: "none"
+          }
+        }
       })
     }),
   ],
