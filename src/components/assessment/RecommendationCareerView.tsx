@@ -8,6 +8,7 @@ import { ModernContentCard } from './ModernContentCard';
 import { ModernSkillsSection } from './ModernSkillsSection';
 import { ModernSimilarCareersSection } from './ModernSimilarCareersSection';
 import { FindMentorsDialog } from './FindMentorsDialog';
+import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 import { useRelatedCareers } from '@/hooks/useRelatedCareers';
 import type { CareerRecommendation } from '@/types/assessment';
 
@@ -22,6 +23,8 @@ export const RecommendationCareerView = ({
 }: RecommendationCareerViewProps) => {
   const navigate = useNavigate();
   const [showFindMentors, setShowFindMentors] = useState(false);
+  const [selectedCareerId, setSelectedCareerId] = useState<string | null>(null);
+  const [careerDialogOpen, setCareerDialogOpen] = useState(false);
   
   const {
     relatedCareers,
@@ -33,7 +36,13 @@ export const RecommendationCareerView = ({
   );
 
   const handleCareerSelect = (careerId: string) => {
-    navigate(`/career?dialog=true&careerId=${careerId}`);
+    setSelectedCareerId(careerId);
+    setCareerDialogOpen(true);
+  };
+
+  const handleCareerDialogClose = () => {
+    setCareerDialogOpen(false);
+    setSelectedCareerId(null);
   };
 
   return (
@@ -136,6 +145,15 @@ export const RecommendationCareerView = ({
         onOpenChange={setShowFindMentors} 
         recommendation={recommendation} 
       />
+
+      {/* Career Details Dialog */}
+      {selectedCareerId && (
+        <CareerDetailsDialog
+          careerId={selectedCareerId}
+          open={careerDialogOpen}
+          onOpenChange={handleCareerDialogClose}
+        />
+      )}
     </div>
   );
 };
