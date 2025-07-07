@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
 import { useWalletBalance } from "@/hooks/useWalletBalance";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { WalletDialog } from "./WalletDialog";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,13 @@ const formatTokenBalance = (balance: number): string => {
 
 export function WalletButton({ className, showBalance = true }: WalletButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { session } = useAuthSession();
   const { balance, isLoading } = useWalletBalance();
+
+  // Don't render if user is not authenticated
+  if (!session?.user?.id) {
+    return null;
+  }
 
   return (
     <>
@@ -51,7 +58,7 @@ export function WalletButton({ className, showBalance = true }: WalletButtonProp
       <WalletDialog 
         open={isDialogOpen} 
         onOpenChange={setIsDialogOpen}
-        profileId="placeholder-id"
+        profileId={session.user.id}
       />
     </>
   );
