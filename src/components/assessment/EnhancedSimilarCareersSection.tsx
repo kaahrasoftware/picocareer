@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,29 +5,25 @@ import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Loader2, Briefcase, ExternalLink, TrendingUp } from 'lucide-react';
 import { SimilarCareerHoverCard } from './SimilarCareerHoverCard';
 import { useEnhancedSimilarCareers, type EnhancedSimilarCareer } from '@/hooks/useEnhancedSimilarCareers';
-
 interface EnhancedSimilarCareersSectionProps {
   requiredSkills: string[];
   careerTitle: string;
   industry?: string;
   onCareerSelect: (careerId: string) => void;
 }
-
-export const EnhancedSimilarCareersSection = ({ 
-  requiredSkills, 
-  careerTitle, 
-  industry, 
-  onCareerSelect 
+export const EnhancedSimilarCareersSection = ({
+  requiredSkills,
+  careerTitle,
+  industry,
+  onCareerSelect
 }: EnhancedSimilarCareersSectionProps) => {
-  const { similarCareers, isLoading, error } = useEnhancedSimilarCareers(
-    requiredSkills, 
-    careerTitle, 
-    industry
-  );
-
+  const {
+    similarCareers,
+    isLoading,
+    error
+  } = useEnhancedSimilarCareers(requiredSkills, careerTitle, industry);
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -43,13 +38,10 @@ export const EnhancedSimilarCareersSection = ({
             </span>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (error) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -61,13 +53,10 @@ export const EnhancedSimilarCareersSection = ({
             Unable to load similar careers at this time. Please try again later.
           </p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (similarCareers.length === 0) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -80,12 +69,9 @@ export const EnhancedSimilarCareersSection = ({
             Check back later as we're constantly adding new career profiles.
           </p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-5 w-5 text-primary" />
@@ -102,31 +88,23 @@ export const EnhancedSimilarCareersSection = ({
         </p>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-          {similarCareers.map((career) => (
-            <EnhancedSimilarCareerCard
-              key={career.id}
-              career={career}
-              onLearnMore={onCareerSelect}
-            />
-          ))}
+          {similarCareers.map(career => <EnhancedSimilarCareerCard key={career.id} career={career} onLearnMore={onCareerSelect} />)}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 interface EnhancedSimilarCareerCardProps {
   career: EnhancedSimilarCareer;
   onLearnMore: (careerId: string) => void;
 }
-
-const EnhancedSimilarCareerCard = ({ career, onLearnMore }: EnhancedSimilarCareerCardProps) => {
+const EnhancedSimilarCareerCard = ({
+  career,
+  onLearnMore
+}: EnhancedSimilarCareerCardProps) => {
   const matchPercentage = Math.round(career.similarity_score * 100);
-
-  return (
-    <SimilarCareerHoverCard career={career}>
+  return <SimilarCareerHoverCard career={career}>
       <Card className="hover:shadow-md transition-shadow h-full cursor-pointer">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 bg-sky-100">
           <div className="flex justify-between items-start gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-primary" />
@@ -144,49 +122,35 @@ const EnhancedSimilarCareerCard = ({ career, onLearnMore }: EnhancedSimilarCaree
             {career.description}
           </p>
           
-          {career.salary_range && (
-            <div className="text-sm">
+          {career.salary_range && <div className="text-sm">
               <span className="font-medium text-green-600">
                 {career.salary_range}
               </span>
-            </div>
-          )}
+            </div>}
 
           {/* Quick Preview of Match Details */}
-          {career.match_details.matchedSkills.length > 0 && (
-            <div className="space-y-2">
+          {career.match_details.matchedSkills.length > 0 && <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground">
                 Matched Skills Preview:
               </p>
               <div className="flex flex-wrap gap-1">
-                {career.match_details.matchedSkills.slice(0, 3).map((skill, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                {career.match_details.matchedSkills.slice(0, 3).map((skill, index) => <Badge key={index} variant="outline" className="text-xs">
                     {skill}
-                  </Badge>
-                ))}
-                {career.match_details.matchedSkills.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
+                  </Badge>)}
+                {career.match_details.matchedSkills.length > 3 && <Badge variant="outline" className="text-xs">
                     +{career.match_details.matchedSkills.length - 3} more
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
               <p className="text-xs text-muted-foreground italic">
                 Hover for complete details
               </p>
-            </div>
-          )}
+            </div>}
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={() => onLearnMore(career.id)}
-          >
+          <Button variant="outline" size="sm" className="w-full" onClick={() => onLearnMore(career.id)}>
             Learn More
             <ExternalLink className="h-3 w-3 ml-1" />
           </Button>
         </CardContent>
       </Card>
-    </SimilarCareerHoverCard>
-  );
+    </SimilarCareerHoverCard>;
 };
