@@ -2,8 +2,26 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Brain, Users, BookOpen, TrendingUp, ArrowRight } from 'lucide-react';
+import { 
+  Brain, 
+  Users, 
+  BookOpen, 
+  TrendingUp, 
+  ArrowRight, 
+  GraduationCap,
+  Briefcase,
+  FileText,
+  Calendar,
+  Building,
+  Coins
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export const QuickDiscoverySection = () => {
   const quickActions = [
@@ -42,6 +60,69 @@ export const QuickDiscoverySection = () => {
       color: "bg-gradient-to-br from-[#66c2e0] to-[#33b3d9]",
       bgColor: "bg-[#66c2e0]/5 hover:bg-[#66c2e0]/10 border-[#66c2e0]/10",
       textColor: "text-[#66c2e0]"
+    },
+    {
+      icon: GraduationCap,
+      title: "Scholarships",
+      description: "Browse scholarships and funding opportunities",
+      href: "/scholarships",
+      color: "bg-gradient-to-br from-[#4da6d9] to-[#0095c1]",
+      bgColor: "bg-[#4da6d9]/5 hover:bg-[#4da6d9]/10 border-[#4da6d9]/10",
+      textColor: "text-[#4da6d9]"
+    },
+    {
+      icon: Briefcase,
+      title: "Opportunities",
+      description: "Explore internships and job opportunities",
+      href: "/opportunities",
+      color: "bg-gradient-to-br from-[#1aa3d1] to-[#0095c1]",
+      bgColor: "bg-[#1aa3d1]/5 hover:bg-[#1aa3d1]/10 border-[#1aa3d1]/10",
+      textColor: "text-[#1aa3d1]"
+    },
+    {
+      icon: FileText,
+      title: "Resource Bank",
+      description: "Access educational resources and materials",
+      href: "/resource-bank",
+      color: "bg-gradient-to-br from-[#5cb3dc] to-[#33b3d9]",
+      bgColor: "bg-[#5cb3dc]/5 hover:bg-[#5cb3dc]/10 border-[#5cb3dc]/10",
+      textColor: "text-[#5cb3dc]"
+    },
+    {
+      icon: Calendar,
+      title: "Events",
+      description: "Discover upcoming events and workshops",
+      href: "/events",
+      color: "bg-gradient-to-br from-[#29a8d4] to-[#0095c1]",
+      bgColor: "bg-[#29a8d4]/5 hover:bg-[#29a8d4]/10 border-[#29a8d4]/10",
+      textColor: "text-[#29a8d4]"
+    },
+    {
+      icon: Building,
+      title: "Hubs",
+      description: "Join community hubs and discussion groups",
+      href: "/hubs",
+      color: "bg-gradient-to-br from-[#3db0d6] to-[#00A6D4]",
+      bgColor: "bg-[#3db0d6]/5 hover:bg-[#3db0d6]/10 border-[#3db0d6]/10",
+      textColor: "text-[#3db0d6]"
+    },
+    {
+      icon: FileText,
+      title: "Blogs",
+      description: "Read latest articles and insights",
+      href: "/blog",
+      color: "bg-gradient-to-br from-[#52b5de] to-[#33b3d9]",
+      bgColor: "bg-[#52b5de]/5 hover:bg-[#52b5de]/10 border-[#52b5de]/10",
+      textColor: "text-[#52b5de]"
+    },
+    {
+      icon: Coins,
+      title: "Token Shop",
+      description: "Purchase tokens for premium features",
+      href: "/token-shop",
+      color: "bg-gradient-to-br from-[#47b2dd] to-[#00A6D4]",
+      bgColor: "bg-[#47b2dd]/5 hover:bg-[#47b2dd]/10 border-[#47b2dd]/10",
+      textColor: "text-[#47b2dd]"
     }
   ];
 
@@ -55,38 +136,57 @@ export const QuickDiscoverySection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-          {quickActions.map((action, index) => (
-            <Card key={index} className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden">
-              <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <action.icon className="w-8 h-8 text-white" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className={`font-semibold text-lg ${action.textColor}`}>
-                      {action.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      {action.description}
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    asChild 
-                    variant="ghost" 
-                    className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300`}
-                  >
-                    <Link to={action.href} className="flex items-center gap-2">
-                      Get Started
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="max-w-7xl mx-auto">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+              direction: "rtl",
+            }}
+            plugins={[
+              Autoplay({
+                delay: 4000,
+                stopOnInteraction: true,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {quickActions.map((action, index) => (
+                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                  <Card className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full">
+                    <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
+                      <div className="flex flex-col items-center text-center space-y-4 h-full">
+                        <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          <action.icon className="w-8 h-8 text-white" />
+                        </div>
+                        
+                        <div className="space-y-2 flex-grow">
+                          <h3 className={`font-semibold text-lg ${action.textColor}`}>
+                            {action.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            {action.description}
+                          </p>
+                        </div>
+                        
+                        <Button 
+                          asChild 
+                          variant="ghost" 
+                          className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300 mt-auto`}
+                        >
+                          <Link to={action.href} className="flex items-center gap-2">
+                            Get Started
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
       </div>
     </section>
