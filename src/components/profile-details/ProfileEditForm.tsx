@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProfileEditFormProps, FormFields } from "./types/form-types";
+import { degreeOptions } from "@/constants/degrees";
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
@@ -16,7 +18,9 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    setValue,
+    watch
   } = useForm<FormFields>({
     defaultValues: {
       first_name: profile.first_name || '',
@@ -39,6 +43,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
     }
   });
 
+  const watchedDegree = watch("highest_degree");
+
   const onSubmit = async (data: FormFields) => {
     setIsSubmitting(true);
     try {
@@ -60,7 +66,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         company_id: data.company_id || null,
         school_id: data.school_id || null,
         academic_major_id: data.academic_major_id || null,
-        highest_degree: data.highest_degree || null,
+        // Ensure highest_degree is properly typed as one of the allowed values
+        highest_degree: data.highest_degree as "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD",
       };
 
       const { error } = await supabase
@@ -203,11 +210,21 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
 
         <div>
           <Label htmlFor="highest_degree">Highest Degree</Label>
-          <Input
-            id="highest_degree"
-            {...register("highest_degree")}
-            placeholder="Bachelor's, Master's, PhD, etc."
-          />
+          <Select 
+            value={watchedDegree} 
+            onValueChange={(value) => setValue("highest_degree", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your highest degree" />
+            </SelectTrigger>
+            <SelectContent>
+              {degreeOptions.map((degree) => (
+                <SelectItem key={degree} value={degree}>
+                  {degree}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
