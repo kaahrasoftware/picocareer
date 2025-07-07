@@ -33,7 +33,7 @@ export const RecommendationCareerView = ({
   );
 
   const handleCareerSelect = (careerId: string) => {
-    navigate(`/careers/${careerId}`);
+    navigate(`/career?dialog=true&careerId=${careerId}`);
   };
 
   return (
