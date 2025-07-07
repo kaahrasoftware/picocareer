@@ -6,6 +6,7 @@ import { CareerOverviewHero } from './CareerOverviewHero';
 import { CareerMetricsCards } from './CareerMetricsCards';
 import { ModernContentCard } from './ModernContentCard';
 import { ModernSkillsSection } from './ModernSkillsSection';
+import { ModernSimilarCareersSection } from './ModernSimilarCareersSection';
 import { FindMentorsDialog } from './FindMentorsDialog';
 import { useRelatedCareers } from '@/hooks/useRelatedCareers';
 import type { CareerRecommendation } from '@/types/assessment';
@@ -121,6 +122,12 @@ export const RecommendationCareerView = ({
             </p>
           </ModernContentCard>
         )}
+
+        {/* Similar Careers Section - NEW */}
+        <ModernSimilarCareersSection 
+          recommendation={recommendation}
+          onCareerSelect={handleCareerSelect}
+        />
       </div>
 
       {/* Find Mentors Dialog */}
