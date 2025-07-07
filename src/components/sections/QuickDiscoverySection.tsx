@@ -136,10 +136,10 @@ export const QuickDiscoverySection = () => {
           </p>
         </div>
         
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-md mx-auto">
           <Carousel
             opts={{
-              align: "start",
+              align: "center",
               loop: true,
               direction: "rtl",
             }}
@@ -151,9 +151,9 @@ export const QuickDiscoverySection = () => {
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent className="-ml-4">
               {quickActions.map((action, index) => (
-                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                <CarouselItem key={index} className="pl-4 basis-full">
                   <Card className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full">
                     <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
                       <div className="flex flex-col items-center text-center space-y-4 h-full">
