@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons";
 import { useToast } from "@/hooks/use-toast";
@@ -29,12 +30,12 @@ export function SocialSignIn() {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative my-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t border-gray-200" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+        <div className="relative flex justify-center text-sm">
+          <span className="bg-white px-4 text-gray-500 font-medium">
             Or continue with
           </span>
         </div>
@@ -43,11 +44,11 @@ export function SocialSignIn() {
       <Button
         variant="outline"
         type="button"
-        className="w-full"
+        className="w-full h-12 border-gray-200 hover:bg-gray-50 hover:border-[#00A6D4] transition-all duration-200 font-medium"
         onClick={handleGoogleSignIn}
       >
-        <Icons.google className="mr-2 h-4 w-4" />
-        Google
+        <Icons.google className="mr-3 h-5 w-5" />
+        Continue with Google
       </Button>
     </>
   );

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialSignIn } from "./SocialSignIn";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Gift } from "lucide-react";
+import { Gift, User, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function SignUpForm() {
@@ -79,83 +79,120 @@ export function SignUpForm() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {referralCode && (
         <Alert className="border-green-200 bg-green-50">
-          <Gift className="h-4 w-4" />
+          <Gift className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
             🎉 You've been referred by a friend! Complete your registration and you'll both get 15 tokens!
           </AlertDescription>
         </Alert>
       )}
 
-      <form onSubmit={handleSignUp} className="space-y-4">
+      <form onSubmit={handleSignUp} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="signup-firstName">First Name</Label>
-            <Input
-              id="signup-firstName"
-              name="firstName"
-              type="text"
-              placeholder="Enter your first name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              required
-            />
+            <Label htmlFor="signup-firstName" className="text-sm font-medium text-gray-700">
+              First Name
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="signup-firstName"
+                name="firstName"
+                type="text"
+                placeholder="First name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+                className="pl-10 h-12 border-gray-200 focus:border-[#00A6D4] focus:ring-[#00A6D4] transition-colors"
+              />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="signup-lastName">Last Name</Label>
+            <Label htmlFor="signup-lastName" className="text-sm font-medium text-gray-700">
+              Last Name
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="signup-lastName"
+                name="lastName"
+                type="text"
+                placeholder="Last name"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+                className="pl-10 h-12 border-gray-200 focus:border-[#00A6D4] focus:ring-[#00A6D4] transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="signup-email" className="text-sm font-medium text-gray-700">
+            Email Address
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              id="signup-lastName"
-              name="lastName"
-              type="text"
-              placeholder="Enter your last name"
-              value={formData.lastName}
+              id="signup-email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleInputChange}
               required
+              className="pl-10 h-12 border-gray-200 focus:border-[#00A6D4] focus:ring-[#00A6D4] transition-colors"
             />
           </div>
         </div>
+        
         <div className="space-y-2">
-          <Label htmlFor="signup-email">Email</Label>
-          <Input
-            id="signup-email"
-            name="email"
-            type="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleInputChange}
-            required
-          />
+          <Label htmlFor="signup-password" className="text-sm font-medium text-gray-700">
+            Password
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              id="signup-password"
+              name="password"
+              type="password"
+              placeholder="Create a password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              minLength={6}
+              className="pl-10 h-12 border-gray-200 focus:border-[#00A6D4] focus:ring-[#00A6D4] transition-colors"
+            />
+          </div>
         </div>
+        
         <div className="space-y-2">
-          <Label htmlFor="signup-password">Password</Label>
-          <Input
-            id="signup-password"
-            name="password"
-            type="password"
-            placeholder="Create a password"
-            value={formData.password}
-            onChange={handleInputChange}
-            required
-            minLength={6}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="signup-confirmPassword">Confirm Password</Label>
-          <Input
-            id="signup-confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm your password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            required
-            minLength={6}
-          />
+          <Label htmlFor="signup-confirmPassword" className="text-sm font-medium text-gray-700">
+            Confirm Password
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              id="signup-confirmPassword"
+              name="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              required
+              minLength={6}
+              className="pl-10 h-12 border-gray-200 focus:border-[#00A6D4] focus:ring-[#00A6D4] transition-colors"
+            />
+          </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          className="w-full h-12 bg-[#00A6D4] hover:bg-[#0EA5E9] text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
+          disabled={isLoading}
+        >
           {isLoading ? "Creating account..." : "Create Account"}
         </Button>
 
