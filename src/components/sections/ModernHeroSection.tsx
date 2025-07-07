@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -55,7 +54,7 @@ export const ModernHeroSection = () => {
             Built for Students by Students
           </div>
           
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-[#00A6D4] to-[#0095c1] bg-clip-text text-transparent leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-black leading-tight">
             The Student-First
             <br />
             <span className="text-[#00A6D4]">Career Platform</span>

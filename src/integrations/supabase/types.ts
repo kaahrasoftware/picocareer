@@ -3498,10 +3498,8 @@ export type Database = {
           avatar_url: string | null
           background_check_consent: boolean | null
           bio: string | null
-          city: string | null
           class_rank: number | null
           company_id: string | null
-          country: string | null
           created_at: string
           current_gpa: number | null
           email: string
@@ -3549,10 +3547,8 @@ export type Database = {
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null
-          city?: string | null
           class_rank?: number | null
           company_id?: string | null
-          country?: string | null
           created_at?: string
           current_gpa?: number | null
           email: string
@@ -3600,10 +3596,8 @@ export type Database = {
           avatar_url?: string | null
           background_check_consent?: boolean | null
           bio?: string | null
-          city?: string | null
           class_rank?: number | null
           company_id?: string | null
-          country?: string | null
           created_at?: string
           current_gpa?: number | null
           email?: string
