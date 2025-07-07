@@ -11,10 +11,14 @@ interface CompanySelectorProps {
 export function CompanySelector({ value, onValueChange }: CompanySelectorProps) {
   const { companies } = useMentorReferenceData();
 
-  const companyOptions = companies?.map(company => ({
-    value: company.id,
-    label: company.name
-  })) || [];
+  // Ensure companyOptions is always an array, even when companies is undefined
+  const companyOptions = React.useMemo(() => {
+    if (!Array.isArray(companies)) return [];
+    return companies.map(company => ({
+      value: company.id,
+      label: company.name
+    }));
+  }, [companies]);
 
   return (
     <SearchableSelect

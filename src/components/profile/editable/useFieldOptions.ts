@@ -17,11 +17,11 @@ export function useFieldOptions(fieldName: string) {
     queryFn: async () => {
       // Skip database query for highest_degree as it uses predefined options
       if (fieldName === 'highest_degree') {
-        return null;
+        return [];
       }
 
       if (!(['academic_major_id', 'school_id', 'position', 'company_id'] as string[]).includes(fieldName)) {
-        return null;
+        return [];
       }
 
       const fieldConfig = fieldToTableMap[fieldName as FieldName];

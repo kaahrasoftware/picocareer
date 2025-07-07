@@ -11,10 +11,14 @@ interface MajorSelectorProps {
 export function MajorSelector({ value, onValueChange }: MajorSelectorProps) {
   const { majors } = useMentorReferenceData();
 
-  const majorOptions = majors?.map(major => ({
-    value: major.id,
-    label: major.title
-  })) || [];
+  // Ensure majorOptions is always an array, even when majors is undefined
+  const majorOptions = React.useMemo(() => {
+    if (!Array.isArray(majors)) return [];
+    return majors.map(major => ({
+      value: major.id,
+      label: major.title
+    }));
+  }, [majors]);
 
   return (
     <SearchableSelect

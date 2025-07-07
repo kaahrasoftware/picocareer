@@ -11,10 +11,14 @@ interface SchoolSelectorProps {
 export function SchoolSelector({ value, onValueChange }: SchoolSelectorProps) {
   const { schools } = useMentorReferenceData();
 
-  const schoolOptions = schools?.map(school => ({
-    value: school.id,
-    label: school.name
-  })) || [];
+  // Ensure schoolOptions is always an array, even when schools is undefined
+  const schoolOptions = React.useMemo(() => {
+    if (!Array.isArray(schools)) return [];
+    return schools.map(school => ({
+      value: school.id,
+      label: school.name
+    }));
+  }, [schools]);
 
   return (
     <SearchableSelect

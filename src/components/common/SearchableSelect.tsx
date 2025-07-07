@@ -32,7 +32,7 @@ interface SearchableSelectProps {
 }
 
 export function SearchableSelect({
-  options,
+  options = [], // Default to empty array
   value,
   onValueChange,
   placeholder = "Select option...",
@@ -43,20 +43,23 @@ export function SearchableSelect({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  // Filter options based on search
+  // Filter options based on search - safely handle undefined/null options
   const filteredOptions = useMemo(() => {
-    if (!searchValue) return options;
+    if (!Array.isArray(options) || !searchValue) return options || [];
     return options.filter(option =>
-      option.label.toLowerCase().includes(searchValue.toLowerCase())
+      option?.label?.toLowerCase().includes(searchValue.toLowerCase())
     );
   }, [options, searchValue]);
 
-  // Find selected option
-  const selectedOption = options.find(option => option.value === value);
+  // Find selected option - safely handle undefined options
+  const selectedOption = useMemo(() => {
+    if (!Array.isArray(options)) return null;
+    return options.find(option => option.value === value) || null;
+  }, [options, value]);
 
   const handleSelect = (currentValue: string) => {
     // Find the actual option that matches this value
-    const item = options.find(option => option.value === currentValue);
+    const item = options?.find(option => option.value === currentValue);
     if (!item) return;
     
     const newValue = item.value === value ? '' : item.value;
