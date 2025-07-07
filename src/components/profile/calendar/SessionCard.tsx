@@ -28,7 +28,7 @@ export function SessionCard({
   onMarkComplete,
   onFeedback
 }: SessionCardProps) {
-  const startTime = new Date(event.start_time as string);
+  const startTime = new Date(event.start);
   const isUpcoming = startTime > new Date();
   const isPast = startTime < new Date();
   const isMentor = event.session_details?.mentor.id === event.user_id;
