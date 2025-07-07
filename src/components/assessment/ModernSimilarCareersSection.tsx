@@ -150,9 +150,9 @@ export const ModernSimilarCareersSection = ({
               </div>
 
               {/* Salary Range (if available) */}
-              {career.required_salary_range && (
+              {career.salary_range && (
                 <p className="text-sm font-medium text-gray-800 mb-3">
-                  {career.required_salary_range}
+                  {career.salary_range}
                 </p>
               )}
 
