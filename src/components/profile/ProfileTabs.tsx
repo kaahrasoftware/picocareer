@@ -13,8 +13,8 @@ interface ProfileTabsProps {
 
 export function ProfileTabs({ profile, isEditing = false, onTabChange }: ProfileTabsProps) {
   if (profile?.user_type === 'mentor') {
-    return <MentorProfileTabs profile={profile} isEditing={isEditing} />;
+    return <MentorProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
   }
 
-  return <MenteeProfileTabs profile={profile} isEditing={isEditing} />;
+  return <MenteeProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
 }
