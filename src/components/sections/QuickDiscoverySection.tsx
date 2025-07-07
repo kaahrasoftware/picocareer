@@ -136,12 +136,13 @@ export const QuickDiscoverySection = () => {
           </p>
         </div>
         
-        <div className="max-w-md mx-auto">
+        <div className="max-w-7xl mx-auto">
           <Carousel
             opts={{
-              align: "center",
+              align: "start",
               loop: true,
               direction: "rtl",
+              slidesToScroll: 1,
             }}
             plugins={[
               Autoplay({
@@ -151,9 +152,9 @@ export const QuickDiscoverySection = () => {
             ]}
             className="w-full"
           >
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ml-2 md:-ml-4">
               {quickActions.map((action, index) => (
-                <CarouselItem key={index} className="pl-4 basis-full">
+                <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/4">
                   <Card className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full">
                     <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
                       <div className="flex flex-col items-center text-center space-y-4 h-full">
