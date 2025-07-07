@@ -32,11 +32,14 @@ import Partnerships from '@/pages/Partnerships';
 import Hubs from '@/pages/Hubs';
 import Hub from '@/pages/Hub';
 import HubInviteResponse from '@/pages/HubInviteResponse';
+import NotFound from '@/pages/NotFound';
+import ErrorPage from '@/pages/Error';
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
       { path: "about", element: <About /> },
@@ -74,8 +77,14 @@ export const router = createBrowserRouter([
   {
     path: "/auth",
     element: <AuthLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Auth /> },
     ],
+  },
+  // Catch-all route for 404s
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
