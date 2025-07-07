@@ -10,10 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProfileEditFormProps, FormFields } from "./types/form-types";
 import { degreeOptions } from "@/constants/degrees";
+import { CompanySelector } from "./form-sections/CompanySelector";
+import { SchoolSelector } from "./form-sections/SchoolSelector";
+import { MajorSelector } from "./form-sections/MajorSelector";
+import { AvatarSection } from "./form-sections/AvatarSection";
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
 
   const {
     register,
@@ -35,11 +40,17 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
       linkedin_url: profile.linkedin_url || '',
       github_url: profile.github_url || '',
       website_url: profile.website_url || '',
+      X_url: profile.X_url || '',
+      instagram_url: profile.instagram_url || '',
+      facebook_url: profile.facebook_url || '',
+      youtube_url: profile.youtube_url || '',
+      tiktok_url: profile.tiktok_url || '',
       position: profile.position || '',
       company_id: profile.company_id || '',
       school_id: profile.school_id || '',
       academic_major_id: profile.academic_major_id || '',
       highest_degree: profile.highest_degree || '',
+      student_nonstudent: profile.student_nonstudent || '',
     }
   });
 
@@ -62,10 +73,17 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         linkedin_url: data.linkedin_url,
         github_url: data.github_url,
         website_url: data.website_url,
+        X_url: data.X_url,
+        instagram_url: data.instagram_url,
+        facebook_url: data.facebook_url,
+        youtube_url: data.youtube_url,
+        tiktok_url: data.tiktok_url,
         position: data.position,
         company_id: data.company_id || null,
         school_id: data.school_id || null,
         academic_major_id: data.academic_major_id || null,
+        student_nonstudent: data.student_nonstudent || null,
+        avatar_url: avatarUrl,
         // Ensure highest_degree is properly typed as one of the allowed values
         highest_degree: data.highest_degree as "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD",
       };
@@ -94,8 +112,21 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
     }
   };
 
+  const handleAvatarUpdate = (url: string) => {
+    setAvatarUrl(url);
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Avatar Section */}
+      <div className="bg-muted rounded-lg p-4">
+        <AvatarSection
+          avatarUrl={avatarUrl}
+          userId={profile.id}
+          onAvatarUpdate={handleAvatarUpdate}
+        />
+      </div>
+
       {/* Personal Information */}
       <div className="bg-muted rounded-lg p-4 space-y-4">
         <h4 className="font-semibold">Personal Information</h4>
@@ -209,6 +240,19 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         </div>
 
         <div>
+          <Label>Company</Label>
+          <CompanySelector
+            value={watch("company_id")}
+            onValueChange={(value) => setValue("company_id", value)}
+          />
+        </div>
+      </div>
+
+      {/* Education Information */}
+      <div className="bg-muted rounded-lg p-4 space-y-4">
+        <h4 className="font-semibold">Education Information</h4>
+        
+        <div>
           <Label htmlFor="highest_degree">Highest Degree</Label>
           <Select 
             value={watchedDegree} 
@@ -226,40 +270,124 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
             </SelectContent>
           </Select>
         </div>
+
+        <div>
+          <Label>School</Label>
+          <SchoolSelector
+            value={watch("school_id")}
+            onValueChange={(value) => setValue("school_id", value)}
+          />
+        </div>
+
+        <div>
+          <Label>Academic Major</Label>
+          <MajorSelector
+            value={watch("academic_major_id")}
+            onValueChange={(value) => setValue("academic_major_id", value)}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="student_nonstudent">Student Status</Label>
+          <Select 
+            value={watch("student_nonstudent")} 
+            onValueChange={(value) => setValue("student_nonstudent", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Student">Student</SelectItem>
+              <SelectItem value="Non-Student">Non-Student</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Social Links */}
       <div className="bg-muted rounded-lg p-4 space-y-4">
         <h4 className="font-semibold">Social Links</h4>
         
-        <div>
-          <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-          <Input
-            id="linkedin_url"
-            type="url"
-            {...register("linkedin_url")}
-            placeholder="https://linkedin.com/in/yourprofile"
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+            <Input
+              id="linkedin_url"
+              type="url"
+              {...register("linkedin_url")}
+              placeholder="https://linkedin.com/in/yourprofile"
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="github_url">GitHub URL</Label>
-          <Input
-            id="github_url"
-            type="url"
-            {...register("github_url")}
-            placeholder="https://github.com/yourusername"
-          />
-        </div>
+          <div>
+            <Label htmlFor="github_url">GitHub URL</Label>
+            <Input
+              id="github_url"
+              type="url"
+              {...register("github_url")}
+              placeholder="https://github.com/yourusername"
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="website_url">Website URL</Label>
-          <Input
-            id="website_url"
-            type="url"
-            {...register("website_url")}
-            placeholder="https://yourwebsite.com"
-          />
+          <div>
+            <Label htmlFor="website_url">Website URL</Label>
+            <Input
+              id="website_url"
+              type="url"
+              {...register("website_url")}
+              placeholder="https://yourwebsite.com"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="X_url">X (Twitter) URL</Label>
+            <Input
+              id="X_url"
+              type="url"
+              {...register("X_url")}
+              placeholder="https://x.com/yourusername"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="instagram_url">Instagram URL</Label>
+            <Input
+              id="instagram_url"
+              type="url"
+              {...register("instagram_url")}
+              placeholder="https://instagram.com/yourusername"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="facebook_url">Facebook URL</Label>
+            <Input
+              id="facebook_url"
+              type="url"
+              {...register("facebook_url")}
+              placeholder="https://facebook.com/yourprofile"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="youtube_url">YouTube URL</Label>
+            <Input
+              id="youtube_url"
+              type="url"
+              {...register("youtube_url")}
+              placeholder="https://youtube.com/@yourchannel"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="tiktok_url">TikTok URL</Label>
+            <Input
+              id="tiktok_url"
+              type="url"
+              {...register("tiktok_url")}
+              placeholder="https://tiktok.com/@yourusername"
+            />
+          </div>
         </div>
       </div>
 
