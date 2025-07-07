@@ -5,14 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Lightbulb, Loader2, Briefcase, ExternalLink, TrendingUp } from 'lucide-react';
 import { SimilarCareerHoverCard } from './SimilarCareerHoverCard';
 import { useEnhancedSimilarCareers, type EnhancedSimilarCareer } from '@/hooks/useEnhancedSimilarCareers';
-
 interface EnhancedSimilarCareersSectionProps {
   requiredSkills: string[];
   careerTitle: string;
   industry?: string;
   onCareerSelect: (careerId: string) => void;
 }
-
 export const EnhancedSimilarCareersSection = ({
   requiredSkills,
   careerTitle,
@@ -24,10 +22,8 @@ export const EnhancedSimilarCareersSection = ({
     isLoading,
     error
   } = useEnhancedSimilarCareers(requiredSkills, careerTitle, industry);
-
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -42,13 +38,10 @@ export const EnhancedSimilarCareersSection = ({
             </span>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (error) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -60,13 +53,10 @@ export const EnhancedSimilarCareersSection = ({
             Unable to load similar careers at this time. Please try again later.
           </p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (similarCareers.length === 0) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-primary" />
@@ -79,45 +69,14 @@ export const EnhancedSimilarCareersSection = ({
             Check back later as we're constantly adding new career profiles.
           </p>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="h-5 w-5 text-primary" />
-          Similar Careers You Can Explore
-          <span className="text-sm font-normal text-muted-foreground">
-            ({similarCareers.length} found)
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Here are similar careers from our database you might be interested in. Hover over each card to see detailed match information, schools offering this program, and mentors in the field that can guide you:
-        </p>
-        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
-          {similarCareers.map(career => (
-            <EnhancedSimilarCareerCard 
-              key={career.id} 
-              career={career} 
-              onLearnMore={onCareerSelect} 
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+  return;
 };
-
 interface EnhancedSimilarCareerCardProps {
   career: EnhancedSimilarCareer;
   onLearnMore: (careerId: string) => void;
 }
-
 const EnhancedSimilarCareerCard = ({
   career,
   onLearnMore
@@ -125,7 +84,7 @@ const EnhancedSimilarCareerCard = ({
   const matchPercentage = Math.round(career.similarity_score * 100);
   return <SimilarCareerHoverCard career={career}>
       <Card className="hover:shadow-md transition-shadow h-full cursor-pointer">
-        <CardHeader className="pb-3 bg-sky-100">
+        <CardHeader className="pb-3">
           <div className="flex justify-between items-start gap-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-primary" />
