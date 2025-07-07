@@ -31,12 +31,9 @@ export const RecommendationCareerView = ({
   return <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button onClick={onBack} variant="outline" size="sm">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Results
-        </Button>
+        
         <div>
-          <h1 className="text-2xl font-bold">{recommendation.title}</h1>
+          
           <div className="flex items-center gap-2 mt-1">
             <Badge className="bg-green-500 text-white">
               <TrendingUp className="h-3 w-3 mr-1" />
@@ -51,9 +48,9 @@ export const RecommendationCareerView = ({
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-0 lg:space-x-0 px-0">
         {/* Left Column - Main Info */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:gap-x-0 space-y-6 px-0">
           {/* Overview Card */}
           <Card>
             <CardHeader>
@@ -65,11 +62,11 @@ export const RecommendationCareerView = ({
               </p>
               
               <div className="grid grid-cols-2 gap-4">
-                {recommendation.salaryRange && <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3">
-                    <div className="text-sm font-medium text-green-700 dark:text-green-400">
+                {recommendation.salaryRange && <div className="rounded-lg p-3 bg-slate-50">
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-400 bg-transparent">
                       Salary Range
                     </div>
-                    <div className="text-lg font-semibold text-green-800 dark:text-green-300">
+                    <div className="text-lg font-semibold text-slate-800 dark:text-slate-300 bg-red-200 rounded-xl">
                       {recommendation.salaryRange}
                     </div>
                   </div>}
