@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -13,11 +13,16 @@ import {
   FileText,
   Calendar,
   Building,
-  Coins
+  Coins,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const QuickDiscoverySection = () => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+
   const quickActions = [
     {
       icon: Brain,
@@ -123,6 +128,29 @@ export const QuickDiscoverySection = () => {
   // Duplicate the actions for seamless infinite scrolling
   const duplicatedActions = [...quickActions, ...quickActions];
 
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (!scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const cardWidth = 320; // w-80 = 320px
+    const gap = 24; // space-x-6 = 24px
+    const scrollDistance = cardWidth + gap;
+
+    // Pause animation during manual scroll
+    setIsPaused(true);
+
+    if (direction === 'left') {
+      container.scrollBy({ left: -scrollDistance, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollDistance, behavior: 'smooth' });
+    }
+
+    // Resume animation after scroll completes
+    setTimeout(() => {
+      setIsPaused(false);
+    }, 500);
+  };
+
   return (
     <section className="py-16 bg-gradient-to-r from-gray-50 to-[#00A6D4]/5">
       <div className="container mx-auto px-4">
@@ -133,42 +161,72 @@ export const QuickDiscoverySection = () => {
           </p>
         </div>
         
-        <div className="max-w-7xl mx-auto overflow-hidden">
-          <div className="flex animate-scroll-horizontal space-x-6">
-            {duplicatedActions.map((action, index) => (
-              <Card 
-                key={index} 
-                className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full flex-shrink-0 w-80"
-              >
-                <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
-                  <div className="flex flex-col items-center text-center space-y-4 h-full">
-                    <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <action.icon className="w-8 h-8 text-white" />
+        <div className="max-w-7xl mx-auto relative">
+          {/* Navigation Buttons */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-md"
+            onClick={() => handleScroll('left')}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-md"
+            onClick={() => handleScroll('right')}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+
+          {/* Scrolling Container */}
+          <div className="overflow-hidden">
+            <div 
+              ref={scrollContainerRef}
+              className={`flex space-x-6 ${isPaused ? '' : 'animate-scroll-horizontal'} overflow-x-auto scrollbar-hide`}
+              style={{ 
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitScrollbar: { display: 'none' }
+              }}
+            >
+              {duplicatedActions.map((action, index) => (
+                <Card 
+                  key={index} 
+                  className="group hover:shadow-xl transition-all duration-300 border-0 overflow-hidden h-full flex-shrink-0 w-80"
+                >
+                  <CardContent className={`p-6 h-full ${action.bgColor} transition-colors border`}>
+                    <div className="flex flex-col items-center text-center space-y-4 h-full">
+                      <div className={`w-16 h-16 rounded-2xl ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <action.icon className="w-8 h-8 text-white" />
+                      </div>
+                      
+                      <div className="space-y-2 flex-grow">
+                        <h3 className={`font-semibold text-lg ${action.textColor}`}>
+                          {action.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm leading-relaxed">
+                          {action.description}
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        asChild 
+                        variant="ghost" 
+                        className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300 mt-auto`}
+                      >
+                        <Link to={action.href} className="flex items-center gap-2">
+                          Get Started
+                          <ArrowRight className="w-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
-                    
-                    <div className="space-y-2 flex-grow">
-                      <h3 className={`font-semibold text-lg ${action.textColor}`}>
-                        {action.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {action.description}
-                      </p>
-                    </div>
-                    
-                    <Button 
-                      asChild 
-                      variant="ghost" 
-                      className={`${action.textColor} hover:bg-white/50 group-hover:translate-x-1 transition-all duration-300 mt-auto`}
-                    >
-                      <Link to={action.href} className="flex items-center gap-2">
-                        Get Started
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </div>
