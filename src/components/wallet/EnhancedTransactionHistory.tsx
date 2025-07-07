@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar, Search, ArrowUpDown, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -118,16 +119,16 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
           Transaction History
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col min-h-0">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-6 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4" />
             <Input
@@ -173,48 +174,50 @@ export function EnhancedTransactionHistory({ walletId }: EnhancedTransactionHist
           </Button>
         </div>
 
-        {/* Transaction List */}
-        <div className="space-y-4">
-          {filteredTransactions.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No transactions found
-            </div>
-          ) : (
-            filteredTransactions.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  {getTransactionIcon(transaction.transaction_type)}
-                  <div>
-                    <div className="font-medium">{transaction.description}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {format(new Date(transaction.created_at), 'PPp')}
+        {/* Transaction List with ScrollArea */}
+        <ScrollArea className="flex-1">
+          <div className="space-y-4 pr-4">
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No transactions found
+              </div>
+            ) : (
+              filteredTransactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    {getTransactionIcon(transaction.transaction_type)}
+                    <div>
+                      <div className="font-medium">{transaction.description}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {format(new Date(transaction.created_at), 'PPp')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex gap-2">
+                      <Badge className={getCategoryBadge(transaction.category)}>
+                        {transaction.category}
+                      </Badge>
+                      <Badge className={getStatusBadge(transaction.transaction_status)}>
+                        {transaction.transaction_status}
+                      </Badge>
+                    </div>
+                    <div className={`font-semibold ${
+                      transaction.transaction_type === 'credit' ? 'text-green-600' : 
+                      transaction.transaction_type === 'refund' ? 'text-blue-600' : 'text-red-600'
+                    }`}>
+                      {transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund' ? '+' : '-'}
+                      {transaction.amount} tokens
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex gap-2">
-                    <Badge className={getCategoryBadge(transaction.category)}>
-                      {transaction.category}
-                    </Badge>
-                    <Badge className={getStatusBadge(transaction.transaction_status)}>
-                      {transaction.transaction_status}
-                    </Badge>
-                  </div>
-                  <div className={`font-semibold ${
-                    transaction.transaction_type === 'credit' ? 'text-green-600' : 
-                    transaction.transaction_type === 'refund' ? 'text-blue-600' : 'text-red-600'
-                  }`}>
-                    {transaction.transaction_type === 'credit' || transaction.transaction_type === 'refund' ? '+' : '-'}
-                    {transaction.amount} tokens
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>
   );
