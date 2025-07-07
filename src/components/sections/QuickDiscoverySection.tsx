@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -186,11 +185,6 @@ export const QuickDiscoverySection = () => {
             <div 
               ref={scrollContainerRef}
               className={`flex space-x-6 ${isPaused ? '' : 'animate-scroll-horizontal'} overflow-x-auto scrollbar-hide`}
-              style={{ 
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                WebkitScrollbar: { display: 'none' }
-              }}
             >
               {duplicatedActions.map((action, index) => (
                 <Card 
