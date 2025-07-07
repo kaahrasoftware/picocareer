@@ -1,50 +1,48 @@
 
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ProfileEditFormProps, FormFields } from "./types/form-types";
-import { degreeOptions } from "@/constants/degrees";
-import { CompanySelector } from "./form-sections/CompanySelector";
-import { SchoolSelector } from "./form-sections/SchoolSelector";
-import { MajorSelector } from "./form-sections/MajorSelector";
-import { AvatarSection } from "./form-sections/AvatarSection";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { PersonalInfoSection } from './form-sections/PersonalInfoSection';
+import { BioSection } from './form-sections/BioSection';
+import { LocationSection } from './form-sections/LocationSection';
+import { SkillsSection } from './form-sections/SkillsSection';
+import { LinksSection } from './form-sections/LinksSection';
+import { ProfessionalSection } from './form-sections/ProfessionalSection';
+import { EducationSection } from './form-sections/EducationSection';
+import { AvatarSection } from './form-sections/AvatarSection';
+import { CompanySelector } from './form-sections/CompanySelector';
+import { SchoolSelector } from './form-sections/SchoolSelector';
+import { MajorSelector } from './form-sections/MajorSelector';
+import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
+import type { ProfileEditFormProps, FormFields } from './types/form-types';
 
 export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFormProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
+  const [currentDegree, setCurrentDegree] = useState(profile.highest_degree || '');
+  const { companies, schools, majors } = useMentorReferenceData();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch
-  } = useForm<FormFields>({
+  const form = useForm<FormFields>({
     defaultValues: {
       first_name: profile.first_name || '',
       last_name: profile.last_name || '',
       bio: profile.bio || '',
       location: profile.location || '',
       years_of_experience: profile.years_of_experience || 0,
-      skills: profile.skills?.join(', ') || '',
-      tools_used: profile.tools_used?.join(', ') || '',
-      keywords: profile.keywords?.join(', ') || '',
-      fields_of_interest: profile.fields_of_interest?.join(', ') || '',
+      skills: Array.isArray(profile.skills) ? profile.skills.join(', ') : '',
+      tools_used: Array.isArray(profile.tools_used) ? profile.tools_used.join(', ') : '',
+      keywords: Array.isArray(profile.keywords) ? profile.keywords.join(', ') : '',
+      fields_of_interest: Array.isArray(profile.fields_of_interest) ? profile.fields_of_interest.join(', ') : '',
       linkedin_url: profile.linkedin_url || '',
       github_url: profile.github_url || '',
       website_url: profile.website_url || '',
-      X_url: profile.X_url || '',
-      instagram_url: profile.instagram_url || '',
-      facebook_url: profile.facebook_url || '',
-      youtube_url: profile.youtube_url || '',
-      tiktok_url: profile.tiktok_url || '',
+      X_url: (profile as any).X_url || '',
+      instagram_url: (profile as any).instagram_url || '',
+      facebook_url: (profile as any).facebook_url || '',
+      youtube_url: (profile as any).youtube_url || '',
+      tiktok_url: (profile as any).tiktok_url || '',
       position: profile.position || '',
       company_id: profile.company_id || '',
       school_id: profile.school_id || '',
@@ -54,38 +52,42 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
     }
   });
 
-  const watchedDegree = watch("highest_degree");
+  const handleAvatarUpdate = (url: string) => {
+    // Avatar update is handled separately through the AvatarSection component
+    toast({
+      title: "Success",
+      description: "Profile picture updated successfully",
+    });
+  };
 
   const onSubmit = async (data: FormFields) => {
     setIsSubmitting(true);
     try {
-      // Convert comma-separated strings back to arrays
+      // Transform form data for database
       const updateData = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        bio: data.bio,
-        location: data.location,
-        years_of_experience: data.years_of_experience,
-        skills: data.skills ? data.skills.split(',').map(s => s.trim()).filter(s => s) : [],
-        tools_used: data.tools_used ? data.tools_used.split(',').map(s => s.trim()).filter(s => s) : [],
-        keywords: data.keywords ? data.keywords.split(',').map(s => s.trim()).filter(s => s) : [],
-        fields_of_interest: data.fields_of_interest ? data.fields_of_interest.split(',').map(s => s.trim()).filter(s => s) : [],
-        linkedin_url: data.linkedin_url,
-        github_url: data.github_url,
-        website_url: data.website_url,
-        X_url: data.X_url,
-        instagram_url: data.instagram_url,
-        facebook_url: data.facebook_url,
-        youtube_url: data.youtube_url,
-        tiktok_url: data.tiktok_url,
-        position: data.position,
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        bio: data.bio.trim(),
+        location: data.location.trim(),
+        years_of_experience: Number(data.years_of_experience),
+        skills: data.skills ? data.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
+        tools_used: data.tools_used ? data.tools_used.split(',').map(s => s.trim()).filter(Boolean) : [],
+        keywords: data.keywords ? data.keywords.split(',').map(s => s.trim()).filter(Boolean) : [],
+        fields_of_interest: data.fields_of_interest ? data.fields_of_interest.split(',').map(s => s.trim()).filter(Boolean) : [],
+        linkedin_url: data.linkedin_url.trim() || null,
+        github_url: data.github_url.trim() || null,
+        website_url: data.website_url.trim() || null,
+        X_url: data.X_url.trim() || null,
+        instagram_url: data.instagram_url.trim() || null,
+        facebook_url: data.facebook_url.trim() || null,
+        youtube_url: data.youtube_url.trim() || null,
+        tiktok_url: data.tiktok_url.trim() || null,
+        position: data.position.trim() || null,
         company_id: data.company_id || null,
         school_id: data.school_id || null,
         academic_major_id: data.academic_major_id || null,
-        student_nonstudent: data.student_nonstudent || null,
-        avatar_url: avatarUrl,
-        // Ensure highest_degree is properly typed as one of the allowed values
-        highest_degree: data.highest_degree as "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD",
+        highest_degree: currentDegree as "No Degree" | "High School" | "Associate" | "Bachelor" | "Master" | "MD" | "PhD",
+        student_nonstudent: data.student_nonstudent as "Student" | "Non-Student" | null,
       };
 
       const { error } = await supabase
@@ -112,287 +114,185 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
     }
   };
 
-  const handleAvatarUpdate = (url: string) => {
-    setAvatarUrl(url);
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Avatar Section */}
-      <div className="bg-muted rounded-lg p-4">
-        <AvatarSection
-          avatarUrl={avatarUrl}
-          userId={profile.id}
-          onAvatarUpdate={handleAvatarUpdate}
-        />
-      </div>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <AvatarSection
+        avatarUrl={profile.avatar_url}
+        userId={profile.id}
+        onAvatarUpdate={handleAvatarUpdate}
+      />
 
-      {/* Personal Information */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <h4 className="font-semibold">Personal Information</h4>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="first_name">First Name</Label>
-            <Input
-              id="first_name"
-              {...register("first_name", { required: "First name is required" })}
-            />
-            {errors.first_name && (
-              <p className="text-sm text-destructive mt-1">{errors.first_name.message}</p>
-            )}
-          </div>
-          
-          <div>
-            <Label htmlFor="last_name">Last Name</Label>
-            <Input
-              id="last_name"
-              {...register("last_name", { required: "Last name is required" })}
-            />
-            {errors.last_name && (
-              <p className="text-sm text-destructive mt-1">{errors.last_name.message}</p>
-            )}
-          </div>
-        </div>
+      <PersonalInfoSection form={form} />
+      <BioSection form={form} />
+      <LocationSection form={form} />
 
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Professional Information</h3>
         <div>
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea
-            id="bio"
-            {...register("bio")}
-            placeholder="Tell us about yourself..."
-            className="min-h-[100px]"
+          <label className="text-sm font-medium">Position</label>
+          <input
+            {...form.register("position")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            placeholder="Your current position"
           />
         </div>
 
         <div>
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            {...register("location")}
-            placeholder="City, Country"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="years_of_experience">Years of Experience</Label>
-          <Input
-            id="years_of_experience"
-            type="number"
-            min="0"
-            {...register("years_of_experience", { valueAsNumber: true })}
-          />
-        </div>
-      </div>
-
-      {/* Skills & Interests */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <h4 className="font-semibold">Skills & Interests</h4>
-        
-        <div>
-          <Label htmlFor="skills">Skills (comma-separated)</Label>
-          <Input
-            id="skills"
-            {...register("skills")}
-            placeholder="React, JavaScript, Python, etc."
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="tools_used">Tools Used (comma-separated)</Label>
-          <Input
-            id="tools_used"
-            {...register("tools_used")}
-            placeholder="VS Code, Git, Docker, etc."
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="fields_of_interest">Fields of Interest (comma-separated)</Label>
-          <Input
-            id="fields_of_interest"
-            {...register("fields_of_interest")}
-            placeholder="Software Development, Data Science, etc."
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="keywords">Keywords (comma-separated)</Label>
-          <Input
-            id="keywords"
-            {...register("keywords")}
-            placeholder="Technology, Innovation, etc."
-          />
-        </div>
-      </div>
-
-      {/* Professional Information */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <h4 className="font-semibold">Professional Information</h4>
-        
-        <div>
-          <Label htmlFor="position">Position</Label>
-          <Input
-            id="position"
-            {...register("position")}
-            placeholder="Software Engineer, Designer, etc."
-          />
-        </div>
-
-        <div>
-          <Label>Company</Label>
+          <label className="text-sm font-medium">Company</label>
           <CompanySelector
-            value={watch("company_id")}
-            onValueChange={(value) => setValue("company_id", value)}
+            value={form.watch("company_id")}
+            onValueChange={(value) => form.setValue("company_id", value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Years of Experience</label>
+          <input
+            {...form.register("years_of_experience")}
+            type="number"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            min="0"
           />
         </div>
       </div>
 
-      {/* Education Information */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <h4 className="font-semibold">Education Information</h4>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Education</h3>
         
         <div>
-          <Label htmlFor="highest_degree">Highest Degree</Label>
-          <Select 
-            value={watchedDegree} 
-            onValueChange={(value) => setValue("highest_degree", value)}
+          <label className="text-sm font-medium">Highest Degree</label>
+          <select
+            value={currentDegree}
+            onChange={(e) => setCurrentDegree(e.target.value)}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select your highest degree" />
-            </SelectTrigger>
-            <SelectContent>
-              {degreeOptions.map((degree) => (
-                <SelectItem key={degree} value={degree}>
-                  {degree}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">Select degree</option>
+            <option value="No Degree">No Degree</option>
+            <option value="High School">High School</option>
+            <option value="Associate">Associate</option>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Master">Master</option>
+            <option value="MD">MD</option>
+            <option value="PhD">PhD</option>
+          </select>
         </div>
 
         <div>
-          <Label>School</Label>
-          <SchoolSelector
-            value={watch("school_id")}
-            onValueChange={(value) => setValue("school_id", value)}
-          />
-        </div>
-
-        <div>
-          <Label>Academic Major</Label>
+          <label className="text-sm font-medium">Academic Major</label>
           <MajorSelector
-            value={watch("academic_major_id")}
-            onValueChange={(value) => setValue("academic_major_id", value)}
+            value={form.watch("academic_major_id")}
+            onValueChange={(value) => form.setValue("academic_major_id", value)}
           />
         </div>
 
         <div>
-          <Label htmlFor="student_nonstudent">Student Status</Label>
-          <Select 
-            value={watch("student_nonstudent")} 
-            onValueChange={(value) => setValue("student_nonstudent", value)}
+          <label className="text-sm font-medium">School</label>
+          <SchoolSelector
+            value={form.watch("school_id")}
+            onValueChange={(value) => form.setValue("school_id", value)}
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Student Status</label>
+          <select
+            {...form.register("student_nonstudent")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Select your status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Student">Student</SelectItem>
-              <SelectItem value="Non-Student">Non-Student</SelectItem>
-            </SelectContent>
-          </Select>
+            <option value="">Select status</option>
+            <option value="Student">Student</option>
+            <option value="Non-Student">Non-Student</option>
+          </select>
         </div>
       </div>
 
-      {/* Social Links */}
-      <div className="bg-muted rounded-lg p-4 space-y-4">
-        <h4 className="font-semibold">Social Links</h4>
+      <SkillsSection form={form} />
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Social Media Links</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-            <Input
-              id="linkedin_url"
-              type="url"
-              {...register("linkedin_url")}
-              placeholder="https://linkedin.com/in/yourprofile"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">LinkedIn URL</label>
+          <input
+            {...form.register("linkedin_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://linkedin.com/in/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="github_url">GitHub URL</Label>
-            <Input
-              id="github_url"
-              type="url"
-              {...register("github_url")}
-              placeholder="https://github.com/yourusername"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">GitHub URL</label>
+          <input
+            {...form.register("github_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://github.com/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="website_url">Website URL</Label>
-            <Input
-              id="website_url"
-              type="url"
-              {...register("website_url")}
-              placeholder="https://yourwebsite.com"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">Website URL</label>
+          <input
+            {...form.register("website_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://yourwebsite.com"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="X_url">X (Twitter) URL</Label>
-            <Input
-              id="X_url"
-              type="url"
-              {...register("X_url")}
-              placeholder="https://x.com/yourusername"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">X (Twitter) URL</label>
+          <input
+            {...form.register("X_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://x.com/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="instagram_url">Instagram URL</Label>
-            <Input
-              id="instagram_url"
-              type="url"
-              {...register("instagram_url")}
-              placeholder="https://instagram.com/yourusername"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">Instagram URL</label>
+          <input
+            {...form.register("instagram_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://instagram.com/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="facebook_url">Facebook URL</Label>
-            <Input
-              id="facebook_url"
-              type="url"
-              {...register("facebook_url")}
-              placeholder="https://facebook.com/yourprofile"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">Facebook URL</label>
+          <input
+            {...form.register("facebook_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://facebook.com/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="youtube_url">YouTube URL</Label>
-            <Input
-              id="youtube_url"
-              type="url"
-              {...register("youtube_url")}
-              placeholder="https://youtube.com/@yourchannel"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">YouTube URL</label>
+          <input
+            {...form.register("youtube_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://youtube.com/channel/username"
+          />
+        </div>
 
-          <div>
-            <Label htmlFor="tiktok_url">TikTok URL</Label>
-            <Input
-              id="tiktok_url"
-              type="url"
-              {...register("tiktok_url")}
-              placeholder="https://tiktok.com/@yourusername"
-            />
-          </div>
+        <div>
+          <label className="text-sm font-medium">TikTok URL</label>
+          <input
+            {...form.register("tiktok_url")}
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            type="url"
+            placeholder="https://tiktok.com/@username"
+          />
         </div>
       </div>
 
-      {/* Form Actions */}
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2">
         <Button
           type="button"
           variant="outline"
@@ -401,11 +301,8 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         >
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Saving..." : "Save Changes"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Updating..." : "Update Profile"}
         </Button>
       </div>
     </form>
