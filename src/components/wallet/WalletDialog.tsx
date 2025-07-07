@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedTransactionHistory } from './EnhancedTransactionHistory';
@@ -10,7 +10,8 @@ import { WalletAnalytics } from './WalletAnalytics';
 import { EarnUseTokensTab } from './EarnUseTokensTab';
 import { ReferralsTab } from './ReferralsTab';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coins } from 'lucide-react';
+import { Coins, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface WalletDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface WalletDialogProps {
 
 export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProps) {
   const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
 
   const { data: wallet, isLoading } = useQuery({
     queryKey: ['wallet', profileId],
@@ -38,6 +40,11 @@ export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProp
 
   const handleNavigateToReferrals = () => {
     setActiveTab('referrals');
+  };
+
+  const handleBuyTokens = () => {
+    navigate('/token-shop');
+    onOpenChange(false);
   };
 
   if (isLoading) {
@@ -92,10 +99,17 @@ export function WalletDialog({ open, onOpenChange, profileId }: WalletDialogProp
                         Token Balance
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                       <div className="text-3xl font-bold text-primary">
                         {wallet.balance} tokens
                       </div>
+                      <Button 
+                        onClick={handleBuyTokens}
+                        className="w-full sm:w-auto flex items-center gap-2"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Buy More Tokens
+                      </Button>
                     </CardContent>
                   </Card>
 

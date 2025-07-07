@@ -32,6 +32,7 @@ import Partnerships from '@/pages/Partnerships';
 import Hubs from '@/pages/Hubs';
 import Hub from '@/pages/Hub';
 import HubInviteResponse from '@/pages/HubInviteResponse';
+import TokenShop from '@/pages/TokenShop';
 import NotFound from '@/pages/NotFound';
 import ErrorPage from '@/pages/Error';
 
@@ -64,6 +65,7 @@ export const router = createBrowserRouter([
       { path: "hubs", element: <Hubs /> },
       { path: "hubs/:id", element: <Hub /> },
       { path: "hub-invite-response", element: <HubInviteResponse /> },
+      { path: "token-shop", element: <TokenShop /> },
       // Admin routes
       { path: "career-upload", element: <CareerUpload /> },
       { path: "major-upload", element: <MajorUpload /> },
