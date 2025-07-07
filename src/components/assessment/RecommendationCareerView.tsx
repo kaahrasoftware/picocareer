@@ -1,166 +1,134 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Briefcase, TrendingUp, Clock, GraduationCap, MapPin, Users } from 'lucide-react';
-import { FindMentorsDialog } from './FindMentorsDialog';
-import { RelatedCareersSection } from './RelatedCareersSection';
 import { useNavigate } from 'react-router-dom';
+import { GraduationCap, MapPin, Target, Lightbulb, Users } from 'lucide-react';
+import { CareerOverviewHero } from './CareerOverviewHero';
+import { CareerMetricsCards } from './CareerMetricsCards';
+import { ModernContentCard } from './ModernContentCard';
+import { ModernSkillsSection } from './ModernSkillsSection';
+import { FindMentorsDialog } from './FindMentorsDialog';
 import { useRelatedCareers } from '@/hooks/useRelatedCareers';
 import type { CareerRecommendation } from '@/types/assessment';
+
 interface RecommendationCareerViewProps {
   recommendation: CareerRecommendation;
   onBack: () => void;
 }
+
 export const RecommendationCareerView = ({
   recommendation,
   onBack
 }: RecommendationCareerViewProps) => {
   const navigate = useNavigate();
   const [showFindMentors, setShowFindMentors] = useState(false);
+  
   const {
     relatedCareers,
     isLoading: relatedLoading
   } = useRelatedCareers('',
-  // No specific career ID for AI recommendations  
-  recommendation.title, recommendation.requiredSkills || [], recommendation.industry);
+    recommendation.title, 
+    recommendation.requiredSkills || [], 
+    recommendation.industry
+  );
+
   const handleCareerSelect = (careerId: string) => {
     navigate(`/careers/${careerId}`);
   };
-  return <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        
-        <div>
-          
-          <div className="flex items-center gap-2 mt-1">
-            <Badge className="bg-green-500 text-white">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              {recommendation.matchScore}% Match
-            </Badge>
-            {recommendation.industry && <Badge variant="outline">
-                <Briefcase className="h-3 w-3 mr-1" />
-                {recommendation.industry}
-              </Badge>}
-          </div>
-        </div>
-      </div>
+
+  return (
+    <div className="space-y-6">
+      {/* Modern Hero Header */}
+      <CareerOverviewHero 
+        recommendation={recommendation} 
+        onBack={onBack} 
+      />
+
+      {/* Modern Metrics Cards */}
+      <CareerMetricsCards recommendation={recommendation} />
 
       {/* Main Content Grid */}
-      <div className="grid gap-0 lg:space-x-0 px-0">
-        {/* Left Column - Main Info */}
-        <div className="lg:gap-x-0 space-y-6 px-0">
-          {/* Overview Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Career Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground leading-relaxed">
-                {recommendation.description}
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                {recommendation.salaryRange && <div className="rounded-lg p-3 bg-slate-50">
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-400 bg-transparent">
-                      Salary Range
-                    </div>
-                    <div className="text-lg font-semibold text-slate-800 dark:text-slate-300 bg-red-200 rounded-xl">
-                      {recommendation.salaryRange}
-                    </div>
-                  </div>}
-                
-                {recommendation.timeToEntry && <div className="rounded-lg p-3 bg-slate-50">
-                    <div className="text-sm font-medium text-blue-700 dark:text-blue-400 flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      Time to Entry
-                    </div>
-                    <div className="text-lg font-semibold text-slate-800 dark:text-slate-300">
-                      {recommendation.timeToEntry}
-                    </div>
-                  </div>}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid gap-6">
+        {/* Career Overview */}
+        <ModernContentCard 
+          title="Career Overview" 
+          icon={<Target className="h-5 w-5 text-indigo-600" />}
+          variant="default"
+        >
+          <p className="text-gray-700 leading-relaxed">
+            {recommendation.description}
+          </p>
+        </ModernContentCard>
 
-          {/* Why This Matches */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Why This Career Matches You</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {recommendation.reasoning}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Why This Matches */}
+        <ModernContentCard 
+          title="Why This Career Matches You" 
+          icon={<Lightbulb className="h-5 w-5 text-amber-600" />}
+          variant="highlighted"
+        >
+          <p className="text-gray-700 leading-relaxed">
+            {recommendation.reasoning}
+          </p>
+        </ModernContentCard>
 
-          {/* Skills Required */}
-          {recommendation.requiredSkills && recommendation.requiredSkills.length > 0 && <Card>
-              <CardHeader>
-                <CardTitle>Required Skills</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {recommendation.requiredSkills.map((skill, index) => <Badge key={index} variant="secondary">
-                      {skill}
-                    </Badge>)}
-                </div>
-              </CardContent>
-            </Card>}
+        {/* Skills Required */}
+        {recommendation.requiredSkills && recommendation.requiredSkills.length > 0 && (
+          <ModernSkillsSection 
+            skills={recommendation.requiredSkills}
+            title="Required Skills"
+          />
+        )}
 
-          {/* Education Requirements */}
-          {recommendation.educationRequirements && recommendation.educationRequirements.length > 0 && <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Education Requirements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {recommendation.educationRequirements.map((req, index) => <li key={index} className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                      <span className="text-muted-foreground">{req}</span>
-                    </li>)}
-                </ul>
-              </CardContent>
-            </Card>}
+        {/* Education Requirements */}
+        {recommendation.educationRequirements && recommendation.educationRequirements.length > 0 && (
+          <ModernContentCard 
+            title="Education Requirements" 
+            icon={<GraduationCap className="h-5 w-5 text-green-600" />}
+            variant="gradient"
+          >
+            <ul className="space-y-3">
+              {recommendation.educationRequirements.map((req, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mt-2.5 flex-shrink-0" />
+                  <span className="text-gray-700 leading-relaxed">{req}</span>
+                </li>
+              ))}
+            </ul>
+          </ModernContentCard>
+        )}
 
-          {/* Work Environment */}
-          {recommendation.workEnvironment && <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Work Environment
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {recommendation.workEnvironment}
-                </p>
-              </CardContent>
-            </Card>}
+        {/* Work Environment */}
+        {recommendation.workEnvironment && (
+          <ModernContentCard 
+            title="Work Environment" 
+            icon={<MapPin className="h-5 w-5 text-purple-600" />}
+            variant="default"
+          >
+            <p className="text-gray-700 leading-relaxed">
+              {recommendation.workEnvironment}
+            </p>
+          </ModernContentCard>
+        )}
 
-          {/* Growth Outlook */}
-          {recommendation.growthOutlook && <Card>
-              <CardHeader>
-                <CardTitle>Growth Outlook</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {recommendation.growthOutlook}
-                </p>
-              </CardContent>
-            </Card>}
-        </div>
-
-        {/* Right Column - Actions & Related */}
-        
+        {/* Growth Outlook - Full Details */}
+        {recommendation.growthOutlook && (
+          <ModernContentCard 
+            title="Growth Outlook" 
+            icon={<Users className="h-5 w-5 text-emerald-600" />}
+            variant="gradient"
+          >
+            <p className="text-gray-700 leading-relaxed">
+              {recommendation.growthOutlook}
+            </p>
+          </ModernContentCard>
+        )}
       </div>
 
       {/* Find Mentors Dialog */}
-      <FindMentorsDialog open={showFindMentors} onOpenChange={setShowFindMentors} recommendation={recommendation} />
-    </div>;
+      <FindMentorsDialog 
+        open={showFindMentors} 
+        onOpenChange={setShowFindMentors} 
+        recommendation={recommendation} 
+      />
+    </div>
+  );
 };
