@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { format, isAfter } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Availability } from "@/types/calendar";
 import type { CalendarEvent } from "@/types/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,12 +33,19 @@ export function CalendarContainer({
 
   // Function to determine if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
+    if (!isValid(date)) return false;
+    
     const dateStr = format(date, 'yyyy-MM-dd');
-    return events.some(event => format(new Date(event.start_time), 'yyyy-MM-dd') === dateStr);
+    return events.some(event => {
+      if (!event.start || !isValid(event.start)) return false;
+      return format(event.start, 'yyyy-MM-dd') === dateStr;
+    });
   };
 
   // Function to determine availability status for a date
   const getAvailabilityStatus = (date: Date) => {
+    if (!isValid(date)) return null;
+    
     const dateStr = format(date, 'yyyy-MM-dd');
     const dayOfWeek = date.getDay();
     const today = new Date();
@@ -47,19 +54,22 @@ export function CalendarContainer({
     // Get both one-time and recurring slots for this date
     const dayAvailabilities = availability.filter(slot => {
       // For one-time slots, check the specific date
-      if (!slot.recurring && format(new Date(slot.start_date_time), 'yyyy-MM-dd') === dateStr) {
-        return true;
+      if (!slot.recurring && slot.start_date_time) {
+        const slotDate = new Date(slot.start_date_time);
+        if (!isValid(slotDate)) return false;
+        return format(slotDate, 'yyyy-MM-dd') === dateStr;
       }
 
       // For recurring slots, check if they apply to this date
       if (slot.recurring && slot.day_of_week === dayOfWeek) {
         // Check if the slot was created before the date we're checking
-        // This ensures recurring slots only apply to future dates from when they were created
-        const slotCreationDate = new Date(slot.created_at || slot.start_date_time);
+        const slotCreationDate = new Date(slot.created_at || slot.start_date_time || Date.now());
+        if (!isValid(slotCreationDate)) return false;
+        
         slotCreationDate.setHours(0, 0, 0, 0);
 
         // Only apply recurring slots to dates that are after the creation date
-        return isAfter(date, slotCreationDate) || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
+        return date >= slotCreationDate || format(date, 'yyyy-MM-dd') === format(slotCreationDate, 'yyyy-MM-dd');
       }
       return false;
     });
@@ -71,10 +81,10 @@ export function CalendarContainer({
   };
 
   // Filter events for selected date
-  const selectedDateEvents = events.filter(event => {
-    if (!selectedDate) return false;
-    return format(new Date(event.start_time), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-  });
+  const selectedDateEvents = selectedDate ? events.filter(event => {
+    if (!event.start || !isValid(event.start) || !isValid(selectedDate)) return false;
+    return format(event.start, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+  }) : [];
 
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
