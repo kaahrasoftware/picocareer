@@ -48,8 +48,8 @@ export function EventsSidebar({
   const isValidDate = date && isValid(date);
   
   const filteredEvents = events.filter((event) =>
-    isValidDate && event.start_time ? 
-      isSameDay(new Date(event.start_time), date) : 
+    isValidDate && event.start ? 
+      isSameDay(new Date(event.start), date) : 
       false
   );
 
