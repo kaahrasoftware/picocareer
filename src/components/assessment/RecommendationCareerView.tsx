@@ -6,8 +6,8 @@ import { CareerOverviewHero } from './CareerOverviewHero';
 import { CareerMetricsCards } from './CareerMetricsCards';
 import { ModernContentCard } from './ModernContentCard';
 import { ModernSkillsSection } from './ModernSkillsSection';
+import { RelatedCareersSection } from './RelatedCareersSection';
 import { FindMentorsDialog } from './FindMentorsDialog';
-import { useRelatedCareers } from '@/hooks/useRelatedCareers';
 import type { CareerRecommendation } from '@/types/assessment';
 
 interface RecommendationCareerViewProps {
@@ -21,15 +21,6 @@ export const RecommendationCareerView = ({
 }: RecommendationCareerViewProps) => {
   const navigate = useNavigate();
   const [showFindMentors, setShowFindMentors] = useState(false);
-  
-  const {
-    relatedCareers,
-    isLoading: relatedLoading
-  } = useRelatedCareers('',
-    recommendation.title, 
-    recommendation.requiredSkills || [], 
-    recommendation.industry
-  );
 
   const handleCareerSelect = (careerId: string) => {
     navigate(`/careers/${careerId}`);
@@ -121,6 +112,12 @@ export const RecommendationCareerView = ({
             </p>
           </ModernContentCard>
         )}
+
+        {/* Related Careers Section */}
+        <RelatedCareersSection 
+          recommendation={recommendation}
+          onCareerSelect={handleCareerSelect}
+        />
       </div>
 
       {/* Find Mentors Dialog */}
