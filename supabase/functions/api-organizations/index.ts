@@ -153,23 +153,76 @@ serve(async (req) => {
           throw new Error('Organization ID required for update');
         }
 
-        let updateData;
+        let updateDataRaw: Partial<CreateOrgRequest>;
         try {
-          updateData = await req.json();
+          updateDataRaw = await req.json();
         } catch (error) {
           throw new Error('Invalid JSON in request body');
         }
         
+        console.log('Raw update data received:', updateDataRaw);
+        
+        // Validate and clean update data (same logic as POST)
+        const cleanedUpdateData: any = {};
+        
+        if (updateDataRaw.name !== undefined) {
+          if (!updateDataRaw.name?.trim()) {
+            throw new Error('Organization name cannot be empty');
+          }
+          cleanedUpdateData.name = updateDataRaw.name.trim();
+        }
+        
+        if (updateDataRaw.contact_email !== undefined) {
+          if (!updateDataRaw.contact_email?.trim()) {
+            throw new Error('Contact email cannot be empty');
+          }
+          cleanedUpdateData.contact_email = updateDataRaw.contact_email.trim();
+        }
+        
+        // Handle optional fields with proper null conversion
+        if (updateDataRaw.domain !== undefined) {
+          cleanedUpdateData.domain = updateDataRaw.domain?.trim() || null;
+        }
+        
+        if (updateDataRaw.hub_id !== undefined) {
+          cleanedUpdateData.hub_id = updateDataRaw.hub_id?.trim() || null;
+        }
+        
+        if (updateDataRaw.subscription_tier !== undefined) {
+          cleanedUpdateData.subscription_tier = updateDataRaw.subscription_tier || 'free';
+        }
+        
+        if (updateDataRaw.contact_name !== undefined) {
+          cleanedUpdateData.contact_name = updateDataRaw.contact_name?.trim() || null;
+        }
+        
+        if (updateDataRaw.phone !== undefined) {
+          cleanedUpdateData.phone = updateDataRaw.phone?.trim() || null;
+        }
+        
+        if (updateDataRaw.billing_address !== undefined) {
+          cleanedUpdateData.billing_address = updateDataRaw.billing_address || {};
+        }
+        
+        if (updateDataRaw.settings !== undefined) {
+          cleanedUpdateData.settings = updateDataRaw.settings || {};
+        }
+        
+        console.log('Cleaned update data:', cleanedUpdateData);
+        
         const { data: updatedOrg, error: updateError } = await userClient
           .from('api_organizations')
-          .update(updateData)
+          .update(cleanedUpdateData)
           .eq('id', orgId)
           .select()
           .single();
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Database update error:', updateError);
+          throw updateError;
+        }
 
-        console.log('Updated organization:', orgId);
+        console.log('Updated organization successfully:', orgId);
 
         return new Response(JSON.stringify(updatedOrg), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
