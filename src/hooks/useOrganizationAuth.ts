@@ -6,57 +6,45 @@ export function useOrganizationAuth() {
   const { user, session } = useAuthSession();
   const [organization, setOrganization] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrganization() {
       if (!user) {
         setLoading(false);
+        setError(null);
         return;
       }
 
       try {
+        setError(null);
+        
         // First, check if user has an organization associated
         const { data: orgData, error } = await supabase
           .from('api_organizations')
           .select('*')
           .eq('contact_email', user.email)
-          .single();
+          .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Error loading organization:', error);
+          setError('Failed to load organization data');
           setLoading(false);
           return;
         }
 
-        // If no organization exists, create one from user metadata
+        // Organization should be created automatically via trigger during signup
+        // If it doesn't exist, show helpful error
         if (!orgData) {
-          const organizationName = user.user_metadata?.organization_name || 'My Organization';
-          const contactName = user.user_metadata?.contact_name || user.email;
-
-          const { data: newOrg, error: createError } = await supabase
-            .from('api_organizations')
-            .insert({
-              name: organizationName,
-              contact_email: user.email,
-              contact_name: contactName,
-              status: 'Pending',
-              subscription_tier: 'free'
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating organization:', createError);
-            setLoading(false);
-            return;
-          }
-
-          setOrganization(newOrg);
-        } else {
-          setOrganization(orgData);
+          setError('Organization not found. Please contact support if this continues.');
+          setLoading(false);
+          return;
         }
+
+        setOrganization(orgData);
       } catch (error) {
         console.error('Error in organization auth:', error);
+        setError('An unexpected error occurred. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -68,6 +56,7 @@ export function useOrganizationAuth() {
   return {
     organization,
     loading,
+    error,
     user,
     session
   };

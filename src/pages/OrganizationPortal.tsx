@@ -6,7 +6,7 @@ import { useOrganizationAuth } from '@/hooks/useOrganizationAuth';
 
 export default function OrganizationPortal() {
   const { isAuthenticated } = useAuthSession('optional');
-  const { organization, loading } = useOrganizationAuth();
+  const { organization, loading, error } = useOrganizationAuth();
 
   if (loading) {
     return (
@@ -16,8 +16,12 @@ export default function OrganizationPortal() {
     );
   }
 
-  if (!isAuthenticated || !organization) {
+  if (!isAuthenticated) {
     return <OrganizationAuth />;
+  }
+
+  if (error || !organization) {
+    return <OrganizationAuth error={error} />;
   }
 
   return <OrganizationDashboard organization={organization} />;
