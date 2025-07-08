@@ -163,15 +163,17 @@ serve(async (req) => {
         });
 
       case 'PUT':
-        if (!keyId || keyId === 'api-keys') {
-          throw new Error('API key ID required for update');
-        }
-
         let updateData;
         try {
           updateData = await req.json();
         } catch (error) {
           throw new Error('Invalid JSON in request body');
+        }
+
+        // Get keyId from request body for PUT operations
+        const updateKeyId = updateData.id;
+        if (!updateKeyId) {
+          throw new Error('API key ID required for update');
         }
         
         // Don't allow updating the actual key or hash
@@ -187,7 +189,7 @@ serve(async (req) => {
         const { data: updatedKey, error: updateError } = await userClient
           .from('api_keys')
           .update(allowedUpdates)
-          .eq('id', keyId)
+          .eq('id', updateKeyId)
           .select()
           .single();
 
