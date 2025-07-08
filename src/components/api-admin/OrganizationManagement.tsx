@@ -74,11 +74,20 @@ export function OrganizationManagement() {
     e.preventDefault();
     
     try {
+      // Prepare data with proper null handling for optional UUID fields
+      const submitData = {
+        ...formData,
+        hub_id: formData.hub_id.trim() || null,
+        domain: formData.domain.trim() || null,
+        contact_name: formData.contact_name.trim() || null,
+        phone: formData.phone.trim() || null,
+      };
+
       if (editingOrg) {
         // Update existing organization
         const { error } = await supabase.functions.invoke(`api-organizations/${editingOrg.id}`, {
           method: 'PUT',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(submitData),
           headers: {
             'Content-Type': 'application/json',
           },
@@ -97,7 +106,7 @@ export function OrganizationManagement() {
         // Create new organization
         const { error } = await supabase.functions.invoke('api-organizations', {
           method: 'POST',
-          body: JSON.stringify(formData),
+          body: JSON.stringify(submitData),
           headers: {
             'Content-Type': 'application/json',
           },

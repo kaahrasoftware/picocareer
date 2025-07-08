@@ -96,20 +96,31 @@ serve(async (req) => {
           throw new Error('Invalid JSON in request body');
         }
         
+        // Validate required fields
+        if (!createData.name?.trim()) {
+          throw new Error('Organization name is required');
+        }
+        if (!createData.contact_email?.trim()) {
+          throw new Error('Contact email is required');
+        }
+        
+        // Prepare data with proper null handling for optional fields
+        const insertData = {
+          name: createData.name.trim(),
+          domain: createData.domain?.trim() || null,
+          hub_id: createData.hub_id?.trim() || null,
+          subscription_tier: createData.subscription_tier || 'free',
+          contact_email: createData.contact_email.trim(),
+          contact_name: createData.contact_name?.trim() || null,
+          phone: createData.phone?.trim() || null,
+          billing_address: createData.billing_address || {},
+          settings: createData.settings || {},
+        };
+        
         // Use user client for insert (RLS will apply)
         const { data: newOrg, error: createError } = await userClient
           .from('api_organizations')
-          .insert({
-            name: createData.name,
-            domain: createData.domain,
-            hub_id: createData.hub_id,
-            subscription_tier: createData.subscription_tier || 'free',
-            contact_email: createData.contact_email,
-            contact_name: createData.contact_name,
-            phone: createData.phone,
-            billing_address: createData.billing_address || {},
-            settings: createData.settings || {},
-          })
+          .insert(insertData)
           .select()
           .single();
 
