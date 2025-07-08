@@ -38,6 +38,7 @@ import ErrorPage from '@/pages/Error';
 import APIAdmin from '@/pages/APIAdmin';
 import APITesting from '@/pages/APITesting';
 import APIDocs from '@/pages/APIDocs';
+import OrganizationPortal from '@/pages/OrganizationPortal';
 
 export const router = createBrowserRouter([
   {
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
       { path: "api-admin", element: <APIAdmin /> },
       { path: "api-testing", element: <APITesting /> },
       { path: "api-docs", element: <APIDocs /> },
+      { path: "organization-portal", element: <OrganizationPortal /> },
     ],
   },
   {
