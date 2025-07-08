@@ -72,6 +72,59 @@ serve(async (req) => {
       case 'GET':
         const orgId = url.searchParams.get('organization_id');
         
+        console.log('GET API Keys request started');
+        console.log('User ID:', user.id);
+        console.log('User email:', user.email);
+        console.log('Organization ID filter:', orgId);
+        console.log('Key ID:', keyId);
+        
+        // First, verify user's role from profiles table
+        try {
+          const { data: profile, error: profileError } = await userClient
+            .from('profiles')
+            .select('user_type, email')
+            .eq('id', user.id)
+            .single();
+          
+          console.log('User profile query result:', { profile, error: profileError });
+          
+          if (profileError) {
+            console.error('Failed to fetch user profile:', profileError);
+            throw new Error(`Profile fetch failed: ${profileError.message}`);
+          }
+          
+          if (!profile || !['admin', 'editor'].includes(profile.user_type)) {
+            console.error('User lacks required permissions:', profile);
+            throw new Error('Insufficient permissions - admin or editor role required');
+          }
+          
+          console.log('User permissions verified:', profile.user_type);
+        } catch (profileError) {
+          console.error('Profile verification failed:', profileError);
+          throw profileError;
+        }
+
+        // Test simple API keys query first (without join)
+        console.log('Testing simple API keys query without join...');
+        try {
+          const { data: simpleKeys, error: simpleError } = await userClient
+            .from('api_keys')
+            .select('id, key_name, organization_id')
+            .limit(1);
+          
+          console.log('Simple query result:', { count: simpleKeys?.length, error: simpleError });
+          
+          if (simpleError) {
+            console.error('Simple query failed:', simpleError);
+            throw new Error(`Simple API keys query failed: ${simpleError.message}`);
+          }
+        } catch (simpleQueryError) {
+          console.error('Simple query threw exception:', simpleQueryError);
+          throw simpleQueryError;
+        }
+
+        // Now try the full query with join
+        console.log('Attempting full query with organization join...');
         let query = userClient
           .from('api_keys')
           .select(`
@@ -91,24 +144,50 @@ serve(async (req) => {
           `);
 
         if (keyId && keyId !== 'api-keys') {
+          console.log('Fetching single API key:', keyId);
           query = query.eq('id', keyId);
-          const { data: apiKey, error } = await query.single();
-          if (error) throw error;
           
-          return new Response(JSON.stringify(apiKey), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          try {
+            const { data: apiKey, error } = await query.single();
+            console.log('Single key query result:', { data: !!apiKey, error });
+            
+            if (error) {
+              console.error('Single key query error:', error);
+              throw error;
+            }
+            
+            return new Response(JSON.stringify(apiKey), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } catch (singleKeyError) {
+            console.error('Single key query failed:', singleKeyError);
+            throw singleKeyError;
+          }
         } else {
+          console.log('Fetching all API keys...');
+          
           if (orgId) {
+            console.log('Filtering by organization:', orgId);
             query = query.eq('organization_id', orgId);
           }
           
-          const { data: apiKeys, error } = await query.order('created_at', { ascending: false });
-          if (error) throw error;
-
-          return new Response(JSON.stringify(apiKeys), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          try {
+            const { data: apiKeys, error } = await query.order('created_at', { ascending: false });
+            console.log('All keys query result:', { count: apiKeys?.length, error });
+            
+            if (error) {
+              console.error('All keys query error:', error);
+              throw error;
+            }
+            
+            console.log('Successfully fetched API keys:', apiKeys?.length || 0);
+            return new Response(JSON.stringify(apiKeys), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          } catch (allKeysError) {
+            console.error('All keys query failed:', allKeysError);
+            throw allKeysError;
+          }
         }
 
       case 'POST':

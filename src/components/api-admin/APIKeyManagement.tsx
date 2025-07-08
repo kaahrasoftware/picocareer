@@ -56,16 +56,27 @@ export function APIKeyManagement() {
 
   const fetchAPIKeys = async () => {
     try {
+      setLoading(true);
+      console.log('Fetching API keys from edge function...');
+      
       const { data, error } = await supabase.functions.invoke('api-keys');
       
-      if (error) throw error;
+      console.log('API Keys fetch response:', { data, error });
       
+      if (error) {
+        console.error('Edge function returned error:', error);
+        const errorMessage = typeof error === 'object' && error.message ? error.message : JSON.stringify(error);
+        throw new Error(`Edge function error: ${errorMessage}`);
+      }
+      
+      console.log('Successfully fetched API keys:', data?.length || 0);
       setApiKeys(data || []);
     } catch (error) {
-      console.error('Error fetching API keys:', error);
+      console.error('Exception while fetching API keys:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Error",
-        description: "Failed to fetch API keys",
+        description: `Failed to fetch API keys: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
