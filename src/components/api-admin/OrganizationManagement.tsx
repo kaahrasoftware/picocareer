@@ -87,10 +87,7 @@ export function OrganizationManagement() {
         // Update existing organization
         const { error } = await supabase.functions.invoke(`api-organizations/${editingOrg.id}`, {
           method: 'PUT',
-          body: JSON.stringify(submitData),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          body: submitData,
         });
         
         if (error) {
@@ -106,10 +103,7 @@ export function OrganizationManagement() {
         // Create new organization
         const { error } = await supabase.functions.invoke('api-organizations', {
           method: 'POST',
-          body: JSON.stringify(submitData),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          body: submitData,
         });
         
         if (error) {
