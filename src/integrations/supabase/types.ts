@@ -14,6 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          environment: Database["public"]["Enums"]["api_environment"]
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_hash: string
+          key_name: string
+          key_prefix: string
+          last_used_at: string | null
+          organization_id: string
+          permissions: Json | null
+          rate_limit_per_day: number | null
+          rate_limit_per_minute: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          environment?: Database["public"]["Enums"]["api_environment"]
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash: string
+          key_name: string
+          key_prefix: string
+          last_used_at?: string | null
+          organization_id: string
+          permissions?: Json | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          environment?: Database["public"]["Enums"]["api_environment"]
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash?: string
+          key_name?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          organization_id?: string
+          permissions?: Json | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_organizations: {
+        Row: {
+          billing_address: Json | null
+          contact_email: string
+          contact_name: string | null
+          created_at: string | null
+          domain: string | null
+          hub_id: string | null
+          id: string
+          name: string
+          phone: string | null
+          settings: Json | null
+          status: Database["public"]["Enums"]["status"]
+          subscription_tier: Database["public"]["Enums"]["api_subscription_tier"]
+          updated_at: string | null
+        }
+        Insert: {
+          billing_address?: Json | null
+          contact_email: string
+          contact_name?: string | null
+          created_at?: string | null
+          domain?: string | null
+          hub_id?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["status"]
+          subscription_tier?: Database["public"]["Enums"]["api_subscription_tier"]
+          updated_at?: string | null
+        }
+        Update: {
+          billing_address?: Json | null
+          contact_email?: string
+          contact_name?: string | null
+          created_at?: string | null
+          domain?: string | null
+          hub_id?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          settings?: Json | null
+          status?: Database["public"]["Enums"]["status"]
+          subscription_tier?: Database["public"]["Enums"]["api_subscription_tier"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_organizations_hub_id_fkey"
+            columns: ["hub_id"]
+            isOneToOne: false
+            referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_questions: {
         Row: {
           conditional_logic: Json | null
@@ -4855,6 +4970,10 @@ export type Database = {
           fixed: boolean
         }[]
       }
+      generate_api_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_personality_test_mappings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5084,6 +5203,10 @@ export type Database = {
         Args: { data: Json } | { string: string } | { string: string }
         Returns: string
       }
+      validate_api_key: {
+        Args: { api_key: string }
+        Returns: string
+      }
     }
     Enums: {
       academic_status:
@@ -5093,6 +5216,8 @@ export type Database = {
         | "transfer_student"
         | "prospective_student"
       announcement_category: "event" | "news" | "alert" | "general"
+      api_environment: "sandbox" | "production"
+      api_subscription_tier: "free" | "basic" | "professional" | "enterprise"
       application_status:
         | "Not Applied"
         | "Applied"
@@ -5887,6 +6012,8 @@ export const Constants = {
         "prospective_student",
       ],
       announcement_category: ["event", "news", "alert", "general"],
+      api_environment: ["sandbox", "production"],
+      api_subscription_tier: ["free", "basic", "professional", "enterprise"],
       application_status: [
         "Not Applied",
         "Applied",
