@@ -138,7 +138,12 @@ serve(async (req) => {
         }
 
       case 'POST':
-        const createData: CreateTemplateRequest = await req.json();
+        let createData: CreateTemplateRequest;
+        try {
+          createData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
         
         // Validate required fields
         if (!createData.name || !createData.organization_id || !createData.config) {
@@ -205,7 +210,12 @@ serve(async (req) => {
           throw new Error('Template ID required for update');
         }
 
-        const updateData: UpdateTemplateRequest = await req.json();
+        let updateData: UpdateTemplateRequest;
+        try {
+          updateData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
 
         // If setting as default, unset other defaults
         if (updateData.is_default) {

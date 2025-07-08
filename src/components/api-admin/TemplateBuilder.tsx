@@ -276,9 +276,10 @@ export function TemplateBuilder() {
       fetchTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save template';
       toast({
         title: "Error",
-        description: "Failed to save template",
+        description: errorMessage,
         variant: "destructive",
       });
     }

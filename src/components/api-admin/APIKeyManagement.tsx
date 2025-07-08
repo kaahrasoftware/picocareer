@@ -122,9 +122,10 @@ export function APIKeyManagement() {
       fetchAPIKeys();
     } catch (error) {
       console.error('Error creating API key:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create API key';
       toast({
         title: "Error",
-        description: "Failed to create API key",
+        description: errorMessage,
         variant: "destructive",
       });
     }
