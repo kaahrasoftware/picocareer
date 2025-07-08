@@ -91,12 +91,9 @@ export function APIKeyManagement() {
     try {
       const { data, error } = await supabase.functions.invoke('api-keys', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           ...formData,
           expires_at: formData.expires_at || null
-        }),
-        headers: {
-          'Content-Type': 'application/json',
         },
       });
       
