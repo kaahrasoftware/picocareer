@@ -189,6 +189,7 @@ serve(async (req) => {
             throw allKeysError;
           }
         }
+        break;
 
       case 'POST':
         let createData: CreateKeyRequest;
