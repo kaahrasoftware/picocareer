@@ -6465,7 +6465,14 @@ export type Database = {
         | "bonus"
       transaction_status: "pending" | "completed" | "failed" | "cancelled"
       transaction_type: "credit" | "debit" | "refund" | "adjustment" | "bonus"
-      user_type: "mentor" | "mentee" | "admin" | "editor"
+      user_type:
+        | "mentor"
+        | "mentee"
+        | "admin"
+        | "editor"
+        | "organization_admin"
+        | "organization_developer"
+        | "organization_viewer"
       webinar_platform: "Google Meet" | "Zoom"
       "where did you hear about us":
         | "Instagram"
@@ -7279,7 +7286,15 @@ export const Constants = {
       ],
       transaction_status: ["pending", "completed", "failed", "cancelled"],
       transaction_type: ["credit", "debit", "refund", "adjustment", "bonus"],
-      user_type: ["mentor", "mentee", "admin", "editor"],
+      user_type: [
+        "mentor",
+        "mentee",
+        "admin",
+        "editor",
+        "organization_admin",
+        "organization_developer",
+        "organization_viewer",
+      ],
       webinar_platform: ["Google Meet", "Zoom"],
       "where did you hear about us": [
         "Instagram",
