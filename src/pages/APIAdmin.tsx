@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Key, FileText, BarChart3, Users, Activity } from "lucide-react";
+import { ProtectedAdminRoute } from "@/components/auth/ProtectedAdminRoute";
 import { OrganizationManagement } from "@/components/api-admin/OrganizationManagement";
 import { APIKeyManagement } from "@/components/api-admin/APIKeyManagement";
 import { TemplateBuilder } from "@/components/api-admin/TemplateBuilder";
@@ -13,7 +14,8 @@ export default function APIAdmin() {
   const [activeTab, setActiveTab] = useState("organizations");
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <ProtectedAdminRoute>
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">API Administration</h1>
@@ -125,6 +127,7 @@ export default function APIAdmin() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </ProtectedAdminRoute>
   );
 }

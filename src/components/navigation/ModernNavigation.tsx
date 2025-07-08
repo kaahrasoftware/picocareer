@@ -157,6 +157,11 @@ export function ModernNavigation() {
           title: "Opportunities Create", 
           href: "/create-opportunity",
           description: "Create job and internship listings"
+        },
+        { 
+          title: "API Administration", 
+          href: "/api-admin",
+          description: "Manage API organizations, keys, and templates"
         }
       ]
     }

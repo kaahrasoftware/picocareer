@@ -35,6 +35,7 @@ import HubInviteResponse from '@/pages/HubInviteResponse';
 import TokenShop from '@/pages/TokenShop';
 import NotFound from '@/pages/NotFound';
 import ErrorPage from '@/pages/Error';
+import APIAdmin from '@/pages/APIAdmin';
 
 export const router = createBrowserRouter([
   {
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
       { path: "company-upload", element: <CompanyUploadPage /> },
       { path: "scholarship-add", element: <ScholarshipAdd /> },
       { path: "create-opportunity", element: <CreateOpportunity /> },
+      { path: "api-admin", element: <APIAdmin /> },
     ],
   },
   {
