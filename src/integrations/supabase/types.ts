@@ -183,6 +183,56 @@ export type Database = {
           },
         ]
       }
+      api_billing_events: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          organization_id: string
+          processed: boolean | null
+          quantity: number | null
+          reference_id: string | null
+          total_amount: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          processed?: boolean | null
+          quantity?: number | null
+          reference_id?: string | null
+          total_amount?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          processed?: boolean | null
+          quantity?: number | null
+          reference_id?: string | null
+          total_amount?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_billing_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string | null
@@ -294,6 +344,230 @@ export type Database = {
             columns: ["hub_id"]
             isOneToOne: false
             referencedRelation: "hubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_quotas: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          limit_value: number
+          organization_id: string
+          period_type: string
+          quota_type: string
+          reset_day: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          limit_value: number
+          organization_id: string
+          period_type: string
+          quota_type: string
+          reset_day?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          limit_value?: number
+          organization_id?: string
+          period_type?: string
+          quota_type?: string
+          reset_day?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_quotas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_rate_limits: {
+        Row: {
+          api_key_id: string | null
+          created_at: string | null
+          id: string
+          last_request_at: string | null
+          organization_id: string
+          request_count: number | null
+          window_duration_minutes: number
+          window_start: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_request_at?: string | null
+          organization_id: string
+          request_count?: number | null
+          window_duration_minutes: number
+          window_start: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_request_at?: string | null
+          organization_id?: string
+          request_count?: number | null
+          window_duration_minutes?: number
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_rate_limits_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_usage_aggregates: {
+        Row: {
+          avg_response_time_ms: number | null
+          created_at: string | null
+          date_period: string
+          failed_requests: number | null
+          id: string
+          organization_id: string
+          period_type: string
+          successful_requests: number | null
+          total_assessments: number | null
+          total_data_transfer_bytes: number | null
+          total_requests: number | null
+          unique_endpoints: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_response_time_ms?: number | null
+          created_at?: string | null
+          date_period: string
+          failed_requests?: number | null
+          id?: string
+          organization_id: string
+          period_type: string
+          successful_requests?: number | null
+          total_assessments?: number | null
+          total_data_transfer_bytes?: number | null
+          total_requests?: number | null
+          unique_endpoints?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_response_time_ms?: number | null
+          created_at?: string | null
+          date_period?: string
+          failed_requests?: number | null
+          id?: string
+          organization_id?: string
+          period_type?: string
+          successful_requests?: number | null
+          total_assessments?: number | null
+          total_data_transfer_bytes?: number | null
+          total_requests?: number | null
+          unique_endpoints?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_aggregates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_usage_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          method: string
+          organization_id: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number | null
+          session_id: string | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          method: string
+          organization_id: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          session_id?: string | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          method?: string
+          organization_id?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          session_id?: string | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_usage_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_usage_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "api_assessment_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -5180,6 +5454,18 @@ export type Database = {
         Args: { user_id: string; target_hub_id: string }
         Returns: boolean
       }
+      check_quota_usage: {
+        Args: {
+          p_organization_id: string
+          p_quota_type: string
+          p_period_type?: string
+        }
+        Returns: Json
+      }
+      check_rate_limit: {
+        Args: { p_api_key_id: string; p_window_minutes?: number }
+        Returns: Json
+      }
       check_timezone_dst_changes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5218,6 +5504,17 @@ export type Database = {
           p_return_url?: string
           p_client_metadata?: Json
           p_expires_in_minutes?: number
+        }
+        Returns: string
+      }
+      create_billing_event: {
+        Args: {
+          p_organization_id: string
+          p_event_type: string
+          p_quantity?: number
+          p_unit_price?: number
+          p_reference_id?: string
+          p_metadata?: Json
         }
         Returns: string
       }
@@ -5404,6 +5701,24 @@ export type Database = {
       is_hub_member: {
         Args: { hub_id: string }
         Returns: boolean
+      }
+      log_api_usage: {
+        Args: {
+          p_organization_id: string
+          p_endpoint: string
+          p_method: string
+          p_status_code: number
+          p_api_key_id?: string
+          p_session_id?: string
+          p_response_time_ms?: number
+          p_request_size_bytes?: number
+          p_response_size_bytes?: number
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_error_message?: string
+          p_metadata?: Json
+        }
+        Returns: string
       }
       log_hub_audit_event: {
         Args: {
