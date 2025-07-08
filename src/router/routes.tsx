@@ -37,6 +37,7 @@ import NotFound from '@/pages/NotFound';
 import ErrorPage from '@/pages/Error';
 import APIAdmin from '@/pages/APIAdmin';
 import APITesting from '@/pages/APITesting';
+import APIDocs from '@/pages/APIDocs';
 
 export const router = createBrowserRouter([
   {
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
       { path: "create-opportunity", element: <CreateOpportunity /> },
       { path: "api-admin", element: <APIAdmin /> },
       { path: "api-testing", element: <APITesting /> },
+      { path: "api-docs", element: <APIDocs /> },
     ],
   },
   {
