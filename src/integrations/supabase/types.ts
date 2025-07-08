@@ -14,6 +14,175 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_assessment_sessions: {
+        Row: {
+          api_user_id: string
+          assessment_id: string | null
+          callback_url: string | null
+          client_metadata: Json | null
+          completed_at: string | null
+          created_at: string | null
+          current_question_index: number | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          last_activity_at: string | null
+          organization_id: string
+          progress_data: Json | null
+          return_url: string | null
+          session_token: string
+          started_at: string | null
+          template_id: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_user_id: string
+          assessment_id?: string | null
+          callback_url?: string | null
+          client_metadata?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_question_index?: number | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          organization_id: string
+          progress_data?: Json | null
+          return_url?: string | null
+          session_token: string
+          started_at?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_user_id?: string
+          assessment_id?: string | null
+          callback_url?: string | null
+          client_metadata?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_question_index?: number | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_activity_at?: string | null
+          organization_id?: string
+          progress_data?: Json | null
+          return_url?: string | null
+          session_token?: string
+          started_at?: string | null
+          template_id?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_assessment_sessions_api_user_id_fkey"
+            columns: ["api_user_id"]
+            isOneToOne: false
+            referencedRelation: "api_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_assessment_sessions_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "career_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_assessment_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_assessment_sessions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "api_assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_assessment_templates: {
+        Row: {
+          branding: Json | null
+          config: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          languages: string[] | null
+          max_retries: number | null
+          name: string
+          organization_id: string
+          question_sets: Json | null
+          scoring_logic: Json | null
+          session_timeout_minutes: number | null
+          target_audience: string[] | null
+          updated_at: string | null
+          version: number
+        }
+        Insert: {
+          branding?: Json | null
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          languages?: string[] | null
+          max_retries?: number | null
+          name: string
+          organization_id: string
+          question_sets?: Json | null
+          scoring_logic?: Json | null
+          session_timeout_minutes?: number | null
+          target_audience?: string[] | null
+          updated_at?: string | null
+          version?: number
+        }
+        Update: {
+          branding?: Json | null
+          config?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          languages?: string[] | null
+          max_retries?: number | null
+          name?: string
+          organization_id?: string
+          question_sets?: Json | null
+          scoring_logic?: Json | null
+          session_timeout_minutes?: number | null
+          target_audience?: string[] | null
+          updated_at?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_assessment_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string | null
@@ -129,19 +298,70 @@ export type Database = {
           },
         ]
       }
+      api_users: {
+        Row: {
+          assessments_taken: number | null
+          created_at: string | null
+          external_user_id: string
+          id: string
+          is_active: boolean | null
+          last_assessment_at: string | null
+          organization_id: string
+          profile_data: Json | null
+          updated_at: string | null
+          user_metadata: Json | null
+        }
+        Insert: {
+          assessments_taken?: number | null
+          created_at?: string | null
+          external_user_id: string
+          id?: string
+          is_active?: boolean | null
+          last_assessment_at?: string | null
+          organization_id: string
+          profile_data?: Json | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+        }
+        Update: {
+          assessments_taken?: number | null
+          created_at?: string | null
+          external_user_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_assessment_at?: string | null
+          organization_id?: string
+          profile_data?: Json | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_users_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_questions: {
         Row: {
           conditional_logic: Json | null
           created_at: string
+          custom_config: Json | null
           description: string | null
           id: string
           is_active: boolean
+          is_custom: boolean | null
           is_required: boolean
           options: Json | null
           order_index: number
+          organization_id: string | null
           prerequisites: Json | null
           profile_type: string[] | null
           target_audience: string[] | null
+          template_id: string | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at: string
@@ -149,15 +369,19 @@ export type Database = {
         Insert: {
           conditional_logic?: Json | null
           created_at?: string
+          custom_config?: Json | null
           description?: string | null
           id?: string
           is_active?: boolean
+          is_custom?: boolean | null
           is_required?: boolean
           options?: Json | null
           order_index: number
+          organization_id?: string | null
           prerequisites?: Json | null
           profile_type?: string[] | null
           target_audience?: string[] | null
+          template_id?: string | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at?: string
@@ -165,20 +389,39 @@ export type Database = {
         Update: {
           conditional_logic?: Json | null
           created_at?: string
+          custom_config?: Json | null
           description?: string | null
           id?: string
           is_active?: boolean
+          is_custom?: boolean | null
           is_required?: boolean
           options?: Json | null
           order_index?: number
+          organization_id?: string | null
           prerequisites?: Json | null
           profile_type?: string[] | null
           target_audience?: string[] | null
+          template_id?: string | null
           title?: string
           type?: Database["public"]["Enums"]["question_type"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "assessment_questions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_questions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "api_assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       assessment_responses: {
         Row: {
@@ -334,45 +577,91 @@ export type Database = {
       }
       career_assessments: {
         Row: {
+          api_created: boolean | null
+          api_session_id: string | null
+          callback_url: string | null
+          client_metadata: Json | null
           completed_at: string | null
           created_at: string
           detected_profile_type:
             | Database["public"]["Enums"]["profile_type_enum"]
             | null
+          external_user_id: string | null
           id: string
+          organization_id: string | null
           profile_detection_completed: boolean | null
           started_at: string
           status: Database["public"]["Enums"]["assessment_status"]
+          template_id: string | null
           updated_at: string
           user_id: string
+          webhook_url: string | null
         }
         Insert: {
+          api_created?: boolean | null
+          api_session_id?: string | null
+          callback_url?: string | null
+          client_metadata?: Json | null
           completed_at?: string | null
           created_at?: string
           detected_profile_type?:
             | Database["public"]["Enums"]["profile_type_enum"]
             | null
+          external_user_id?: string | null
           id?: string
+          organization_id?: string | null
           profile_detection_completed?: boolean | null
           started_at?: string
           status?: Database["public"]["Enums"]["assessment_status"]
+          template_id?: string | null
           updated_at?: string
           user_id: string
+          webhook_url?: string | null
         }
         Update: {
+          api_created?: boolean | null
+          api_session_id?: string | null
+          callback_url?: string | null
+          client_metadata?: Json | null
           completed_at?: string | null
           created_at?: string
           detected_profile_type?:
             | Database["public"]["Enums"]["profile_type_enum"]
             | null
+          external_user_id?: string | null
           id?: string
+          organization_id?: string | null
           profile_detection_completed?: boolean | null
           started_at?: string
           status?: Database["public"]["Enums"]["assessment_status"]
+          template_id?: string | null
           updated_at?: string
           user_id?: string
+          webhook_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "career_assessments_api_session_id_fkey"
+            columns: ["api_session_id"]
+            isOneToOne: false
+            referencedRelation: "api_assessment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_assessments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "api_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_assessments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "api_assessment_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       career_major_relations: {
         Row: {
@@ -4911,9 +5200,26 @@ export type Database = {
           mentor_email: string
         }[]
       }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       confirm_hub_membership: {
         Args: { _hub_id: string }
         Returns: Json
+      }
+      create_assessment_session: {
+        Args: {
+          p_organization_id: string
+          p_external_user_id: string
+          p_template_id?: string
+          p_callback_url?: string
+          p_webhook_url?: string
+          p_return_url?: string
+          p_client_metadata?: Json
+          p_expires_in_minutes?: number
+        }
+        Returns: string
       }
       create_hub_member: {
         Args: {
@@ -4978,6 +5284,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      generate_session_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_hub_recommendations: {
         Args: { p_hub_id: string }
         Returns: {
@@ -4987,6 +5297,10 @@ export type Database = {
           bookmark_count: number
           search_count: number
         }[]
+      }
+      get_organization_template: {
+        Args: { p_organization_id: string; p_template_name?: string }
+        Returns: string
       }
       get_transaction_summary: {
         Args: {
@@ -5205,6 +5519,10 @@ export type Database = {
       }
       validate_api_key: {
         Args: { api_key: string }
+        Returns: string
+      }
+      validate_session_token: {
+        Args: { p_session_token: string }
         Returns: string
       }
     }
