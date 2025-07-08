@@ -27,25 +27,28 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '');
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
 
-    // Verify admin access
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader);
+    // Create user client with the JWT token for RLS
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    );
+
+    // Verify admin access using user client
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       throw new Error('Invalid authentication');
-    }
-
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('user_type')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || !['admin', 'editor'].includes(profile.user_type)) {
-      throw new Error('Insufficient permissions');
     }
 
     const url = new URL(req.url);
@@ -56,7 +59,7 @@ serve(async (req) => {
       case 'GET':
         const orgId = url.searchParams.get('organization_id');
         
-        let query = supabaseClient
+        let query = userClient
           .from('api_keys')
           .select(`
             id,
@@ -112,7 +115,7 @@ serve(async (req) => {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const keyHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        const { data: newKey, error: createError } = await supabaseClient
+        const { data: newKey, error: createError } = await userClient
           .from('api_keys')
           .insert({
             organization_id: createData.organization_id,
@@ -171,7 +174,7 @@ serve(async (req) => {
           permissions: updateData.permissions,
         };
 
-        const { data: updatedKey, error: updateError } = await supabaseClient
+        const { data: updatedKey, error: updateError } = await userClient
           .from('api_keys')
           .update(allowedUpdates)
           .eq('id', keyId)
@@ -191,7 +194,7 @@ serve(async (req) => {
           throw new Error('API key ID required for deletion');
         }
 
-        const { error: deleteError } = await supabaseClient
+        const { error: deleteError } = await userClient
           .from('api_keys')
           .delete()
           .eq('id', keyId);

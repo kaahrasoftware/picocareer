@@ -47,16 +47,21 @@ export function OrganizationManagement() {
 
   const fetchOrganizations = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('api-organizations');
+      const { data, error } = await supabase.functions.invoke('api-organizations', {
+        method: 'GET',
+      });
       
-      if (error) throw error;
+      if (error) {
+        console.error('API organizations error:', error);
+        throw error;
+      }
       
       setOrganizations(data || []);
     } catch (error) {
       console.error('Error fetching organizations:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch organizations",
+        description: `Failed to fetch organizations: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     } finally {
@@ -70,12 +75,15 @@ export function OrganizationManagement() {
     try {
       if (editingOrg) {
         // Update existing organization
-        const { error } = await supabase.functions.invoke('api-organizations', {
+        const { error } = await supabase.functions.invoke(`api-organizations/${editingOrg.id}`, {
           method: 'PUT',
-          body: { ...formData, id: editingOrg.id }
+          body: formData
         });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Update organization error:', error);
+          throw error;
+        }
         
         toast({
           title: "Success",
@@ -88,7 +96,10 @@ export function OrganizationManagement() {
           body: formData
         });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Create organization error:', error);
+          throw error;
+        }
         
         toast({
           title: "Success", 
@@ -112,7 +123,7 @@ export function OrganizationManagement() {
       console.error('Error saving organization:', error);
       toast({
         title: "Error",
-        description: "Failed to save organization",
+        description: `Failed to save organization: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -136,12 +147,14 @@ export function OrganizationManagement() {
     if (!confirm('Are you sure you want to delete this organization?')) return;
     
     try {
-      const { error } = await supabase.functions.invoke('api-organizations', {
+      const { error } = await supabase.functions.invoke(`api-organizations/${orgId}`, {
         method: 'DELETE',
-        body: { id: orgId }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete organization error:', error);
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -153,7 +166,7 @@ export function OrganizationManagement() {
       console.error('Error deleting organization:', error);
       toast({
         title: "Error",
-        description: "Failed to delete organization",
+        description: `Failed to delete organization: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }

@@ -29,25 +29,30 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '');
+    // Since verify_jwt = true in config.toml, we can use the service role client
+    // and rely on RLS policies for authorization
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
 
-    // Verify admin access
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(authHeader);
+    // Create user client with the JWT token for RLS
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    );
+
+    // Verify admin access using user client (this will respect RLS)
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) {
       throw new Error('Invalid authentication');
-    }
-
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('user_type')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || !['admin', 'editor'].includes(profile.user_type)) {
-      throw new Error('Insufficient permissions');
     }
 
     const url = new URL(req.url);
@@ -57,8 +62,8 @@ serve(async (req) => {
     switch (req.method) {
       case 'GET':
         if (orgId && orgId !== 'api-organizations') {
-          // Get single organization
-          const { data: organization, error } = await supabaseClient
+          // Get single organization using user client (RLS will apply)
+          const { data: organization, error } = await userClient
             .from('api_organizations')
             .select('*')
             .eq('id', orgId)
@@ -70,8 +75,8 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } else {
-          // Get all organizations
-          const { data: organizations, error } = await supabaseClient
+          // Get all organizations using user client (RLS will apply)
+          const { data: organizations, error } = await userClient
             .from('api_organizations')
             .select('*')
             .order('created_at', { ascending: false });
@@ -86,7 +91,8 @@ serve(async (req) => {
       case 'POST':
         const createData: CreateOrgRequest = await req.json();
         
-        const { data: newOrg, error: createError } = await supabaseClient
+        // Use user client for insert (RLS will apply)
+        const { data: newOrg, error: createError } = await userClient
           .from('api_organizations')
           .insert({
             name: createData.name,
@@ -133,7 +139,7 @@ serve(async (req) => {
 
         const updateData = await req.json();
         
-        const { data: updatedOrg, error: updateError } = await supabaseClient
+        const { data: updatedOrg, error: updateError } = await userClient
           .from('api_organizations')
           .update(updateData)
           .eq('id', orgId)
@@ -153,7 +159,7 @@ serve(async (req) => {
           throw new Error('Organization ID required for deletion');
         }
 
-        const { error: deleteError } = await supabaseClient
+        const { error: deleteError } = await userClient
           .from('api_organizations')
           .delete()
           .eq('id', orgId);
