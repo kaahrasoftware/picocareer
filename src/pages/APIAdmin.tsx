@@ -9,9 +9,10 @@ import { TemplateBuilder } from "@/components/api-admin/TemplateBuilder";
 import { AnalyticsDashboard } from "@/components/api-admin/AnalyticsDashboard";
 import { SessionMonitoring } from "@/components/api-admin/SessionMonitoring";
 import { QuotaManagement } from "@/components/api-admin/QuotaManagement";
+import { AuthDebug } from "@/components/debug/AuthDebug";
 
 export default function APIAdmin() {
-  const [activeTab, setActiveTab] = useState("organizations");
+  const [activeTab, setActiveTab] = useState("debug");
 
   return (
     <ProtectedAdminRoute>
@@ -26,7 +27,11 @@ export default function APIAdmin() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="debug" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Debug
+          </TabsTrigger>
           <TabsTrigger value="organizations" className="flex items-center gap-2">
             <Building className="h-4 w-4" />
             Organizations
@@ -52,6 +57,20 @@ export default function APIAdmin() {
             Quotas
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="debug" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Authentication & API Debug</CardTitle>
+              <CardDescription>
+                Debug authentication status and test API connectivity
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AuthDebug />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="organizations" className="space-y-6">
           <Card>

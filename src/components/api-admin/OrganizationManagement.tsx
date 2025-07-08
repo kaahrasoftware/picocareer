@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit, Trash2, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 interface Organization {
   id: string;
@@ -196,7 +197,8 @@ export function OrganizationManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <ErrorBoundary>
+      <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Organizations ({organizations.length})</h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -386,6 +388,7 @@ export function OrganizationManagement() {
           </Card>
         )}
       </div>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
