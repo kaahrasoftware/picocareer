@@ -89,7 +89,7 @@ export function QuotaManagement() {
 
           return {
             key: `${quota.organization_id}-${quota.quota_type}-${quota.period_type}`,
-            usage: usageData as QuotaUsage
+            usage: usageData as unknown as QuotaUsage
           };
         } catch (error) {
           console.error('Error fetching usage for quota:', quota.id, error);
