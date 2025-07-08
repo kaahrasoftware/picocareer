@@ -36,6 +36,7 @@ import TokenShop from '@/pages/TokenShop';
 import NotFound from '@/pages/NotFound';
 import ErrorPage from '@/pages/Error';
 import APIAdmin from '@/pages/APIAdmin';
+import APITesting from '@/pages/APITesting';
 
 export const router = createBrowserRouter([
   {
@@ -76,6 +77,7 @@ export const router = createBrowserRouter([
       { path: "scholarship-add", element: <ScholarshipAdd /> },
       { path: "create-opportunity", element: <CreateOpportunity /> },
       { path: "api-admin", element: <APIAdmin /> },
+      { path: "api-testing", element: <APITesting /> },
     ],
   },
   {
