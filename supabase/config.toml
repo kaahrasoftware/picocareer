@@ -61,6 +61,12 @@ verify_jwt = true
 [functions.api-sessions]
 verify_jwt = false
 
+[functions.api-templates]
+verify_jwt = false
+
+[functions.api-template-testing]
+verify_jwt = false
+
 [functions.fetch-school-data]
 verify_jwt = true
 
