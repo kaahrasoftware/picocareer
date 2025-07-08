@@ -89,7 +89,12 @@ serve(async (req) => {
         }
 
       case 'POST':
-        const createData: CreateOrgRequest = await req.json();
+        let createData: CreateOrgRequest;
+        try {
+          createData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
         
         // Use user client for insert (RLS will apply)
         const { data: newOrg, error: createError } = await userClient
@@ -137,7 +142,12 @@ serve(async (req) => {
           throw new Error('Organization ID required for update');
         }
 
-        const updateData = await req.json();
+        let updateData;
+        try {
+          updateData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
         
         const { data: updatedOrg, error: updateError } = await userClient
           .from('api_organizations')

@@ -99,7 +99,12 @@ serve(async (req) => {
         }
 
       case 'POST':
-        const createData: CreateKeyRequest = await req.json();
+        let createData: CreateKeyRequest;
+        try {
+          createData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
         
         // Generate API key using the database function
         const { data: generatedKey } = await supabaseClient.rpc('generate_api_key');
@@ -162,7 +167,12 @@ serve(async (req) => {
           throw new Error('API key ID required for update');
         }
 
-        const updateData = await req.json();
+        let updateData;
+        try {
+          updateData = await req.json();
+        } catch (error) {
+          throw new Error('Invalid JSON in request body');
+        }
         
         // Don't allow updating the actual key or hash
         const allowedUpdates = {
