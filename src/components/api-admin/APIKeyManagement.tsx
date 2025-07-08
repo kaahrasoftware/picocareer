@@ -90,7 +90,6 @@ export function APIKeyManagement() {
     
     try {
       const { data, error } = await supabase.functions.invoke('api-keys', {
-        method: 'POST',
         body: {
           ...formData,
           expires_at: formData.expires_at || null
@@ -133,10 +132,10 @@ export function APIKeyManagement() {
     
     try {
       const { error } = await supabase.functions.invoke('api-keys', {
-        method: 'PUT',
         body: { 
           id: keyId,
-          is_active: false 
+          is_active: false,
+          _method: 'PUT'
         }
       });
       

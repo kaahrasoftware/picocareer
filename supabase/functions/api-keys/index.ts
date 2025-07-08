@@ -55,7 +55,20 @@ serve(async (req) => {
     const pathSegments = url.pathname.split('/').filter(Boolean);
     const keyId = pathSegments[pathSegments.length - 1];
 
-    switch (req.method) {
+    // Handle method override for PUT requests from frontend
+    let method = req.method;
+    if (req.method === 'POST') {
+      try {
+        const body = await req.clone().json();
+        if (body._method === 'PUT') {
+          method = 'PUT';
+        }
+      } catch (e) {
+        // Not JSON or no _method, continue with POST
+      }
+    }
+
+    switch (method) {
       case 'GET':
         const orgId = url.searchParams.get('organization_id');
         
