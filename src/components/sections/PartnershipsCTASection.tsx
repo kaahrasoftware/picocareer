@@ -78,11 +78,11 @@ export const PartnershipsCTASection = () => {
             <div className="flex items-center justify-center gap-6 text-slate-300">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-sky-500"></div>
-                <span className="text-xs text-zinc-500">100+ Partners</span>
+                <span className="text-xs text-zinc-500">10+ Partners</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                <span className="text-xs text-zinc-500">50K+ Students</span>
+                <span className="text-xs text-zinc-500">5K+ Students</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
