@@ -29,6 +29,8 @@ interface SearchableSelectProps {
   searchPlaceholder?: string;
   emptyMessage?: string;
   className?: string;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 export function SearchableSelect({
@@ -39,6 +41,8 @@ export function SearchableSelect({
   searchPlaceholder = "Search options...",
   emptyMessage = "No option found.",
   className,
+  disabled = false,
+  loading = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
@@ -75,9 +79,10 @@ export function SearchableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          disabled={disabled}
           className={cn("w-full justify-between", className)}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {loading ? "Loading..." : (selectedOption ? selectedOption.label : placeholder)}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

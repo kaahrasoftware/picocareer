@@ -9,7 +9,7 @@ interface SchoolSelectorProps {
 }
 
 export function SchoolSelector({ value, onValueChange }: SchoolSelectorProps) {
-  const { schools } = useMentorReferenceData();
+  const { schools, isLoading } = useMentorReferenceData();
 
   // Ensure schoolOptions is always an array, even when schools is undefined
   const schoolOptions = React.useMemo(() => {
@@ -28,6 +28,8 @@ export function SchoolSelector({ value, onValueChange }: SchoolSelectorProps) {
       placeholder="Select School"
       searchPlaceholder="Search schools..."
       emptyMessage="No schools found."
+      disabled={isLoading.schools}
+      loading={isLoading.schools}
     />
   );
 }

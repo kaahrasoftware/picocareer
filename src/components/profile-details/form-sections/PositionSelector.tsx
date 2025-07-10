@@ -8,7 +8,7 @@ interface PositionSelectorProps {
 }
 
 export function PositionSelector({ value, onValueChange }: PositionSelectorProps) {
-  const { careers } = useMentorReferenceData();
+  const { careers, isLoading } = useMentorReferenceData();
 
   // Ensure careerOptions is always an array, even when careers is undefined
   const careerOptions = React.useMemo(() => {
@@ -27,6 +27,8 @@ export function PositionSelector({ value, onValueChange }: PositionSelectorProps
       placeholder="Select Position"
       searchPlaceholder="Search positions..."
       emptyMessage="No positions found."
+      disabled={isLoading.careers}
+      loading={isLoading.careers}
     />
   );
 }

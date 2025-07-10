@@ -9,7 +9,7 @@ interface MajorSelectorProps {
 }
 
 export function MajorSelector({ value, onValueChange }: MajorSelectorProps) {
-  const { majors } = useMentorReferenceData();
+  const { majors, isLoading } = useMentorReferenceData();
 
   // Ensure majorOptions is always an array, even when majors is undefined
   const majorOptions = React.useMemo(() => {
@@ -28,6 +28,8 @@ export function MajorSelector({ value, onValueChange }: MajorSelectorProps) {
       placeholder="Select Academic Major"
       searchPlaceholder="Search majors..."
       emptyMessage="No majors found."
+      disabled={isLoading.majors}
+      loading={isLoading.majors}
     />
   );
 }

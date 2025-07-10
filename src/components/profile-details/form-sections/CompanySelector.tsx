@@ -9,7 +9,7 @@ interface CompanySelectorProps {
 }
 
 export function CompanySelector({ value, onValueChange }: CompanySelectorProps) {
-  const { companies } = useMentorReferenceData();
+  const { companies, isLoading } = useMentorReferenceData();
 
   // Ensure companyOptions is always an array, even when companies is undefined
   const companyOptions = React.useMemo(() => {
@@ -28,6 +28,8 @@ export function CompanySelector({ value, onValueChange }: CompanySelectorProps) 
       placeholder="Select Company"
       searchPlaceholder="Search companies..."
       emptyMessage="No companies found."
+      disabled={isLoading.companies}
+      loading={isLoading.companies}
     />
   );
 }

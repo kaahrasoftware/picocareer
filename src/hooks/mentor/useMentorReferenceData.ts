@@ -134,25 +134,25 @@ export function useMentorReferenceData() {
     return allMajors;
   };
 
-  const { data: careers } = useQuery({
+  const { data: careers, isLoading: careersLoading } = useQuery({
     queryKey: ['careers-all'],
     queryFn: fetchAllCareers,
     staleTime: 30 * 60 * 1000, // 30 minutes cache
   });
 
-  const { data: companies } = useQuery({
+  const { data: companies, isLoading: companiesLoading } = useQuery({
     queryKey: ['companies-all'],
     queryFn: fetchAllCompanies,
     staleTime: 30 * 60 * 1000,
   });
 
-  const { data: schools } = useQuery({
+  const { data: schools, isLoading: schoolsLoading } = useQuery({
     queryKey: ['schools-all'],
     queryFn: fetchAllSchools,
     staleTime: 30 * 60 * 1000,
   });
 
-  const { data: majors } = useQuery({
+  const { data: majors, isLoading: majorsLoading } = useQuery({
     queryKey: ['majors-all'],
     queryFn: fetchAllMajors,
     staleTime: 30 * 60 * 1000,
@@ -162,6 +162,12 @@ export function useMentorReferenceData() {
     careers,
     companies,
     schools,
-    majors
+    majors,
+    isLoading: {
+      careers: careersLoading,
+      companies: companiesLoading,
+      schools: schoolsLoading,
+      majors: majorsLoading,
+    }
   };
 }
