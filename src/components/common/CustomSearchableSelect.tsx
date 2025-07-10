@@ -99,6 +99,7 @@ export function CustomSearchableSelect({
         variant="outline"
         role="combobox"
         aria-expanded={false}
+        type="button"
         className={cn("w-full justify-between", className)}
         disabled
       >
@@ -114,6 +115,7 @@ export function CustomSearchableSelect({
         variant="outline"
         role="combobox"
         aria-expanded={open}
+        type="button"
         className="w-full justify-between"
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
