@@ -47,9 +47,24 @@ export function SearchableSelect({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
+  // Early return while loading to prevent cmdk iteration errors
+  if (loading || !Array.isArray(options)) {
+    return (
+      <Button
+        variant="outline"
+        role="combobox"
+        disabled={true}
+        className={cn("w-full justify-between", className)}
+      >
+        Loading...
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+    );
+  }
+
   // Filter options based on search - safely handle undefined/null options
   const filteredOptions = useMemo(() => {
-    if (!Array.isArray(options) || !searchValue) return options || [];
+    if (!searchValue) return options;
     return options.filter(option =>
       option?.label?.toLowerCase().includes(searchValue.toLowerCase())
     );
@@ -57,7 +72,6 @@ export function SearchableSelect({
 
   // Find selected option - safely handle undefined options
   const selectedOption = useMemo(() => {
-    if (!Array.isArray(options)) return null;
     return options.find(option => option.value === value) || null;
   }, [options, value]);
 
@@ -82,7 +96,7 @@ export function SearchableSelect({
           disabled={disabled}
           className={cn("w-full justify-between", className)}
         >
-          {loading ? "Loading..." : (selectedOption ? selectedOption.label : placeholder)}
+          {selectedOption ? selectedOption.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -95,7 +109,7 @@ export function SearchableSelect({
           />
           <CommandEmpty>{emptyMessage}</CommandEmpty>
           <CommandGroup>
-            {filteredOptions.map((item) => (
+            {Array.isArray(filteredOptions) && filteredOptions.map((item) => (
               <CommandItem
                 key={item.value}
                 value={item.value}
