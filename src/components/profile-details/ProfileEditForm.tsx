@@ -15,6 +15,7 @@ import { AvatarSection } from './form-sections/AvatarSection';
 import { CompanySelector } from './form-sections/CompanySelector';
 import { SchoolSelector } from './form-sections/SchoolSelector';
 import { MajorSelector } from './form-sections/MajorSelector';
+import { PositionSelector } from './form-sections/PositionSelector';
 import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
 import type { ProfileEditFormProps, FormFields } from './types/form-types';
 
@@ -130,10 +131,9 @@ export function ProfileEditForm({ profile, onCancel, onSuccess }: ProfileEditFor
         <h3 className="text-lg font-semibold">Professional Information</h3>
         <div>
           <label className="text-sm font-medium">Position</label>
-          <input
-            {...form.register("position")}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            placeholder="Your current position"
+          <PositionSelector
+            value={form.watch("position")}
+            onValueChange={(value) => form.setValue("position", value)}
           />
         </div>
 
