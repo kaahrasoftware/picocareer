@@ -6,7 +6,6 @@ import { Users, Target, Trophy, ArrowRight, Sparkles, Zap } from "lucide-react";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { AuthPromptDialog } from "@/components/auth/AuthPromptDialog";
 import { cn } from "@/lib/utils";
-
 export const ModernHeroSection = () => {
   const {
     session
@@ -16,7 +15,6 @@ export const ModernHeroSection = () => {
   const isLoggedIn = !!session?.user;
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
-  
   const handleBecomeMentorClick = () => {
     if (isLoggedIn) {
       navigate('/mentor-registration');
@@ -24,7 +22,6 @@ export const ModernHeroSection = () => {
       setIsAuthDialogOpen(true);
     }
   };
-  
   const handleBecomeMenteeClick = () => {
     if (isLoggedIn) {
       navigate('/mentor');
@@ -37,7 +34,6 @@ export const ModernHeroSection = () => {
       }
     }
   };
-  
   return <div className="relative isolate overflow-hidden">
       {/* Background Effects - Updated to use brand color */}
       <div className="absolute inset-0 -z-10">
@@ -66,15 +62,15 @@ export const ModernHeroSection = () => {
           <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-[#00A6D4] rounded-full animate-pulse" />
-              <span className="text-muted-foreground">500+ Real Mentors</span>
+              <span className="text-muted-foreground">25+ Real Mentors</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-[#33b3d9] rounded-full animate-pulse" />
-              <span className="text-muted-foreground">1000+ Universities</span>
+              <span className="text-muted-foreground">2500+ Universities</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-[#0095c1] rounded-full animate-pulse" />
-              <span className="text-muted-foreground">200+ Career Paths</span>
+              <span className="text-muted-foreground">300+ Career Paths</span>
             </div>
           </div>
         </div>
