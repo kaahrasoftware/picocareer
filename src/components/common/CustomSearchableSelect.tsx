@@ -18,6 +18,9 @@ interface CustomSearchableSelectProps {
   className?: string;
   disabled?: boolean;
   loading?: boolean;
+  allowCustom?: boolean;
+  onAddCustom?: (customValue: string) => Promise<void>;
+  customOptionLabel?: string;
 }
 
 export function CustomSearchableSelect({
@@ -29,10 +32,14 @@ export function CustomSearchableSelect({
   emptyMessage = "No options found",
   className,
   disabled = false,
-  loading = false
+  loading = false,
+  allowCustom = false,
+  onAddCustom,
+  customOptionLabel = "Add"
 }: CustomSearchableSelectProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,7 +64,35 @@ export function CustomSearchableSelect({
     onValueChange(selectedValue);
     setOpen(false);
     setSearchValue("");
+    setIsAddingCustom(false);
   };
+
+  // Handle adding custom option
+  const handleAddCustom = async () => {
+    if (!onAddCustom || !searchValue.trim()) return;
+    
+    setIsAddingCustom(true);
+    try {
+      await onAddCustom(searchValue.trim());
+      setSearchValue("");
+      setOpen(false);
+    } catch (error) {
+      console.error("Error adding custom option:", error);
+    } finally {
+      setIsAddingCustom(false);
+    }
+  };
+
+  // Check if search value exactly matches an existing option
+  const hasExactMatch = useMemo(() => {
+    if (!searchValue.trim()) return false;
+    return filteredOptions.some(option => 
+      option.label.toLowerCase() === searchValue.toLowerCase()
+    );
+  }, [filteredOptions, searchValue]);
+
+  // Show add custom option when allowed and no exact match found
+  const showAddCustom = allowCustom && searchValue.trim() && !hasExactMatch && !isAddingCustom;
 
   // Handle click outside
   useEffect(() => {
@@ -140,7 +175,7 @@ export function CustomSearchableSelect({
           </div>
           
           <div className="max-h-60 overflow-auto">
-            {filteredOptions.length === 0 ? (
+            {filteredOptions.length === 0 && !showAddCustom ? (
               <div className="px-3 py-2 text-sm text-muted-foreground text-center">
                 {emptyMessage}
               </div>
@@ -164,6 +199,20 @@ export function CustomSearchableSelect({
                     {option.label}
                   </div>
                 ))}
+                
+                {showAddCustom && (
+                  <div
+                    className="flex items-center px-2 py-2 text-sm cursor-pointer rounded-sm hover:bg-accent hover:text-accent-foreground border-t"
+                    onClick={handleAddCustom}
+                  >
+                    {isAddingCustom ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <div className="mr-2 h-4 w-4 flex items-center justify-center text-primary">+</div>
+                    )}
+                    {customOptionLabel} "{searchValue}"
+                  </div>
+                )}
               </div>
             )}
           </div>
