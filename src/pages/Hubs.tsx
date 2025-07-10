@@ -77,20 +77,7 @@ export default function Hubs() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Connect with institutions, find your perfect educational and professional match, and join thriving communities.</p>
           
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mt-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{hubs?.length || 0}</div>
-              <div className="text-sm text-muted-foreground">Active Hubs</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{hubTypes.length}</div>
-              <div className="text-sm text-muted-foreground">Categories</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary">100+</div>
-              <div className="text-sm text-muted-foreground">Communities</div>
-            </div>
-          </div>
+          
         </div>
 
         {/* Search and Filter */}
