@@ -97,7 +97,7 @@ export default function Profile() {
         )}
 
         <TabsContent value="settings" className="space-y-4 mt-6">
-          <SettingsTab />
+          <SettingsTab profileId={profile.id} />
         </TabsContent>
 
         {isMentor && (

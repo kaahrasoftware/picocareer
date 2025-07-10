@@ -3,10 +3,14 @@ import { SettingsContainer } from "./settings/SettingsContainer";
 import { ManualReferralProcessor } from "./ManualReferralProcessor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function SettingsTab() {
+interface SettingsTabProps {
+  profileId?: string;
+}
+
+export function SettingsTab({ profileId }: SettingsTabProps) {
   return (
     <div className="space-y-6">
-      <SettingsContainer />
+      <SettingsContainer profileId={profileId} />
       
       <Card>
         <CardHeader>
