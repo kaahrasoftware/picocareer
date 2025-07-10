@@ -1,11 +1,8 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-
 export const PartnershipsCTASection = () => {
-  return (
-    <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50 relative overflow-hidden">
+  return <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-sky-50 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-10 left-10 w-20 h-20 bg-gradient-to-br from-blue-400 to-sky-400 rounded-full blur-xl"></div>
@@ -37,11 +34,7 @@ export const PartnershipsCTASection = () => {
 
           {/* Enhanced CTA with improved design */}
           <div className="relative">
-            <Button
-              asChild
-              size="lg"
-              className="group relative bg-gradient-to-r from-blue-600 via-blue-700 to-sky-600 hover:from-blue-700 hover:via-blue-800 hover:to-sky-700 text-white font-semibold px-10 py-6 h-auto text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border-0 rounded-xl overflow-hidden"
-            >
+            <Button asChild size="lg" className="group relative bg-gradient-to-r from-blue-600 via-blue-700 to-sky-600 hover:from-blue-700 hover:via-blue-800 hover:to-sky-700 text-white font-semibold px-10 py-6 h-auto text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 border-0 rounded-xl overflow-hidden">
               <Link to="/partnerships" className="flex items-center gap-3 relative z-10">
                 <span>Explore Partnership Opportunities</span>
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -81,24 +74,23 @@ export const PartnershipsCTASection = () => {
           
           {/* Trust indicators */}
           <div className="mt-10 pt-8 border-t border-slate-200">
-            <p className="text-sm text-slate-400 mb-4">Trusted by leading institutions worldwide</p>
+            <p className="text-sm mb-4 text-slate-950">Trusted by leading institutions worldwide</p>
             <div className="flex items-center justify-center gap-6 text-slate-300">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span className="text-xs">100+ Partners</span>
+                <span className="text-xs text-slate-900">100+ Partners</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-sky-400 rounded-full"></div>
-                <span className="text-xs">50K+ Students</span>
+                <span className="text-xs text-slate-900">50K+ Students</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                <span className="text-xs">95% Satisfaction</span>
+                <span className="text-xs text-slate-900">95% Satisfaction</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
