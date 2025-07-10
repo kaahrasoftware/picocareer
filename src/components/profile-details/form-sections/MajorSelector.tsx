@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { CustomSearchableSelect } from '@/components/common/CustomSearchableSelect';
 import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
 
 interface MajorSelectorProps {
@@ -21,7 +21,7 @@ export function MajorSelector({ value, onValueChange }: MajorSelectorProps) {
   }, [majors]);
 
   return (
-    <SearchableSelect
+    <CustomSearchableSelect
       options={majorOptions}
       value={value}
       onValueChange={onValueChange}

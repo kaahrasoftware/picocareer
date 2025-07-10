@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { CustomSearchableSelect } from '@/components/common/CustomSearchableSelect';
 import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
 
 interface CompanySelectorProps {
@@ -21,7 +21,7 @@ export function CompanySelector({ value, onValueChange }: CompanySelectorProps) 
   }, [companies]);
 
   return (
-    <SearchableSelect
+    <CustomSearchableSelect
       options={companyOptions}
       value={value}
       onValueChange={onValueChange}

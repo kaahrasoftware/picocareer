@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { CustomSearchableSelect } from '@/components/common/CustomSearchableSelect';
 import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
 
 interface SchoolSelectorProps {
@@ -21,7 +21,7 @@ export function SchoolSelector({ value, onValueChange }: SchoolSelectorProps) {
   }, [schools]);
 
   return (
-    <SearchableSelect
+    <CustomSearchableSelect
       options={schoolOptions}
       value={value}
       onValueChange={onValueChange}

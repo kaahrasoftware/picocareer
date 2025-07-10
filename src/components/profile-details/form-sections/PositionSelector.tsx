@@ -1,5 +1,5 @@
 import React from 'react';
-import { SearchableSelect } from '@/components/common/SearchableSelect';
+import { CustomSearchableSelect } from '@/components/common/CustomSearchableSelect';
 import { useMentorReferenceData } from '@/hooks/mentor/useMentorReferenceData';
 
 interface PositionSelectorProps {
@@ -20,7 +20,7 @@ export function PositionSelector({ value, onValueChange }: PositionSelectorProps
   }, [careers]);
 
   return (
-    <SearchableSelect
+    <CustomSearchableSelect
       options={careerOptions}
       value={value}
       onValueChange={onValueChange}
