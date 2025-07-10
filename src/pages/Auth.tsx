@@ -2,12 +2,14 @@
 import React from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
+import { AuthGuard } from '@/components/auth/AuthGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GraduationCap, Users, TrendingUp, Target, Star, ArrowRight } from 'lucide-react';
 
 export default function Auth() {
   return (
+    <AuthGuard>
     <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#00A6D4] via-[#0EA5E9] to-[#012169] relative overflow-hidden">
@@ -142,5 +144,6 @@ export default function Auth() {
         </div>
       </div>
     </div>
+    </AuthGuard>
   );
 }
