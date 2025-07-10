@@ -47,7 +47,21 @@ export function SearchableSelect({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
-  // Early return while loading to prevent cmdk iteration errors
+  // Filter options based on search - safely handle undefined/null options
+  const filteredOptions = useMemo(() => {
+    if (!Array.isArray(options) || !searchValue) return options || [];
+    return options.filter(option =>
+      option?.label?.toLowerCase().includes(searchValue.toLowerCase())
+    );
+  }, [options, searchValue]);
+
+  // Find selected option - safely handle undefined options
+  const selectedOption = useMemo(() => {
+    if (!Array.isArray(options)) return null;
+    return options.find(option => option.value === value) || null;
+  }, [options, value]);
+
+  // Handle loading state after all hooks are called
   if (loading || !Array.isArray(options)) {
     return (
       <Button
@@ -61,19 +75,6 @@ export function SearchableSelect({
       </Button>
     );
   }
-
-  // Filter options based on search - safely handle undefined/null options
-  const filteredOptions = useMemo(() => {
-    if (!searchValue) return options;
-    return options.filter(option =>
-      option?.label?.toLowerCase().includes(searchValue.toLowerCase())
-    );
-  }, [options, searchValue]);
-
-  // Find selected option - safely handle undefined options
-  const selectedOption = useMemo(() => {
-    return options.find(option => option.value === value) || null;
-  }, [options, value]);
 
   const handleSelect = (currentValue: string) => {
     // Find the actual option that matches this value
