@@ -61,7 +61,7 @@ export function SearchableSelect({
     return options.find(option => option.value === value) || null;
   }, [options, value]);
 
-  // Handle loading state after all hooks are called
+  // Handle loading state or invalid data after all hooks are called
   if (loading || !Array.isArray(options)) {
     return (
       <Button
@@ -102,31 +102,40 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onValueChange={setSearchValue}
-          />
-          <CommandEmpty>{emptyMessage}</CommandEmpty>
-          <CommandGroup>
-            {Array.isArray(filteredOptions) && filteredOptions.map((item) => (
-              <CommandItem
-                key={item.value}
-                value={item.value}
-                onSelect={handleSelect}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === item.value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {item.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
+        {Array.isArray(filteredOptions) && filteredOptions.length >= 0 ? (
+          <Command>
+            <CommandInput
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onValueChange={setSearchValue}
+            />
+            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandGroup>
+              {filteredOptions.map((item) => {
+                if (!item || !item.value || !item.label) return null;
+                return (
+                  <CommandItem
+                    key={item.value}
+                    value={item.value}
+                    onSelect={handleSelect}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === item.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {item.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </Command>
+        ) : (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            Loading options...
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
