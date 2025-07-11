@@ -97,9 +97,9 @@ export const QuestionRenderer = ({
         return (
           <RadioGroup value={answer} onValueChange={setAnswer}>
             {question.options?.map((option, index) => (
-              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-3' : 'p-2'} rounded hover:bg-gray-50 min-h-[48px]`}>
+              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-2' : 'p-3'} rounded hover:bg-gray-50 ${isMobile ? 'min-h-[40px]' : 'min-h-[48px]'}`}>
                 <RadioGroupItem value={option} id={`option-${index}`} className={isMobile ? 'w-5 h-5' : ''} />
-                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-relaxed' : ''}`}>
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-normal' : ''}`}>
                   {option}
                 </Label>
               </div>
@@ -109,9 +109,9 @@ export const QuestionRenderer = ({
 
       case 'multiple_select':
         return (
-          <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+          <div className={`${isMobile ? 'space-y-1' : 'space-y-3'}`}>
             {question.options?.map((option, index) => (
-              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-3' : 'p-2'} rounded hover:bg-gray-50 min-h-[48px]`}>
+              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-2' : 'p-3'} rounded hover:bg-gray-50 ${isMobile ? 'min-h-[40px]' : 'min-h-[48px]'}`}>
                 <Checkbox
                   id={`option-${index}`}
                   checked={selectedOptions.includes(option)}
@@ -120,7 +120,7 @@ export const QuestionRenderer = ({
                   }
                   className={isMobile ? 'w-5 h-5' : ''}
                 />
-                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-relaxed' : ''}`}>
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-normal' : ''}`}>
                   {option}
                 </Label>
               </div>
