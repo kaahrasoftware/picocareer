@@ -101,26 +101,39 @@ export const ResultsPanel = ({
   const profileInfo = getProfileTypeInfo(detectedProfileType);
 
   return (
-    <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
-      <Card>
-        <CardHeader className={`text-center ${isMobile ? 'pb-4' : ''}`}>
-          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} flex items-center justify-center gap-2`}>
-            <Target className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-primary`} />
-            {isMobile ? 'Your Career Matches' : 'Your Personalized Career Recommendations'}
+    <div className={`${isMobile ? 'space-y-6' : 'space-y-8'}`}>
+      <Card className="shadow-xl border-0 overflow-hidden">
+        <CardHeader className={`text-center bg-gradient-to-r from-success/5 to-primary/5 ${isMobile ? 'pb-6 px-6' : 'pb-8 px-8'}`}>
+          <CardTitle className={`${isMobile ? 'text-2xl' : 'text-3xl'} flex items-center justify-center gap-3 font-bold`}>
+            <div className="relative">
+              <Target className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-primary`} />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-success rounded-full animate-pulse"></div>
+            </div>
+            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              {isMobile ? 'Your Career Matches' : 'Your Personalized Career Recommendations'}
+            </span>
           </CardTitle>
           
           {/* Assessment Complete Summary */}
-          <div className={`bg-green-50 rounded-lg ${isMobile ? 'p-3 mt-3' : 'p-4 mt-4'}`}>
-            <div className={`flex items-center justify-center ${isMobile ? 'mb-2' : 'mb-3'}`}>
-              <CheckCircle className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600 mr-2`} />
-              <span className={`font-semibold text-green-800 ${isMobile ? 'text-sm' : ''}`}>Assessment Complete!</span>
+          <div className={`bg-gradient-to-r from-success/10 to-primary/10 rounded-2xl border border-success/20 ${isMobile ? 'p-6 mt-6' : 'p-8 mt-8'}`}>
+            <div className={`flex items-center justify-center ${isMobile ? 'mb-4' : 'mb-6'}`}>
+              <div className="relative">
+                <CheckCircle className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-success mr-3`} />
+                <div className="absolute inset-0 bg-success/20 rounded-full blur-md"></div>
+              </div>
+              <span className={`font-bold text-success ${isMobile ? 'text-lg' : 'text-xl'}`}>Assessment Complete!</span>
             </div>
             
-            <div className="text-center">
-              <div className={`bg-white rounded-lg ${isMobile ? 'p-2' : 'p-3'} inline-block`}>
-                <Target className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-green-600 mx-auto mb-1`} />
-                <p className={`font-medium ${isMobile ? 'text-sm' : ''}`}>Personalized Analysis</p>
-                <p className={`text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>{responses.length} questions answered</p>
+            <div className="text-center space-y-4">
+              <div className={`bg-white/80 backdrop-blur-sm rounded-xl ${isMobile ? 'p-4' : 'p-6'} inline-block shadow-lg`}>
+                <div className="flex items-center justify-center space-x-3 mb-2">
+                  <Target className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} text-primary`} />
+                  <span className="text-2xl">🎯</span>
+                </div>
+                <p className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'} text-foreground`}>AI-Powered Analysis Complete</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-base'} mt-1`}>
+                  {responses.length} personalized questions analyzed
+                </p>
               </div>
             </div>
           </div>
@@ -145,58 +158,58 @@ export const ResultsPanel = ({
             Based on your {responses.length} responses, here are your personalized career matches
           </p>
         </CardHeader>
-        <CardContent>
-          <div className={`${isMobile ? 'grid grid-cols-1 gap-2 mb-4' : 'flex flex-wrap gap-2 justify-center mb-6'}`}>
+        <CardContent className={`${isMobile ? 'px-6 pb-8' : 'px-8 pb-10'}`}>
+          <div className={`${isMobile ? 'grid grid-cols-1 gap-3 mb-6' : 'grid grid-cols-2 gap-4 justify-center mb-8'}`}>
             <Button 
               onClick={onRetakeAssessment} 
               variant="outline"
-              size={isMobile ? "sm" : "default"}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              size="lg"
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200`}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-5 w-5 mr-3" />
               Retake Assessment
             </Button>
             <Button 
               onClick={saveRecommendations} 
               variant="outline"
-              size={isMobile ? "sm" : "default"}
+              size="lg"
               disabled={isSaving || isSaved || recommendations.length === 0}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200 disabled:opacity-50`}
             >
               {isSaving ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  {isMobile ? 'Saving...' : 'Saving...'}
+                  <RefreshCw className="h-5 w-5 mr-3 animate-spin" />
+                  {isMobile ? 'Saving...' : 'Saving Results...'}
                 </>
               ) : isSaved ? (
                 <>
-                  <Bookmark className="h-4 w-4 mr-2" />
+                  <Bookmark className="h-5 w-5 mr-3 text-success" />
                   Saved
                 </>
               ) : (
                 <>
-                  <BookmarkPlus className="h-4 w-4 mr-2" />
-                  {isMobile ? 'Save' : 'Save Recommendations'}
+                  <BookmarkPlus className="h-5 w-5 mr-3" />
+                  {isMobile ? 'Save Results' : 'Save Recommendations'}
                 </>
               )}
             </Button>
             <Button 
               onClick={handleExportResults} 
               variant="outline"
-              size={isMobile ? "sm" : "default"}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              size="lg"
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200`}
             >
-              <Download className="h-4 w-4 mr-2" />
-              {isMobile ? 'Export' : 'Export PDF'}
+              <Download className="h-5 w-5 mr-3" />
+              {isMobile ? 'Export PDF' : 'Export Results'}
             </Button>
             <Button 
               onClick={handleShareResults} 
               variant="outline"
-              size={isMobile ? "sm" : "default"}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              size="lg"
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200`}
             >
-              <Share2 className="h-4 w-4 mr-2" />
-              {isMobile ? 'Share' : 'Share Results'}
+              <Share2 className="h-5 w-5 mr-3" />
+              {isMobile ? 'Share Results' : 'Share Results'}
             </Button>
           </div>
         </CardContent>

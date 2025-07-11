@@ -55,12 +55,17 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
 
   return (
     <>
-      <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
-        <Card>
-          <CardHeader className={isMobile ? 'pb-4' : ''}>
-            <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
-              <Brain className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-primary`} />
-              Discover Your Perfect Career Path
+      <div className={`${isMobile ? 'space-y-6' : 'space-y-8'}`}>
+        <Card className="shadow-xl border-0 overflow-hidden">
+          <CardHeader className={`bg-gradient-to-r from-primary/5 to-secondary/5 ${isMobile ? 'pb-6 px-6' : 'pb-8 px-8'}`}>
+            <CardTitle className={`flex items-center gap-3 ${isMobile ? 'text-2xl' : 'text-3xl'} font-bold`}>
+              <div className="relative">
+                <Brain className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} text-primary`} />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary/20 rounded-full animate-pulse"></div>
+              </div>
+              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Discover Your Perfect Career Path
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
@@ -167,20 +172,22 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
           </CardContent>
         </Card>
 
-        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-4'} justify-center`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-4' : 'gap-6'} justify-center ${isMobile ? 'pt-4' : 'pt-6'}`}>
           <Button 
             onClick={handleStartAssessment} 
-            size={isMobile ? "default" : "lg"} 
-            className={`${isMobile ? 'w-full min-h-[48px]' : 'px-8'}`}
+            size="lg"
+            className={`${isMobile ? 'w-full min-h-[56px] text-lg' : 'px-12 min-h-[52px] text-lg'} bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-semibold`}
           >
-            Start Assessment
+            <span className="mr-2">🚀</span>
+            Start Your Career Assessment
           </Button>
           <Button 
             variant="outline" 
             onClick={handleViewHistory} 
-            size={isMobile ? "default" : "lg"}
-            className={isMobile ? 'w-full min-h-[48px]' : ''}
+            size="lg"
+            className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'px-8 min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200 font-medium`}
           >
+            <span className="mr-2">📊</span>
             View Past Results
           </Button>
         </div>

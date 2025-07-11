@@ -54,53 +54,67 @@ export const CareerRecommendationCard = ({
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader className={isMobile ? 'pb-4' : ''}>
-          <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-between items-start'}`}>
-            <div className={`flex items-start ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
+      <Card className="shadow-lg border-0 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+        <CardHeader className={`bg-gradient-to-r from-primary/5 to-secondary/5 ${isMobile ? 'pb-6 px-6' : 'pb-8 px-8'}`}>
+          <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-start'}`}>
+            <div className={`flex items-start ${isMobile ? 'space-x-4' : 'space-x-4'}`}>
               <div className="flex-shrink-0">
-                <div className={`${isMobile ? 'w-6 h-6 text-sm' : 'w-8 h-8'} bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold`}>
+                <div className={`${isMobile ? 'w-12 h-12 text-lg' : 'w-14 h-14 text-xl'} bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full flex items-center justify-center font-bold shadow-lg`}>
                   {rank}
                 </div>
               </div>
-              <div className="flex-1">
-                <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
-                  <Briefcase className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-                  {recommendation.title}
+              <div className="flex-1 space-y-3">
+                <CardTitle className={`flex items-start gap-3 ${isMobile ? 'text-xl' : 'text-2xl'} font-bold leading-tight`}>
+                  <Briefcase className={`${isMobile ? 'h-6 w-6' : 'h-7 w-7'} text-primary mt-1`} />
+                  <span className="flex-1">{recommendation.title}</span>
                 </CardTitle>
-                <div className={`flex items-center gap-2 ${isMobile ? 'mt-1' : 'mt-2'}`}>
-                  <Badge variant="secondary" className={isMobile ? 'text-xs' : ''}>
+                <div className={`flex items-center gap-3 ${isMobile ? 'mt-2' : 'mt-3'}`}>
+                  <Badge variant="secondary" className={`${isMobile ? 'text-sm px-3 py-1' : 'text-base px-4 py-2'} bg-primary/10 text-primary font-semibold`}>
                     {Math.round(recommendation.matchScore)}% Match
                   </Badge>
-                  <Progress 
-                    value={recommendation.matchScore} 
-                    className={`${isMobile ? 'w-16 h-1.5' : 'w-20 h-2'}`}
-                  />
+                  <div className="flex-1 space-y-1">
+                    <Progress 
+                      value={recommendation.matchScore} 
+                      className={`${isMobile ? 'h-2' : 'h-3'} bg-primary/10`}
+                    />
+                    <p className="text-xs text-muted-foreground">Match confidence</p>
+                  </div>
                 </div>
               </div>
             </div>
             {!isMobile && (
-              <Button variant="ghost" size="sm" onClick={handleBookmark}>
-                <Bookmark className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={handleBookmark} className="hover:bg-primary/10">
+                <Bookmark className="h-5 w-5" />
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
-          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>{recommendation.description}</p>
+        <CardContent className={`${isMobile ? 'space-y-6 px-6 pb-8' : 'space-y-8 px-8 pb-10'}`}>
+          <p className={`text-muted-foreground ${isMobile ? 'text-base' : 'text-lg'} leading-relaxed`}>
+            {recommendation.description}
+          </p>
           
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'md:grid-cols-3 gap-4'} text-sm`}>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
-              <span>{recommendation.salaryRange || 'Varies'}</span>
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'md:grid-cols-3 gap-6'}`}>
+            <div className={`flex items-center gap-3 ${isMobile ? 'p-3 bg-green-50 rounded-lg' : 'p-4 bg-green-50 rounded-xl'}`}>
+              <DollarSign className={`${isMobile ? 'h-6 w-6' : 'h-7 w-7'} text-green-600`} />
+              <div>
+                <p className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} text-green-800`}>Salary Range</p>
+                <p className={`${isMobile ? 'text-sm' : 'text-base'} text-green-700`}>{recommendation.salaryRange || 'Varies'}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              <span>{recommendation.growthOutlook || 'Stable'}</span>
+            <div className={`flex items-center gap-3 ${isMobile ? 'p-3 bg-blue-50 rounded-lg' : 'p-4 bg-blue-50 rounded-xl'}`}>
+              <TrendingUp className={`${isMobile ? 'h-6 w-6' : 'h-7 w-7'} text-blue-600`} />
+              <div>
+                <p className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} text-blue-800`}>Growth Outlook</p>
+                <p className={`${isMobile ? 'text-sm' : 'text-base'} text-blue-700`}>{recommendation.growthOutlook || 'Stable'}</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-600" />
-              <span>{recommendation.timeToEntry || 'Varies'}</span>
+            <div className={`flex items-center gap-3 ${isMobile ? 'p-3 bg-orange-50 rounded-lg' : 'p-4 bg-orange-50 rounded-xl'}`}>
+              <Clock className={`${isMobile ? 'h-6 w-6' : 'h-7 w-7'} text-orange-600`} />
+              <div>
+                <p className={`font-semibold ${isMobile ? 'text-sm' : 'text-base'} text-orange-800`}>Time to Entry</p>
+                <p className={`${isMobile ? 'text-sm' : 'text-base'} text-orange-700`}>{recommendation.timeToEntry || 'Varies'}</p>
+              </div>
             </div>
           </div>
 
@@ -129,28 +143,28 @@ export const CareerRecommendationCard = ({
             </div>
           )}
 
-          <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-2'} ${isMobile ? 'pt-1' : 'pt-2'}`}>
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-3'} ${isMobile ? 'pt-4' : 'pt-6'}`}>
             <Button 
               onClick={handleViewCareer} 
-              size={isMobile ? "default" : "sm"}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              size="lg"
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'flex-1 min-h-[48px]'} bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium`}
             >
-              Learn More
-              <ExternalLink className="h-3 w-3 ml-1" />
+              Learn More About This Career
+              <ExternalLink className="h-5 w-5 ml-2" />
             </Button>
             <Button 
               variant="outline" 
-              size={isMobile ? "default" : "sm"} 
+              size="lg"
               onClick={handleFindMentors}
-              className={isMobile ? 'w-full min-h-[44px]' : ''}
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'flex-1 min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200 font-medium`}
             >
-              <Users className="h-3 w-3 mr-1" />
+              <Users className="h-5 w-5 mr-2" />
               Find Mentors
             </Button>
             {isMobile && (
-              <Button variant="ghost" size="sm" onClick={handleBookmark} className="self-start">
-                <Bookmark className="h-4 w-4 mr-1" />
-                Bookmark
+              <Button variant="ghost" size="lg" onClick={handleBookmark} className="justify-start hover:bg-primary/10">
+                <Bookmark className="h-5 w-5 mr-2" />
+                Bookmark This Career
               </Button>
             )}
           </div>
