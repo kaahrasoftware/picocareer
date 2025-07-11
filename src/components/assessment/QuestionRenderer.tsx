@@ -99,7 +99,7 @@ export const QuestionRenderer = ({
             {question.options?.map((option, index) => (
               <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-3' : 'p-2'} rounded hover:bg-gray-50 min-h-[48px]`}>
                 <RadioGroupItem value={option} id={`option-${index}`} className={isMobile ? 'w-5 h-5' : ''} />
-                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-base leading-relaxed' : ''}`}>
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-relaxed' : ''}`}>
                   {option}
                 </Label>
               </div>
@@ -120,7 +120,7 @@ export const QuestionRenderer = ({
                   }
                   className={isMobile ? 'w-5 h-5' : ''}
                 />
-                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-base leading-relaxed' : ''}`}>
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-sm leading-relaxed' : ''}`}>
                   {option}
                 </Label>
               </div>
@@ -147,7 +147,7 @@ export const QuestionRenderer = ({
                 className={`w-full ${isMobile ? 'h-8' : ''}`}
               />
             </div>
-            <div className={`flex justify-between ${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>
+            <div className={`flex justify-between ${isMobile ? 'text-sm' : 'text-sm'} text-muted-foreground`}>
               <span>Not at all (1)</span>
               <span className="font-medium">Current: {currentValue}</span>
               <span>Extremely (10)</span>
@@ -161,7 +161,7 @@ export const QuestionRenderer = ({
             value={typeof answer === 'string' ? answer : ''}
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="Share your thoughts..."
-            className={`${isMobile ? 'min-h-[100px] text-base' : 'min-h-[120px]'}`}
+            className={`${isMobile ? 'min-h-[100px] text-sm' : 'min-h-[120px]'}`}
           />
         );
 
@@ -180,10 +180,10 @@ export const QuestionRenderer = ({
           detectedProfileType={detectedProfileType}
         />
         <div className="flex justify-between items-start">
-          <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} leading-relaxed`}>{question.title}</CardTitle>
+          <CardTitle className={`${isMobile ? 'text-base' : 'text-xl'} leading-relaxed`}>{question.title}</CardTitle>
         </div>
         {question.description && (
-          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>{question.description}</p>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>{question.description}</p>
         )}
       </CardHeader>
       <CardContent className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
