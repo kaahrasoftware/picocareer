@@ -219,32 +219,31 @@ export class PDFExportService {
     
     // Modern page header
     this.addModernPageHeader(rank);
-    
-    this.currentY += 25;
+    this.currentY += 50; // Add space after header
     
     // Hero section for career
     this.addCareerHero(recommendation, rank);
-    
-    this.currentY += 30;
+    this.currentY += 80; // Add space after hero section
     
     // Match score with modern design
     this.addModernMatchScore(recommendation.matchScore);
-    
-    this.currentY += 35;
+    this.currentY += 70; // Add space after match score
     
     // Career description card
     this.addDescriptionCard(recommendation);
-    
-    this.currentY += 25;
+    // currentY is updated inside addDescriptionCard
+    this.currentY += 20; // Add spacing after description
     
     // Reasoning section
     if (recommendation.reasoning) {
       this.addReasoningSection(recommendation.reasoning);
-      this.currentY += 25;
+      // currentY is updated inside addReasoningSection
+      this.currentY += 20; // Add spacing after reasoning
     }
     
     // Career details grid
     this.addModernCareerDetails(recommendation);
+    // currentY is updated inside addModernCareerDetails
   }
   
   private addModernPageHeader(rank: number): void {
@@ -256,26 +255,28 @@ export class PDFExportService {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(24);
     this.doc.setTextColor(1, 33, 105);
-    this.doc.text('PicoCareer', this.margin, this.currentY + 15);
+    this.doc.text('PicoCareer', this.margin, 25);
     
     // Page indicator
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(12);
     this.doc.setTextColor(71, 85, 105);
-    this.doc.text(`Career Recommendation ${rank}`, this.pageWidth - this.margin - 60, this.currentY + 15);
+    this.doc.text(`Career Recommendation ${rank}`, this.pageWidth - this.margin - 80, 25);
   }
   
   private addCareerHero(recommendation: any, rank: number): void {
+    const cardHeight = 70;
+    
     // Hero card
-    this.addModernCard(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 60);
+    this.addModernCard(this.margin, this.currentY, this.pageWidth - 2 * this.margin, cardHeight);
     
     // Rank badge
     this.doc.setFillColor(0, 166, 212);
-    this.doc.circle(this.margin + 25, this.currentY + 25, 15, 'F');
+    this.doc.circle(this.margin + 25, this.currentY + 30, 15, 'F');
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(16);
     this.doc.setTextColor(255, 255, 255);
-    this.doc.text(rank.toString(), this.margin + 20, this.currentY + 30);
+    this.doc.text(rank.toString(), this.margin + 20, this.currentY + 35);
     
     // Career title
     this.doc.setFont('helvetica', 'bold');
@@ -284,14 +285,17 @@ export class PDFExportService {
     const titleLines = this.doc.splitTextToSize(recommendation.title, this.pageWidth - 120);
     this.doc.text(titleLines, this.margin + 50, this.currentY + 25);
     
+    // Calculate title height for proper positioning
+    const titleHeight = titleLines.length * 8;
+    
     // Category or industry badge
     if (recommendation.category || recommendation.industry) {
       this.doc.setFillColor(99, 102, 241);
-      this.doc.roundedRect(this.margin + 50, this.currentY + 40, 80, 12, 6, 6, 'F');
+      this.doc.roundedRect(this.margin + 50, this.currentY + 25 + titleHeight + 5, 80, 12, 6, 6, 'F');
       this.doc.setFont('helvetica', 'normal');
       this.doc.setFontSize(9);
       this.doc.setTextColor(255, 255, 255);
-      this.doc.text(recommendation.category || recommendation.industry || 'Professional', this.margin + 60, this.currentY + 48);
+      this.doc.text(recommendation.category || recommendation.industry || 'Professional', this.margin + 60, this.currentY + 32 + titleHeight + 5);
     }
   }
   
@@ -397,17 +401,18 @@ export class PDFExportService {
 
   private addModernCareerDetails(recommendation: any): void {
     // Grid of detail cards
-    const cardWidth = (this.pageWidth - 4 * this.margin) / 2;
-    const cardHeight = 45;
+    const cardWidth = (this.pageWidth - 3 * this.margin) / 2;
+    const cardHeight = 55;
     const spacing = 15;
     
     let row = 0;
     let col = 0;
+    const startY = this.currentY;
     
     // Salary Range Card
     if (recommendation.salaryRange) {
       const x = this.margin + col * (cardWidth + spacing);
-      const y = this.currentY + row * (cardHeight + spacing);
+      const y = startY + row * (cardHeight + spacing);
       
       this.addModernCard(x, y, cardWidth, cardHeight);
       this.addDetailCardContent('💰', 'Salary Range', recommendation.salaryRange, x, y);
@@ -419,7 +424,7 @@ export class PDFExportService {
     // Growth Outlook Card
     if (recommendation.growthOutlook) {
       const x = this.margin + col * (cardWidth + spacing);
-      const y = this.currentY + row * (cardHeight + spacing);
+      const y = startY + row * (cardHeight + spacing);
       
       this.addModernCard(x, y, cardWidth, cardHeight);
       this.addDetailCardContent('📈', 'Growth Outlook', recommendation.growthOutlook, x, y);
@@ -431,7 +436,7 @@ export class PDFExportService {
     // Time to Entry Card
     if (recommendation.timeToEntry) {
       const x = this.margin + col * (cardWidth + spacing);
-      const y = this.currentY + row * (cardHeight + spacing);
+      const y = startY + row * (cardHeight + spacing);
       
       this.addModernCard(x, y, cardWidth, cardHeight);
       this.addDetailCardContent('⏱️', 'Time to Entry', recommendation.timeToEntry, x, y);
@@ -443,7 +448,7 @@ export class PDFExportService {
     // Work Environment Card
     if (recommendation.workEnvironment) {
       const x = this.margin + col * (cardWidth + spacing);
-      const y = this.currentY + row * (cardHeight + spacing);
+      const y = startY + row * (cardHeight + spacing);
       
       this.addModernCard(x, y, cardWidth, cardHeight);
       this.addDetailCardContent('🏢', 'Work Environment', recommendation.workEnvironment, x, y);
@@ -452,7 +457,8 @@ export class PDFExportService {
       if (col === 0) row++;
     }
     
-    this.currentY += (row + (col > 0 ? 1 : 0)) * (cardHeight + spacing) + 20;
+    // Update currentY to be after the detail cards
+    this.currentY = startY + (row + (col > 0 ? 1 : 0)) * (cardHeight + spacing) + 20;
     
     // Skills and Education sections
     this.addSkillsAndEducation(recommendation);
@@ -463,20 +469,25 @@ export class PDFExportService {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(12);
     this.doc.setTextColor(0, 166, 212);
-    this.doc.text('●', x + 15, y + 18);
+    this.doc.text('●', x + 15, y + 20);
     
     // Title
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(11);
     this.doc.setTextColor(15, 23, 42);
-    this.doc.text(title, x + 25, y + 18);
+    this.doc.text(title, x + 25, y + 20);
     
     // Content
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
     this.doc.setTextColor(71, 85, 105);
-    const contentLines = this.doc.splitTextToSize(content, (this.pageWidth - 4 * this.margin) / 2 - 40);
-    this.doc.text(contentLines.slice(0, 2), x + 15, y + 30); // Limit to 2 lines
+    const cardWidth = (this.pageWidth - 3 * this.margin) / 2;
+    const contentLines = this.doc.splitTextToSize(content, cardWidth - 40);
+    
+    // Display content with proper line spacing
+    contentLines.slice(0, 3).forEach((line: string, index: number) => {
+      this.doc.text(line, x + 15, y + 35 + index * 5);
+    });
   }
   
   private addSkillsAndEducation(recommendation: any): void {
@@ -486,7 +497,12 @@ export class PDFExportService {
     if (!hasSkills && !hasEducation) return;
     
     const cardWidth = this.pageWidth - 2 * this.margin;
-    const cardHeight = 80;
+    
+    // Calculate required height based on content
+    const maxSkills = hasSkills ? Math.min(6, recommendation.requiredSkills.length) : 0;
+    const maxEducation = hasEducation ? Math.min(4, recommendation.educationRequirements.length) : 0;
+    const maxItems = Math.max(maxSkills, maxEducation);
+    const cardHeight = Math.max(90, 50 + maxItems * 6);
     
     this.addModernCard(this.margin, this.currentY, cardWidth, cardHeight);
     
@@ -494,7 +510,7 @@ export class PDFExportService {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(16);
     this.doc.setTextColor(15, 23, 42);
-    this.doc.text('Requirements & Skills', this.margin + 20, this.currentY + 20);
+    this.doc.text('Requirements & Skills', this.margin + 20, this.currentY + 22);
     
     const leftColumn = this.margin + 20;
     const rightColumn = this.pageWidth / 2 + 10;
@@ -504,14 +520,14 @@ export class PDFExportService {
       this.doc.setFont('helvetica', 'bold');
       this.doc.setFontSize(12);
       this.doc.setTextColor(15, 23, 42);
-      this.doc.text('Key Skills:', leftColumn, this.currentY + 35);
+      this.doc.text('Key Skills:', leftColumn, this.currentY + 40);
       
       this.doc.setFont('helvetica', 'normal');
       this.doc.setFontSize(10);
       this.doc.setTextColor(71, 85, 105);
       
       recommendation.requiredSkills.slice(0, 6).forEach((skill: string, index: number) => {
-        this.doc.text(`• ${skill}`, leftColumn + 5, this.currentY + 47 + index * 6);
+        this.doc.text(`• ${skill}`, leftColumn + 5, this.currentY + 52 + index * 6);
       });
     }
     
@@ -520,54 +536,72 @@ export class PDFExportService {
       this.doc.setFont('helvetica', 'bold');
       this.doc.setFontSize(12);
       this.doc.setTextColor(15, 23, 42);
-      this.doc.text('Education:', rightColumn, this.currentY + 35);
+      this.doc.text('Education:', rightColumn, this.currentY + 40);
       
       this.doc.setFont('helvetica', 'normal');
       this.doc.setFontSize(10);
       this.doc.setTextColor(71, 85, 105);
       
       recommendation.educationRequirements.slice(0, 4).forEach((req: string, index: number) => {
-        this.doc.text(`• ${req}`, rightColumn + 5, this.currentY + 47 + index * 6);
+        this.doc.text(`• ${req}`, rightColumn + 5, this.currentY + 52 + index * 6);
       });
     }
     
-    this.currentY += cardHeight + 15;
+    this.currentY += cardHeight + 20;
   }
 
   private addContactPage(): void {
     this.currentY = 30;
     
-    // Modern header
-    this.addModernPageHeader(0);
-    this.currentY += 25;
+    // Modern header (without rank parameter for contact page)
+    this.addContactPageHeader();
+    this.currentY += 50;
     
     // Hero section
-    this.addModernCard(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 70);
+    this.addModernCard(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 80);
     
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(28);
     this.doc.setTextColor(15, 23, 42);
-    this.doc.text('Ready to Take the Next Step?', this.margin + 25, this.currentY + 30);
+    this.doc.text('Ready to Take the Next Step?', this.margin + 25, this.currentY + 35);
     
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(14);
     this.doc.setTextColor(71, 85, 105);
-    this.doc.text('Connect with PicoCareer for personalized career guidance and support', this.margin + 25, this.currentY + 50);
+    this.doc.text('Connect with PicoCareer for personalized career guidance and support', this.margin + 25, this.currentY + 55);
     
     this.currentY += 100;
     
     // Contact cards
     this.addContactCards();
+    this.currentY += 110; // Add space after contact cards
     
     // Resources section
-    this.currentY += 30;
     this.addResourcesSection();
+    this.currentY += 80; // Add space after resources
     
     // Final CTA
-    this.currentY += 40;
     this.addFinalCTA();
     
     this.addModernFooter();
+  }
+  
+  private addContactPageHeader(): void {
+    // Header background
+    this.doc.setFillColor(248, 250, 252);
+    this.doc.rect(0, 0, this.pageWidth, 45, 'F');
+    
+    // Logo
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(24);
+    this.doc.setTextColor(1, 33, 105);
+    this.doc.text('PicoCareer', this.margin, 25);
+    
+    // Page indicator
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(12);
+    this.doc.setTextColor(71, 85, 105);
+    this.doc.text('Contact & Resources', this.pageWidth - this.margin - 70, 25);
   }
   
   private addContactCards(): void {
