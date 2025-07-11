@@ -8,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 interface CareerResultsProps {
   filteredCareers: Tables<"careers">[];
   isLoading?: boolean;
+  isMobile?: boolean;
 }
 
-export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps) => {
+export const CareerResults = ({ filteredCareers, isLoading, isMobile = false }: CareerResultsProps) => {
   const navigate = useNavigate();
   
   // Filter for complete careers only
@@ -42,7 +43,7 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
   return (
     <>
       <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}
         variants={container}
         initial="hidden"
         animate="show"
@@ -60,6 +61,7 @@ export const CareerResults = ({ filteredCareers, isLoading }: CareerResultsProps
               transferable_skills={career.transferable_skills}
               profiles_count={career.profiles_count}
               onClick={() => handleCareerClick(career.id)}
+              isMobile={isMobile}
             />
           </motion.div>
         ))}

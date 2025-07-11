@@ -19,6 +19,7 @@ export interface CareerCardProps {
   required_education?: string[];
   transferable_skills?: string[];
   profiles_count?: number;
+  isMobile?: boolean;
 }
 
 export function CareerCard({
@@ -34,7 +35,8 @@ export function CareerCard({
   onClick,
   required_education = [],
   transferable_skills = [],
-  profiles_count = 0
+  profiles_count = 0,
+  isMobile = false
 }: CareerCardProps) {
   const truncateText = (text: string, maxLength: number) => {
     if (!text) return '';
@@ -44,6 +46,59 @@ export function CareerCard({
 
   // Use salary_range if provided, otherwise use salary
   const displaySalary = salary_range || salary;
+
+  if (isMobile) {
+    return (
+      <Card 
+        className="flex flex-col hover:shadow-md transition-all duration-200 border-muted/60 overflow-hidden group cursor-pointer"
+        onClick={onClick}
+      >
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="text-base font-semibold leading-tight line-clamp-2 flex-1">{title}</h3>
+            {matchScore && (
+              <Badge className="bg-green-100 text-green-800 text-xs ml-2 whitespace-nowrap">
+                {matchScore}%
+              </Badge>
+            )}
+          </div>
+          
+          {/* Industry */}
+          {industry && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs mb-2">
+              {industry}
+            </Badge>
+          )}
+          
+          {/* Essential info row */}
+          <div className="flex justify-between items-center text-xs text-muted-foreground mb-2">
+            {displaySalary && (
+              <span className="font-medium text-green-600">{displaySalary}</span>
+            )}
+            <span>{profiles_count} {profiles_count === 1 ? 'Mentor' : 'Mentors'}</span>
+          </div>
+          
+          {/* Short description */}
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            {truncateText(description, 100)}
+          </p>
+          
+          {/* Touch-friendly button */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full h-8 text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onClick) onClick();
+            }}
+          >
+            View Details
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card 

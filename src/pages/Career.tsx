@@ -6,6 +6,7 @@ import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
 import { motion } from "framer-motion";
+import { useBreakpoints } from "@/hooks/useBreakpoints";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface ScoredCareer extends Tables<"careers"> {
@@ -13,6 +14,7 @@ interface ScoredCareer extends Tables<"careers"> {
 }
 
 const Career = () => {
+  const { isMobile, isTablet } = useBreakpoints();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [industryFilter, setIndustryFilter] = useState("all");
@@ -196,27 +198,29 @@ const Career = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className={`container mx-auto ${isMobile ? 'px-3 py-4' : 'px-4 py-8'}`}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
+          transition={{ duration: isMobile ? 0.3 : 0.5 }}
+          className={isMobile ? "mb-4" : "mb-8"}
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Explore Career Paths
+          <h1 className={`font-bold text-gray-900 mb-2 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+            {isMobile ? 'Explore Careers' : 'Explore Career Paths'}
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl">
-            Discover career opportunities that match your interests and skills. 
-            Filter by industry, required skills, and career type to find your perfect path.
+          <p className={`text-gray-600 ${isMobile ? 'text-sm max-w-none' : 'text-xl max-w-3xl'}`}>
+            {isMobile 
+              ? 'Find career opportunities that match your skills and interests.'
+              : 'Discover career opportunities that match your interests and skills. Filter by industry, required skills, and career type to find your perfect path.'
+            }
           </p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="mb-8"
+          transition={{ duration: isMobile ? 0.3 : 0.5, delay: isMobile ? 0.05 : 0.1 }}
+          className={isMobile ? "mb-4" : "mb-8"}
         >
           <CareerFilters
             searchQuery={searchQuery}
@@ -233,17 +237,18 @@ const Career = () => {
             setPopularFilter={setPopularFilter}
             industries={industries}
             allSkills={allSkills}
+            isMobile={isMobile}
           />
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: isMobile ? 0.3 : 0.5, delay: isMobile ? 0.1 : 0.2 }}
         >
-          <div className="mb-4 text-sm text-gray-600">
+          <div className={`mb-3 text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
             Showing {filteredCareers.length} of {careers.length} careers
-            {searchQuery && (
+            {searchQuery && !isMobile && (
               <span className="ml-2 text-blue-600">
                 (sorted by relevance)
               </span>
@@ -253,6 +258,7 @@ const Career = () => {
           <CareerResults
             filteredCareers={filteredCareers}
             isLoading={isLoading}
+            isMobile={isMobile}
           />
         </motion.div>
       </div>
