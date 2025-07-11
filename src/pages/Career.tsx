@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CareerFilters } from "@/components/career/CareerFilters";
 import { CareerResults } from "@/components/career/CareerResults";
 import { CareerDetailsDialog } from "@/components/CareerDetailsDialog";
+import { StandardPagination } from "@/components/common/StandardPagination";
 import { motion } from "framer-motion";
 import { useBreakpoints } from "@/hooks/useBreakpoints";
 import type { Tables } from "@/integrations/supabase/types";
@@ -22,10 +23,31 @@ const Career = () => {
   const [isSkillsDropdownOpen, setIsSkillsDropdownOpen] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState("");
   const [popularFilter, setPopularFilter] = useState("all");
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = isMobile ? 8 : 12;
 
   // Dialog state management
   const dialogOpen = searchParams.get("dialog") === "true";
   const selectedCareerId = searchParams.get("careerId");
+
+  // Initialize current page from URL
+  useEffect(() => {
+    const pageFromUrl = searchParams.get("page");
+    if (pageFromUrl) {
+      const page = parseInt(pageFromUrl);
+      if (page > 0) setCurrentPage(page);
+    }
+  }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete("page");
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchQuery, industryFilter, selectedSkills, popularFilter]);
 
   const handleDialogOpenChange = (open: boolean) => {
     if (!open) {
@@ -35,6 +57,16 @@ const Career = () => {
       newSearchParams.delete("careerId");
       setSearchParams(newSearchParams, { replace: true });
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("page", page.toString());
+    setSearchParams(newSearchParams, { replace: true });
+    
+    // Smooth scroll to top on page change
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Fetch careers
@@ -196,6 +228,13 @@ const Career = () => {
     return filtered.sort((a, b) => a.title.localeCompare(b.title));
   }, [careers, searchQuery, industryFilter, selectedSkills, popularFilter]);
 
+  // Calculate pagination values
+  const totalPages = Math.ceil(filteredCareers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCareers = filteredCareers.slice(startIndex, startIndex + itemsPerPage);
+  const startItem = filteredCareers.length > 0 ? startIndex + 1 : 0;
+  const endItem = Math.min(startIndex + itemsPerPage, filteredCareers.length);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <div className={`container mx-auto ${isMobile ? 'px-3 py-4' : 'px-4 py-8'}`}>
@@ -247,19 +286,35 @@ const Career = () => {
           transition={{ duration: isMobile ? 0.3 : 0.5, delay: isMobile ? 0.1 : 0.2 }}
         >
           <div className={`mb-3 text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
-            Showing {filteredCareers.length} of {careers.length} careers
-            {searchQuery && !isMobile && (
-              <span className="ml-2 text-blue-600">
-                (sorted by relevance)
-              </span>
+            {filteredCareers.length > 0 ? (
+              <>
+                Showing {startItem}-{endItem} of {filteredCareers.length} careers
+                {searchQuery && !isMobile && (
+                  <span className="ml-2 text-blue-600">
+                    (sorted by relevance)
+                  </span>
+                )}
+              </>
+            ) : (
+              `0 of ${careers.length} careers`
             )}
           </div>
           
           <CareerResults
-            filteredCareers={filteredCareers}
+            filteredCareers={paginatedCareers}
             isLoading={isLoading}
             isMobile={isMobile}
           />
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <StandardPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              maxPageButtons={isMobile ? 3 : 5}
+            />
+          )}
         </motion.div>
       </div>
 
