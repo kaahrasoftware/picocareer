@@ -10,6 +10,7 @@ export class PDFExportService {
   private readonly primaryColor = '#00A6D4';
   private readonly secondaryColor = '#012169';
   private readonly accentColor = '#000000';
+  private logoImage: string | null = null;
 
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4');
@@ -19,6 +20,17 @@ export class PDFExportService {
 
   async generatePDF(data: PDFExportData, options: PDFGenerationOptions = {}): Promise<void> {
     try {
+      // Load logo first
+      await this.loadLogo();
+      
+      // Set PDF metadata
+      this.doc.setProperties({
+        title: 'PicoCareer Assessment Results',
+        subject: 'Career Assessment Report',
+        author: 'PicoCareer',
+        creator: 'PicoCareer Assessment Platform'
+      });
+      
       // Add cover page
       this.addCoverPage(data);
       
@@ -48,78 +60,51 @@ export class PDFExportService {
   }
 
   private addCoverPage(data: PDFExportData): void {
-    // Header with PicoCareer branding
-    this.doc.setFillColor(this.primaryColor);
-    this.doc.rect(0, 0, this.pageWidth, 60, 'F');
+    // Modern gradient header
+    this.addGradientHeader();
     
-    // PicoCareer logo area (placeholder)
-    this.doc.setFillColor(255, 255, 255);
-    this.doc.rect(this.margin, 15, 40, 30, 'F');
-    this.doc.setTextColor(this.primaryColor);
-    this.doc.setFontSize(12);
-    this.doc.text('LOGO', this.margin + 15, 32);
-    
-    // Title
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(24);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('PicoCareer', this.margin + 50, 25);
-    this.doc.setFontSize(16);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text('Career Assessment Results', this.margin + 50, 35);
-    
-    // Main title
-    this.currentY = 80;
-    this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFontSize(28);
-    this.doc.setFont('helvetica', 'bold');
-    this.centerText('Your Personalized Career Report', this.currentY);
-    
-    this.currentY += 20;
-    this.doc.setFontSize(14);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(100, 100, 100);
-    this.centerText('AI-Powered Career Recommendations', this.currentY);
-    
-    // Assessment info box
-    this.currentY += 40;
-    this.doc.setFillColor(240, 248, 255);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 80, 'F');
-    this.doc.setDrawColor(this.primaryColor);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 80, 'S');
-    
-    this.currentY += 20;
-    this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFontSize(16);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Assessment Summary', this.margin + 10, this.currentY);
-    
-    this.currentY += 15;
-    this.doc.setFontSize(12);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(60, 60, 60);
-    
-    const completedDate = new Date(data.completedAt).toLocaleDateString();
-    this.doc.text(`Completed: ${completedDate}`, this.margin + 10, this.currentY);
-    
-    this.currentY += 8;
-    this.doc.text(`Questions Answered: ${data.responses.length}`, this.margin + 10, this.currentY);
-    
-    this.currentY += 8;
-    this.doc.text(`Career Matches Found: ${data.recommendations.length}`, this.margin + 10, this.currentY);
-    
-    if (data.detectedProfileType) {
-      this.currentY += 8;
-      const profileLabel = this.getProfileTypeLabel(data.detectedProfileType);
-      this.doc.text(`Profile Type: ${profileLabel}`, this.margin + 10, this.currentY);
+    // PicoCareer logo and branding
+    if (this.logoImage) {
+      this.doc.addImage(this.logoImage, 'PNG', this.margin, 20, 25, 25);
     }
     
-    // Add disclaimer
-    this.currentY = this.pageHeight - 40;
-    this.doc.setFontSize(10);
+    // Company name and tagline
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.setFontSize(32);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('PicoCareer', this.margin + 35, 35);
+    
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('AI-Powered Career Guidance', this.margin + 35, 45);
+    
+    // Hero section
+    this.currentY = 90;
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(36);
+    this.doc.setFont('helvetica', 'bold');
+    this.centerText('Your Career Journey', this.currentY);
+    this.centerText('Starts Here', this.currentY + 15);
+    
+    this.currentY += 35;
+    this.doc.setFontSize(16);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    this.centerText('Personalized Career Assessment Results', this.currentY);
+    
+    // Modern assessment info cards
+    this.currentY += 30;
+    this.addModernInfoCards(data);
+    
+    // Achievement badge
+    this.addAchievementBadge();
+    
+    // Modern disclaimer
+    this.currentY = this.pageHeight - 35;
+    this.doc.setFontSize(9);
     this.doc.setTextColor(120, 120, 120);
-    this.centerText('This report is generated based on your assessment responses', this.currentY);
-    this.centerText('and should be used as a guide for career exploration.', this.currentY + 6);
+    this.centerText('This personalized report is generated using advanced AI analysis', this.currentY);
+    this.centerText('and should be used as a comprehensive guide for career exploration.', this.currentY + 5);
   }
 
   private addAssessmentSummary(data: PDFExportData): void {
@@ -152,49 +137,61 @@ export class PDFExportService {
 
   private addCareerRecommendation(recommendation: any, rank: number): void {
     // Check if we need a new page
-    if (this.currentY > this.pageHeight - 100) {
+    if (this.currentY > this.pageHeight - 120) {
       this.addNewPage();
     }
     
-    // Career title with rank
-    this.doc.setFillColor(this.primaryColor);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 15, 'F');
+    // Modern career card
+    const cardHeight = 90;
+    const cardRadius = 8;
     
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(16);
+    // Card shadow effect (multiple rectangles with opacity)
+    this.doc.setFillColor(0, 0, 0);
+    this.doc.setGState(this.doc.GState({ opacity: 0.1 }));
+    this.doc.roundedRect(this.margin + 2, this.currentY + 2, this.pageWidth - 2 * this.margin, cardHeight, cardRadius, cardRadius, 'F');
+    this.doc.setGState(this.doc.GState({ opacity: 1 }));
+    
+    // Card background
+    this.doc.setFillColor(255, 255, 255);
+    this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, cardHeight, cardRadius, cardRadius, 'F');
+    
+    // Card border
+    this.doc.setDrawColor(240, 240, 240);
+    this.doc.setLineWidth(0.5);
+    this.doc.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, cardHeight, cardRadius, cardRadius, 'S');
+    
+    // Rank badge
+    this.addRankBadge(rank, this.margin + 10, this.currentY + 10);
+    
+    // Career title
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(18);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text(`#${rank} ${recommendation.title}`, this.margin + 5, this.currentY + 10);
+    this.doc.text(recommendation.title, this.margin + 45, this.currentY + 18);
     
-    // Match score
-    const scoreX = this.pageWidth - this.margin - 30;
-    this.doc.text(`${recommendation.matchScore}%`, scoreX, this.currentY + 10);
-    
-    this.currentY += 20;
+    // Match score with progress bar
+    this.addMatchScoreBar(recommendation.matchScore, this.currentY + 25);
     
     // Description
-    this.doc.setTextColor(60, 60, 60);
-    this.doc.setFontSize(11);
+    this.doc.setTextColor(80, 80, 80);
+    this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'normal');
-    this.addParagraph(recommendation.description);
-    
-    this.currentY += 5;
+    const descLines = this.doc.splitTextToSize(recommendation.description, this.pageWidth - 4 * this.margin);
+    this.doc.text(descLines.slice(0, 2), this.margin + 10, this.currentY + 38);
     
     // Match reasoning
-    this.doc.setFontSize(10);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setTextColor(this.secondaryColor);
-    this.doc.text('Why this career matches you:', this.margin, this.currentY);
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'italic');
+    this.doc.setTextColor(this.primaryColor);
+    const reasoningLines = this.doc.splitTextToSize(`💡 ${recommendation.reasoning}`, this.pageWidth - 4 * this.margin);
+    this.doc.text(reasoningLines.slice(0, 2), this.margin + 10, this.currentY + 58);
     
-    this.currentY += 5;
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(60, 60, 60);
-    this.addParagraph(recommendation.reasoning);
+    this.currentY += cardHeight + 10;
     
-    // Career details in columns
-    this.currentY += 10;
-    this.addCareerDetails(recommendation);
+    // Modern career details cards
+    this.addModernCareerDetails(recommendation);
     
-    this.currentY += 15;
+    this.currentY += 20;
   }
 
   private addCareerDetails(recommendation: any): void {
@@ -252,52 +249,162 @@ export class PDFExportService {
   }
 
   private addFooterPage(): void {
-    this.currentY = 50;
+    this.currentY = 40;
     
-    // Thank you section
-    this.doc.setFontSize(20);
+    // Modern thank you section with logo
+    if (this.logoImage) {
+      const logoSize = 30;
+      const logoX = (this.pageWidth - logoSize) / 2;
+      this.doc.addImage(this.logoImage, 'PNG', logoX, this.currentY, logoSize, logoSize);
+      this.currentY += logoSize + 15;
+    }
+    
+    this.doc.setFontSize(24);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(this.secondaryColor);
-    this.centerText('Thank You for Using PicoCareer', this.currentY);
+    this.centerText('Thank You for Choosing PicoCareer', this.currentY);
+    
+    this.currentY += 15;
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    this.centerText('Your career journey is just beginning', this.currentY);
+    
+    // Modern next steps cards
+    this.currentY += 30;
+    this.addModernNextStepsCards();
+    
+    // Resources section
+    this.currentY += 20;
+    this.addResourcesSection();
+    
+    // Modern certification footer
+    this.addModernCertificationFooter();
+  }
+
+  private addModernNextStepsCards(): void {
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(18);
+    this.doc.setFont('helvetica', 'bold');
+    this.centerText('Your Next Steps', this.currentY);
     
     this.currentY += 20;
-    this.doc.setFontSize(12);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(60, 60, 60);
-    this.centerText('We hope this assessment helps guide your career journey.', this.currentY);
     
-    // Next steps
-    this.currentY += 30;
-    this.addSectionHeader('Next Steps');
-    
-    this.currentY += 10;
-    const nextSteps = [
-      '• Research the recommended careers in detail',
-      '• Connect with professionals in these fields',
-      '• Explore educational pathways and requirements',
-      '• Consider internships or job shadowing opportunities',
-      '• Update your skills based on career requirements'
+    const steps = [
+      { icon: '🔍', title: 'Research', desc: 'Explore recommended careers in detail' },
+      { icon: '🤝', title: 'Network', desc: 'Connect with industry professionals' },
+      { icon: '🎓', title: 'Learn', desc: 'Identify skill gaps and education paths' },
+      { icon: '💼', title: 'Experience', desc: 'Seek internships and opportunities' }
     ];
     
-    nextSteps.forEach(step => {
-      this.doc.text(step, this.margin, this.currentY);
-      this.currentY += 8;
+    const cardWidth = (this.pageWidth - 5 * this.margin) / 2;
+    const cardHeight = 30;
+    
+    steps.forEach((step, index) => {
+      const row = Math.floor(index / 2);
+      const col = index % 2;
+      const cardX = this.margin + col * (cardWidth + this.margin);
+      const cardY = this.currentY + row * (cardHeight + 10);
+      
+      // Card background
+      this.doc.setFillColor(248, 250, 252);
+      this.doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 5, 5, 'F');
+      this.doc.setDrawColor(226, 232, 240);
+      this.doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 5, 5, 'S');
+      
+      // Icon
+      this.doc.setFontSize(16);
+      this.doc.text(step.icon, cardX + 8, cardY + 12);
+      
+      // Title and description
+      this.doc.setTextColor(this.secondaryColor);
+      this.doc.setFontSize(11);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(step.title, cardX + 25, cardY + 10);
+      
+      this.doc.setTextColor(100, 100, 100);
+      this.doc.setFontSize(8);
+      this.doc.setFont('helvetica', 'normal');
+      const descLines = this.doc.splitTextToSize(step.desc, cardWidth - 30);
+      this.doc.text(descLines, cardX + 25, cardY + 18);
     });
     
-    // PicoCareer branding and certification
-    this.currentY = this.pageHeight - 80;
-    this.doc.setFillColor(this.primaryColor);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 50, 'F');
+    this.currentY += 2 * (cardHeight + 10);
+  }
+
+  private addResourcesSection(): void {
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.centerText('Additional Resources', this.currentY);
     
+    this.currentY += 15;
+    this.doc.setTextColor(100, 100, 100);
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    
+    const resources = [
+      '📧 Email us at support@picocareer.com for personalized guidance',
+      '🌐 Visit our career blog at www.picocareer.com/blog',
+      '📱 Follow us on social media for career tips and updates',
+      '💬 Join our community forum for peer support'
+    ];
+    
+    resources.forEach(resource => {
+      this.centerText(resource, this.currentY);
+      this.currentY += 8;
+    });
+  }
+
+  private addModernCertificationFooter(): void {
+    this.currentY = this.pageHeight - 70;
+    
+    // Modern gradient footer
+    this.addGradientFooter();
+    
+    // Logo in footer
+    if (this.logoImage) {
+      this.doc.addImage(this.logoImage, 'PNG', this.margin + 10, this.currentY + 15, 20, 20);
+    }
+    
+    // Certification text
     this.doc.setTextColor(255, 255, 255);
     this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'bold');
-    this.centerText('Certified by PicoCareer', this.currentY + 15);
+    this.doc.text('Certified by PicoCareer', this.margin + 40, this.currentY + 20);
     
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'normal');
-    this.centerText('AI-Powered Career Guidance Platform', this.currentY + 25);
-    this.centerText('www.picocareer.com', this.currentY + 35);
+    this.doc.text('AI-Powered Career Guidance Platform', this.margin + 40, this.currentY + 30);
+    
+    // Website and contact
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'bold');
+    const websiteX = this.pageWidth - this.margin - 60;
+    this.doc.text('www.picocareer.com', websiteX, this.currentY + 20);
+    this.doc.text('info@picocareer.com', websiteX, this.currentY + 30);
+    
+    // Generation timestamp
+    this.doc.setFontSize(8);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(200, 200, 200);
+    const timestamp = new Date().toLocaleString();
+    this.centerText(`Generated on ${timestamp}`, this.currentY + 50);
+  }
+
+  private addGradientFooter(): void {
+    const footerHeight = 60;
+    const steps = 15;
+    
+    for (let i = 0; i < steps; i++) {
+      const ratio = i / (steps - 1);
+      const r = Math.round(1 + ratio * 0);
+      const g = Math.round(33 + ratio * 133);
+      const b = Math.round(105 + ratio * 64);
+      
+      this.doc.setFillColor(r, g, b);
+      this.doc.rect(this.margin, this.currentY + i * (footerHeight / steps), this.pageWidth - 2 * this.margin, footerHeight / steps + 1, 'F');
+    }
   }
 
   private addSectionHeader(title: string): void {
@@ -361,5 +468,196 @@ export class PDFExportService {
       default:
         return 'Your recommendations are personalized based on your assessment responses and career interests.';
     }
+  }
+
+  private async loadLogo(): Promise<void> {
+    try {
+      const response = await fetch('/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png');
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      return new Promise((resolve) => {
+        reader.onload = () => {
+          this.logoImage = reader.result as string;
+          resolve();
+        };
+        reader.onerror = () => {
+          console.warn('Could not load logo, using fallback');
+          resolve();
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn('Could not load logo:', error);
+    }
+  }
+
+  private addGradientHeader(): void {
+    // Create gradient effect with multiple rectangles
+    const headerHeight = 70;
+    const steps = 20;
+    
+    for (let i = 0; i < steps; i++) {
+      const ratio = i / (steps - 1);
+      const r = Math.round(0 + (1 - ratio) * 0);
+      const g = Math.round(166 + (1 - ratio) * 60);
+      const b = Math.round(212 + (1 - ratio) * 57);
+      
+      this.doc.setFillColor(r, g, b);
+      this.doc.rect(0, i * (headerHeight / steps), this.pageWidth, headerHeight / steps + 1, 'F');
+    }
+  }
+
+  private addModernInfoCards(data: PDFExportData): void {
+    const cardWidth = (this.pageWidth - 3 * this.margin) / 2;
+    const cardHeight = 35;
+    
+    // Left card - Assessment Info
+    this.doc.setFillColor(248, 250, 252);
+    this.doc.roundedRect(this.margin, this.currentY, cardWidth, cardHeight, 5, 5, 'F');
+    this.doc.setDrawColor(226, 232, 240);
+    this.doc.roundedRect(this.margin, this.currentY, cardWidth, cardHeight, 5, 5, 'S');
+    
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Assessment Details', this.margin + 8, this.currentY + 12);
+    
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    const completedDate = new Date(data.completedAt).toLocaleDateString();
+    this.doc.text(`Completed: ${completedDate}`, this.margin + 8, this.currentY + 20);
+    this.doc.text(`${data.responses.length} Questions • ${data.recommendations.length} Matches`, this.margin + 8, this.currentY + 27);
+    
+    // Right card - Profile Type
+    const rightCardX = this.margin + cardWidth + this.margin;
+    this.doc.setFillColor(240, 253, 244);
+    this.doc.roundedRect(rightCardX, this.currentY, cardWidth, cardHeight, 5, 5, 'F');
+    this.doc.setDrawColor(187, 247, 208);
+    this.doc.roundedRect(rightCardX, this.currentY, cardWidth, cardHeight, 5, 5, 'S');
+    
+    this.doc.setTextColor(this.primaryColor);
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Your Profile', rightCardX + 8, this.currentY + 12);
+    
+    this.doc.setFontSize(9);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    if (data.detectedProfileType) {
+      const profileLabel = this.getProfileTypeLabel(data.detectedProfileType);
+      this.doc.text(profileLabel, rightCardX + 8, this.currentY + 20);
+      this.doc.text('AI-Detected Profile Type', rightCardX + 8, this.currentY + 27);
+    }
+    
+    this.currentY += cardHeight + 20;
+  }
+
+  private addAchievementBadge(): void {
+    const badgeY = this.currentY + 10;
+    const badgeX = this.pageWidth / 2;
+    
+    // Badge background
+    this.doc.setFillColor(this.primaryColor);
+    this.doc.circle(badgeX, badgeY, 25, 'F');
+    
+    // Badge border
+    this.doc.setDrawColor(255, 255, 255);
+    this.doc.setLineWidth(2);
+    this.doc.circle(badgeX, badgeY, 25, 'S');
+    
+    // Badge text
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'bold');
+    this.centerText('ASSESSMENT', badgeY - 3);
+    this.centerText('COMPLETE', badgeY + 5);
+    
+    this.currentY += 35;
+  }
+
+  private addRankBadge(rank: number, x: number, y: number): void {
+    // Badge background
+    this.doc.setFillColor(this.primaryColor);
+    this.doc.circle(x + 10, y + 8, 12, 'F');
+    
+    // Badge text
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    const rankText = `#${rank}`;
+    const textWidth = this.doc.getTextWidth(rankText);
+    this.doc.text(rankText, x + 10 - textWidth/2, y + 12);
+  }
+
+  private addMatchScoreBar(score: number, y: number): void {
+    const barWidth = 120;
+    const barHeight = 6;
+    const barX = this.pageWidth - this.margin - barWidth - 10;
+    
+    // Background bar
+    this.doc.setFillColor(240, 240, 240);
+    this.doc.roundedRect(barX, y, barWidth, barHeight, 3, 3, 'F');
+    
+    // Progress bar
+    const progressWidth = (score / 100) * barWidth;
+    let progressColor = score >= 80 ? [34, 197, 94] : score >= 60 ? [251, 191, 36] : [239, 68, 68];
+    this.doc.setFillColor(progressColor[0], progressColor[1], progressColor[2]);
+    this.doc.roundedRect(barX, y, progressWidth, barHeight, 3, 3, 'F');
+    
+    // Score text
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text(`${score}% Match`, barX + barWidth + 5, y + 5);
+  }
+
+  private addModernCareerDetails(recommendation: any): void {
+    const detailCards = [
+      { icon: '💰', label: 'Salary', value: recommendation.salaryRange },
+      { icon: '📈', label: 'Growth', value: recommendation.growthOutlook },
+      { icon: '⏱️', label: 'Entry Time', value: recommendation.timeToEntry },
+      { icon: '🏢', label: 'Environment', value: recommendation.workEnvironment }
+    ].filter(card => card.value);
+    
+    if (detailCards.length === 0) return;
+    
+    const cardWidth = (this.pageWidth - 3 * this.margin) / 2;
+    const cardHeight = 25;
+    let cardX = this.margin;
+    let cardY = this.currentY;
+    
+    detailCards.forEach((card, index) => {
+      if (index > 0 && index % 2 === 0) {
+        cardY += cardHeight + 5;
+        cardX = this.margin;
+      }
+      
+      // Card background
+      this.doc.setFillColor(252, 252, 252);
+      this.doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 3, 3, 'F');
+      this.doc.setDrawColor(240, 240, 240);
+      this.doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 3, 3, 'S');
+      
+      // Icon and content
+      this.doc.setFontSize(12);
+      this.doc.text(card.icon, cardX + 5, cardY + 10);
+      
+      this.doc.setTextColor(this.secondaryColor);
+      this.doc.setFontSize(9);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(card.label, cardX + 18, cardY + 8);
+      
+      this.doc.setTextColor(80, 80, 80);
+      this.doc.setFontSize(8);
+      this.doc.setFont('helvetica', 'normal');
+      const valueLines = this.doc.splitTextToSize(card.value, cardWidth - 25);
+      this.doc.text(valueLines[0], cardX + 18, cardY + 16);
+      
+      cardX += cardWidth + this.margin;
+    });
+    
+    this.currentY = cardY + cardHeight + 5;
   }
 }
