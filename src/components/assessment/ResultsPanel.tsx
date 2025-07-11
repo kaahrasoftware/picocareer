@@ -8,6 +8,7 @@ import { AssessmentSummary } from './AssessmentSummary';
 import { CareerRecommendation, QuestionResponse } from '@/types/assessment';
 import { useSaveRecommendations } from '@/hooks/useSaveRecommendations';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
+import { usePdfExport } from '@/hooks/usePdfExport';
 import { 
   Target, 
   RefreshCw, 
@@ -83,6 +84,11 @@ export const ResultsPanel = ({
     recommendations
   });
 
+  const { exportToPdf, isExporting } = usePdfExport({
+    assessmentId: finalAssessmentId,
+    detectedProfileType
+  });
+
   useEffect(() => {
     // Only check if already saved for real assessment IDs (UUID format)
     if (finalAssessmentId && finalAssessmentId.length === 36) {
@@ -91,7 +97,7 @@ export const ResultsPanel = ({
   }, [finalAssessmentId, checkIfAlreadySaved]);
 
   const handleExportResults = () => {
-    console.log('Exporting results...');
+    exportToPdf(recommendations, responses);
   };
 
   const handleShareResults = () => {
@@ -197,10 +203,20 @@ export const ResultsPanel = ({
               onClick={handleExportResults} 
               variant="outline"
               size="lg"
-              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200`}
+              disabled={isExporting || recommendations.length === 0}
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200 disabled:opacity-50`}
             >
-              <Download className="h-5 w-5 mr-3" />
-              {isMobile ? 'Export PDF' : 'Export Results'}
+              {isExporting ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-3 animate-spin" />
+                  {isMobile ? 'Generating...' : 'Generating PDF...'}
+                </>
+              ) : (
+                <>
+                  <Download className="h-5 w-5 mr-3" />
+                  {isMobile ? 'Export PDF' : 'Export Results'}
+                </>
+              )}
             </Button>
             <Button 
               onClick={handleShareResults} 
