@@ -8,6 +8,7 @@ import { CareerRecommendation } from '@/types/assessment';
 import { CareerDetailsDialog } from '@/components/CareerDetailsDialog';
 import { FindMentorsDialog } from './FindMentorsDialog';
 import { RelatedCareersSection } from './RelatedCareersSection';
+import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { 
   Briefcase, 
   TrendingUp, 
@@ -27,6 +28,7 @@ export const CareerRecommendationCard = ({
   recommendation, 
   rank 
 }: CareerRecommendationCardProps) => {
+  const { isMobile } = useBreakpoints();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mentorsDialogOpen, setMentorsDialogOpen] = useState(false);
   const [selectedCareerId, setSelectedCareerId] = useState<string>('');
@@ -53,39 +55,41 @@ export const CareerRecommendationCard = ({
   return (
     <>
       <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div className="flex items-start space-x-3">
+        <CardHeader className={isMobile ? 'pb-4' : ''}>
+          <div className={`flex ${isMobile ? 'flex-col space-y-3' : 'justify-between items-start'}`}>
+            <div className={`flex items-start ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold">
+                <div className={`${isMobile ? 'w-6 h-6 text-sm' : 'w-8 h-8'} bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold`}>
                   {rank}
                 </div>
               </div>
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
+              <div className="flex-1">
+                <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+                  <Briefcase className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
                   {recommendation.title}
                 </CardTitle>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary">
+                <div className={`flex items-center gap-2 ${isMobile ? 'mt-1' : 'mt-2'}`}>
+                  <Badge variant="secondary" className={isMobile ? 'text-xs' : ''}>
                     {Math.round(recommendation.matchScore)}% Match
                   </Badge>
                   <Progress 
                     value={recommendation.matchScore} 
-                    className="w-20 h-2"
+                    className={`${isMobile ? 'w-16 h-1.5' : 'w-20 h-2'}`}
                   />
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleBookmark}>
-              <Bookmark className="h-4 w-4" />
-            </Button>
+            {!isMobile && (
+              <Button variant="ghost" size="sm" onClick={handleBookmark}>
+                <Bookmark className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">{recommendation.description}</p>
+        <CardContent className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>{recommendation.description}</p>
           
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'md:grid-cols-3 gap-4'} text-sm`}>
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-green-600" />
               <span>{recommendation.salaryRange || 'Varies'}</span>
@@ -101,7 +105,7 @@ export const CareerRecommendationCard = ({
           </div>
 
           <div>
-            <h4 className="font-semibold mb-2">Why This Matches You:</h4>
+            <h4 className={`font-semibold ${isMobile ? 'mb-1 text-sm' : 'mb-2'}`}>Why This Matches You:</h4>
             <p className="text-sm text-muted-foreground">
               {recommendation.reasoning}
             </p>
@@ -109,35 +113,57 @@ export const CareerRecommendationCard = ({
 
           {recommendation.requiredSkills && recommendation.requiredSkills.length > 0 && (
             <div>
-              <h4 className="font-semibold mb-2">Key Skills Needed:</h4>
+              <h4 className={`font-semibold ${isMobile ? 'mb-1 text-sm' : 'mb-2'}`}>Key Skills Needed:</h4>
               <div className="flex flex-wrap gap-1">
-                {recommendation.requiredSkills.slice(0, 6).map((skill, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
+                {recommendation.requiredSkills.slice(0, isMobile ? 4 : 6).map((skill, index) => (
+                  <Badge key={index} variant="outline" className={`${isMobile ? 'text-xs px-2 py-0.5' : 'text-xs'}`}>
                     {skill}
                   </Badge>
                 ))}
+                {isMobile && recommendation.requiredSkills.length > 4 && (
+                  <Badge variant="outline" className="text-xs px-2 py-0.5">
+                    +{recommendation.requiredSkills.length - 4} more
+                  </Badge>
+                )}
               </div>
             </div>
           )}
 
-          <div className="flex gap-2 pt-2">
-            <Button onClick={handleViewCareer} size="sm">
+          <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-2'} ${isMobile ? 'pt-1' : 'pt-2'}`}>
+            <Button 
+              onClick={handleViewCareer} 
+              size={isMobile ? "default" : "sm"}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
+            >
               Learn More
               <ExternalLink className="h-3 w-3 ml-1" />
             </Button>
-            <Button variant="outline" size="sm" onClick={handleFindMentors}>
+            <Button 
+              variant="outline" 
+              size={isMobile ? "default" : "sm"} 
+              onClick={handleFindMentors}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
+            >
               <Users className="h-3 w-3 mr-1" />
               Find Mentors
             </Button>
+            {isMobile && (
+              <Button variant="ghost" size="sm" onClick={handleBookmark} className="self-start">
+                <Bookmark className="h-4 w-4 mr-1" />
+                Bookmark
+              </Button>
+            )}
           </div>
 
-          {/* Related Careers Section */}
-          <div className="mt-6">
-            <RelatedCareersSection
-              recommendation={recommendation}
-              onCareerSelect={handleRelatedCareerSelect}
-            />
-          </div>
+          {/* Related Careers Section - Hide on mobile to reduce clutter */}
+          {!isMobile && (
+            <div className="mt-6">
+              <RelatedCareersSection
+                recommendation={recommendation}
+                onCareerSelect={handleRelatedCareerSelect}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AssessmentQuestion, QuestionResponse } from '@/types/assessment';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
+import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 interface QuestionRendererProps {
@@ -28,6 +29,7 @@ export const QuestionRenderer = ({
   isLastQuestion = false,
   detectedProfileType
 }: QuestionRendererProps) => {
+  const { isMobile } = useBreakpoints();
   const getInitialAnswer = (questionType: string) => {
     switch (questionType) {
       case 'scale':
@@ -95,9 +97,9 @@ export const QuestionRenderer = ({
         return (
           <RadioGroup value={answer} onValueChange={setAnswer}>
             {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
-                <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
+              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-3' : 'p-2'} rounded hover:bg-gray-50 min-h-[48px]`}>
+                <RadioGroupItem value={option} id={`option-${index}`} className={isMobile ? 'w-5 h-5' : ''} />
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-base leading-relaxed' : ''}`}>
                   {option}
                 </Label>
               </div>
@@ -107,17 +109,18 @@ export const QuestionRenderer = ({
 
       case 'multiple_select':
         return (
-          <div className="space-y-3">
+          <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
             {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50">
+              <div key={index} className={`flex items-center space-x-2 ${isMobile ? 'p-3' : 'p-2'} rounded hover:bg-gray-50 min-h-[48px]`}>
                 <Checkbox
                   id={`option-${index}`}
                   checked={selectedOptions.includes(option)}
                   onCheckedChange={(checked) => 
                     handleMultipleSelect(option, checked as boolean)
                   }
+                  className={isMobile ? 'w-5 h-5' : ''}
                 />
-                <Label htmlFor={`option-${index}`} className="cursor-pointer flex-1">
+                <Label htmlFor={`option-${index}`} className={`cursor-pointer flex-1 ${isMobile ? 'text-base leading-relaxed' : ''}`}>
                   {option}
                 </Label>
               </div>
@@ -130,8 +133,8 @@ export const QuestionRenderer = ({
         const sliderValue = Array.isArray(answer) ? answer : [5];
         
         return (
-          <div className="space-y-4">
-            <div className="px-2">
+          <div className={`${isMobile ? 'space-y-6 py-2' : 'space-y-4'}`}>
+            <div className={`${isMobile ? 'px-4' : 'px-2'}`}>
               <Slider
                 value={sliderValue}
                 onValueChange={(newValue) => {
@@ -141,10 +144,10 @@ export const QuestionRenderer = ({
                 max={10}
                 min={1}
                 step={1}
-                className="w-full"
+                className={`w-full ${isMobile ? 'h-8' : ''}`}
               />
             </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
+            <div className={`flex justify-between ${isMobile ? 'text-base' : 'text-sm'} text-muted-foreground`}>
               <span>Not at all (1)</span>
               <span className="font-medium">Current: {currentValue}</span>
               <span>Extremely (10)</span>
@@ -158,7 +161,7 @@ export const QuestionRenderer = ({
             value={typeof answer === 'string' ? answer : ''}
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="Share your thoughts..."
-            className="min-h-[120px]"
+            className={`${isMobile ? 'min-h-[100px] text-base' : 'min-h-[120px]'}`}
           />
         );
 
@@ -169,7 +172,7 @@ export const QuestionRenderer = ({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className={isMobile ? 'pb-4' : ''}>
         <QuestionTypeIndicator
           questionOrder={question.order}
           profileType={question.profileType}
@@ -177,27 +180,27 @@ export const QuestionRenderer = ({
           detectedProfileType={detectedProfileType}
         />
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl leading-relaxed">{question.title}</CardTitle>
+          <CardTitle className={`${isMobile ? 'text-lg' : 'text-xl'} leading-relaxed`}>{question.title}</CardTitle>
         </div>
         {question.description && (
-          <p className="text-muted-foreground">{question.description}</p>
+          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>{question.description}</p>
         )}
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
         {renderQuestionInput()}
         
-        <div className="flex justify-end pt-4">
+        <div className={`flex justify-end ${isMobile ? 'pt-2' : 'pt-4'}`}>
           {isLastQuestion ? (
             <Button 
               onClick={onComplete}
               disabled={!isAnswerValid() || isGenerating}
-              size="lg"
-              className="px-8"
+              size={isMobile ? "default" : "lg"}
+              className={`${isMobile ? 'w-full min-h-[48px]' : 'px-8'}`}
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating Your Results...
+                  {isMobile ? 'Generating...' : 'Generating Your Results...'}
                 </>
               ) : (
                 'Complete Assessment'
@@ -207,7 +210,8 @@ export const QuestionRenderer = ({
             <Button 
               onClick={handleSubmit}
               disabled={!isAnswerValid()}
-              size="lg"
+              size={isMobile ? "default" : "lg"}
+              className={isMobile ? 'w-full min-h-[48px]' : ''}
             >
               Next Question
               <ArrowRight className="h-4 w-4 ml-2" />

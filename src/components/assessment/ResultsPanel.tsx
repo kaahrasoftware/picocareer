@@ -7,6 +7,7 @@ import { CareerRecommendationCard } from './CareerRecommendationCard';
 import { AssessmentSummary } from './AssessmentSummary';
 import { CareerRecommendation, QuestionResponse } from '@/types/assessment';
 import { useSaveRecommendations } from '@/hooks/useSaveRecommendations';
+import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { 
   Target, 
   RefreshCw, 
@@ -68,6 +69,7 @@ export const ResultsPanel = ({
   detectedProfileType,
   assessmentId
 }: ResultsPanelProps) => {
+  const { isMobile } = useBreakpoints();
   // Use the passed assessmentId or generate a fallback UUID
   const finalAssessmentId = assessmentId || crypto.randomUUID();
   
@@ -99,65 +101,72 @@ export const ResultsPanel = ({
   const profileInfo = getProfileTypeInfo(detectedProfileType);
 
   return (
-    <div className="space-y-6">
+    <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
       <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl flex items-center justify-center gap-2">
-            <Target className="h-6 w-6 text-primary" />
-            Your Personalized Career Recommendations
+        <CardHeader className={`text-center ${isMobile ? 'pb-4' : ''}`}>
+          <CardTitle className={`${isMobile ? 'text-xl' : 'text-2xl'} flex items-center justify-center gap-2`}>
+            <Target className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-primary`} />
+            {isMobile ? 'Your Career Matches' : 'Your Personalized Career Recommendations'}
           </CardTitle>
           
           {/* Assessment Complete Summary */}
-          <div className="bg-green-50 rounded-lg p-4 mt-4">
-            <div className="flex items-center justify-center mb-3">
-              <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-              <span className="font-semibold text-green-800">Assessment Complete!</span>
+          <div className={`bg-green-50 rounded-lg ${isMobile ? 'p-3 mt-3' : 'p-4 mt-4'}`}>
+            <div className={`flex items-center justify-center ${isMobile ? 'mb-2' : 'mb-3'}`}>
+              <CheckCircle className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600 mr-2`} />
+              <span className={`font-semibold text-green-800 ${isMobile ? 'text-sm' : ''}`}>Assessment Complete!</span>
             </div>
             
             <div className="text-center">
-              <div className="bg-white rounded-lg p-3 inline-block">
-                <Target className="h-6 w-6 text-green-600 mx-auto mb-1" />
-                <p className="font-medium">Personalized Analysis</p>
-                <p className="text-muted-foreground">{responses.length} questions answered</p>
+              <div className={`bg-white rounded-lg ${isMobile ? 'p-2' : 'p-3'} inline-block`}>
+                <Target className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-green-600 mx-auto mb-1`} />
+                <p className={`font-medium ${isMobile ? 'text-sm' : ''}`}>Personalized Analysis</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>{responses.length} questions answered</p>
               </div>
             </div>
           </div>
           
           {/* Profile Type Display */}
           {profileInfo && (
-            <div className="flex flex-col items-center space-y-2 mt-4">
+            <div className={`flex flex-col items-center ${isMobile ? 'space-y-1 mt-3' : 'space-y-2 mt-4'}`}>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-muted-foreground">Assessment personalized for:</span>
+                <CheckCircle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-green-600`} />
+                <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>Assessment personalized for:</span>
               </div>
               <Badge className={profileInfo.color}>
                 <span className="mr-2">{profileInfo.icon}</span>
                 <User className="h-3 w-3 mr-1" />
                 {profileInfo.label}
               </Badge>
-              <p className="text-sm text-muted-foreground">{profileInfo.description}</p>
+              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground text-center`}>{profileInfo.description}</p>
             </div>
           )}
           
-          <p className="text-muted-foreground mt-4">
+          <p className={`text-muted-foreground ${isMobile ? 'mt-3 text-sm' : 'mt-4'}`}>
             Based on your {responses.length} responses, here are your personalized career matches
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            <Button onClick={onRetakeAssessment} variant="outline">
+          <div className={`${isMobile ? 'grid grid-cols-1 gap-2 mb-4' : 'flex flex-wrap gap-2 justify-center mb-6'}`}>
+            <Button 
+              onClick={onRetakeAssessment} 
+              variant="outline"
+              size={isMobile ? "sm" : "default"}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Retake Assessment
             </Button>
             <Button 
               onClick={saveRecommendations} 
               variant="outline"
+              size={isMobile ? "sm" : "default"}
               disabled={isSaving || isSaved || recommendations.length === 0}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
             >
               {isSaving ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  {isMobile ? 'Saving...' : 'Saving...'}
                 </>
               ) : isSaved ? (
                 <>
@@ -167,17 +176,27 @@ export const ResultsPanel = ({
               ) : (
                 <>
                   <BookmarkPlus className="h-4 w-4 mr-2" />
-                  Save Recommendations
+                  {isMobile ? 'Save' : 'Save Recommendations'}
                 </>
               )}
             </Button>
-            <Button onClick={handleExportResults} variant="outline">
+            <Button 
+              onClick={handleExportResults} 
+              variant="outline"
+              size={isMobile ? "sm" : "default"}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
+            >
               <Download className="h-4 w-4 mr-2" />
-              Export PDF
+              {isMobile ? 'Export' : 'Export PDF'}
             </Button>
-            <Button onClick={handleShareResults} variant="outline">
+            <Button 
+              onClick={handleShareResults} 
+              variant="outline"
+              size={isMobile ? "sm" : "default"}
+              className={isMobile ? 'w-full min-h-[44px]' : ''}
+            >
               <Share2 className="h-4 w-4 mr-2" />
-              Share Results
+              {isMobile ? 'Share' : 'Share Results'}
             </Button>
           </div>
         </CardContent>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Brain, Users, Clock, Target, BookOpen, Briefcase, GraduationCap, User } from 'lucide-react';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { AuthPromptDialog } from '@/components/auth/AuthPromptDialog';
 
 interface AssessmentIntroProps {
@@ -12,6 +13,7 @@ interface AssessmentIntroProps {
 
 export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
   const navigate = useNavigate();
+  const { isMobile } = useBreakpoints();
   const { session } = useAuthSession();
   const isAuthenticated = !!session?.user;
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
@@ -53,23 +55,23 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className={`${isMobile ? 'space-y-4' : 'space-y-6'}`}>
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-primary" />
+          <CardHeader className={isMobile ? 'pb-4' : ''}>
+            <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+              <Brain className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} text-primary`} />
               Discover Your Perfect Career Path
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
+          <CardContent className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+            <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
               Our AI-powered career assessment adapts to your unique situation, whether you're exploring 
               careers for the first time or looking to make a professional transition.
             </p>
             
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <h3 className="font-semibold flex items-center gap-2">
+            <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'md:grid-cols-2 gap-4'}`}>
+              <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+                <h3 className={`font-semibold flex items-center gap-2 ${isMobile ? 'text-sm' : ''}`}>
                   <Target className="h-4 w-4" />
                   Personalized Questions
                 </h3>
@@ -78,8 +80,8 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
                 </p>
               </div>
               
-              <div className="space-y-3">
-                <h3 className="font-semibold flex items-center gap-2">
+              <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+                <h3 className={`font-semibold flex items-center gap-2 ${isMobile ? 'text-sm' : ''}`}>
                   <Clock className="h-4 w-4" />
                   10-15 Minutes
                 </h3>
@@ -92,45 +94,45 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
+          <CardHeader className={isMobile ? 'pb-4' : ''}>
+            <CardTitle className={`flex items-center gap-2 ${isMobile ? 'text-lg' : ''}`}>
+              <Users className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-primary`} />
               Designed for Every Stage
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-4">
+            <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'md:grid-cols-2 gap-4'}`}>
+              <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
                 <div className="flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-green-600 mt-0.5" />
+                  <BookOpen className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-green-600 mt-0.5`} />
                   <div>
-                    <h4 className="font-medium">Middle & High School Students</h4>
+                    <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>Middle & High School Students</h4>
                     <p className="text-sm text-muted-foreground">Explore interests and discover potential career paths early</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <GraduationCap className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <GraduationCap className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-blue-600 mt-0.5`} />
                   <div>
-                    <h4 className="font-medium">College Students</h4>
+                    <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>College Students</h4>
                     <p className="text-sm text-muted-foreground">Align your major with career goals and plan your future</p>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-4">
+              <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
                 <div className="flex items-start gap-3">
-                  <Briefcase className="h-5 w-5 text-purple-600 mt-0.5" />
+                  <Briefcase className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-purple-600 mt-0.5`} />
                   <div>
-                    <h4 className="font-medium">Career Professionals</h4>
+                    <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>Career Professionals</h4>
                     <p className="text-sm text-muted-foreground">Find new opportunities and plan career transitions</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <User className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-orange-600 mt-0.5`} />
                   <div>
-                    <h4 className="font-medium">Recent Graduates</h4>
+                    <h4 className={`font-medium ${isMobile ? 'text-sm' : ''}`}>Recent Graduates</h4>
                     <p className="text-sm text-muted-foreground">Navigate the transition from education to career</p>
                   </div>
                 </div>
@@ -140,8 +142,8 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>What You'll Get</CardTitle>
+          <CardHeader className={isMobile ? 'pb-4' : ''}>
+            <CardTitle className={isMobile ? 'text-lg' : ''}>What You'll Get</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
@@ -165,11 +167,20 @@ export const AssessmentIntro = ({ onStart }: AssessmentIntroProps) => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-4 justify-center">
-          <Button onClick={handleStartAssessment} size="lg" className="px-8">
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'gap-4'} justify-center`}>
+          <Button 
+            onClick={handleStartAssessment} 
+            size={isMobile ? "default" : "lg"} 
+            className={`${isMobile ? 'w-full min-h-[48px]' : 'px-8'}`}
+          >
             Start Assessment
           </Button>
-          <Button variant="outline" onClick={handleViewHistory} size="lg">
+          <Button 
+            variant="outline" 
+            onClick={handleViewHistory} 
+            size={isMobile ? "default" : "lg"}
+            className={isMobile ? 'w-full min-h-[48px]' : ''}
+          >
             View Past Results
           </Button>
         </div>
