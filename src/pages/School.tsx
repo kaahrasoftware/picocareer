@@ -14,16 +14,21 @@ import {
 import { StandardPagination } from "@/components/common/StandardPagination";
 import { SchoolCard } from "@/components/SchoolCard";
 import { GoToTopButton } from "@/components/ui/go-to-top-button";
+import { useBreakpoints } from "@/hooks/useBreakpoints";
 import type { School } from "@/types/database/schools";
 
 export default function School() {
+  const { isMobile } = useBreakpoints();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [schoolType, setSchoolType] = useState<string | undefined>(undefined);
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
-  // Setup pagination with 20 items per page
+  // Mobile-responsive pagination - fewer items per page on mobile
+  const itemsPerPage = isMobile ? 8 : 20;
+  
+  // Setup pagination with responsive items per page
   const {
     data: schools,
     isLoading,
@@ -32,8 +37,8 @@ export default function School() {
     setPage,
     count: totalSchools
   } = usePaginatedQuery<School>({
-    table: 'schools', // Changed from tableName to table
-    limit: 20,
+    table: 'schools',
+    limit: itemsPerPage,
     page: 1,
     orderBy: sortField,
     orderDirection: sortDirection,
@@ -68,27 +73,27 @@ export default function School() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h1 className="text-3xl font-bold">Schools Directory</h1>
-        <div className="text-sm text-muted-foreground">
+    <div className={`container mx-auto ${isMobile ? 'py-4 px-4' : 'py-8'}`}>
+      <div className="flex flex-col space-y-2 mb-6">
+        <h1 className={`font-bold ${isMobile ? 'text-2xl' : 'text-3xl'}`}>Schools Directory</h1>
+        <div className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>
           Showing {schools.length} of {totalSchools} schools
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {/* Filters and Search - Mobile-first responsive layout */}
+      <div className={`${isMobile ? 'flex flex-col space-y-3' : 'grid grid-cols-1 md:grid-cols-3 gap-4'} mb-6`}>
         <div>
           <Input
             placeholder="Search schools..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full"
+            className={`w-full ${isMobile ? 'h-12' : ''}`}
           />
         </div>
         <div>
           <Select onValueChange={handleTypeChange} defaultValue="all">
-            <SelectTrigger>
+            <SelectTrigger className={isMobile ? 'h-12' : ''}>
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
@@ -102,7 +107,7 @@ export default function School() {
         </div>
         <div>
           <Select onValueChange={handleSortChange} defaultValue="name-asc">
-            <SelectTrigger>
+            <SelectTrigger className={isMobile ? 'h-12' : ''}>
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -119,34 +124,43 @@ export default function School() {
 
       {/* Loading Skeleton */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-48" />
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
+          {Array.from({ length: isMobile ? 4 : 6 }).map((_, i) => (
+            <Skeleton key={i} className={isMobile ? 'h-40' : 'h-48'} />
           ))}
         </div>
       ) : (
         <>
           {/* School Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'}`}>
             {schools.length > 0 ? (
               schools.map((school) => (
                 <SchoolCard key={school.id} school={school} />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
-                <p className="text-lg text-muted-foreground">No schools found matching your criteria.</p>
+                <p className={`text-muted-foreground ${isMobile ? 'text-base' : 'text-lg'}`}>
+                  No schools found matching your criteria.
+                </p>
               </div>
             )}
           </div>
           
           {/* Pagination */}
-          <div className="mt-8">
-            <StandardPagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          </div>
+          {totalPages > 1 && (
+            <div className={isMobile ? 'mt-6' : 'mt-8'}>
+              <StandardPagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={(newPage) => {
+                  setPage(newPage);
+                  // Smooth scroll to top on page change
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                maxPageButtons={isMobile ? 3 : 5}
+              />
+            </div>
+          )}
         </>
       )}
       
