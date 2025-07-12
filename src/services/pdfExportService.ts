@@ -1,6 +1,5 @@
 import jsPDF from 'jspdf';
 import { PDFExportData, PDFGenerationOptions } from '@/types/pdf';
-import picoCareerLogo from '@/assets/picocareer-logo.png';
 
 export class PDFExportService {
   private doc: jsPDF;
@@ -13,6 +12,7 @@ export class PDFExportService {
   private readonly accentColor = '#000000';
   private readonly lightGray = '#F8F9FA';
   private readonly textColor = '#2D3748';
+  private readonly logoUrl = '/lovable-uploads/f2122040-63e7-4f46-8b7c-d7c748d45e28.png';
 
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4');
@@ -57,7 +57,7 @@ export class PDFExportService {
     
     // Add logo
     try {
-      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, 10, 60, 20);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 10, 60, 20);
     } catch (error) {
       // Fallback to text if logo fails
       this.doc.setTextColor(this.primaryColor);
@@ -342,7 +342,7 @@ export class PDFExportService {
     
     // Add logo in footer
     try {
-      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, this.currentY + 10, 40, 13);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, this.currentY + 10, 40, 13);
     } catch (error) {
       this.doc.setTextColor(255, 255, 255);
       this.doc.setFontSize(14);
@@ -392,7 +392,7 @@ export class PDFExportService {
     this.doc.line(0, 30, this.pageWidth, 30);
     
     try {
-      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, 8, 30, 10);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 8, 30, 10);
     } catch (error) {
       this.doc.setFontSize(10);
       this.doc.setTextColor(this.primaryColor);
