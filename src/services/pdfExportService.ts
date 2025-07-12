@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { PDFExportData, PDFGenerationOptions } from '@/types/pdf';
+import picoCareerLogo from '@/assets/picocareer-logo.png';
 
 export class PDFExportService {
   private doc: jsPDF;
@@ -10,6 +11,8 @@ export class PDFExportService {
   private readonly primaryColor = '#00A6D4';
   private readonly secondaryColor = '#012169';
   private readonly accentColor = '#000000';
+  private readonly lightGray = '#F8F9FA';
+  private readonly textColor = '#2D3748';
 
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4');
@@ -48,70 +51,79 @@ export class PDFExportService {
   }
 
   private addCoverPage(data: PDFExportData): void {
-    // Header with PicoCareer branding
-    this.doc.setFillColor(this.primaryColor);
-    this.doc.rect(0, 0, this.pageWidth, 60, 'F');
-    
-    // PicoCareer logo area (placeholder)
+    // Clean header with logo
     this.doc.setFillColor(255, 255, 255);
-    this.doc.rect(this.margin, 15, 40, 30, 'F');
-    this.doc.setTextColor(this.primaryColor);
+    this.doc.rect(0, 0, this.pageWidth, 50, 'F');
+    
+    // Add logo
+    try {
+      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, 10, 60, 20);
+    } catch (error) {
+      // Fallback to text if logo fails
+      this.doc.setTextColor(this.primaryColor);
+      this.doc.setFontSize(18);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('PicoCareer', this.margin, 25);
+    }
+    
+    // Subtitle in header
+    this.doc.setTextColor(this.textColor);
     this.doc.setFontSize(12);
-    this.doc.text('LOGO', this.margin + 15, 32);
-    
-    // Title
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(24);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('PicoCareer', this.margin + 50, 25);
-    this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.text('Career Assessment Results', this.margin + 50, 35);
+    this.doc.text('Career Assessment Results', this.margin + 70, 25);
     
-    // Main title
-    this.currentY = 80;
+    // Modern hero section
+    this.currentY = 70;
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFontSize(28);
+    this.doc.setFontSize(32);
     this.doc.setFont('helvetica', 'bold');
-    this.centerText('Your Personalized Career Report', this.currentY);
-    
-    this.currentY += 20;
-    this.doc.setFontSize(14);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(100, 100, 100);
-    this.centerText('AI-Powered Career Recommendations', this.currentY);
-    
-    // Assessment info box
-    this.currentY += 40;
-    this.doc.setFillColor(240, 248, 255);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 80, 'F');
-    this.doc.setDrawColor(this.primaryColor);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 80, 'S');
-    
-    this.currentY += 20;
-    this.doc.setTextColor(this.secondaryColor);
-    this.doc.setFontSize(16);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Assessment Summary', this.margin + 10, this.currentY);
+    this.centerText('Your Career Assessment', this.currentY);
     
     this.currentY += 15;
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(20);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(60, 60, 60);
+    this.centerText('Personalized Results Report', this.currentY);
     
-    const completedDate = new Date(data.completedAt).toLocaleDateString();
-    this.doc.text(`Completed: ${completedDate}`, this.margin + 10, this.currentY);
+    this.currentY += 10;
+    this.doc.setFontSize(12);
+    this.doc.setTextColor(120, 120, 120);
+    this.centerText('Powered by AI Career Intelligence', this.currentY);
     
-    this.currentY += 8;
-    this.doc.text(`Questions Answered: ${data.responses.length}`, this.margin + 10, this.currentY);
+    // Key metrics cards
+    this.currentY += 30;
+    const cardWidth = (this.pageWidth - 2 * this.margin - 20) / 3;
+    const cardHeight = 40;
     
-    this.currentY += 8;
-    this.doc.text(`Career Matches Found: ${data.recommendations.length}`, this.margin + 10, this.currentY);
+    // Assessment completion card
+    this.addMetricCard('Assessment Completed', new Date(data.completedAt).toLocaleDateString(), this.margin, cardWidth, cardHeight);
     
+    // Questions answered card
+    this.addMetricCard('Questions Answered', data.responses.length.toString(), this.margin + cardWidth + 10, cardWidth, cardHeight);
+    
+    // Career matches card
+    this.addMetricCard('Career Matches', data.recommendations.length.toString(), this.margin + 2 * (cardWidth + 10), cardWidth, cardHeight);
+    
+    this.currentY += cardHeight + 20;
+    
+    // Profile type section
     if (data.detectedProfileType) {
+      this.doc.setFillColor(this.lightGray);
+      this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 30, 'F');
+      
+      this.currentY += 10;
+      this.doc.setTextColor(this.secondaryColor);
+      this.doc.setFontSize(14);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('Profile Type', this.margin + 10, this.currentY);
+      
       this.currentY += 8;
+      this.doc.setFontSize(12);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(this.textColor);
       const profileLabel = this.getProfileTypeLabel(data.detectedProfileType);
-      this.doc.text(`Profile Type: ${profileLabel}`, this.margin + 10, this.currentY);
+      this.doc.text(profileLabel, this.margin + 10, this.currentY);
+      
+      this.currentY += 15;
     }
     
     // Add disclaimer
@@ -206,30 +218,30 @@ export class PDFExportService {
     this.currentY = startY;
     
     if (recommendation.salaryRange) {
-      this.addDetailItem('💰 Salary Range', recommendation.salaryRange, leftCol);
+      this.addDetailItem('Salary Range', recommendation.salaryRange, leftCol);
     }
     
     if (recommendation.growthOutlook) {
-      this.addDetailItem('📈 Growth Outlook', recommendation.growthOutlook, leftCol);
+      this.addDetailItem('Growth Outlook', recommendation.growthOutlook, leftCol);
     }
     
     if (recommendation.timeToEntry) {
-      this.addDetailItem('⏱️ Time to Entry', recommendation.timeToEntry, leftCol);
+      this.addDetailItem('Time to Entry', recommendation.timeToEntry, leftCol);
     }
     
     // Right column
     this.currentY = startY;
     
     if (recommendation.workEnvironment) {
-      this.addDetailItem('🏢 Work Environment', recommendation.workEnvironment, rightCol);
+      this.addDetailItem('Work Environment', recommendation.workEnvironment, rightCol);
     }
     
     if (recommendation.requiredSkills && recommendation.requiredSkills.length > 0) {
-      this.addDetailItem('🎯 Key Skills', recommendation.requiredSkills.slice(0, 4).join(', '), rightCol);
+      this.addDetailItem('Key Skills', recommendation.requiredSkills.slice(0, 4).join(', '), rightCol);
     }
     
     if (recommendation.educationRequirements && recommendation.educationRequirements.length > 0) {
-      this.addDetailItem('🎓 Education', recommendation.educationRequirements.slice(0, 2).join(', '), rightCol);
+      this.addDetailItem('Education Requirements', recommendation.educationRequirements.slice(0, 2).join(', '), rightCol);
     }
     
     // Set currentY to the maximum of both columns
@@ -237,18 +249,49 @@ export class PDFExportService {
   }
 
   private addDetailItem(label: string, value: string, x: number): void {
-    this.doc.setFontSize(9);
+    // Clean card design for each detail item
+    const cardWidth = (this.pageWidth / 2) - 30;
+    this.doc.setFillColor(this.lightGray);
+    this.doc.rect(x, this.currentY - 3, cardWidth, 18, 'F');
+    this.doc.setDrawColor(230, 230, 230);
+    this.doc.rect(x, this.currentY - 3, cardWidth, 18, 'S');
+    
+    this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(this.secondaryColor);
-    this.doc.text(label, x, this.currentY);
+    this.doc.text(label, x + 5, this.currentY + 3);
     
-    this.currentY += 4;
+    this.currentY += 6;
+    this.doc.setFontSize(9);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(60, 60, 60);
+    this.doc.setTextColor(this.textColor);
     
-    const lines = this.doc.splitTextToSize(value, (this.pageWidth / 2) - 20);
-    this.doc.text(lines, x, this.currentY);
-    this.currentY += lines.length * 4 + 4;
+    const lines = this.doc.splitTextToSize(value, cardWidth - 10);
+    this.doc.text(lines, x + 5, this.currentY + 3);
+    this.currentY += lines.length * 3 + 8;
+  }
+
+  private addMetricCard(title: string, value: string, x: number, width: number, height: number): void {
+    // Card background
+    this.doc.setFillColor(this.lightGray);
+    this.doc.rect(x, this.currentY, width, height, 'F');
+    this.doc.setDrawColor(this.primaryColor);
+    this.doc.setLineWidth(0.5);
+    this.doc.rect(x, this.currentY, width, height, 'S');
+    
+    // Title
+    this.doc.setTextColor(this.secondaryColor);
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'bold');
+    const titleX = x + width / 2 - this.doc.getTextWidth(title) / 2;
+    this.doc.text(title, titleX, this.currentY + 15);
+    
+    // Value
+    this.doc.setTextColor(this.primaryColor);
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    const valueX = x + width / 2 - this.doc.getTextWidth(value) / 2;
+    this.doc.text(value, valueX, this.currentY + 28);
   }
 
   private addFooterPage(): void {
@@ -266,38 +309,53 @@ export class PDFExportService {
     this.doc.setTextColor(60, 60, 60);
     this.centerText('We hope this assessment helps guide your career journey.', this.currentY);
     
-    // Next steps
+    // Next steps section
     this.currentY += 30;
-    this.addSectionHeader('Next Steps');
+    this.addSectionHeader('Your Next Steps');
     
     this.currentY += 10;
     const nextSteps = [
-      '• Research the recommended careers in detail',
-      '• Connect with professionals in these fields',
-      '• Explore educational pathways and requirements',
-      '• Consider internships or job shadowing opportunities',
-      '• Update your skills based on career requirements'
+      'Research your recommended careers in depth',
+      'Connect with professionals in these fields',
+      'Explore educational and certification requirements',
+      'Consider internships or job shadowing opportunities',
+      'Develop skills aligned with your target careers'
     ];
     
-    nextSteps.forEach(step => {
-      this.doc.text(step, this.margin, this.currentY);
-      this.currentY += 8;
+    nextSteps.forEach((step, index) => {
+      // Clean numbered list
+      this.doc.setFontSize(11);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setTextColor(this.primaryColor);
+      this.doc.text(`${index + 1}.`, this.margin, this.currentY);
+      
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(this.textColor);
+      this.doc.text(step, this.margin + 10, this.currentY);
+      this.currentY += 10;
     });
     
-    // PicoCareer branding and certification
-    this.currentY = this.pageHeight - 80;
-    this.doc.setFillColor(this.primaryColor);
-    this.doc.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 50, 'F');
+    // Professional footer with logo
+    this.currentY = this.pageHeight - 60;
+    this.doc.setFillColor(this.secondaryColor);
+    this.doc.rect(0, this.currentY, this.pageWidth, 60, 'F');
+    
+    // Add logo in footer
+    try {
+      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, this.currentY + 10, 40, 13);
+    } catch (error) {
+      this.doc.setTextColor(255, 255, 255);
+      this.doc.setFontSize(14);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('PicoCareer', this.margin, this.currentY + 20);
+    }
     
     this.doc.setTextColor(255, 255, 255);
-    this.doc.setFontSize(16);
-    this.doc.setFont('helvetica', 'bold');
-    this.centerText('Certified by PicoCareer', this.currentY + 15);
-    
     this.doc.setFontSize(12);
     this.doc.setFont('helvetica', 'normal');
-    this.centerText('AI-Powered Career Guidance Platform', this.currentY + 25);
-    this.centerText('www.picocareer.com', this.currentY + 35);
+    this.doc.text('AI-Powered Career Guidance', this.margin + 50, this.currentY + 20);
+    this.doc.setFontSize(10);
+    this.doc.text('www.picocareer.com', this.margin + 50, this.currentY + 35);
   }
 
   private addSectionHeader(title: string): void {
@@ -327,15 +385,28 @@ export class PDFExportService {
 
   private addNewPage(): void {
     this.doc.addPage();
-    this.currentY = 20;
+    this.currentY = 35;
     
-    // Add page header
-    this.doc.setFontSize(10);
-    this.doc.setTextColor(150, 150, 150);
-    this.doc.text('PicoCareer Assessment Results', this.margin, 15);
+    // Modern page header with logo
+    this.doc.setDrawColor(240, 240, 240);
+    this.doc.line(0, 30, this.pageWidth, 30);
+    
+    try {
+      this.doc.addImage(picoCareerLogo, 'PNG', this.margin, 8, 30, 10);
+    } catch (error) {
+      this.doc.setFontSize(10);
+      this.doc.setTextColor(this.primaryColor);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text('PicoCareer', this.margin, 18);
+    }
+    
+    this.doc.setFontSize(9);
+    this.doc.setTextColor(120, 120, 120);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('Career Assessment Results', this.margin + 40, 18);
     
     const pageNum = this.doc.internal.pages.length - 1;
-    this.doc.text(`Page ${pageNum}`, this.pageWidth - this.margin - 20, 15);
+    this.doc.text(`Page ${pageNum}`, this.pageWidth - this.margin - 15, 18);
   }
 
   private getProfileTypeLabel(profileType: string): string {
