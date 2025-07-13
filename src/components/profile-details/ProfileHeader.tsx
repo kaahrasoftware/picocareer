@@ -57,22 +57,8 @@ export function ProfileHeader({
     );
   }
 
-  // Debug logging for avatar click issue
-  console.log('🔍 ProfileHeader Debug:', {
-    sessionUserId: session?.user?.id,
-    profileId: profile.id,
-    sessionUserIdType: typeof session?.user?.id,
-    profileIdType: typeof profile.id,
-    sessionExists: !!session,
-    userExists: !!session?.user,
-    isOwnProfile: session?.user?.id === profile.id
-  });
-
   const isOwnProfile = session?.user?.id === profile.id;
   const isMentor = profile.user_type === 'mentor';
-
-  // Temporary override for testing (REMOVE AFTER DEBUGGING)
-  const editable = true; // Force editable for testing
 
   const handleAvatarUpdate = (url: string) => {
     if (profile) {
@@ -100,7 +86,7 @@ export function ProfileHeader({
               imageAlt={profile.full_name || profile.email} 
               size="lg" 
               userId={profile.id} 
-              editable={editable} 
+              editable={isOwnProfile} 
               onAvatarUpdate={handleAvatarUpdate} 
             />
             {isMentor && (
