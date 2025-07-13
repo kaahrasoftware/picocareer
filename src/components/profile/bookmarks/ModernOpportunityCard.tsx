@@ -73,7 +73,7 @@ export function ModernOpportunityCard({ opportunity, onView }: ModernOpportunity
         {/* Header section */}
         <div className="space-y-2">
           <h3 className="font-semibold text-lg leading-tight line-clamp-2 text-card-foreground group-hover:text-primary transition-colors duration-200">
-            {opportunity.title || `Opportunity ${opportunity.id}`}
+            {opportunity.title}
           </h3>
           
           {opportunity.organization && (
