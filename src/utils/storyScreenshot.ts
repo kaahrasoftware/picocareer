@@ -80,7 +80,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   descriptionSection.style.textAlign = 'center';
   
   const description = document.createElement('div');
-  description.style.fontSize = '22px';
+  description.style.fontSize = '28px';
   description.style.lineHeight = '1.5';
   description.style.opacity = '0.9';
   description.style.marginBottom = '0';
@@ -132,7 +132,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   
   const reasoningText = document.createElement('p');
   reasoningText.textContent = recommendation.reasoning;
-  reasoningText.style.fontSize = '18px';
+  reasoningText.style.fontSize = '28px';
   reasoningText.style.lineHeight = '1.6';
   reasoningText.style.color = 'rgba(255, 255, 255, 0.9)';
   reasoningText.style.textAlign = 'left';
