@@ -4,7 +4,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
 import { useDefaultAvatar } from "@/hooks/useDefaultAvatar";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { ProfileHeader } from "@/components/profile-details/ProfileHeader";
+import { ProfileHeader } from "@/components/profile-details/ProfileHeaderSimple";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/profile/ProfileTab";
