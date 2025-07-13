@@ -93,19 +93,22 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   
   // Salary range tag - large and prominent golden style
   const salaryTag = document.createElement('div');
-  salaryTag.style.background = 'rgba(255, 193, 7, 0.2)';
+  salaryTag.style.background = 'rgba(255, 215, 0, 0.25)';
   salaryTag.style.backdropFilter = 'blur(5px)';
-  salaryTag.style.border = '1px solid rgba(255, 193, 7, 0.4)';
+  salaryTag.style.border = '2px solid rgba(255, 215, 0, 0.7)';
   salaryTag.style.borderRadius = '32px';
   salaryTag.style.padding = '16px 32px';
   salaryTag.style.fontSize = '24px';
   salaryTag.style.fontWeight = '600';
   salaryTag.style.color = 'white';
+  salaryTag.style.textShadow = '0 1px 2px rgba(0,0,0,0.5)';
   salaryTag.style.whiteSpace = 'nowrap';
   salaryTag.style.margin = '24px auto 0';
   salaryTag.style.display = 'block';
   salaryTag.style.textAlign = 'center';
   salaryTag.style.width = 'fit-content';
+  salaryTag.style.alignSelf = 'center';
+  salaryTag.style.justifySelf = 'center';
   salaryTag.textContent = `💰 ${recommendation.salaryRange || 'Competitive Salary'}`;
   
   descriptionSection.appendChild(description);
