@@ -1,4 +1,3 @@
-
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useProfileAnalytics } from "@/hooks/useProfileAnalytics";
@@ -14,71 +13,64 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { MentorTab } from "@/components/profile/MentorTab";
 import { WalletTab } from "@/components/profile/WalletTab";
 import { BookmarksTab } from "@/components/profile/BookmarksTab";
-
 export default function Profile() {
-  const { session } = useAuthSession();
-  const { data: profile, isLoading, error } = useUserProfile(session);
-  const { handleTabChange } = useProfileAnalytics();
-  const { isAdmin } = useIsAdmin();
+  const {
+    session
+  } = useAuthSession();
+  const {
+    data: profile,
+    isLoading,
+    error
+  } = useUserProfile(session);
+  const {
+    handleTabChange
+  } = useProfileAnalytics();
+  const {
+    isAdmin
+  } = useIsAdmin();
 
   // Ensure user has a default avatar if they don't have one
   useDefaultAvatar(session?.user?.id, profile?.avatar_url);
 
   // Show loading state while profile data is being fetched
   if (isLoading) {
-    return (
-      <div className="container py-6">
+    return <div className="container py-6">
         <PageLoader isLoading={true} variant="default" />
-      </div>
-    );
+      </div>;
   }
 
   // Show error state if profile fetch failed
   if (error) {
-    return (
-      <div className="container py-6">
+    return <div className="container py-6">
         <div className="text-center py-8">
           <p className="text-destructive mb-4">Failed to load profile data</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-          >
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90">
             Retry
           </button>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Don't render components if profile is still null/undefined
   if (!profile) {
-    return (
-      <div className="container py-6">
+    return <div className="container py-6">
         <div className="text-center py-8">
           <p className="text-muted-foreground">No profile data available</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const isMentor = profile.user_type === 'mentor';
-
-  return (
-    <div className="container py-6 space-y-6">
+  return <div className="container py-6 space-y-6">
       <ProfileHeader profile={profile} session={session} />
       
       <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-1">
           <TabsTrigger value="profile" className="text-xs lg:text-sm">Profile</TabsTrigger>
           <TabsTrigger value="calendar" className="text-xs lg:text-sm">Calendar</TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>
-          )}
+          {isAdmin && <TabsTrigger value="dashboard" className="text-xs lg:text-sm">Dashboard</TabsTrigger>}
           <TabsTrigger value="settings" className="text-xs lg:text-sm">Settings</TabsTrigger>
-          {isMentor && (
-            <TabsTrigger value="mentor" className="text-xs lg:text-sm">Mentor</TabsTrigger>
-          )}
-          <TabsTrigger value="wallet" className="text-xs lg:text-sm">Wallet</TabsTrigger>
+          {isMentor && <TabsTrigger value="mentor" className="text-xs lg:text-sm">Mentor</TabsTrigger>}
+          
           <TabsTrigger value="bookmarks" className="text-xs lg:text-sm">Bookmarks</TabsTrigger>
         </TabsList>
 
@@ -90,21 +82,17 @@ export default function Profile() {
           <CalendarTab profile={profile} />
         </TabsContent>
 
-        {isAdmin && (
-          <TabsContent value="dashboard" className="space-y-4 mt-6">
+        {isAdmin && <TabsContent value="dashboard" className="space-y-4 mt-6">
             <DashboardTab />
-          </TabsContent>
-        )}
+          </TabsContent>}
 
         <TabsContent value="settings" className="space-y-4 mt-6">
           <SettingsTab profileId={profile.id} />
         </TabsContent>
 
-        {isMentor && (
-          <TabsContent value="mentor" className="space-y-4 mt-6">
+        {isMentor && <TabsContent value="mentor" className="space-y-4 mt-6">
             <MentorTab profile={profile} />
-          </TabsContent>
-        )}
+          </TabsContent>}
 
         <TabsContent value="wallet" className="space-y-4 mt-6">
           <WalletTab />
@@ -114,6 +102,5 @@ export default function Profile() {
           <BookmarksTab />
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
