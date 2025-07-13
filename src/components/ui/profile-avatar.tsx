@@ -1,11 +1,9 @@
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AvatarPicker } from "@/components/ui/avatar-picker";
-
-function generateDefaultAvatar(userId: string): string {
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${userId}&backgroundColor=b6e3f4,c0aede,d1d4f9&radius=50`;
-}
+import { Upload } from "lucide-react";
+import { AvatarPicker } from "@/components/avatar/AvatarPicker";
+import { generateDefaultAvatar } from "@/utils/avatarGenerator";
 
 export interface ProfileAvatarProps {
   avatarUrl?: string;
@@ -17,32 +15,42 @@ export interface ProfileAvatarProps {
   onAvatarUpdate?: (url: string) => void;
 }
 
-export function ProfileAvatar({
-  avatarUrl,
-  imageAlt = "Profile",
-  size = "md",
+export function ProfileAvatar({ 
+  avatarUrl = "", 
+  imageAlt = "", 
+  size = "md", 
   editable = false,
+  onChange,
   userId,
-  onAvatarUpdate,
+  onAvatarUpdate
 }: ProfileAvatarProps) {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-
+  
   const sizeClasses = {
     sm: "h-8 w-8",
-    md: "h-10 w-10", 
+    md: "h-12 w-12",
     lg: "h-16 w-16"
   };
 
+  const firstLetter = imageAlt?.[0] || (typeof imageAlt === 'string' && imageAlt.length > 0 ? imageAlt[0] : 'U');
+
+  // Use default avatar if no avatar URL is provided and we have a user ID
   const displayAvatarUrl = avatarUrl || (userId ? generateDefaultAvatar(userId) : "");
 
   const handleAvatarClick = () => {
+    console.log('🖱️ Avatar clicked:', { editable, userId, showAvatarPicker });
     if (editable && userId) {
+      console.log('✅ Opening avatar picker');
       setShowAvatarPicker(true);
+    } else {
+      console.log('❌ Avatar not editable or no userId');
     }
   };
 
   const handleAvatarUpdate = (url: string) => {
-    onAvatarUpdate?.(url);
+    if (onAvatarUpdate) {
+      onAvatarUpdate(url);
+    }
     setShowAvatarPicker(false);
   };
 
@@ -50,27 +58,36 @@ export function ProfileAvatar({
     <>
       <div className="relative group">
         <Avatar 
-          className={`${sizeClasses[size]} ${editable ? 'cursor-pointer' : ''}`}
+          className={`${sizeClasses[size]} ${editable ? 'cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all duration-200' : ''}`} 
           onClick={handleAvatarClick}
+          title={editable ? "Click to change profile picture" : undefined}
         >
           <AvatarImage src={displayAvatarUrl} alt={imageAlt} />
-          <AvatarFallback>{imageAlt.charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarFallback>{firstLetter}</AvatarFallback>
         </Avatar>
         
         {editable && (
-          <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-white text-xs">Edit</span>
-          </div>
+          <>
+            {/* Main hover overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200 rounded-full">
+              <Upload className="w-4 h-4 text-white drop-shadow-sm" />
+            </div>
+            
+            {/* Small edit indicator */}
+            <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 opacity-80 group-hover:opacity-100 transition-opacity duration-200 shadow-sm">
+              <Upload className="w-3 h-3" />
+            </div>
+          </>
         )}
       </div>
 
-      {showAvatarPicker && userId && onAvatarUpdate && (
+      {userId && (
         <AvatarPicker
-          isOpen={showAvatarPicker}
-          onClose={() => setShowAvatarPicker(false)}
+          open={showAvatarPicker}
+          onOpenChange={setShowAvatarPicker}
           userId={userId}
+          currentAvatarUrl={avatarUrl}
           onAvatarUpdate={handleAvatarUpdate}
-          currentAvatarUrl={displayAvatarUrl}
         />
       )}
     </>
