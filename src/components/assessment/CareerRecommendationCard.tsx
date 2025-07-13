@@ -54,7 +54,11 @@ export const CareerRecommendationCard = ({
 
   return (
     <>
-      <Card className="shadow-lg border-0 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+      <Card 
+        className="shadow-lg border-0 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
+        data-career-id={recommendation.careerId}
+        id={`career-card-${recommendation.careerId}`}
+      >
         <CardHeader className={`bg-gradient-to-r from-primary/5 to-secondary/5 ${isMobile ? 'pb-6 px-6' : 'pb-8 px-8'}`}>
           <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'justify-between items-start'}`}>
             <div className={`flex items-start ${isMobile ? 'space-x-4' : 'space-x-4'}`}>

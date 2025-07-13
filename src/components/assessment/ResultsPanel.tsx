@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CareerRecommendationCard } from './CareerRecommendationCard';
 import { AssessmentSummary } from './AssessmentSummary';
 import { AssessmentSharingModal } from '@/components/sharing/AssessmentSharingModal';
+import { CareerStoryModal } from '@/components/sharing/CareerStoryModal';
 import { CareerRecommendation, QuestionResponse } from '@/types/assessment';
 import { useSaveRecommendations } from '@/hooks/useSaveRecommendations';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
@@ -15,6 +16,7 @@ import {
   RefreshCw, 
   Download, 
   Share2,
+  Camera,
   CheckCircle,
   User,
   BookmarkPlus,
@@ -73,6 +75,7 @@ export const ResultsPanel = ({
 }: ResultsPanelProps) => {
   const { isMobile } = useBreakpoints();
   const [showSharingModal, setShowSharingModal] = useState(false);
+  const [showStoryModal, setShowStoryModal] = useState(false);
   // Use the passed assessmentId or generate a fallback UUID
   const finalAssessmentId = assessmentId || crypto.randomUUID();
   
@@ -104,6 +107,10 @@ export const ResultsPanel = ({
 
   const handleShareResults = () => {
     setShowSharingModal(true);
+  };
+
+  const handleCreateStory = () => {
+    setShowStoryModal(true);
   };
 
   const profileInfo = getProfileTypeInfo(detectedProfileType);
@@ -167,7 +174,7 @@ export const ResultsPanel = ({
           </p>
         </CardHeader>
         <CardContent className={`${isMobile ? 'px-6 pb-8' : 'px-8 pb-10'}`}>
-          <div className={`${isMobile ? 'grid grid-cols-1 gap-3 mb-6' : 'grid grid-cols-2 gap-4 justify-center mb-8'}`}>
+          <div className={`${isMobile ? 'grid grid-cols-1 gap-3 mb-6' : 'grid grid-cols-3 gap-4 justify-center mb-8'}`}>
             <Button 
               onClick={onRetakeAssessment} 
               variant="outline"
@@ -229,6 +236,15 @@ export const ResultsPanel = ({
               <Share2 className="h-5 w-5 mr-3" />
               {isMobile ? 'Share Results' : 'Share Results'}
             </Button>
+            <Button 
+              onClick={handleCreateStory} 
+              variant="outline"
+              size="lg"
+              className={`${isMobile ? 'w-full min-h-[52px] text-base' : 'min-h-[48px]'} border-2 hover:border-primary/40 transition-all duration-200`}
+            >
+              <Camera className="h-5 w-5 mr-3" />
+              {isMobile ? 'Create Story' : 'Create Story'}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -261,6 +277,13 @@ export const ResultsPanel = ({
         onClose={() => setShowSharingModal(false)}
         assessmentId={finalAssessmentId}
         recommendations={recommendations}
+      />
+
+      <CareerStoryModal
+        isOpen={showStoryModal}
+        onClose={() => setShowStoryModal(false)}
+        recommendations={recommendations}
+        assessmentId={finalAssessmentId}
       />
     </div>
   );
