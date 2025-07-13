@@ -91,47 +91,24 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     : descText;
   description.textContent = truncatedDesc;
   
-  // Skills tags section
-  const skillsSection = document.createElement('div');
-  skillsSection.style.display = 'flex';
-  skillsSection.style.flexWrap = 'wrap';
-  skillsSection.style.gap = '12px';
-  skillsSection.style.justifyContent = 'center';
-  skillsSection.style.marginBottom = '0';
-  
-  const skills = recommendation.requiredSkills?.slice(0, 4) || ['Problem Solving', 'Communication', 'Critical Thinking'];
-  skills.forEach(skill => {
-    const skillTag = document.createElement('div');
-    skillTag.style.background = 'rgba(255, 255, 255, 0.2)';
-    skillTag.style.backdropFilter = 'blur(5px)';
-    skillTag.style.border = '1px solid rgba(255, 255, 255, 0.3)';
-    skillTag.style.borderRadius = '20px';
-    skillTag.style.padding = '8px 16px';
-    skillTag.style.fontSize = '16px';
-    skillTag.style.fontWeight = '500';
-    skillTag.style.color = 'white';
-    skillTag.style.whiteSpace = 'nowrap';
-    skillTag.textContent = skill;
-    skillsSection.appendChild(skillTag);
-  });
-
-  // Salary range tag - prominent golden style
+  // Salary range tag - large and prominent golden style
   const salaryTag = document.createElement('div');
   salaryTag.style.background = 'rgba(255, 193, 7, 0.2)';
   salaryTag.style.backdropFilter = 'blur(5px)';
   salaryTag.style.border = '1px solid rgba(255, 193, 7, 0.4)';
-  salaryTag.style.borderRadius = '24px';
-  salaryTag.style.padding = '12px 20px';
-  salaryTag.style.fontSize = '18px';
+  salaryTag.style.borderRadius = '32px';
+  salaryTag.style.padding = '16px 32px';
+  salaryTag.style.fontSize = '24px';
   salaryTag.style.fontWeight = '600';
   salaryTag.style.color = 'white';
   salaryTag.style.whiteSpace = 'nowrap';
-  salaryTag.style.marginTop = '16px';
-  salaryTag.style.display = 'inline-block';
+  salaryTag.style.margin = '24px auto 0';
+  salaryTag.style.display = 'block';
+  salaryTag.style.textAlign = 'center';
+  salaryTag.style.width = 'fit-content';
   salaryTag.textContent = `💰 ${recommendation.salaryRange || 'Competitive Salary'}`;
   
   descriptionSection.appendChild(description);
-  descriptionSection.appendChild(skillsSection);
   descriptionSection.appendChild(salaryTag);
   
   // Reasoning section - why this career fits the user
