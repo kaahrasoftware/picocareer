@@ -82,135 +82,246 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   header.appendChild(logoContainer);
   header.appendChild(subtitle);
   
-  // Main content card with glassmorphism
+  // Modern asymmetrical content container
+  const contentWrapper = document.createElement('div');
+  contentWrapper.style.flex = '1';
+  contentWrapper.style.display = 'flex';
+  contentWrapper.style.flexDirection = 'column';
+  contentWrapper.style.justifyContent = 'center';
+  contentWrapper.style.margin = '40px 0';
+  contentWrapper.style.position = 'relative';
+  contentWrapper.style.zIndex = '1';
+  
+  // Floating geometric shapes for background
+  const shape1 = document.createElement('div');
+  shape1.style.position = 'absolute';
+  shape1.style.top = '10%';
+  shape1.style.right = '5%';
+  shape1.style.width = '120px';
+  shape1.style.height = '120px';
+  shape1.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))';
+  shape1.style.borderRadius = '30px';
+  shape1.style.transform = 'rotate(15deg)';
+  shape1.style.backdropFilter = 'blur(10px)';
+  shape1.style.zIndex = '0';
+  
+  const shape2 = document.createElement('div');
+  shape2.style.position = 'absolute';
+  shape2.style.bottom = '15%';
+  shape2.style.left = '8%';
+  shape2.style.width = '80px';
+  shape2.style.height = '80px';
+  shape2.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03))';
+  shape2.style.borderRadius = '50%';
+  shape2.style.backdropFilter = 'blur(8px)';
+  shape2.style.zIndex = '0';
+  
+  contentWrapper.appendChild(shape1);
+  contentWrapper.appendChild(shape2);
+  
+  // Main content card with modern glassmorphism
   const card = document.createElement('div');
-  card.style.background = 'rgba(255, 255, 255, 0.95)';
-  card.style.backdropFilter = 'blur(20px)';
-  card.style.borderRadius = '24px';
-  card.style.padding = '60px 50px';
-  card.style.color = '#1a1a1a';
-  card.style.textAlign = 'center';
-  card.style.boxShadow = '0 32px 64px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)';
-  card.style.margin = '40px 0';
-  card.style.flex = '1';
-  card.style.display = 'flex';
-  card.style.flexDirection = 'column';
-  card.style.justifyContent = 'center';
+  card.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1))';
+  card.style.backdropFilter = 'blur(30px)';
+  card.style.borderRadius = '32px';
+  card.style.padding = '50px 45px';
+  card.style.color = '#ffffff';
+  card.style.textAlign = 'left';
+  card.style.boxShadow = '0 40px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
+  card.style.border = '1px solid rgba(255,255,255,0.15)';
   card.style.position = 'relative';
   card.style.zIndex = '1';
+  card.style.overflow = 'hidden';
   
-  // Rank badge with modern styling
+  // Floating rank badge with 3D effect
   const rankBadge = document.createElement('div');
-  rankBadge.style.background = 'linear-gradient(135deg, #00A6D4, #012169)';
+  rankBadge.style.position = 'absolute';
+  rankBadge.style.top = '-25px';
+  rankBadge.style.right = '30px';
+  rankBadge.style.background = 'linear-gradient(135deg, #00A6D4 0%, #012169 100%)';
   rankBadge.style.color = 'white';
-  rankBadge.style.width = '90px';
-  rankBadge.style.height = '90px';
-  rankBadge.style.borderRadius = '50%';
+  rankBadge.style.width = '80px';
+  rankBadge.style.height = '80px';
+  rankBadge.style.borderRadius = '20px';
   rankBadge.style.display = 'flex';
   rankBadge.style.alignItems = 'center';
   rankBadge.style.justifyContent = 'center';
-  rankBadge.style.fontSize = '32px';
-  rankBadge.style.fontWeight = '700';
-  rankBadge.style.margin = '0 auto 40px auto';
-  rankBadge.style.boxShadow = '0 8px 32px rgba(0, 166, 212, 0.4)';
-  rankBadge.style.border = '3px solid rgba(255,255,255,0.2)';
+  rankBadge.style.fontSize = '28px';
+  rankBadge.style.fontWeight = '800';
+  rankBadge.style.boxShadow = '0 15px 35px rgba(0,166,212,0.5), 0 5px 15px rgba(0,0,0,0.2)';
+  rankBadge.style.border = '2px solid rgba(255,255,255,0.3)';
+  rankBadge.style.transform = 'rotate(-8deg)';
+  rankBadge.style.zIndex = '2';
   rankBadge.textContent = `#${rank}`;
   
-  // Career title with improved typography
+  // Modern hero section with asymmetrical layout
+  const heroSection = document.createElement('div');
+  heroSection.style.marginBottom = '35px';
+  heroSection.style.position = 'relative';
+  
+  // Career title with gradient text
   const title = document.createElement('h1');
-  title.style.fontSize = '48px';
-  title.style.fontWeight = '700';
+  title.style.fontSize = '52px';
+  title.style.fontWeight = '800';
   title.style.lineHeight = '1.1';
-  title.style.margin = '0 0 25px 0';
-  title.style.color = '#1a1a1a';
-  title.style.letterSpacing = '-0.5px';
+  title.style.margin = '0 0 20px 0';
+  title.style.background = 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%)';
+  title.style.webkitBackgroundClip = 'text';
+  title.style.backgroundClip = 'text';
+  title.style.webkitTextFillColor = 'transparent';
+  title.style.letterSpacing = '-1px';
+  title.style.textShadow = '0 2px 4px rgba(0,0,0,0.1)';
   title.textContent = recommendation.title;
   
-  // Match score with progress visualization
+  // Modern match score with 3D progress ring
   const matchScoreContainer = document.createElement('div');
-  matchScoreContainer.style.margin = '0 0 40px 0';
+  matchScoreContainer.style.display = 'flex';
+  matchScoreContainer.style.alignItems = 'center';
+  matchScoreContainer.style.gap = '25px';
+  matchScoreContainer.style.marginBottom = '35px';
+  matchScoreContainer.style.padding = '20px';
+  matchScoreContainer.style.background = 'rgba(255,255,255,0.1)';
+  matchScoreContainer.style.borderRadius = '20px';
+  matchScoreContainer.style.border = '1px solid rgba(255,255,255,0.2)';
   
-  const matchScore = document.createElement('div');
-  matchScore.style.fontSize = '32px';
-  matchScore.style.fontWeight = '700';
-  matchScore.style.color = '#00A6D4';
-  matchScore.style.marginBottom = '15px';
-  matchScore.textContent = `${Math.round(recommendation.matchScore)}% Match`;
+  // Circular progress indicator
+  const progressRing = document.createElement('div');
+  progressRing.style.position = 'relative';
+  progressRing.style.width = '90px';
+  progressRing.style.height = '90px';
+  progressRing.style.borderRadius = '50%';
+  progressRing.style.background = `conic-gradient(from 0deg, #00A6D4 0%, #012169 ${Math.round(recommendation.matchScore)}%, rgba(255,255,255,0.2) ${Math.round(recommendation.matchScore)}%)`;
+  progressRing.style.display = 'flex';
+  progressRing.style.alignItems = 'center';
+  progressRing.style.justifyContent = 'center';
+  progressRing.style.boxShadow = '0 8px 25px rgba(0,166,212,0.3)';
   
-  // Progress bar
-  const progressBg = document.createElement('div');
-  progressBg.style.width = '100%';
-  progressBg.style.height = '8px';
-  progressBg.style.background = 'rgba(0, 166, 212, 0.2)';
-  progressBg.style.borderRadius = '4px';
-  progressBg.style.overflow = 'hidden';
-  progressBg.style.margin = '0 auto';
-  progressBg.style.maxWidth = '300px';
+  const progressInner = document.createElement('div');
+  progressInner.style.width = '70px';
+  progressInner.style.height = '70px';
+  progressInner.style.borderRadius = '50%';
+  progressInner.style.background = 'rgba(255,255,255,0.95)';
+  progressInner.style.display = 'flex';
+  progressInner.style.alignItems = 'center';
+  progressInner.style.justifyContent = 'center';
+  progressInner.style.fontSize = '18px';
+  progressInner.style.fontWeight = '800';
+  progressInner.style.color = '#012169';
+  progressInner.textContent = `${Math.round(recommendation.matchScore)}%`;
   
-  const progressFill = document.createElement('div');
-  progressFill.style.width = `${Math.round(recommendation.matchScore)}%`;
-  progressFill.style.height = '100%';
-  progressFill.style.background = 'linear-gradient(90deg, #00A6D4, #012169)';
-  progressFill.style.borderRadius = '4px';
-  progressFill.style.transition = 'width 0.3s ease';
+  progressRing.appendChild(progressInner);
   
-  progressBg.appendChild(progressFill);
-  matchScoreContainer.appendChild(matchScore);
-  matchScoreContainer.appendChild(progressBg);
+  const matchLabel = document.createElement('div');
+  matchLabel.style.fontSize = '28px';
+  matchLabel.style.fontWeight = '700';
+  matchLabel.style.color = '#ffffff';
+  matchLabel.style.textShadow = '0 2px 4px rgba(0,0,0,0.2)';
+  matchLabel.textContent = 'Perfect Match';
   
-  // Key details with modern icons and styling
-  const details = document.createElement('div');
-  details.style.display = 'grid';
-  details.style.gridTemplateColumns = '1fr';
-  details.style.gap = '15px';
-  details.style.fontSize = '24px';
-  details.style.lineHeight = '1.4';
-  details.style.margin = '0 0 35px 0';
-  details.style.padding = '25px';
-  details.style.background = 'rgba(0, 166, 212, 0.05)';
-  details.style.borderRadius = '16px';
-  details.style.border = '1px solid rgba(0, 166, 212, 0.1)';
+  matchScoreContainer.appendChild(progressRing);
+  matchScoreContainer.appendChild(matchLabel);
   
-  const detailsContent = [];
+  heroSection.appendChild(title);
+  heroSection.appendChild(matchScoreContainer);
+  
+  // Modern card-based details section
+  const detailsGrid = document.createElement('div');
+  detailsGrid.style.display = 'grid';
+  detailsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+  detailsGrid.style.gap = '20px';
+  detailsGrid.style.margin = '0 0 35px 0';
+  
+  const detailsData = [];
   if (recommendation.salaryRange) {
-    detailsContent.push(`<div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 20px;">💰</span><span style="color: #1a1a1a; font-weight: 600;">${recommendation.salaryRange}</span></div>`);
+    detailsData.push({ icon: '💰', label: 'Salary Range', value: recommendation.salaryRange });
   }
   if (recommendation.growthOutlook) {
-    detailsContent.push(`<div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 20px;">📈</span><span style="color: #1a1a1a; font-weight: 600;">${recommendation.growthOutlook}</span></div>`);
+    detailsData.push({ icon: '📈', label: 'Growth Outlook', value: recommendation.growthOutlook });
   }
   if (recommendation.timeToEntry) {
-    detailsContent.push(`<div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 20px;">⏱️</span><span style="color: #1a1a1a; font-weight: 600;">${recommendation.timeToEntry}</span></div>`);
+    detailsData.push({ icon: '⏱️', label: 'Time to Entry', value: recommendation.timeToEntry });
   }
   
-  details.innerHTML = detailsContent.join('');
+  detailsData.forEach(detail => {
+    const detailCard = document.createElement('div');
+    detailCard.style.padding = '20px';
+    detailCard.style.background = 'rgba(255,255,255,0.15)';
+    detailCard.style.borderRadius = '16px';
+    detailCard.style.border = '1px solid rgba(255,255,255,0.25)';
+    detailCard.style.backdropFilter = 'blur(10px)';
+    detailCard.style.textAlign = 'center';
+    detailCard.style.boxShadow = '0 8px 20px rgba(0,0,0,0.1)';
+    
+    const icon = document.createElement('div');
+    icon.style.fontSize = '32px';
+    icon.style.marginBottom = '10px';
+    icon.textContent = detail.icon;
+    
+    const label = document.createElement('div');
+    label.style.fontSize = '14px';
+    label.style.color = 'rgba(255,255,255,0.8)';
+    label.style.marginBottom = '5px';
+    label.style.fontWeight = '600';
+    label.style.textTransform = 'uppercase';
+    label.style.letterSpacing = '0.5px';
+    label.textContent = detail.label;
+    
+    const value = document.createElement('div');
+    value.style.fontSize = '18px';
+    value.style.color = '#ffffff';
+    value.style.fontWeight = '700';
+    value.style.lineHeight = '1.3';
+    value.textContent = detail.value;
+    
+    detailCard.appendChild(icon);
+    detailCard.appendChild(label);
+    detailCard.appendChild(value);
+    detailsGrid.appendChild(detailCard);
+  });
   
-  // Reasoning snippet with improved styling
+  // Modern quote section with gradient styling
   const reasoning = document.createElement('div');
-  reasoning.style.fontSize = '22px';
-  reasoning.style.lineHeight = '1.5';
-  reasoning.style.fontStyle = 'italic';
-  reasoning.style.color = '#4a5568';
-  reasoning.style.margin = '0';
-  reasoning.style.padding = '20px';
-  reasoning.style.background = 'rgba(0, 0, 0, 0.02)';
-  reasoning.style.borderRadius = '12px';
-  reasoning.style.borderLeft = '4px solid #00A6D4';
-  reasoning.style.maxHeight = '100px';
-  reasoning.style.overflow = 'hidden';
+  reasoning.style.position = 'relative';
+  reasoning.style.padding = '25px';
+  reasoning.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))';
+  reasoning.style.borderRadius = '20px';
+  reasoning.style.border = '1px solid rgba(255,255,255,0.2)';
+  reasoning.style.backdropFilter = 'blur(15px)';
+  reasoning.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
   
-  const reasoningText = recommendation.reasoning || 'Personalized recommendation based on your assessment.';
-  const truncatedReasoning = reasoningText.length > 100 
-    ? reasoningText.substring(0, 97) + '...'
+  const quoteIcon = document.createElement('div');
+  quoteIcon.style.position = 'absolute';
+  quoteIcon.style.top = '15px';
+  quoteIcon.style.left = '20px';
+  quoteIcon.style.fontSize = '24px';
+  quoteIcon.style.color = 'rgba(255,255,255,0.6)';
+  quoteIcon.textContent = '"';
+  
+  const reasoningText = recommendation.reasoning || 'Personalized recommendation based on your unique assessment results and career preferences.';
+  const truncatedReasoning = reasoningText.length > 120 
+    ? reasoningText.substring(0, 117) + '...'
     : reasoningText;
-  reasoning.textContent = `"${truncatedReasoning}"`;
+  
+  const reasoningContent = document.createElement('div');
+  reasoningContent.style.fontSize = '18px';
+  reasoningContent.style.lineHeight = '1.5';
+  reasoningContent.style.color = 'rgba(255,255,255,0.95)';
+  reasoningContent.style.fontStyle = 'italic';
+  reasoningContent.style.fontWeight = '500';
+  reasoningContent.style.marginLeft = '15px';
+  reasoningContent.textContent = truncatedReasoning;
+  
+  reasoning.appendChild(quoteIcon);
+  reasoning.appendChild(reasoningContent);
   
   card.appendChild(rankBadge);
-  card.appendChild(title);
-  card.appendChild(matchScoreContainer);
-  if (detailsContent.length > 0) {
-    card.appendChild(details);
+  card.appendChild(heroSection);
+  if (detailsData.length > 0) {
+    card.appendChild(detailsGrid);
   }
   card.appendChild(reasoning);
+  
+  contentWrapper.appendChild(card);
   
   // Modern footer with enhanced CTA
   const footer = document.createElement('div');
@@ -253,7 +364,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   footer.appendChild(websiteLink);
   
   container.appendChild(header);
-  container.appendChild(card);
+  container.appendChild(contentWrapper);
   container.appendChild(footer);
   
   // Add to DOM temporarily
