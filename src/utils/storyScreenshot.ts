@@ -20,7 +20,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   container.style.background = 'linear-gradient(135deg, #00A6D4 0%, #012169 100%)';
   container.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   container.style.color = 'white';
-  container.style.padding = '80px 60px';
+  container.style.padding = '100px 80px';
   container.style.boxSizing = 'border-box';
   container.style.display = 'flex';
   container.style.flexDirection = 'column';
@@ -48,7 +48,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   card.style.flex = '1';
   card.style.display = 'flex';
   card.style.flexDirection = 'column';
-  card.style.gap = '40px';
+  card.style.gap = '50px';
   card.style.alignItems = 'center';
   
   // Hero section - Large match score
@@ -71,33 +71,67 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   title.style.textAlign = 'center';
   title.textContent = recommendation.title;
   
-  // Simplified description
+  // Enhanced description section
+  const descriptionSection = document.createElement('div');
+  descriptionSection.style.width = '100%';
+  descriptionSection.style.maxWidth = '700px';
+  descriptionSection.style.textAlign = 'center';
+  
   const description = document.createElement('div');
-  description.style.fontSize = '20px';
-  description.style.lineHeight = '1.4';
+  description.style.fontSize = '22px';
+  description.style.lineHeight = '1.5';
   description.style.opacity = '0.9';
-  description.style.margin = '0 0 40px 0';
-  description.style.textAlign = 'center';
-  description.style.maxWidth = '600px';
+  description.style.marginBottom = '30px';
   
   const descText = recommendation.description || recommendation.reasoning || 'Personalized recommendation based on your assessment.';
-  const truncatedDesc = descText.length > 120 
-    ? descText.substring(0, 117) + '...'
+  const truncatedDesc = descText.length > 150 
+    ? descText.substring(0, 147) + '...'
     : descText;
   description.textContent = truncatedDesc;
   
-  // Clean details section
+  // Skills tags section
+  const skillsSection = document.createElement('div');
+  skillsSection.style.display = 'flex';
+  skillsSection.style.flexWrap = 'wrap';
+  skillsSection.style.gap = '12px';
+  skillsSection.style.justifyContent = 'center';
+  skillsSection.style.marginBottom = '20px';
+  
+  const skills = recommendation.requiredSkills?.slice(0, 4) || ['Problem Solving', 'Communication', 'Critical Thinking'];
+  skills.forEach(skill => {
+    const skillTag = document.createElement('div');
+    skillTag.style.background = 'rgba(255, 255, 255, 0.2)';
+    skillTag.style.backdropFilter = 'blur(5px)';
+    skillTag.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+    skillTag.style.borderRadius = '20px';
+    skillTag.style.padding = '8px 16px';
+    skillTag.style.fontSize = '16px';
+    skillTag.style.fontWeight = '500';
+    skillTag.style.color = 'white';
+    skillTag.style.whiteSpace = 'nowrap';
+    skillTag.textContent = skill;
+    skillsSection.appendChild(skillTag);
+  });
+  
+  descriptionSection.appendChild(description);
+  descriptionSection.appendChild(skillsSection);
+  
+  // Enhanced details section with 6 items in 2x3 grid
   const detailsContainer = document.createElement('div');
   detailsContainer.style.display = 'grid';
-  detailsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
-  detailsContainer.style.gap = '24px';
+  detailsContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+  detailsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
+  detailsContainer.style.gap = '20px';
   detailsContainer.style.width = '100%';
-  detailsContainer.style.maxWidth = '600px';
+  detailsContainer.style.maxWidth = '800px';
   
   const detailsData = [
     { icon: '💰', label: 'Salary Range', value: recommendation.salaryRange || 'Competitive' },
     { icon: '📈', label: 'Growth Outlook', value: recommendation.growthOutlook || 'Positive' },
-    { icon: '⏱️', label: 'Time to Entry', value: recommendation.timeToEntry || 'Varies' }
+    { icon: '⏱️', label: 'Time to Entry', value: recommendation.timeToEntry || 'Varies' },
+    { icon: '🏢', label: 'Work Environment', value: recommendation.workEnvironment || 'Office/Remote' },
+    { icon: '🎓', label: 'Education', value: recommendation.educationRequirements?.[0] || 'Bachelor\'s Degree' },
+    { icon: '🏭', label: 'Industry', value: recommendation.industry || 'Technology' }
   ];
   
   detailsData.forEach(detail => {
@@ -120,7 +154,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   
   card.appendChild(heroSection);
   card.appendChild(title);
-  card.appendChild(description);
+  card.appendChild(descriptionSection);
   card.appendChild(detailsContainer);
   
   // Footer with CTA
