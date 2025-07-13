@@ -7,16 +7,13 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAssessmentSharing, SharingPlatform } from '@/hooks/useAssessmentSharing';
 import { CareerRecommendation } from '@/types/assessment';
-import { useToast } from '@/hooks/use-toast';
 import { 
   Share2, 
   Camera, 
   Copy, 
   Check, 
   Loader2,
-  X,
   Download
 } from 'lucide-react';
 
@@ -33,77 +30,106 @@ export const AssessmentSharingModal = ({
   assessmentId,
   recommendations
 }: AssessmentSharingModalProps) => {
-  const { toast } = useToast();
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
-  const [sharingPlatform, setSharingPlatform] = useState<string | null>(null);
+  const [isCapturingScreenshot, setIsCapturingScreenshot] = useState(false);
+  const [shareImage, setShareImage] = useState<string | null>(null);
 
-  const {
-    platforms,
-    captureResultsScreenshot,
-    shareViaPlatform,
-    copyToClipboard,
-    isCapturingScreenshot,
-    shareImage,
-    hasRecommendations
-  } = useAssessmentSharing(assessmentId, recommendations);
+  const generateShareContent = () => {
+    const topRecommendation = recommendations[0];
+    const matchCount = recommendations.length;
+    
+    const shareUrl = assessmentId 
+      ? `${window.location.origin}/career-assessment/results/${assessmentId}`
+      : `${window.location.origin}/career-assessment`;
+
+    const shareText = topRecommendation
+      ? `🎯 I just discovered my career matches!\n\n✨ Top recommendation: ${topRecommendation.title} (${topRecommendation.matchScore}% match)\n📊 ${matchCount} personalized career recommendations\n🚀 AI-powered analysis complete\n\nDiscover your career path:`
+      : `🎯 I just completed my career assessment!\n\n📊 Get personalized career recommendations\n🚀 AI-powered career analysis\n\nDiscover your career path:`;
+
+    return {
+      url: shareUrl,
+      title: 'My Career Assessment Results - PicoCareer',
+      text: shareText
+    };
+  };
+  const platforms = [
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      icon: '💬',
+      color: 'bg-[#25D366] hover:bg-[#20bc5a]',
+      shareUrl: (text: string, url: string) => 
+        `https://wa.me/?text=${encodeURIComponent(`${text}\n\n${url}`)}`
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      icon: '💼',
+      color: 'bg-[#0077B5] hover:bg-[#006699]',
+      shareUrl: (text: string, url: string) => 
+        `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent('My Career Assessment Results')}&summary=${encodeURIComponent(text)}`
+    },
+    {
+      id: 'facebook',
+      name: 'Facebook',
+      icon: '👥',
+      color: 'bg-[#1877F2] hover:bg-[#166fe5]',
+      shareUrl: (text: string, url: string) => 
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+    },
+    {
+      id: 'twitter',
+      name: 'Twitter',
+      icon: '🐦',
+      color: 'bg-[#1DA1F2] hover:bg-[#1a91da]',
+      shareUrl: (text: string, url: string) => 
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${text}\n\n${url}`)}`
+    }
+  ];
 
   const handleCaptureScreenshot = async () => {
+    setIsCapturingScreenshot(true);
     try {
-      await captureResultsScreenshot('results-panel');
-      toast({
-        title: "Screenshot captured!",
-        description: "Your results are ready to share.",
+      const html2canvas = (await import('html2canvas')).default;
+      const element = document.getElementById('results-panel');
+      if (!element) {
+        throw new Error('Results panel not found');
+      }
+      
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: false
       });
+      
+      const imageDataURL = canvas.toDataURL('image/png', 0.92);
+      setShareImage(imageDataURL);
     } catch (error) {
-      toast({
-        title: "Screenshot failed",
-        description: "Unable to capture results. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Failed to capture screenshot:', error);
+      alert('Failed to capture screenshot. Please try again.');
+    } finally {
+      setIsCapturingScreenshot(false);
     }
   };
 
-  const handleShare = async (platform: SharingPlatform) => {
-    setSharingPlatform(platform.id);
-    try {
-      const success = await shareViaPlatform(platform);
-      if (success) {
-        toast({
-          title: `Shared to ${platform.name}!`,
-          description: "Your results have been shared successfully.",
-        });
-        onClose();
-      } else {
-        throw new Error('Sharing failed');
-      }
-    } catch (error) {
-      toast({
-        title: "Sharing failed",
-        description: `Unable to share to ${platform.name}. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setSharingPlatform(null);
-    }
+  const handleShare = (platform: any) => {
+    const content = generateShareContent();
+    const shareUrl = platform.shareUrl(content.text, content.url);
+    window.open(shareUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleCopyLink = async () => {
+    const content = generateShareContent();
+    const textToCopy = `${content.text}\n\n${content.url}`;
+    
     try {
-      const success = await copyToClipboard();
-      if (success) {
-        setCopiedToClipboard(true);
-        toast({
-          title: "Copied to clipboard!",
-          description: "Your share text and link have been copied.",
-        });
-        setTimeout(() => setCopiedToClipboard(false), 2000);
-      }
+      await navigator.clipboard.writeText(textToCopy);
+      setCopiedToClipboard(true);
+      setTimeout(() => setCopiedToClipboard(false), 2000);
     } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard. Please try again.",
-        variant: "destructive",
-      });
+      console.error('Failed to copy to clipboard:', error);
+      alert('Failed to copy to clipboard. Please try again.');
     }
   };
 
@@ -115,15 +141,10 @@ export const AssessmentSharingModal = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast({
-        title: "Downloaded!",
-        description: "Your results screenshot has been saved.",
-      });
     }
   };
 
-  if (!hasRecommendations) {
+  if (recommendations.length === 0) {
     return null;
   }
 
@@ -218,23 +239,13 @@ export const AssessmentSharingModal = ({
                   key={platform.id}
                   variant="outline"
                   onClick={() => handleShare(platform)}
-                  disabled={sharingPlatform === platform.id || (platform.requiresImage && !shareImage)}
                   className={`${platform.color} text-white border-0 hover:text-white transition-all duration-200`}
                 >
-                  {sharingPlatform === platform.id ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <span className="mr-2">{platform.icon}</span>
-                  )}
+                  <span className="mr-2">{platform.icon}</span>
                   {platform.name}
                 </Button>
               ))}
             </div>
-            {platforms.some(p => p.requiresImage) && !shareImage && (
-              <p className="text-xs text-muted-foreground text-center">
-                📸 Capture a screenshot to share on Instagram
-              </p>
-            )}
           </div>
 
           {/* Copy Link */}
