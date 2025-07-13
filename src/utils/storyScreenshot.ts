@@ -114,9 +114,25 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     skillTag.textContent = skill;
     skillsSection.appendChild(skillTag);
   });
+
+  // Salary range tag - prominent golden style
+  const salaryTag = document.createElement('div');
+  salaryTag.style.background = 'rgba(255, 193, 7, 0.2)';
+  salaryTag.style.backdropFilter = 'blur(5px)';
+  salaryTag.style.border = '1px solid rgba(255, 193, 7, 0.4)';
+  salaryTag.style.borderRadius = '24px';
+  salaryTag.style.padding = '12px 20px';
+  salaryTag.style.fontSize = '18px';
+  salaryTag.style.fontWeight = '600';
+  salaryTag.style.color = 'white';
+  salaryTag.style.whiteSpace = 'nowrap';
+  salaryTag.style.marginTop = '16px';
+  salaryTag.style.display = 'inline-block';
+  salaryTag.textContent = `💰 ${recommendation.salaryRange || 'Competitive Salary'}`;
   
   descriptionSection.appendChild(description);
   descriptionSection.appendChild(skillsSection);
+  descriptionSection.appendChild(salaryTag);
   
   // Reasoning section - why this career fits the user
   const reasoningSection = document.createElement('div');
@@ -148,19 +164,16 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   reasoningSection.appendChild(reasoningTitle);
   reasoningSection.appendChild(reasoningText);
   
-  // Enhanced details section with 4 items in 2x2 grid
+  // Enhanced details section with 2 items in 1x2 grid
   const detailsContainer = document.createElement('div');
   detailsContainer.style.display = 'grid';
   detailsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-  detailsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
   detailsContainer.style.gap = '32px';
   detailsContainer.style.width = '100%';
   detailsContainer.style.maxWidth = '900px';
   
   const detailsData = [
-    { icon: '💰', label: 'Salary Range', value: recommendation.salaryRange || 'Competitive' },
     { icon: '📈', label: 'Growth Outlook', value: recommendation.growthOutlook || 'Positive' },
-    { icon: '⏱️', label: 'Time to Entry', value: recommendation.timeToEntry || 'Varies' },
     { icon: '🏢', label: 'Work Environment', value: recommendation.workEnvironment || 'Office/Remote' }
   ];
   
