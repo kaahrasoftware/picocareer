@@ -55,9 +55,9 @@ export class PDFExportService {
     this.doc.setFillColor(255, 255, 255);
     this.doc.rect(0, 0, this.pageWidth, 50, 'F');
     
-    // Add logo - optimized size and positioning
+    // Add logo - proper aspect ratio (height-based sizing)
     try {
-      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 12, 45, 15);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 12, undefined, 15);
     } catch (error) {
       // Fallback to text if logo fails
       this.doc.setTextColor(this.primaryColor);
@@ -340,9 +340,9 @@ export class PDFExportService {
     this.doc.setFillColor(this.secondaryColor);
     this.doc.rect(0, this.currentY, this.pageWidth, 60, 'F');
     
-    // Add logo in footer - optimized size and positioning
+    // Add logo in footer - proper aspect ratio (height-based sizing)
     try {
-      this.doc.addImage(this.logoUrl, 'PNG', this.margin, this.currentY + 12, 35, 12);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, this.currentY + 12, undefined, 12);
     } catch (error) {
       this.doc.setTextColor(255, 255, 255);
       this.doc.setFontSize(14);
@@ -392,7 +392,7 @@ export class PDFExportService {
     this.doc.line(0, 30, this.pageWidth, 30);
     
     try {
-      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 9, 25, 8);
+      this.doc.addImage(this.logoUrl, 'PNG', this.margin, 9, undefined, 8);
     } catch (error) {
       this.doc.setFontSize(10);
       this.doc.setTextColor(this.primaryColor);
