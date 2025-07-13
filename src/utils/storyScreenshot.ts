@@ -116,11 +116,41 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   descriptionSection.appendChild(description);
   descriptionSection.appendChild(skillsSection);
   
-  // Enhanced details section with 6 items in 2x3 grid (2 cards per row)
+  // Reasoning section - why this career fits the user
+  const reasoningSection = document.createElement('div');
+  reasoningSection.style.width = '100%';
+  reasoningSection.style.maxWidth = '700px';
+  reasoningSection.style.margin = '32px 0';
+  reasoningSection.style.padding = '28px';
+  reasoningSection.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+  reasoningSection.style.backdropFilter = 'blur(5px)';
+  reasoningSection.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+  reasoningSection.style.borderRadius = '20px';
+  
+  const reasoningTitle = document.createElement('h3');
+  reasoningTitle.textContent = 'Why This Career Fits You';
+  reasoningTitle.style.fontSize = '20px';
+  reasoningTitle.style.fontWeight = '600';
+  reasoningTitle.style.color = 'white';
+  reasoningTitle.style.marginBottom = '16px';
+  reasoningTitle.style.textAlign = 'center';
+  
+  const reasoningText = document.createElement('p');
+  reasoningText.textContent = recommendation.reasoning;
+  reasoningText.style.fontSize = '18px';
+  reasoningText.style.lineHeight = '1.6';
+  reasoningText.style.color = 'rgba(255, 255, 255, 0.9)';
+  reasoningText.style.textAlign = 'left';
+  reasoningText.style.margin = '0';
+  
+  reasoningSection.appendChild(reasoningTitle);
+  reasoningSection.appendChild(reasoningText);
+  
+  // Enhanced details section with 4 items in 2x2 grid
   const detailsContainer = document.createElement('div');
   detailsContainer.style.display = 'grid';
   detailsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-  detailsContainer.style.gridTemplateRows = 'repeat(3, 1fr)';
+  detailsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
   detailsContainer.style.gap = '24px';
   detailsContainer.style.width = '100%';
   detailsContainer.style.maxWidth = '700px';
@@ -129,9 +159,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     { icon: '💰', label: 'Salary Range', value: recommendation.salaryRange || 'Competitive' },
     { icon: '📈', label: 'Growth Outlook', value: recommendation.growthOutlook || 'Positive' },
     { icon: '⏱️', label: 'Time to Entry', value: recommendation.timeToEntry || 'Varies' },
-    { icon: '🏢', label: 'Work Environment', value: recommendation.workEnvironment || 'Office/Remote' },
-    { icon: '🎓', label: 'Education', value: recommendation.educationRequirements?.[0] || 'Bachelor\'s Degree' },
-    { icon: '🏭', label: 'Industry', value: recommendation.industry || 'Technology' }
+    { icon: '🏢', label: 'Work Environment', value: recommendation.workEnvironment || 'Office/Remote' }
   ];
   
   detailsData.forEach(detail => {
@@ -155,6 +183,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   card.appendChild(heroSection);
   card.appendChild(title);
   card.appendChild(descriptionSection);
+  card.appendChild(reasoningSection);
   card.appendChild(detailsContainer);
   
   // Footer with CTA
