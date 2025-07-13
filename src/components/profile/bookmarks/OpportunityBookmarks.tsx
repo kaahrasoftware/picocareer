@@ -3,12 +3,11 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, ExternalLink, MapPin, Building, Calendar } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookmarksList } from "./BookmarksList";
+import { ModernOpportunityCard } from "./ModernOpportunityCard";
+import { ModernLoadingSkeleton } from "./ModernLoadingSkeleton";
 
 interface OpportunityBookmarksProps {
   activePage: string;
@@ -78,51 +77,16 @@ export function OpportunityBookmarks({ activePage }: OpportunityBookmarksProps) 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const renderOpportunityCard = (opportunity: OpportunityItem) => (
-    <Card key={opportunity.id} className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg line-clamp-2">{opportunity.title}</CardTitle>
-        {opportunity.organization && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <Building className="h-3 w-3" />
-            {opportunity.organization}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        {opportunity.description && (
-          <p className="text-sm text-gray-600 line-clamp-3 mb-3">
-            {opportunity.description}
-          </p>
-        )}
-        {opportunity.location && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-            <MapPin className="h-3 w-3" />
-            {opportunity.location}
-          </p>
-        )}
-        {opportunity.deadline && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-3">
-            <Calendar className="h-3 w-3" />
-            Deadline: {new Date(opportunity.deadline).toLocaleDateString()}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          {opportunity.type && (
-            <Badge variant="secondary" className="text-xs">
-              {opportunity.type}
-            </Badge>
-          )}
-          {opportunity.external_url && (
-            <Button variant="outline" size="sm" asChild>
-              <a href={opportunity.external_url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3 mr-1" />
-                View
-              </a>
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <ModernOpportunityCard 
+      key={opportunity.id}
+      opportunity={opportunity}
+      onView={() => {
+        // Handle view details action
+        if (opportunity.external_url) {
+          window.open(opportunity.external_url, '_blank', 'noopener,noreferrer');
+        }
+      }}
+    />
   );
 
   return (
