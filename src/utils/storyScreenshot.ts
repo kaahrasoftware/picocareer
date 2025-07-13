@@ -190,7 +190,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   // Footer with CTA
   const footer = document.createElement('div');
   footer.style.textAlign = 'center';
-  footer.style.marginTop = '60px';
+  footer.style.marginTop = '30px';
   footer.innerHTML = `
     <div style="font-size: 28px; font-weight: bold; margin-bottom: 20px;">🎯 Discover Your Career Path</div>
     <div style="font-size: 24px; opacity: 0.9;">Take your free assessment today</div>
