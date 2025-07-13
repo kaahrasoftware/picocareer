@@ -116,14 +116,14 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   descriptionSection.appendChild(description);
   descriptionSection.appendChild(skillsSection);
   
-  // Enhanced details section with 6 items in 2x3 grid
+  // Enhanced details section with 6 items in 2x3 grid (2 cards per row)
   const detailsContainer = document.createElement('div');
   detailsContainer.style.display = 'grid';
-  detailsContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-  detailsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
-  detailsContainer.style.gap = '20px';
+  detailsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+  detailsContainer.style.gridTemplateRows = 'repeat(3, 1fr)';
+  detailsContainer.style.gap = '24px';
   detailsContainer.style.width = '100%';
-  detailsContainer.style.maxWidth = '800px';
+  detailsContainer.style.maxWidth = '700px';
   
   const detailsData = [
     { icon: '💰', label: 'Salary Range', value: recommendation.salaryRange || 'Competitive' },
@@ -140,13 +140,13 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     detailCard.style.backdropFilter = 'blur(5px)';
     detailCard.style.border = '1px solid rgba(255, 255, 255, 0.2)';
     detailCard.style.borderRadius = '16px';
-    detailCard.style.padding = '24px 20px';
+    detailCard.style.padding = '30px 24px';
     detailCard.style.textAlign = 'center';
     
     detailCard.innerHTML = `
-      <div style="font-size: 32px; margin-bottom: 12px;">${detail.icon}</div>
-      <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
-      <div style="font-size: 18px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
+      <div style="font-size: 40px; margin-bottom: 16px;">${detail.icon}</div>
+      <div style="font-size: 16px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
+      <div style="font-size: 22px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
     `;
     
     detailsContainer.appendChild(detailCard);
