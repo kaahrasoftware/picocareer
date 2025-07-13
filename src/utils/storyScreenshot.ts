@@ -132,6 +132,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   reasoningTitle.style.color = 'white';
   reasoningTitle.style.marginBottom = '16px';
   reasoningTitle.style.textAlign = 'center';
+  reasoningTitle.style.textTransform = 'uppercase';
   
   const reasoningText = document.createElement('p');
   reasoningText.textContent = recommendation.reasoning;
