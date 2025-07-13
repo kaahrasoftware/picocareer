@@ -43,6 +43,8 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   card.style.borderRadius = '24px';
   card.style.padding = '60px 50px';
   card.style.color = 'white';
+  card.style.width = '950px';
+  card.style.maxWidth = '950px';
   card.style.textAlign = 'center';
   card.style.margin = '40px 0';
   card.style.flex = '1';
@@ -151,9 +153,9 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   detailsContainer.style.display = 'grid';
   detailsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
   detailsContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
-  detailsContainer.style.gap = '24px';
+  detailsContainer.style.gap = '32px';
   detailsContainer.style.width = '100%';
-  detailsContainer.style.maxWidth = '700px';
+  detailsContainer.style.maxWidth = '900px';
   
   const detailsData = [
     { icon: '💰', label: 'Salary Range', value: recommendation.salaryRange || 'Competitive' },
@@ -167,14 +169,14 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     detailCard.style.background = 'rgba(255, 255, 255, 0.15)';
     detailCard.style.backdropFilter = 'blur(5px)';
     detailCard.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-    detailCard.style.borderRadius = '16px';
-    detailCard.style.padding = '30px 24px';
+    detailCard.style.borderRadius = '20px';
+    detailCard.style.padding = '40px 32px';
     detailCard.style.textAlign = 'center';
     
     detailCard.innerHTML = `
-      <div style="font-size: 40px; margin-bottom: 16px;">${detail.icon}</div>
-      <div style="font-size: 16px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
-      <div style="font-size: 22px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
+      <div style="font-size: 80px; margin-bottom: 20px;">${detail.icon}</div>
+      <div style="font-size: 32px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
+      <div style="font-size: 44px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
     `;
     
     detailsContainer.appendChild(detailCard);
