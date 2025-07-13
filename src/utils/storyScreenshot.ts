@@ -34,7 +34,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     <div style="text-align: center; margin-bottom: 20px;">
       <img src="/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png" 
            alt="PicoCareer Logo" 
-           style="height: 64px; width: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;">
+           style="height: 128px; width: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;">
       <div style="font-size: 48px; font-weight: bold;">${brandingText}</div>
     </div>
     <div style="font-size: 32px; opacity: 0.9;">Career Assessment Results</div>
