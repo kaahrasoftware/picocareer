@@ -38,8 +38,12 @@ export function ProfileAvatar({
   const displayAvatarUrl = avatarUrl || (userId ? generateDefaultAvatar(userId) : "");
 
   const handleAvatarClick = () => {
+    console.log('🖱️ Avatar clicked:', { editable, userId, showAvatarPicker });
     if (editable && userId) {
+      console.log('✅ Opening avatar picker');
       setShowAvatarPicker(true);
+    } else {
+      console.log('❌ Avatar not editable or no userId');
     }
   };
 
