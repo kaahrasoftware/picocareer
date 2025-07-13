@@ -59,7 +59,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   
   const matchScore = Math.round(recommendation.matchScore || 85);
   heroSection.innerHTML = `
-    <div style="font-size: 120px; font-weight: 800; margin-bottom: 16px; line-height: 1; text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">${matchScore}%</div>
+    <div style="font-size: 120px; font-weight: 800; margin-bottom: 32px; line-height: 1; text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">${matchScore}%</div>
     <div style="font-size: 24px; opacity: 0.8; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">Perfect Match</div>
   `;
   
