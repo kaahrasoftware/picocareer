@@ -53,15 +53,27 @@ export function ProfileAvatar({
   return (
     <>
       <div className="relative group">
-        <Avatar className={`${sizeClasses[size]} ${editable ? 'cursor-pointer' : ''}`} onClick={handleAvatarClick}>
+        <Avatar 
+          className={`${sizeClasses[size]} ${editable ? 'cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all duration-200' : ''}`} 
+          onClick={handleAvatarClick}
+          title={editable ? "Click to change profile picture" : undefined}
+        >
           <AvatarImage src={displayAvatarUrl} alt={imageAlt} />
           <AvatarFallback>{firstLetter}</AvatarFallback>
         </Avatar>
         
         {editable && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity rounded-full">
-            <Upload className="w-4 h-4 text-white" />
-          </div>
+          <>
+            {/* Main hover overlay */}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200 rounded-full">
+              <Upload className="w-4 h-4 text-white drop-shadow-sm" />
+            </div>
+            
+            {/* Small edit indicator */}
+            <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1 opacity-80 group-hover:opacity-100 transition-opacity duration-200 shadow-sm">
+              <Upload className="w-3 h-3" />
+            </div>
+          </>
         )}
       </div>
 
