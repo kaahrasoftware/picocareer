@@ -3,12 +3,10 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, GraduationCap, Users, Star } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookmarksList } from "./BookmarksList";
+import { ModernMajorCard } from "./ModernMajorCard";
 import { MajorProfile, MajorBookmarksProps } from "./types";
 
 export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmarksProps) {
@@ -103,41 +101,11 @@ export function MajorBookmarks({ activePage, onViewMajorDetails }: MajorBookmark
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const renderMajorCard = (major: MajorProfile) => (
-    <Card key={major.id} className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg line-clamp-2">{major.title}</CardTitle>
-          {major.featured && <Star className="h-4 w-4 text-yellow-500" />}
-        </div>
-        {major.degree_levels && major.degree_levels.length > 0 && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <GraduationCap className="h-3 w-3" />
-            {major.degree_levels.join(", ")}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        {major.description && (
-          <p className="text-sm text-gray-600 line-clamp-3 mb-3">
-            {major.description}
-          </p>
-        )}
-        {major.potential_salary && (
-          <p className="text-xs text-muted-foreground mb-2">
-            Potential Salary: {major.potential_salary}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {major.profiles_count || 0} students
-          </Badge>
-          <Button variant="outline" size="sm" onClick={() => onViewMajorDetails(major)}>
-            View Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ModernMajorCard 
+      key={major.id} 
+      major={major} 
+      onView={onViewMajorDetails} 
+    />
   );
 
   return (

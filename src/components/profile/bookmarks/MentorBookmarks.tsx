@@ -3,13 +3,10 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bookmark, MapPin, Building, Star } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookmarksList } from "./BookmarksList";
+import { ModernMentorCard } from "./ModernMentorCard";
 import { MentorProfile, MentorBookmarksProps } from "./types";
 
 export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookmarksProps) {
@@ -90,56 +87,11 @@ export function MentorBookmarks({ activePage, onViewMentorProfile }: MentorBookm
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const renderMentorCard = (mentor: MentorProfile) => (
-    <Card key={mentor.id} className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={mentor.avatar_url} alt={mentor.full_name} />
-            <AvatarFallback>
-              {mentor.full_name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'M'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg line-clamp-1">{mentor.full_name}</CardTitle>
-              {mentor.top_mentor && <Star className="h-4 w-4 text-yellow-500" />}
-            </div>
-            {mentor.position && (
-              <p className="text-sm text-muted-foreground">{mentor.position}</p>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {mentor.company_name && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
-            <Building className="h-3 w-3" />
-            {mentor.company_name}
-          </p>
-        )}
-        {mentor.location && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1 mb-3">
-            <MapPin className="h-3 w-3" />
-            {mentor.location}
-          </p>
-        )}
-        {mentor.bio && (
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-            {mentor.bio}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          {mentor.skills && mentor.skills.length > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {mentor.skills.length} skills
-            </Badge>
-          )}
-          <Button variant="outline" size="sm" onClick={() => onViewMentorProfile(mentor)}>
-            View Profile
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ModernMentorCard 
+      key={mentor.id} 
+      mentor={mentor} 
+      onView={onViewMentorProfile} 
+    />
   );
 
   return (

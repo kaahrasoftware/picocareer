@@ -3,12 +3,10 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Bookmark, ExternalLink, MapPin, Building, DollarSign } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { BookmarksList } from "./BookmarksList";
+import { ModernCareerCard } from "./ModernCareerCard";
 import { CareerProfile, CareerBookmarksProps } from "./types";
 
 export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookmarksProps) {
@@ -82,38 +80,11 @@ export function CareerBookmarks({ activePage, onViewCareerDetails }: CareerBookm
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const renderCareerCard = (career: CareerProfile) => (
-    <Card key={career.id} className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg line-clamp-2">{career.title}</CardTitle>
-        {career.industry && (
-          <p className="text-sm text-muted-foreground flex items-center gap-1">
-            <Building className="h-3 w-3" />
-            {career.industry}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        {career.description && (
-          <p className="text-sm text-gray-600 line-clamp-3 mb-3">
-            {career.description}
-          </p>
-        )}
-        {career.salary_range && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-            <DollarSign className="h-3 w-3" />
-            {career.salary_range}
-          </p>
-        )}
-        <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-xs">
-            {career.profiles_count || 0} professionals
-          </Badge>
-          <Button variant="outline" size="sm" onClick={() => onViewCareerDetails(career)}>
-            View Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <ModernCareerCard 
+      key={career.id} 
+      career={career} 
+      onView={onViewCareerDetails} 
+    />
   );
 
   return (
