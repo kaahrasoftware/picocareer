@@ -61,8 +61,6 @@ export function ModernOpportunityCard({ opportunity, onView }: ModernOpportunity
 
   return (
     <Card className="group relative overflow-hidden bg-gradient-to-br from-card via-card to-card/95 border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 card-hover-lift">
-      {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
       {/* Bookmark indicator */}
       <div className="absolute top-3 right-3 z-10">
@@ -165,8 +163,6 @@ export function ModernOpportunityCard({ opportunity, onView }: ModernOpportunity
         </div>
       </CardContent>
       
-      {/* Bottom gradient accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </Card>
   );
 }

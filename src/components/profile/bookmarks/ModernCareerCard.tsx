@@ -33,8 +33,6 @@ export function ModernCareerCard({ career, onView }: ModernCareerCardProps) {
 
   return (
     <div className="group relative">
-      {/* Gradient background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       {/* Main card */}
       <div className="relative bg-card border border-border/50 rounded-xl p-6 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
@@ -105,8 +103,6 @@ export function ModernCareerCard({ career, onView }: ModernCareerCardProps) {
           </Button>
         </div>
 
-        {/* Gradient border animation */}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/50 via-secondary/50 to-primary/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl" />
       </div>
     </div>
   );
