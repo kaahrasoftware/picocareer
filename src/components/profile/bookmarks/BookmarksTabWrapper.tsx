@@ -5,6 +5,7 @@ import { OpportunityBookmarks } from "./OpportunityBookmarks";
 import { CareerBookmarks } from "./CareerBookmarks";
 import { MentorBookmarks } from "./MentorBookmarks";
 import { MajorBookmarks } from "./MajorBookmarks";
+import { ScholarshipBookmarks } from "./ScholarshipBookmarks";
 
 export function BookmarksTabWrapper() {
   const [activePage, setActivePage] = useState("opportunities");
@@ -27,11 +28,12 @@ export function BookmarksTabWrapper() {
   return (
     <div className="w-full">
       <Tabs value={activePage} onValueChange={setActivePage} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
           <TabsTrigger value="careers">Careers</TabsTrigger>
           <TabsTrigger value="mentors">Mentors</TabsTrigger>
           <TabsTrigger value="majors">Majors</TabsTrigger>
+          <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
         </TabsList>
         
         <TabsContent value="opportunities" className="mt-6">
@@ -57,6 +59,10 @@ export function BookmarksTabWrapper() {
             activePage={activePage}
             onViewMajorDetails={handleViewMajorDetails}
           />
+        </TabsContent>
+        
+        <TabsContent value="scholarships" className="mt-6">
+          <ScholarshipBookmarks activePage={activePage} />
         </TabsContent>
       </Tabs>
     </div>
