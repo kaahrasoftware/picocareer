@@ -1,10 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CareerRecommendationCard } from './CareerRecommendationCard';
 import { AssessmentSummary } from './AssessmentSummary';
+import { AssessmentSharingModal } from '@/components/sharing/AssessmentSharingModal';
 import { CareerRecommendation, QuestionResponse } from '@/types/assessment';
 import { useSaveRecommendations } from '@/hooks/useSaveRecommendations';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
@@ -71,6 +72,7 @@ export const ResultsPanel = ({
   assessmentId
 }: ResultsPanelProps) => {
   const { isMobile } = useBreakpoints();
+  const [showSharingModal, setShowSharingModal] = useState(false);
   // Use the passed assessmentId or generate a fallback UUID
   const finalAssessmentId = assessmentId || crypto.randomUUID();
   
@@ -101,13 +103,13 @@ export const ResultsPanel = ({
   };
 
   const handleShareResults = () => {
-    console.log('Sharing results...');
+    setShowSharingModal(true);
   };
 
   const profileInfo = getProfileTypeInfo(detectedProfileType);
 
   return (
-    <div className={`${isMobile ? 'space-y-6' : 'space-y-8'}`}>
+    <div className={`${isMobile ? 'space-y-6' : 'space-y-8'}`} id="results-panel">
       <Card className="shadow-xl border-0 overflow-hidden">
         <CardHeader className={`text-center bg-gradient-to-r from-success/5 to-primary/5 ${isMobile ? 'pb-6 px-6' : 'pb-8 px-8'}`}>
           <CardTitle className={`${isMobile ? 'text-2xl' : 'text-3xl'} flex items-center justify-center gap-3 font-bold`}>
@@ -253,6 +255,13 @@ export const ResultsPanel = ({
           </Card>
         )}
       </div>
+
+      <AssessmentSharingModal
+        isOpen={showSharingModal}
+        onClose={() => setShowSharingModal(false)}
+        assessmentId={finalAssessmentId}
+        recommendations={recommendations}
+      />
     </div>
   );
 };
