@@ -174,9 +174,9 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
     detailCard.style.textAlign = 'center';
     
     detailCard.innerHTML = `
-      <div style="font-size: 80px; margin-bottom: 20px;">${detail.icon}</div>
-      <div style="font-size: 32px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
-      <div style="font-size: 44px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
+      <div style="font-size: 60px; margin-bottom: 16px;">${detail.icon}</div>
+      <div style="font-size: 20px; color: rgba(255, 255, 255, 0.7); font-weight: 500; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">${detail.label}</div>
+      <div style="font-size: 28px; color: white; font-weight: 600; line-height: 1.3;">${detail.value}</div>
     `;
     
     detailsContainer.appendChild(detailCard);
