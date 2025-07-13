@@ -107,7 +107,7 @@ export const useAssessmentFlow = () => {
     }
   };
 
-  const handleAnswer = useCallback((response: QuestionResponse) => {
+  const handleAnswer = useCallback(async (response: QuestionResponse) => {
     setResponses(prev => {
       const existingIndex = prev.findIndex(r => r.questionId === response.questionId);
       const updatedResponses = existingIndex >= 0 
@@ -126,11 +126,27 @@ export const useAssessmentFlow = () => {
       return updatedResponses;
     });
 
+    // Save response to database if we have a valid assessment ID
+    if (assessmentId && assessmentId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+      try {
+        await supabase
+          .from('assessment_responses')
+          .upsert({
+            assessment_id: assessmentId,
+            question_id: response.questionId,
+            answer: response.answer
+          });
+      } catch (error) {
+        console.error('Error saving response:', error);
+        // Continue with assessment even if saving fails
+      }
+    }
+
     // Move to next question in filtered set
     if (currentQuestionIndex < filteredQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
-  }, [currentQuestionIndex, detectedProfileType, filteredQuestions.length]);
+  }, [currentQuestionIndex, detectedProfileType, filteredQuestions.length, assessmentId]);
 
   const completeAssessment = async () => {
     try {
