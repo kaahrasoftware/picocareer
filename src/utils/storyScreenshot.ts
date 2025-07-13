@@ -124,7 +124,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   card.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1))';
   card.style.backdropFilter = 'blur(30px)';
   card.style.borderRadius = '32px';
-  card.style.padding = '50px 45px';
+  card.style.padding = '70px 50px';
   card.style.color = '#ffffff';
   card.style.textAlign = 'left';
   card.style.boxShadow = '0 40px 80px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.2), inset 0 1px 0 rgba(255,255,255,0.3)';
@@ -156,7 +156,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   
   // Modern hero section with asymmetrical layout
   const heroSection = document.createElement('div');
-  heroSection.style.marginBottom = '35px';
+  heroSection.style.marginBottom = '45px';
   heroSection.style.position = 'relative';
   
   // Career title with gradient text
@@ -178,7 +178,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   matchScoreContainer.style.display = 'flex';
   matchScoreContainer.style.alignItems = 'center';
   matchScoreContainer.style.gap = '25px';
-  matchScoreContainer.style.marginBottom = '35px';
+  matchScoreContainer.style.marginBottom = '45px';
   matchScoreContainer.style.padding = '20px';
   matchScoreContainer.style.background = 'rgba(255,255,255,0.1)';
   matchScoreContainer.style.borderRadius = '20px';
@@ -229,7 +229,7 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   detailsGrid.style.display = 'grid';
   detailsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
   detailsGrid.style.gap = '20px';
-  detailsGrid.style.margin = '0 0 35px 0';
+  detailsGrid.style.margin = '0 0 45px 0';
   
   const detailsData = [];
   if (recommendation.salaryRange) {
