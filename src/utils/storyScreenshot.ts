@@ -31,10 +31,10 @@ export const createStoryScreenshot = async (options: StoryScreenshotOptions): Pr
   header.style.textAlign = 'center';
   header.style.marginBottom = '60px';
   header.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px;">
+    <div style="text-align: center; margin-bottom: 20px;">
       <img src="/lovable-uploads/d6b217eb-2cec-4933-b8ee-09a438e5d28d.png" 
            alt="PicoCareer Logo" 
-           style="height: 32px; width: auto;">
+           style="height: 64px; width: auto; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;">
       <div style="font-size: 48px; font-weight: bold;">${brandingText}</div>
     </div>
     <div style="font-size: 32px; opacity: 0.9;">Career Assessment Results</div>
