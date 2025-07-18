@@ -7,6 +7,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { ProfileHeader } from "@/components/profile-details/ProfileHeader";
 import { PageLoader } from "@/components/ui/page-loader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileTab } from "@/components/profile/ProfileTab";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
 import { CalendarTab } from "@/components/profile/CalendarTab";
 import { DashboardTab } from "@/components/profile/DashboardTab";
@@ -83,7 +84,7 @@ export default function Profile() {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-4 mt-6">
-          <ProfileTabs profile={profile} />
+          <ProfileTab profile={profile} />
         </TabsContent>
 
         <TabsContent value="calendar" className="space-y-4 mt-6">
