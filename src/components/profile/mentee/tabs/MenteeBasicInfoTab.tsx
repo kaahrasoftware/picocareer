@@ -31,10 +31,11 @@ export function MenteeBasicInfoTab({ profile, isEditing, onEdit, onSave, onCance
   const { data: favoriteCourses } = useFavoriteCourses(profile?.id);
   
   const academicStatusOptions: { value: AcademicStatus; label: string }[] = [
-    { value: 'undergraduate', label: 'Undergraduate Student' },
-    { value: 'graduate', label: 'Graduate Student' },
-    { value: 'postgraduate', label: 'Postgraduate' },
-    { value: 'high_school', label: 'High School Student' },
+    { value: 'current_student', label: 'Current Student' },
+    { value: 'gap_year', label: 'Gap Year' },
+    { value: 'graduated', label: 'Graduated' },
+    { value: 'transfer_student', label: 'Transfer Student' },
+    { value: 'prospective_student', label: 'Prospective Student' },
   ];
 
   const handleInputChange = (field: string, value: string) => {

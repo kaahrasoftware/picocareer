@@ -12,6 +12,7 @@ export interface MenteeCourse {
   description?: string;
   status: CourseStatus;
   instructor_name?: string;
+  is_favorite?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -98,5 +99,5 @@ export interface MenteeEssayResponse {
 
 // Type definitions
 export type CourseStatus = 'completed' | 'in_progress' | 'planned' | 'dropped';
-export type AcademicStatus = 'undergraduate' | 'graduate' | 'postgraduate' | 'high_school';
+export type AcademicStatus = 'current_student' | 'gap_year' | 'graduated' | 'transfer_student' | 'prospective_student';
 export type InterestCategory = 'career' | 'academic' | 'extracurricular' | 'hobby' | 'industry' | 'skill';
