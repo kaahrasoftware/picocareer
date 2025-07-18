@@ -104,7 +104,7 @@ export default function Profile() {
           </TabsContent>}
 
         {isStudent && <TabsContent value="student" className="space-y-4 mt-6">
-            <ProfileTabs profile={profile} />
+            <ProfileTabs profile={profile} context="student" />
           </TabsContent>}
 
         <TabsContent value="wallet" className="space-y-4 mt-6">

@@ -9,9 +9,10 @@ interface ProfileTabsProps {
   profile: Profile | null;
   isEditing?: boolean;
   onTabChange?: (value: string) => void;
+  context?: 'student' | 'default';
 }
 
-export function ProfileTabs({ profile, isEditing = false, onTabChange }: ProfileTabsProps) {
+export function ProfileTabs({ profile, isEditing = false, onTabChange, context = 'default' }: ProfileTabsProps) {
   // Add defensive check to prevent rendering if profile is null/undefined
   if (!profile) {
     return (
@@ -21,7 +22,12 @@ export function ProfileTabs({ profile, isEditing = false, onTabChange }: Profile
     );
   }
 
-  // Mentors should always get MentorProfileTabs
+  // If context is 'student', always show MenteeProfileTabs regardless of user_type
+  if (context === 'student') {
+    return <MenteeProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
+  }
+
+  // Mentors should always get MentorProfileTabs (when not in student context)
   if (profile.user_type === 'mentor') {
     return <MentorProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
   }
