@@ -21,14 +21,26 @@ export function ProfileTabs({ profile, isEditing = false, onTabChange }: Profile
     );
   }
 
-  // Show mentee tabs for mentors, mentees, or students
-  const showMenteeTabs = profile.user_type === 'mentee' || 
-                        profile.user_type === 'mentor' || 
-                        profile.student_nonstudent === 'Student';
-
-  if (profile.user_type === 'mentor' && !showMenteeTabs) {
+  // Mentors should always get MentorProfileTabs
+  if (profile.user_type === 'mentor') {
     return <MentorProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
   }
 
-  return <MenteeProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
+  // Students and mentees get MenteeProfileTabs
+  const showMenteeTabs = profile.user_type === 'mentee' || 
+                        profile.student_nonstudent === 'Student';
+
+  if (showMenteeTabs) {
+    return <MenteeProfileTabs profile={profile} isEditing={isEditing} onTabChange={onTabChange} />;
+  }
+
+  // Default fallback for other user types - show basic profile info
+  return (
+    <div className="p-6 bg-muted rounded-lg">
+      <h3 className="text-lg font-semibold mb-4">Profile</h3>
+      <p className="text-muted-foreground">
+        Basic profile information for {profile.first_name} {profile.last_name}
+      </p>
+    </div>
+  );
 }
