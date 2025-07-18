@@ -3002,6 +3002,7 @@ export type Database = {
           grade: string | null
           id: string
           instructor_name: string | null
+          is_favorite: boolean | null
           mentee_id: string
           semester: string | null
           status: Database["public"]["Enums"]["course_status"]
@@ -3017,6 +3018,7 @@ export type Database = {
           grade?: string | null
           id?: string
           instructor_name?: string | null
+          is_favorite?: boolean | null
           mentee_id: string
           semester?: string | null
           status?: Database["public"]["Enums"]["course_status"]
@@ -3032,6 +3034,7 @@ export type Database = {
           grade?: string | null
           id?: string
           instructor_name?: string | null
+          is_favorite?: boolean | null
           mentee_id?: string
           semester?: string | null
           status?: Database["public"]["Enums"]["course_status"]
