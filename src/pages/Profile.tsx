@@ -15,12 +15,16 @@ import { SettingsTab } from "@/components/profile/SettingsTab";
 import { MentorTab } from "@/components/profile/MentorTab";
 import { WalletTab } from "@/components/profile/WalletTab";
 import { BookmarksTab } from "@/components/profile/BookmarksTab";
+import { Button } from "@/components/ui/button";
+import { Pencil, X, Save } from "lucide-react";
+import { useState } from "react";
 
 export default function Profile() {
   const { session } = useAuthSession();
   const { data: profile, isLoading, error } = useUserProfile(session);
   const { handleTabChange } = useProfileAnalytics();
   const { isAdmin } = useIsAdmin();
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
 
   // Ensure user has a default avatar if they don't have one
   useDefaultAvatar(session?.user?.id, profile?.avatar_url);
@@ -69,6 +73,18 @@ export default function Profile() {
   
   const gridCols = Math.min(tabCount, 7);
 
+  const handleStudentEdit = () => {
+    setIsEditingStudent(true);
+  };
+
+  const handleStudentSave = () => {
+    setIsEditingStudent(false);
+  };
+
+  const handleStudentCancel = () => {
+    setIsEditingStudent(false);
+  };
+
   return <div className="container py-6 space-y-6">
       <ProfileHeader profile={profile} session={session} />
       
@@ -104,7 +120,43 @@ export default function Profile() {
           </TabsContent>}
 
         {isStudent && <TabsContent value="student" className="space-y-4 mt-6">
-            <ProfileTabs profile={profile} context="student" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Student Profile</h3>
+                {!isEditingStudent ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleStudentEdit}
+                    className="flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleStudentCancel}
+                      className="flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleStudentSave}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      Save
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <ProfileTabs profile={profile} context="student" isEditing={isEditingStudent} />
+            </div>
           </TabsContent>}
 
         <TabsContent value="wallet" className="space-y-4 mt-6">
