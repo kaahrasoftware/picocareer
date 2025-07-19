@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Edit2, BookOpen, Star } from 'lucide-react';
 import { useFavoriteCourses } from '@/hooks/useFavoriteCourses';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FavoriteCourseSelector } from '../FavoriteCourseSelector';
 
 interface MenteeBasicInfoTabProps {
   profile: any;
@@ -66,143 +66,157 @@ export function MenteeBasicInfoTab({ profile, isEditing, onEdit, onSave, onCance
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Academic Information
-        </CardTitle>
-        {!isEditing && (
-          <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {isEditing ? (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="academic_status">Academic Status</Label>
-                <Select 
-                  value={formData.academic_status} 
-                  onValueChange={(value) => handleInputChange('academic_status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select academic status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {academicStatusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Academic Information
+          </CardTitle>
+          {!isEditing && (
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Edit2 className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {isEditing ? (
+            <>
+              {/* Academic Information Form */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="academic_status">Academic Status</Label>
+                  <Select 
+                    value={formData.academic_status} 
+                    onValueChange={(value) => handleInputChange('academic_status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select academic status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {academicStatusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="current_gpa">Current GPA</Label>
+                  <Input
+                    id="current_gpa"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="4.0"
+                    placeholder="3.75"
+                    value={formData.current_gpa}
+                    onChange={(e) => handleInputChange('current_gpa', e.target.value)}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="current_gpa">Current GPA</Label>
-                <Input
-                  id="current_gpa"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="4.0"
-                  placeholder="3.75"
-                  value={formData.current_gpa}
-                  onChange={(e) => handleInputChange('current_gpa', e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="graduation_year">Expected Graduation Year</Label>
-                <Input
-                  id="graduation_year"
-                  type="number"
-                  min="2020"
-                  max="2035"
-                  placeholder="2025"
-                  value={formData.graduation_year}
-                  onChange={(e) => handleInputChange('graduation_year', e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="graduation_year">Expected Graduation Year</Label>
+                  <Input
+                    id="graduation_year"
+                    type="number"
+                    min="2020"
+                    max="2035"
+                    placeholder="2025"
+                    value={formData.graduation_year}
+                    onChange={(e) => handleInputChange('graduation_year', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="total_credits">Total Credits Completed</Label>
+                  <Input
+                    id="total_credits"
+                    type="number"
+                    min="0"
+                    placeholder="90"
+                    value={formData.total_credits}
+                    onChange={(e) => handleInputChange('total_credits', e.target.value)}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="total_credits">Total Credits Completed</Label>
-                <Input
-                  id="total_credits"
-                  type="number"
-                  min="0"
-                  placeholder="90"
-                  value={formData.total_credits}
-                  onChange={(e) => handleInputChange('total_credits', e.target.value)}
-                />
-              </div>
-            </div>
 
+              <div>
+                <Label htmlFor="class_rank">Class Rank (Optional)</Label>
+                <Input
+                  id="class_rank"
+                  placeholder="e.g., Top 10%, 15 of 200"
+                  value={formData.class_rank}
+                  onChange={(e) => handleInputChange('class_rank', e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={onCancel}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave}>
+                  Save Changes
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Academic Status</Label>
+                  <p className="text-sm font-medium">
+                    {academicStatusOptions.find(opt => opt.value === profile?.academic_status)?.label || 'Not provided'}
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Current GPA</Label>
+                  <p className="text-sm font-medium">
+                    {profile?.current_gpa ? `${profile.current_gpa}/4.0` : 'Not provided'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Expected Graduation Year</Label>
+                  <p className="text-sm font-medium">{profile?.graduation_year || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Total Credits Completed</Label>
+                  <p className="text-sm font-medium">{profile?.total_credits || 'Not provided'}</p>
+                </div>
+              </div>
+
+              {profile?.class_rank && (
+                <div>
+                  <Label className="text-sm font-medium text-muted-foreground">Class Rank</Label>
+                  <p className="text-sm font-medium">{profile.class_rank}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Favorite Courses Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Star className="h-5 w-5" />
+            Favorite Subjects/Courses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <FavoriteCourseSelector menteeId={profile?.id} />
+          ) : (
             <div>
-              <Label htmlFor="class_rank">Class Rank (Optional)</Label>
-              <Input
-                id="class_rank"
-                placeholder="e.g., Top 10%, 15 of 200"
-                value={formData.class_rank}
-                onChange={(e) => handleInputChange('class_rank', e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={onCancel}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>
-                Save Changes
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Academic Status</Label>
-                <p className="text-sm font-medium">
-                  {academicStatusOptions.find(opt => opt.value === profile?.academic_status)?.label || 'Not provided'}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Current GPA</Label>
-                <p className="text-sm font-medium">
-                  {profile?.current_gpa ? `${profile.current_gpa}/4.0` : 'Not provided'}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Expected Graduation Year</Label>
-                <p className="text-sm font-medium">{profile?.graduation_year || 'Not provided'}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Total Credits Completed</Label>
-                <p className="text-sm font-medium">{profile?.total_credits || 'Not provided'}</p>
-              </div>
-            </div>
-
-            {profile?.class_rank && (
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Class Rank</Label>
-                <p className="text-sm font-medium">{profile.class_rank}</p>
-              </div>
-            )}
-
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                Favorite Subjects/Courses
-              </Label>
               {favoriteCourses && favoriteCourses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-2 mt-2">
+                <div className="grid grid-cols-1 gap-2">
                   {favoriteCourses.map((course) => (
                     <div key={course.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border">
                       <div>
@@ -220,14 +234,14 @@ export function MenteeBasicInfoTab({ profile, isEditing, onEdit, onSave, onCance
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground">
                   No favorite courses selected. Add courses and mark them as favorites to display here.
                 </p>
               )}
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
