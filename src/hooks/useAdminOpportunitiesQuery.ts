@@ -9,6 +9,8 @@ export interface OpportunityWithAnalytics {
   status: string;
   deadline?: string;
   created_at: string;
+  opportunity_type?: string;
+  provider_name?: string;
   applications_count?: number;
   views_count?: number;
   bookmarks_count?: number;
@@ -26,7 +28,9 @@ export function useAdminOpportunitiesQuery() {
           description,
           status,
           deadline,
-          created_at
+          created_at,
+          opportunity_type,
+          provider_name
         `)
         .order('created_at', { ascending: false });
 

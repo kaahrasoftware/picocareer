@@ -23,7 +23,7 @@ export function OpportunitiesManagementTab() {
   // Map the data to match the expected format for the data table
   const mappedOpportunities = opportunities?.map(opp => ({
     ...opp,
-    type: opp.opportunity_type || 'other',
+    type: (opp.opportunity_type || 'other') as 'scholarship' | 'event' | 'job' | 'internship' | 'fellowship' | 'grant' | 'competition' | 'volunteer' | 'other',
     provider_name: opp.provider_name || 'N/A'
   })) || [];
 
