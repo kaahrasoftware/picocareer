@@ -60,15 +60,15 @@ export function useSystemTransactionHistory(filters: TransactionFilters) {
 
       // Apply filters
       if (filters.type !== 'all') {
-        query = query.eq('transaction_type', filters.type);
+        query = query.eq('transaction_type', filters.type as any);
       }
 
       if (filters.category !== 'all') {
-        query = query.eq('category', filters.category);
+        query = query.eq('category', filters.category as any);
       }
 
       if (filters.status !== 'all') {
-        query = query.eq('transaction_status', filters.status);
+        query = query.eq('transaction_status', filters.status as any);
       }
 
       if (filters.dateFrom) {

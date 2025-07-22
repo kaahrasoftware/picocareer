@@ -258,13 +258,18 @@ export function SystemTransactionHistory() {
       )}
 
       {/* Enhanced Transaction Table */}
-      <DataTable
-        columns={columns}
-        data={transactions}
-        searchKey="userName"
-        searchPlaceholder="Search transactions..."
-        loading={isLoading}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={transactions}
+          searchKey="userName"
+          searchPlaceholder="Search transactions..."
+        />
+      )}
     </div>
   );
 }
