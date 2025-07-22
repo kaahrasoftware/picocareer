@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, ArrowRightLeft, AlertTriangle } from "lucide-react";
 import { UserSearchInput } from './UserSearchInput';
 import { TokenOperationDialog } from './TokenOperationDialog';
-import { useTokenAddMutation } from '@/hooks/useTokenAddMutation';
+import { useAddTokensMutation } from '@/hooks/useAddTokensMutation';
 import { useTokenTransferMutation } from '@/hooks/useTokenTransferMutation';
 import { toast } from 'sonner';
 
@@ -42,7 +42,7 @@ export function TokenOperationsPanel() {
   const [transferDescription, setTransferDescription] = useState('');
   const [showTransferConfirm, setShowTransferConfirm] = useState(false);
 
-  const addTokensMutation = useTokenAddMutation();
+  const addTokensMutation = useAddTokensMutation();
   const transferTokensMutation = useTokenTransferMutation();
 
   const handleAddTokens = () => {
@@ -68,7 +68,7 @@ export function TokenOperationsPanel() {
       profileId: addUser.id,
       amount,
       description: addDescription || `Admin added ${amount} tokens`,
-      category: addCategory as 'reward' | 'adjustment' | 'bonus'
+      category: addCategory as 'bonus' | 'adjustment' | 'refund' | 'content'
     }, {
       onSuccess: () => {
         setShowAddConfirm(false);
@@ -178,7 +178,7 @@ export function TokenOperationsPanel() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="reward">Reward</SelectItem>
+                      <SelectItem value="content">Content</SelectItem>
                       <SelectItem value="bonus">Bonus</SelectItem>
                       <SelectItem value="adjustment">Adjustment</SelectItem>
                     </SelectContent>
