@@ -2,13 +2,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { OpportunityStatus } from '@/types/database/enums';
 
 export function useUpdateOpportunityStatusMutation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: OpportunityStatus }) => {
       const { data, error } = await supabase
         .from('opportunities')
         .update({ status })

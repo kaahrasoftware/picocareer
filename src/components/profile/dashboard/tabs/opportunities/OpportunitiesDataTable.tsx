@@ -8,6 +8,7 @@ import { ExternalLink, Edit } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUpdateOpportunityStatusMutation } from "@/hooks/useUpdateOpportunityStatusMutation";
+import { OpportunityStatus } from "@/types/database/enums";
 
 interface Opportunity {
   id: string;
@@ -30,7 +31,7 @@ export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: Opp
   const statusMutation = useUpdateOpportunityStatusMutation();
 
   const handleStatusChange = async (opportunityId: string, newStatus: string) => {
-    await statusMutation.mutateAsync({ id: opportunityId, status: newStatus });
+    await statusMutation.mutateAsync({ id: opportunityId, status: newStatus as OpportunityStatus });
   };
 
   const getTypeColor = (type: Opportunity['type']) => {
@@ -127,10 +128,10 @@ export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: Opp
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Active">
+            <SelectItem value={OpportunityStatus.ACTIVE}>
               <Badge className="bg-green-100 text-green-800">Active</Badge>
             </SelectItem>
-            <SelectItem value="Pending">
+            <SelectItem value={OpportunityStatus.PENDING}>
               <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
             </SelectItem>
           </SelectContent>
