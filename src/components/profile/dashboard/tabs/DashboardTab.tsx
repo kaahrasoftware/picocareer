@@ -6,16 +6,16 @@ import {
   BookOpen,
   GraduationCap,
   Settings,
-  Calendar,
-  CalendarClock
+  Bug,
+  Coins
 } from "lucide-react";
 import { OverviewTab } from "./OverviewTab";
 import { UsersTab } from "./UsersTab";
 import { AppSettingsTab } from "./AppSettingsTab";
 import { AcademicResourcesTab } from "./AcademicResourcesTab";
 import { ContentResourcesTab } from "./ContentResourcesTab";
-import { EventManagementTab } from "./EventManagementTab";
-import { SessionManagementTab } from "./sessions/SessionManagementTab";
+import { TokensManagementTab } from "./tokens/TokensManagementTab";
+import { BrowserCompatibilityTest } from "../../debug/BrowserCompatibilityTest";
 
 export function DashboardTab() {
   return (
@@ -24,31 +24,31 @@ export function DashboardTab() {
         <TabsList className="grid grid-cols-7 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
-            <span>Overview</span>
+            Overview
           </TabsTrigger>
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
-            <span>Users</span>
+            Users
           </TabsTrigger>
-          <TabsTrigger value="events" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>Events</span>
-          </TabsTrigger>
-          <TabsTrigger value="sessions" className="gap-2">
-            <CalendarClock className="h-4 w-4" />
-            <span>Sessions</span>
+          <TabsTrigger value="tokens" className="gap-2">
+            <Coins className="h-4 w-4" />
+            Tokens
           </TabsTrigger>
           <TabsTrigger value="academic-resources" className="gap-2">
             <GraduationCap className="h-4 w-4" />
-            <span>Academic Resources</span>
+            Academic Resources
           </TabsTrigger>
           <TabsTrigger value="content-resources" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            <span>Content Resources</span>
+            Content Resources
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
-            <span>Settings</span>
+            App Settings
+          </TabsTrigger>
+          <TabsTrigger value="debug" className="gap-2">
+            <Bug className="h-4 w-4" />
+            Debug
           </TabsTrigger>
         </TabsList>
 
@@ -60,12 +60,8 @@ export function DashboardTab() {
           <UsersTab />
         </TabsContent>
 
-        <TabsContent value="events">
-          <EventManagementTab />
-        </TabsContent>
-
-        <TabsContent value="sessions">
-          <SessionManagementTab />
+        <TabsContent value="tokens">
+          <TokensManagementTab />
         </TabsContent>
 
         <TabsContent value="academic-resources">
@@ -78,6 +74,13 @@ export function DashboardTab() {
 
         <TabsContent value="settings">
           <AppSettingsTab />
+        </TabsContent>
+
+        <TabsContent value="debug">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold">Debug Tools</h2>
+            <BrowserCompatibilityTest />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
