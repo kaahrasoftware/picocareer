@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { OpportunityFilters } from "@/components/opportunity/OpportunityFilters";
@@ -34,7 +33,7 @@ export default function Opportunities() {
   };
 
   const handleCreateOpportunity = () => {
-    navigate("/opportunities/create");
+    navigate("/create-opportunity");
   };
 
   // Generate display title based on selected filter type
