@@ -4,17 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, ArrowRightLeft, Coins } from "lucide-react";
-import { useAddTokensMutation } from "@/hooks/useAddTokensMutation";
-import { useTokenTransferMutation } from "@/hooks/useTokenTransferMutation";
-import { UserSearchInput } from "./UserSearchInput";
-import { TokenOperationDialog } from "./TokenOperationDialog";
-import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserPlus, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { UserSearchInput } from './UserSearchInput';
+import { TokenOperationDialog } from './TokenOperationDialog';
+import { useTokenAddMutation } from '@/hooks/useTokenAddMutation';
+import { useTokenTransferMutation } from '@/hooks/useTokenTransferMutation';
+import { toast } from 'sonner';
 
-interface UserData {
+interface UserSearchResult {
   id: string;
   email: string;
   firstName: string;
@@ -26,103 +26,111 @@ interface UserData {
 }
 
 export function TokenOperationsPanel() {
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
-  const [sourceUser, setSourceUser] = useState<UserData | null>(null);
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<'bonus' | 'adjustment' | 'refund' | 'content'>('bonus');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [operationType, setOperationType] = useState<'add' | 'transfer'>('add');
+  const [activeTab, setActiveTab] = useState('add');
+  
+  // Add tokens state
+  const [addUser, setAddUser] = useState<UserSearchResult | null>(null);
+  const [addAmount, setAddAmount] = useState('');
+  const [addDescription, setAddDescription] = useState('');
+  const [addCategory, setAddCategory] = useState('adjustment');
+  const [showAddConfirm, setShowAddConfirm] = useState(false);
+  
+  // Transfer tokens state
+  const [fromUser, setFromUser] = useState<UserSearchResult | null>(null);
+  const [toUser, setToUser] = useState<UserSearchResult | null>(null);
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferDescription, setTransferDescription] = useState('');
+  const [showTransferConfirm, setShowTransferConfirm] = useState(false);
 
-  const addTokensMutation = useAddTokensMutation();
+  const addTokensMutation = useTokenAddMutation();
   const transferTokensMutation = useTokenTransferMutation();
 
   const handleAddTokens = () => {
-    if (!selectedUser || !amount || !description) {
-      toast.error('Please fill in all required fields and select a user');
+    if (!addUser) {
+      toast.error('Please select a user');
       return;
     }
-
-    const tokenAmount = parseInt(amount);
-    if (isNaN(tokenAmount) || tokenAmount <= 0) {
+    
+    const amount = parseFloat(addAmount);
+    if (!amount || amount <= 0) {
       toast.error('Please enter a valid amount');
       return;
     }
 
-    setOperationType('add');
-    setShowConfirmDialog(true);
+    setShowAddConfirm(true);
+  };
+
+  const confirmAddTokens = () => {
+    if (!addUser) return;
+    
+    const amount = parseFloat(addAmount);
+    addTokensMutation.mutate({
+      profileId: addUser.id,
+      amount,
+      description: addDescription || `Admin added ${amount} tokens`,
+      category: addCategory as 'reward' | 'adjustment' | 'bonus'
+    }, {
+      onSuccess: () => {
+        setShowAddConfirm(false);
+        setAddUser(null);
+        setAddAmount('');
+        setAddDescription('');
+        setAddCategory('adjustment');
+      }
+    });
   };
 
   const handleTransferTokens = () => {
-    if (!sourceUser || !selectedUser || !amount || !description) {
-      toast.error('Please fill in all required fields and select both users');
+    if (!fromUser) {
+      toast.error('Please select a source user');
       return;
     }
-
-    if (sourceUser.id === selectedUser.id) {
-      toast.error('Cannot transfer tokens to the same user');
+    
+    if (!toUser) {
+      toast.error('Please select a destination user');
       return;
     }
-
-    const tokenAmount = parseInt(amount);
-    if (isNaN(tokenAmount) || tokenAmount <= 0) {
+    
+    const amount = parseFloat(transferAmount);
+    if (!amount || amount <= 0) {
       toast.error('Please enter a valid amount');
       return;
     }
 
-    if (sourceUser.currentBalance < tokenAmount) {
-      toast.error('Source user has insufficient balance for this transfer');
+    if (fromUser.currentBalance < amount) {
+      toast.error('Source user has insufficient balance');
       return;
     }
 
-    setOperationType('transfer');
-    setShowConfirmDialog(true);
+    setShowTransferConfirm(true);
   };
 
-  const confirmOperation = async () => {
-    const tokenAmount = parseInt(amount);
-
-    try {
-      if (operationType === 'add') {
-        await addTokensMutation.mutateAsync({
-          profileId: selectedUser!.id,
-          amount: tokenAmount,
-          description,
-          category
-        });
-      } else {
-        await transferTokensMutation.mutateAsync({
-          fromProfileId: sourceUser!.id,
-          toProfileId: selectedUser!.id,
-          amount: tokenAmount,
-          description
-        });
+  const confirmTransferTokens = () => {
+    if (!fromUser || !toUser) return;
+    
+    const amount = parseFloat(transferAmount);
+    transferTokensMutation.mutate({
+      fromProfileId: fromUser.id,
+      toProfileId: toUser.id,
+      amount,
+      description: transferDescription || `Admin transfer: ${amount} tokens from ${fromUser.fullName} to ${toUser.fullName}`
+    }, {
+      onSuccess: () => {
+        setShowTransferConfirm(false);
+        setFromUser(null);
+        setToUser(null);
+        setTransferAmount('');
+        setTransferDescription('');
       }
-
-      // Reset form
-      setSelectedUser(null);
-      setSourceUser(null);
-      setAmount('');
-      setDescription('');
-      setShowConfirmDialog(false);
-    } catch (error) {
-      console.error('Token operation failed:', error);
-    }
-  };
-
-  const resetForm = () => {
-    setSelectedUser(null);
-    setSourceUser(null);
-    setAmount('');
-    setDescription('');
+    });
   };
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="add" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="add" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
+            <UserPlus className="h-4 w-4" />
             Add Tokens
           </TabsTrigger>
           <TabsTrigger value="transfer" className="flex items-center gap-2">
@@ -134,76 +142,68 @@ export function TokenOperationsPanel() {
         <TabsContent value="add" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Coins className="h-5 w-5 text-green-600" />
-                Add Tokens to User Account
-              </CardTitle>
+              <CardTitle>Add Tokens to User</CardTitle>
               <CardDescription>
-                Add tokens to a user's wallet. This will create a credit transaction.
+                Add tokens to a user's wallet. This creates a positive transaction in their account.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="target-user">Select User *</Label>
+                <Label>Select User</Label>
                 <UserSearchInput
-                  onUserSelect={setSelectedUser}
-                  selectedUser={selectedUser}
-                  onClearSelection={() => setSelectedUser(null)}
+                  onUserSelect={setAddUser}
+                  selectedUser={addUser}
+                  onClearSelection={() => setAddUser(null)}
                   placeholder="Search for user to add tokens to..."
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="add-amount">Amount *</Label>
+                  <Label htmlFor="add-amount">Amount</Label>
                   <Input
                     id="add-amount"
                     type="number"
-                    placeholder="Enter amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    value={addAmount}
+                    onChange={(e) => setAddAmount(e.target.value)}
+                    placeholder="Enter token amount"
                     min="1"
+                    step="1"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="add-category">Category</Label>
-                  <Select value={category} onValueChange={(value: any) => setCategory(value)}>
+                  <Select value={addCategory} onValueChange={setAddCategory}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="reward">Reward</SelectItem>
                       <SelectItem value="bonus">Bonus</SelectItem>
                       <SelectItem value="adjustment">Adjustment</SelectItem>
-                      <SelectItem value="refund">Refund</SelectItem>
-                      <SelectItem value="content">Content</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="add-description">Description *</Label>
+                <Label htmlFor="add-description">Description (Optional)</Label>
                 <Textarea
                   id="add-description"
-                  placeholder="Enter reason for adding tokens..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={addDescription}
+                  onChange={(e) => setAddDescription(e.target.value)}
+                  placeholder="Reason for adding tokens..."
                   rows={3}
                 />
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleAddTokens}
-                  disabled={!selectedUser || !amount || !description || addTokensMutation.isPending}
-                  className="flex-1"
-                >
-                  {addTokensMutation.isPending ? 'Adding...' : `Add ${amount || '0'} Tokens`}
-                </Button>
-                <Button variant="outline" onClick={resetForm}>
-                  Reset
-                </Button>
-              </div>
+              <Button 
+                onClick={handleAddTokens}
+                disabled={!addUser || !addAmount || addTokensMutation.isPending}
+                className="w-full"
+              >
+                {addTokensMutation.isPending ? 'Adding...' : 'Add Tokens'}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -211,97 +211,110 @@ export function TokenOperationsPanel() {
         <TabsContent value="transfer" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ArrowRightLeft className="h-5 w-5 text-blue-600" />
-                Transfer Tokens Between Users
-              </CardTitle>
+              <CardTitle>Transfer Tokens Between Users</CardTitle>
               <CardDescription>
-                Transfer tokens from one user's wallet to another. Both debit and credit transactions will be created.
+                Transfer tokens from one user's wallet to another. Both users must exist and have wallets.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="source-user">From User *</Label>
+                <Label>From User (Source)</Label>
                 <UserSearchInput
-                  onUserSelect={setSourceUser}
-                  selectedUser={sourceUser}
-                  onClearSelection={() => setSourceUser(null)}
-                  placeholder="Search for user to transfer tokens from..."
+                  onUserSelect={setFromUser}
+                  selectedUser={fromUser}
+                  onClearSelection={() => setFromUser(null)}
+                  placeholder="Search for source user..."
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="target-user-transfer">To User *</Label>
+                <Label>To User (Destination)</Label>
                 <UserSearchInput
-                  onUserSelect={setSelectedUser}
-                  selectedUser={selectedUser}
-                  onClearSelection={() => setSelectedUser(null)}
-                  placeholder="Search for user to transfer tokens to..."
+                  onUserSelect={setToUser}
+                  selectedUser={toUser}
+                  onClearSelection={() => setToUser(null)}
+                  placeholder="Search for destination user..."
                 />
               </div>
 
+              {fromUser && toUser && fromUser.id === toUser.id && (
+                <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm text-yellow-800">
+                    Source and destination users cannot be the same
+                  </span>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="transfer-amount">Amount *</Label>
+                <Label htmlFor="transfer-amount">Amount</Label>
                 <Input
                   id="transfer-amount"
                   type="number"
-                  placeholder="Enter amount to transfer"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="Enter token amount"
                   min="1"
-                  max={sourceUser?.currentBalance || undefined}
+                  step="1"
                 />
-                {sourceUser && amount && parseInt(amount) > sourceUser.currentBalance && (
+                {fromUser && transferAmount && parseFloat(transferAmount) > fromUser.currentBalance && (
                   <p className="text-sm text-red-600">
-                    Amount exceeds available balance ({sourceUser.currentBalance} tokens)
+                    Amount exceeds source user's balance ({fromUser.currentBalance} tokens)
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-description">Description *</Label>
+                <Label htmlFor="transfer-description">Description (Optional)</Label>
                 <Textarea
                   id="transfer-description"
-                  placeholder="Enter reason for token transfer..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={transferDescription}
+                  onChange={(e) => setTransferDescription(e.target.value)}
+                  placeholder="Reason for transfer..."
                   rows={3}
                 />
               </div>
 
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleTransferTokens}
-                  disabled={
-                    !sourceUser || 
-                    !selectedUser || 
-                    !amount || 
-                    !description || 
-                    transferTokensMutation.isPending ||
-                    (sourceUser && parseInt(amount) > sourceUser.currentBalance)
-                  }
-                  className="flex-1"
-                >
-                  {transferTokensMutation.isPending ? 'Transferring...' : `Transfer ${amount || '0'} Tokens`}
-                </Button>
-                <Button variant="outline" onClick={resetForm}>
-                  Reset
-                </Button>
-              </div>
+              <Button 
+                onClick={handleTransferTokens}
+                disabled={
+                  !fromUser || 
+                  !toUser || 
+                  !transferAmount || 
+                  fromUser.id === toUser.id ||
+                  (transferAmount && parseFloat(transferAmount) > fromUser.currentBalance) ||
+                  transferTokensMutation.isPending
+                }
+                className="w-full"
+              >
+                {transferTokensMutation.isPending ? 'Transferring...' : 'Transfer Tokens'}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
+      {/* Add Tokens Confirmation Dialog */}
       <TokenOperationDialog
-        isOpen={showConfirmDialog}
-        onClose={() => setShowConfirmDialog(false)}
-        onConfirm={confirmOperation}
-        operationType={operationType}
-        amount={parseInt(amount) || 0}
-        user={selectedUser!}
-        sourceUser={sourceUser}
-        isLoading={addTokensMutation.isPending || transferTokensMutation.isPending}
+        isOpen={showAddConfirm}
+        onClose={() => setShowAddConfirm(false)}
+        onConfirm={confirmAddTokens}
+        operationType="add"
+        amount={parseFloat(addAmount) || 0}
+        user={addUser}
+        isLoading={addTokensMutation.isPending}
+      />
+
+      {/* Transfer Tokens Confirmation Dialog */}
+      <TokenOperationDialog
+        isOpen={showTransferConfirm}
+        onClose={() => setShowTransferConfirm(false)}
+        onConfirm={confirmTransferTokens}
+        operationType="transfer"
+        amount={parseFloat(transferAmount) || 0}
+        user={toUser}
+        sourceUser={fromUser}
+        isLoading={transferTokensMutation.isPending}
       />
     </div>
   );

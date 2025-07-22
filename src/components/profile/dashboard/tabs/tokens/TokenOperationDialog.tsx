@@ -15,6 +15,9 @@ interface UserData {
   email: string;
   fullName: string;
   currentBalance: number;
+  firstName?: string;
+  lastName?: string;
+  userType?: string;
 }
 
 interface TokenOperationDialogProps {
@@ -23,8 +26,8 @@ interface TokenOperationDialogProps {
   onConfirm: () => void;
   operationType: 'add' | 'transfer';
   amount: number;
-  user: UserData;
-  sourceUser?: UserData;
+  user: UserData | null;
+  sourceUser?: UserData | null;
   isLoading?: boolean;
 }
 
@@ -39,6 +42,31 @@ export function TokenOperationDialog({
   isLoading = false
 }: TokenOperationDialogProps) {
   const isTransfer = operationType === 'transfer';
+  
+  // Don't render dialog if user data is missing
+  if (!user) {
+    return null;
+  }
+
+  // Safely get user display name with fallbacks
+  const getUserDisplayName = (userData: UserData | null) => {
+    if (!userData) return 'Unknown User';
+    return userData.fullName || 
+           `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 
+           userData.email?.split('@')[0] || 
+           'Unknown User';
+  };
+
+  const getUserEmail = (userData: UserData | null) => {
+    return userData?.email || 'No email';
+  };
+
+  const getUserBalance = (userData: UserData | null) => {
+    return userData?.currentBalance || 0;
+  };
+
+  const displayName = getUserDisplayName(user);
+  const sourceDisplayName = getUserDisplayName(sourceUser);
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -59,13 +87,13 @@ export function TokenOperationDialog({
               <h4 className="font-medium text-orange-800 mb-2">From User</h4>
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-orange-600" />
-                <span className="font-medium">{sourceUser.fullName}</span>
-                <span className="text-orange-600">({sourceUser.email})</span>
+                <span className="font-medium">{sourceDisplayName}</span>
+                <span className="text-orange-600">({getUserEmail(sourceUser)})</span>
               </div>
               <div className="flex items-center gap-1 text-sm mt-1">
                 <Coins className="h-3 w-3 text-orange-600" />
-                <span>Current: {sourceUser.currentBalance} tokens</span>
-                <span className="text-orange-600">→ Will have: {sourceUser.currentBalance - amount} tokens</span>
+                <span>Current: {getUserBalance(sourceUser)} tokens</span>
+                <span className="text-orange-600">→ Will have: {getUserBalance(sourceUser) - amount} tokens</span>
               </div>
             </div>
           )}
@@ -76,13 +104,13 @@ export function TokenOperationDialog({
             </h4>
             <div className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4 text-green-600" />
-              <span className="font-medium">{user.fullName}</span>
-              <span className="text-green-600">({user.email})</span>
+              <span className="font-medium">{displayName}</span>
+              <span className="text-green-600">({getUserEmail(user)})</span>
             </div>
             <div className="flex items-center gap-1 text-sm mt-1">
               <Coins className="h-3 w-3 text-green-600" />
-              <span>Current: {user.currentBalance} tokens</span>
-              <span className="text-green-600">→ Will have: {user.currentBalance + amount} tokens</span>
+              <span>Current: {getUserBalance(user)} tokens</span>
+              <span className="text-green-600">→ Will have: {getUserBalance(user) + amount} tokens</span>
             </div>
           </div>
 
@@ -97,7 +125,7 @@ export function TokenOperationDialog({
                 <span>Operation:</span>
                 <span className="font-medium capitalize">{operationType}</span>
               </div>
-              {isTransfer && sourceUser && sourceUser.currentBalance < amount && (
+              {isTransfer && sourceUser && getUserBalance(sourceUser) < amount && (
                 <div className="text-red-600 text-xs mt-2 font-medium">
                   ⚠️ Warning: Source user has insufficient balance!
                 </div>
@@ -112,7 +140,7 @@ export function TokenOperationDialog({
           </Button>
           <Button 
             onClick={onConfirm} 
-            disabled={isLoading || (isTransfer && sourceUser && sourceUser.currentBalance < amount)}
+            disabled={isLoading || (isTransfer && sourceUser && getUserBalance(sourceUser) < amount)}
             className="flex-1"
           >
             {isLoading ? 'Processing...' : `Confirm ${operationType === 'transfer' ? 'Transfer' : 'Add Tokens'}`}
