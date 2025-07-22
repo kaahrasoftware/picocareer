@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Edit } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Opportunity {
   id: string;
@@ -20,9 +21,10 @@ interface Opportunity {
 interface OpportunitiesDataTableProps {
   opportunities: Opportunity[];
   onEdit?: (opportunity: Opportunity) => void;
+  isLoading?: boolean;
 }
 
-export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesDataTableProps) {
+export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: OpportunitiesDataTableProps) {
   const getTypeColor = (type: Opportunity['type']) => {
     const colors = {
       scholarship: 'bg-purple-100 text-purple-800',
@@ -137,10 +139,28 @@ export function OpportunitiesDataTable({ opportunities, onEdit }: OpportunitiesD
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DataTable
       columns={columns}
       data={opportunities}
+      searchKey="title"
+      searchPlaceholder="Search opportunities..."
     />
   );
 }
