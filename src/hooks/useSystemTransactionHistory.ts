@@ -57,11 +57,11 @@ export function useSystemTransactionHistory(filters: TransactionFilters) {
       }
 
       if (filters.category !== 'all') {
-        query = query.eq('category', filters.category);
+        query = query.eq('category', filters.category as any);
       }
 
       if (filters.status !== 'all') {
-        query = query.eq('transaction_status', filters.status);
+        query = query.eq('transaction_status', filters.status as any);
       }
 
       const { data, error } = await query;

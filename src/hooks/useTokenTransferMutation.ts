@@ -48,8 +48,8 @@ export function useTokenTransferMutation() {
         }
       });
 
-      if (deductError || !deductResult.success) {
-        throw new Error(deductResult?.message || 'Failed to deduct tokens');
+      if (deductError || !(deductResult as any)?.success) {
+        throw new Error((deductResult as any)?.message || 'Failed to deduct tokens');
       }
 
       // Add to destination wallet
@@ -64,8 +64,8 @@ export function useTokenTransferMutation() {
         }
       });
 
-      if (addError || !addResult.success) {
-        throw new Error(addResult?.message || 'Failed to add tokens');
+      if (addError || !(addResult as any)?.success) {
+        throw new Error((addResult as any)?.message || 'Failed to add tokens');
       }
 
       return { deductResult, addResult };

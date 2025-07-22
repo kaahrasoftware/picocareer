@@ -15,7 +15,7 @@ import { AppSettingsTab } from "./AppSettingsTab";
 import { AcademicResourcesTab } from "./AcademicResourcesTab";
 import { ContentResourcesTab } from "./ContentResourcesTab";
 import { TokensManagementTab } from "./tokens/TokensManagementTab";
-import { BrowserCompatibilityTest } from "../../debug/BrowserCompatibilityTest";
+
 
 export function DashboardTab() {
   return (
@@ -79,7 +79,7 @@ export function DashboardTab() {
         <TabsContent value="debug">
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Debug Tools</h2>
-            <BrowserCompatibilityTest />
+            <p className="text-muted-foreground">Debug tools will be available here.</p>
           </div>
         </TabsContent>
       </Tabs>
