@@ -7,13 +7,16 @@ interface TransactionFilters {
   type: string;
   category: string;
   status: string;
+  dateFrom?: Date;
+  dateTo?: Date;
 }
 
-interface TransactionData {
+interface SystemTransactionData {
   id: string;
   walletId: string;
   userEmail: string;
   userName: string;
+  userType: string;
   transactionType: string;
   amount: number;
   description: string;
@@ -21,12 +24,13 @@ interface TransactionData {
   status: string;
   createdAt: string;
   metadata: any;
+  referenceId?: string;
 }
 
 export function useSystemTransactionHistory(filters: TransactionFilters) {
   return useQuery({
     queryKey: ['system-transaction-history', filters],
-    queryFn: async (): Promise<TransactionData[]> => {
+    queryFn: async (): Promise<SystemTransactionData[]> => {
       let query = supabase
         .from('token_transactions')
         .select(`
@@ -39,17 +43,20 @@ export function useSystemTransactionHistory(filters: TransactionFilters) {
           transaction_status,
           created_at,
           metadata,
+          reference_id,
           wallets!inner(
-            profile_id,
+            id,
             profiles!inner(
+              id,
               first_name,
               last_name,
-              email
+              email,
+              user_type
             )
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(500);
+        .limit(1000); // Limit for performance
 
       // Apply filters
       if (filters.type !== 'all') {
@@ -57,43 +64,53 @@ export function useSystemTransactionHistory(filters: TransactionFilters) {
       }
 
       if (filters.category !== 'all') {
-        query = query.eq('category', filters.category as any);
+        query = query.eq('category', filters.category);
       }
 
       if (filters.status !== 'all') {
-        query = query.eq('transaction_status', filters.status as any);
+        query = query.eq('transaction_status', filters.status);
+      }
+
+      if (filters.dateFrom) {
+        query = query.gte('created_at', filters.dateFrom.toISOString());
+      }
+
+      if (filters.dateTo) {
+        query = query.lte('created_at', filters.dateTo.toISOString());
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      const transactions = data?.map(tx => ({
+      // Transform the data
+      const transactions: SystemTransactionData[] = data?.map(tx => ({
         id: tx.id,
         walletId: tx.wallet_id,
         userEmail: tx.wallets.profiles.email || '',
-        userName: `${tx.wallets.profiles.first_name || ''} ${tx.wallets.profiles.last_name || ''}`.trim() || 'Unknown User',
+        userName: `${tx.wallets.profiles.first_name || ''} ${tx.wallets.profiles.last_name || ''}`.trim(),
+        userType: tx.wallets.profiles.user_type || 'mentee',
         transactionType: tx.transaction_type,
         amount: tx.amount,
         description: tx.description,
         category: tx.category,
         status: tx.transaction_status,
         createdAt: tx.created_at,
-        metadata: tx.metadata
+        metadata: tx.metadata,
+        referenceId: tx.reference_id
       })) || [];
 
       // Apply search filter on processed data
       if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
         return transactions.filter(tx => 
-          tx.userName.toLowerCase().includes(searchTerm) ||
-          tx.userEmail.toLowerCase().includes(searchTerm) ||
-          tx.description.toLowerCase().includes(searchTerm)
+          tx.userName.toLowerCase().includes(filters.search.toLowerCase()) ||
+          tx.userEmail.toLowerCase().includes(filters.search.toLowerCase()) ||
+          tx.description.toLowerCase().includes(filters.search.toLowerCase())
         );
       }
 
       return transactions;
     },
-    staleTime: 30000, // 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 }
