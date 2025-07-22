@@ -31,6 +31,17 @@ export function useSystemTransactionHistory(filters: TransactionFilters) {
   return useQuery({
     queryKey: ['system-transaction-history', filters],
     queryFn: async (): Promise<SystemTransactionData[]> => {
+      // First check if current user is admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      if (!profile || profile.user_type !== 'admin') {
+        throw new Error('Unauthorized: Admin access required');
+      }
+
       let query = supabase
         .from('token_transactions')
         .select(`
