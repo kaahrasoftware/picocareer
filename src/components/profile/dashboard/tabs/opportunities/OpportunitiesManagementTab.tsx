@@ -16,8 +16,7 @@ export function OpportunitiesManagementTab() {
   };
 
   const handleEditOpportunity = (opportunity: any) => {
-    // Navigate to edit page when available
-    console.log("Edit opportunity:", opportunity.id);
+    navigate(`/edit-opportunity/${opportunity.id}`);
   };
 
   // Map the data to match the expected format for the data table

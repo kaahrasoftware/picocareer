@@ -3,9 +3,11 @@ import React from 'react';
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExternalLink, Edit } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUpdateOpportunityStatusMutation } from "@/hooks/useUpdateOpportunityStatusMutation";
 
 interface Opportunity {
   id: string;
@@ -25,6 +27,12 @@ interface OpportunitiesDataTableProps {
 }
 
 export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: OpportunitiesDataTableProps) {
+  const statusMutation = useUpdateOpportunityStatusMutation();
+
+  const handleStatusChange = async (opportunityId: string, newStatus: string) => {
+    await statusMutation.mutateAsync({ id: opportunityId, status: newStatus });
+  };
+
   const getTypeColor = (type: Opportunity['type']) => {
     const colors = {
       scholarship: 'bg-purple-100 text-purple-800',
@@ -38,6 +46,21 @@ export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: Opp
       other: 'bg-gray-100 text-gray-800'
     };
     return colors[type] || colors.other;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'published':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'inactive':
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const columns = [
@@ -91,9 +114,27 @@ export function OpportunitiesDataTable({ opportunities, onEdit, isLoading }: Opp
       header: "Status",
       accessorKey: "status",
       cell: ({ row }: { row: { original: Opportunity } }) => (
-        <Badge variant={row.original.status === 'Published' ? 'default' : 'secondary'}>
-          {row.original.status}
-        </Badge>
+        <Select
+          value={row.original.status}
+          onValueChange={(value) => handleStatusChange(row.original.id, value)}
+          disabled={statusMutation.isPending}
+        >
+          <SelectTrigger className="w-32">
+            <SelectValue>
+              <Badge className={getStatusColor(row.original.status)}>
+                {row.original.status}
+              </Badge>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Active">
+              <Badge className="bg-green-100 text-green-800">Active</Badge>
+            </SelectItem>
+            <SelectItem value="Pending">
+              <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+            </SelectItem>
+          </SelectContent>
+        </Select>
       ),
     },
     {

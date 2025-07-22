@@ -27,6 +27,7 @@ import SchoolUploadPage from '@/pages/SchoolUploadPage';
 import CompanyUploadPage from '@/pages/CompanyUploadPage';
 import ScholarshipAdd from '@/pages/ScholarshipAdd';
 import CreateOpportunity from '@/pages/CreateOpportunity';
+import EditOpportunity from '@/pages/EditOpportunity';
 import MentorRegistration from '@/pages/MentorRegistration';
 import Partnerships from '@/pages/Partnerships';
 import Hubs from '@/pages/Hubs';
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
       { path: "company-upload", element: <CompanyUploadPage /> },
       { path: "scholarship-add", element: <ScholarshipAdd /> },
       { path: "create-opportunity", element: <CreateOpportunity /> },
+      { path: "edit-opportunity/:id", element: <EditOpportunity /> },
       { path: "api-admin", element: <APIAdmin /> },
       { path: "api-testing", element: <APITesting /> },
       { path: "api-docs", element: <APIDocs /> },
