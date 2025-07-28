@@ -7,7 +7,8 @@ import {
   GraduationCap,
   Settings,
   Bug,
-  Coins
+  Coins,
+  Calendar
 } from "lucide-react";
 import { OverviewTab } from "./OverviewTab";
 import { UsersTab } from "./UsersTab";
@@ -15,13 +16,14 @@ import { AppSettingsTab } from "./AppSettingsTab";
 import { AcademicResourcesTab } from "./AcademicResourcesTab";
 import { ContentResourcesTab } from "./ContentResourcesTab";
 import { TokensManagementTab } from "./tokens/TokensManagementTab";
+import { SessionManagementTab } from "./sessions/SessionManagementTab";
 
 
 export function DashboardTab() {
   return (
     <div className="space-y-8 p-6">
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid grid-cols-7 gap-4">
+        <TabsList className="grid grid-cols-8 gap-4">
           <TabsTrigger value="overview" className="gap-2">
             <LayoutDashboard className="h-4 w-4" />
             Overview
@@ -33,6 +35,10 @@ export function DashboardTab() {
           <TabsTrigger value="tokens" className="gap-2">
             <Coins className="h-4 w-4" />
             Tokens
+          </TabsTrigger>
+          <TabsTrigger value="sessions" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Sessions
           </TabsTrigger>
           <TabsTrigger value="academic-resources" className="gap-2">
             <GraduationCap className="h-4 w-4" />
@@ -62,6 +68,10 @@ export function DashboardTab() {
 
         <TabsContent value="tokens">
           <TokensManagementTab />
+        </TabsContent>
+
+        <TabsContent value="sessions">
+          <SessionManagementTab />
         </TabsContent>
 
         <TabsContent value="academic-resources">
