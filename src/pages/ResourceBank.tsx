@@ -7,15 +7,14 @@ import { EventResource } from "@/types/event-resources";
 import { Button } from "@/components/ui/button";
 import { ResourceBankUploadDialog } from "@/components/resource-bank/ResourceBankUploadDialog";
 import { useAuth } from "@/context/AuthContext";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Plus } from "lucide-react";
 
 export default function ResourceBank() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const { user } = useAuth();
-
-  // Check if user is admin
-  const isAdmin = user?.user_metadata?.user_type === 'admin';
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
 
   const { data: allResources, isLoading, error } = useQuery({
     queryKey: ['all-event-resources'],
