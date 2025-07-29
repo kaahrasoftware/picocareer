@@ -36,7 +36,7 @@ export function ResourceBankUploadDialog({ open, onOpenChange }: ResourceBankUpl
       access_level: "public",
       is_downloadable: true,
       external_url: "",
-      event_id: "",
+      event_id: "no-event",
     },
   });
 
@@ -116,7 +116,7 @@ export function ResourceBankUploadDialog({ open, onOpenChange }: ResourceBankUpl
         external_url: data.resource_type === 'link' ? data.external_url : null,
         file_format: data.file_format || null,
         file_size: data.file_size || null,
-        event_id: data.event_id || null, // Allow null for general resources
+        event_id: data.event_id === "no-event" ? null : data.event_id, // Convert placeholder to null
         sort_order: 0
       };
 
@@ -334,8 +334,8 @@ export function ResourceBankUploadDialog({ open, onOpenChange }: ResourceBankUpl
                         <SelectValue placeholder="Select an event (optional)" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="">No Event Association</SelectItem>
+                     <SelectContent>
+                       <SelectItem value="no-event">No Event Association</SelectItem>
                       {events?.map((event) => (
                         <SelectItem key={event.id} value={event.id}>
                           {event.title} ({new Date(event.start_time).toLocaleDateString()})
