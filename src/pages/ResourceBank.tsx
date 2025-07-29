@@ -4,9 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EventResourcesSection } from "@/components/event/EventResourcesSection";
 import { EventResource } from "@/types/event-resources";
+import { Button } from "@/components/ui/button";
+import { ResourceBankUploadDialog } from "@/components/resource-bank/ResourceBankUploadDialog";
+import { useAuth } from "@/context/AuthContext";
+import { Plus } from "lucide-react";
 
 export default function ResourceBank() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const { user } = useAuth();
+
+  // Check if user is admin
+  const isAdmin = user?.user_metadata?.user_type === 'admin';
 
   const { data: allResources, isLoading, error } = useQuery({
     queryKey: ['all-event-resources'],
@@ -15,7 +24,7 @@ export default function ResourceBank() {
         .from('event_resources')
         .select(`
           *,
-          events!inner(
+          events(
             id,
             title,
             start_time,
@@ -54,15 +63,36 @@ export default function ResourceBank() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Resource Bank</h1>
-        <p className="text-muted-foreground">
-          Discover and access educational resources from all our events
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Resource Bank</h1>
+            <p className="text-muted-foreground">
+              Discover and access educational resources from all our events
+            </p>
+          </div>
+          {isAdmin && (
+            <Button 
+              onClick={() => setShowUploadDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Upload Resource
+            </Button>
+          )}
+        </div>
       </div>
 
       <EventResourcesSection 
         resources={allResources || []}
       />
+
+      {/* Upload Dialog for Admins */}
+      {isAdmin && (
+        <ResourceBankUploadDialog
+          open={showUploadDialog}
+          onOpenChange={setShowUploadDialog}
+        />
+      )}
     </div>
   );
 }

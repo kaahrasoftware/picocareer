@@ -1691,7 +1691,7 @@ export type Database = {
           created_at: string
           description: string | null
           download_count: number | null
-          event_id: string
+          event_id: string | null
           external_url: string | null
           file_format: string | null
           file_size: number | null
@@ -1714,7 +1714,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number | null
-          event_id: string
+          event_id?: string | null
           external_url?: string | null
           file_format?: string | null
           file_size?: number | null
@@ -1737,7 +1737,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           download_count?: number | null
-          event_id?: string
+          event_id?: string | null
           external_url?: string | null
           file_format?: string | null
           file_size?: number | null
