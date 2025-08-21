@@ -70,6 +70,7 @@ serve(async (req) => {
       mode: 'payment',
       success_url: `${req.headers.get('origin')}/profile?tab=wallet&success=true`,
       cancel_url: `${req.headers.get('origin')}/token-shop`,
+      allow_promotion_codes: true,
       metadata: {
         user_id: userId,
         price_id: priceId,

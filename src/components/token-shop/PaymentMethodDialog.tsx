@@ -2,7 +2,10 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CreditCard, Coins } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CreditCard, Coins, Tag } from "lucide-react";
+import { useState } from "react";
 
 interface TokenPackage {
   id: string;
@@ -27,6 +30,8 @@ export function PaymentMethodDialog({
   selectedPackage, 
   onContinueWithStripe 
 }: PaymentMethodDialogProps) {
+  const [discountCode, setDiscountCode] = useState("");
+  
   if (!selectedPackage) return null;
 
   const handleStripePayment = () => {
@@ -66,6 +71,22 @@ export function PaymentMethodDialog({
               </div>
             </CardContent>
           </Card>
+
+          {/* Discount Code */}
+          <div className="space-y-2">
+            <Label htmlFor="discount-code" className="text-sm font-medium flex items-center gap-2">
+              <Tag className="h-4 w-4" />
+              Discount Code (Optional)
+            </Label>
+            <Input
+              id="discount-code"
+              type="text"
+              placeholder="Enter discount code"
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value)}
+              className="font-mono"
+            />
+          </div>
 
           {/* Payment Methods */}
           <div className="space-y-3">
