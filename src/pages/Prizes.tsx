@@ -5,14 +5,11 @@ import { Separator } from "@/components/ui/separator";
 import { Gift, Trophy, Star, Clock, Users, Tag, ArrowRight, Zap } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
-
 const Prizes = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
   useEffect(() => {
     document.title = "Prizes & Promotions - PicoCareer";
-    
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Discover amazing prizes and promotional offers at PicoCareer. Earn tokens, unlock rewards, and access exclusive opportunities.');
@@ -25,38 +22,24 @@ const Prizes = () => {
     title: "Building Bridges",
     subtitle: "PicoCareer Prize Giveaway!",
     description: "Unlock this incredible package designed to kickstart your future",
-    prizes: [
-      "🎁 $100 worth of Pico Tokens (100% free!)",
-      "🎓 40 free mentorship sessions with any of our 20+ mentors", 
-      "📝 Expert guidance on college applications, scholarships, financial aid, and study abroad programs",
-      "💡 Career advice and mentorship to help shape your future",
-      "🤖 Free AI-powered career assessment to discover your strengths and best-fit career paths"
-    ],
-    bonuses: [
-      "✨ Invite 5 friends, each one gets 50% off in our Token Shop",
-      "🏫 Invite your school, and your entire school community can enjoy 50% off in our Token Shop"
-    ],
+    prizes: ["🎁 $100 worth of Pico Tokens (100% free!)", "🎓 40 free mentorship sessions with any of our 20+ mentors", "📝 Expert guidance on college applications, scholarships, financial aid, and study abroad programs", "💡 Career advice and mentorship to help shape your future", "🤖 Free AI-powered career assessment to discover your strengths and best-fit career paths"],
+    bonuses: ["✨ Invite 5 friends, each one gets 50% off in our Token Shop", "🏫 Invite your school, and your entire school community can enjoy 50% off in our Token Shop"],
     claimInstructions: {
       winner: "Create an account → Check your wallet → Click Token Shop → Purchase 1000 Tokens → Enter coupon BRIDGES2025",
       friends: ["FRIEND1", "FRIEND2", "FRIEND3", "FRIEND4", "FRIEND5"],
       school: "Reach out to us at info@picocareer.com with the subject line 'Pico Hub - Building Bridges'"
     }
   };
-
   const handleClaimWinnerPrize = () => {
     navigate('/token-shop?discount=BRIDGES2025');
   };
-
   const handleFriendCoupon = (coupon: string) => {
     navigate(`/token-shop?discount=${coupon}`);
   };
-
   const handleSchoolInquiry = () => {
     window.open('mailto:info@picocareer.com?subject=Pico Hub - Building Bridges', '_blank');
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Header Section */}
         <header className="text-center mb-12">
@@ -89,20 +72,16 @@ const Prizes = () => {
                   Exclusive Giveaway
                 </Badge>
               </div>
-              <CardTitle className="text-3xl font-bold text-center mb-2">
-                What You'll Win
-              </CardTitle>
+              <CardTitle className="text-3xl font-bold text-center mb-2">What You Win</CardTitle>
             </CardHeader>
             
             <CardContent className="space-y-6">
               {/* Prize Items */}
               <div className="grid md:grid-cols-2 gap-4">
-                {buildingBridgesEvent.prizes.map((prize, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                {buildingBridgesEvent.prizes.map((prize, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
                     <div className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2" />
                     <span className="text-sm font-medium">{prize}</span>
-                  </div>
-                ))}
+                  </div>)}
               </div>
               
               <Separator />
@@ -111,12 +90,10 @@ const Prizes = () => {
               <div>
                 <h4 className="font-semibold text-lg mb-3 text-center">Plus These Amazing Bonuses!</h4>
                 <div className="space-y-3">
-                  {buildingBridgesEvent.bonuses.map((bonus, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                  {buildingBridgesEvent.bonuses.map((bonus, index) => <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
                       <div className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2" />
                       <span className="text-sm font-medium">{bonus}</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </CardContent>
@@ -145,11 +122,7 @@ const Prizes = () => {
                 <div className="text-sm text-muted-foreground text-center mb-4">
                   {buildingBridgesEvent.claimInstructions.winner}
                 </div>
-                <Button 
-                  onClick={handleClaimWinnerPrize}
-                  className="w-full"
-                  size="lg"
-                >
+                <Button onClick={handleClaimWinnerPrize} className="w-full" size="lg">
                   Claim Winner Prize
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -171,17 +144,9 @@ const Prizes = () => {
                   Each friend gets their own discount code:
                 </p>
                 <div className="grid grid-cols-1 gap-2">
-                  {buildingBridgesEvent.claimInstructions.friends.map((friendCode, index) => (
-                    <Button
-                      key={friendCode}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleFriendCoupon(friendCode)}
-                      className="font-mono text-xs"
-                    >
+                  {buildingBridgesEvent.claimInstructions.friends.map((friendCode, index) => <Button key={friendCode} variant="outline" size="sm" onClick={() => handleFriendCoupon(friendCode)} className="font-mono text-xs">
                       {friendCode}
-                    </Button>
-                  ))}
+                    </Button>)}
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
                   Click any code to apply in Token Shop
@@ -198,12 +163,7 @@ const Prizes = () => {
                 <p className="text-sm text-muted-foreground text-center">
                   Get your entire school 50% off by contacting us:
                 </p>
-                <Button 
-                  onClick={handleSchoolInquiry}
-                  variant="outline"
-                  size="lg"
-                  className="w-full"
-                >
+                <Button onClick={handleSchoolInquiry} variant="outline" size="lg" className="w-full">
                   Contact Us
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -237,8 +197,6 @@ const Prizes = () => {
           </Card>
         </section>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Prizes;
