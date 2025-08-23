@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { TokenShopHeader } from "@/components/token-shop/TokenShopHeader";
@@ -34,6 +35,7 @@ interface FilterState {
 
 export default function TokenShop() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<FilterState>({
     priceRange: [0, 100],
@@ -45,6 +47,9 @@ export default function TokenShop() {
   // Payment dialog state
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedPackageForPayment, setSelectedPackageForPayment] = useState<TokenPackage | null>(null);
+  
+  // Discount state
+  const discountCode = searchParams.get('discount') || '';
 
   // Get current session
   const { data: session } = useQuery({
@@ -107,7 +112,7 @@ export default function TokenShop() {
     }
   };
 
-  const handleContinueWithStripe = async (priceId: string) => {
+  const handleContinueWithStripe = async (priceId: string, promotionCode?: string) => {
     try {
       if (!session) {
         toast({
@@ -122,7 +127,7 @@ export default function TokenShop() {
       console.log('Package price ID:', priceId);
 
       const response = await supabase.functions.invoke('create-token-checkout', {
-        body: { priceId },
+        body: { priceId, promotionCode },
       });
 
       console.log('Checkout response:', response);
@@ -274,6 +279,22 @@ export default function TokenShop() {
         {/* Hero Section */}
         <ModernTokenShopHero />
         
+        {/* Discount Banner */}
+        {discountCode && (
+          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-center gap-3">
+                <Tag className="h-5 w-5 text-primary" />
+                <span className="font-semibold">Discount code applied:</span>
+                <code className="px-2 py-1 bg-primary/10 rounded font-mono text-sm">
+                  {discountCode}
+                </code>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Horizontal Wallet Overview */}
         <HorizontalWalletOverview />
         
@@ -342,6 +363,7 @@ export default function TokenShop() {
         onClose={() => setIsPaymentDialogOpen(false)}
         selectedPackage={selectedPackageForPayment}
         onContinueWithStripe={handleContinueWithStripe}
+        initialDiscountCode={discountCode}
       />
     </div>
   );

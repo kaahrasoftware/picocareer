@@ -32,7 +32,7 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     });
 
-    const { priceId } = await req.json();
+    const { priceId, promotionCode } = await req.json();
 
     // Get the authorization header
     const authHeader = req.headers.get('Authorization');
@@ -60,7 +60,7 @@ serve(async (req) => {
     console.log('Creating checkout session for user:', userId, 'with price:', priceId);
     
     // Create checkout session with user ID in metadata
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: any = {
       line_items: [
         {
           price: priceId,
@@ -75,7 +75,33 @@ serve(async (req) => {
         user_id: userId,
         price_id: priceId,
       },
-    });
+    };
+
+    // Add promotion code if provided
+    if (promotionCode) {
+      try {
+        // Check if the promotion code exists
+        const promotionCodes = await stripe.promotionCodes.list({
+          code: promotionCode,
+          active: true,
+          limit: 1,
+        });
+        
+        if (promotionCodes.data.length > 0) {
+          sessionConfig.discounts = [{
+            promotion_code: promotionCodes.data[0].id,
+          }];
+          console.log('Applied promotion code:', promotionCode);
+        } else {
+          console.log('Promotion code not found or inactive:', promotionCode);
+        }
+      } catch (promoError) {
+        console.error('Error applying promotion code:', promoError);
+        // Continue without the promotion code rather than failing
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log('Checkout session created successfully:', session.id);
 

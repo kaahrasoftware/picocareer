@@ -19,105 +19,40 @@ const Prizes = () => {
     }
   }, []);
 
-  // Mock data for promotions
-  const activePromotions = [
-    {
-      id: "1",
-      title: "Welcome Bonus",
-      description: "Get 50% extra tokens on your first purchase",
-      discountCode: "WELCOME50",
-      validUntil: "2025-01-31",
-      tokenBonus: 50,
-      isActive: true,
-      featured: true
-    },
-    {
-      id: "2", 
-      title: "Student Special",
-      description: "20% off all token packages for verified students",
-      discountCode: "STUDENT20",
-      validUntil: "2025-02-28",
-      tokenBonus: 20,
-      isActive: true,
-      featured: false
-    },
-    {
-      id: "3",
-      title: "Holiday Deal",
-      description: "Double tokens on packages over 500 tokens",
-      discountCode: "HOLIDAY2X",
-      validUntil: "2024-12-31",
-      tokenBonus: 100,
-      isActive: true,
-      featured: true
+  // Building Bridges event data
+  const buildingBridgesEvent = {
+    id: "building-bridges-2025",
+    title: "Building Bridges",
+    subtitle: "PicoCareer Prize Giveaway!",
+    description: "Unlock this incredible package designed to kickstart your future",
+    prizes: [
+      "🎁 $100 worth of Pico Tokens (100% free!)",
+      "🎓 40 free mentorship sessions with any of our 20+ mentors", 
+      "📝 Expert guidance on college applications, scholarships, financial aid, and study abroad programs",
+      "💡 Career advice and mentorship to help shape your future",
+      "🤖 Free AI-powered career assessment to discover your strengths and best-fit career paths"
+    ],
+    bonuses: [
+      "✨ Invite 5 friends, each one gets 50% off in our Token Shop",
+      "🏫 Invite your school, and your entire school community can enjoy 50% off in our Token Shop"
+    ],
+    claimInstructions: {
+      winner: "Create an account → Check your wallet → Click Token Shop → Purchase 1000 Tokens → Enter coupon BRIDGES2025",
+      friends: ["FRIEND1", "FRIEND2", "FRIEND3", "FRIEND4", "FRIEND5"],
+      school: "Reach out to us at info@picocareer.com with the subject line 'Pico Hub - Building Bridges'"
     }
-  ];
-
-  // Mock data for prizes
-  const availablePrizes = [
-    {
-      id: "1",
-      name: "Career Coaching Session",
-      description: "One-on-one career coaching with industry professionals", 
-      tokenCost: 1000,
-      category: "Professional Development",
-      availability: "Limited",
-      estimatedValue: "$150"
-    },
-    {
-      id: "2",
-      name: "Premium Resume Review",
-      description: "Professional resume review and optimization by experts",
-      tokenCost: 500,
-      category: "Career Services", 
-      availability: "Available",
-      estimatedValue: "$75"
-    },
-    {
-      id: "3",
-      name: "LinkedIn Profile Optimization",
-      description: "Complete LinkedIn profile makeover by career specialists",
-      tokenCost: 750,
-      category: "Professional Development",
-      availability: "Available", 
-      estimatedValue: "$100"
-    },
-    {
-      id: "4",
-      name: "Interview Prep Package",
-      description: "Mock interviews and feedback sessions with industry mentors",
-      tokenCost: 1200,
-      category: "Career Services",
-      availability: "Limited",
-      estimatedValue: "$200"
-    },
-    {
-      id: "5",
-      name: "Networking Event Access",
-      description: "VIP access to exclusive industry networking events",
-      tokenCost: 800,
-      category: "Networking",
-      availability: "Available",
-      estimatedValue: "$120"
-    },
-    {
-      id: "6",
-      name: "Skill Assessment Bundle",
-      description: "Comprehensive skill assessments across multiple domains",
-      tokenCost: 600,
-      category: "Assessment",
-      availability: "Available",
-      estimatedValue: "$80"
-    }
-  ];
-
-  const handleUsePromotion = (discountCode: string) => {
-    navigate(`/token-shop?discount=${discountCode}`);
   };
 
-  const handleClaimPrize = (prizeId: string) => {
-    // Navigate to token shop or prize claim flow
-    navigate('/token-shop');
+  const handleClaimWinnerPrize = () => {
+    navigate('/token-shop?discount=BRIDGES2025');
+  };
+
+  const handleFriendCoupon = (coupon: string) => {
+    navigate(`/token-shop?discount=${coupon}`);
+  };
+
+  const handleSchoolInquiry = () => {
+    window.open('mailto:info@picocareer.com?subject=Pico Hub - Building Bridges', '_blank');
   };
 
   return (
@@ -127,150 +62,158 @@ const Prizes = () => {
         <header className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="p-3 bg-primary/10 rounded-full">
-              <Gift className="h-8 w-8 text-primary" />
+              <Trophy className="h-8 w-8 text-primary" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Prizes & Promotions
+              {buildingBridgesEvent.title}
             </h1>
           </div>
+          <h2 className="text-2xl font-semibold text-primary mb-4">{buildingBridgesEvent.subtitle}</h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover amazing rewards and exclusive offers. Earn tokens, unlock prizes, and boost your career journey.
+            {buildingBridgesEvent.description}
           </p>
         </header>
 
-        {/* Active Promotions Section */}
+        {/* Building Bridges Prize Section */}
         <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <Tag className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Active Promotions</h2>
-            <Badge variant="secondary" className="animate-pulse">
-              <Zap className="h-3 w-3 mr-1" />
-              Limited Time
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activePromotions.map((promotion) => (
-              <Card 
-                key={promotion.id} 
-                className={`relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
-                  promotion.featured ? 'ring-2 ring-primary/20 bg-gradient-to-br from-background to-primary/5' : ''
-                }`}
-              >
-                {promotion.featured && (
-                  <div className="absolute -top-2 -right-2">
-                    <Badge className="bg-primary text-primary-foreground">
-                      <Star className="h-3 w-3 mr-1" />
-                      Featured
-                    </Badge>
+          <Card className="max-w-4xl mx-auto relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 border-primary/20">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/20 to-transparent rounded-bl-full" />
+            
+            <CardHeader className="relative">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Gift className="h-6 w-6 text-primary" />
+                </div>
+                <Badge className="bg-primary text-primary-foreground animate-pulse">
+                  <Star className="h-3 w-3 mr-1" />
+                  Exclusive Giveaway
+                </Badge>
+              </div>
+              <CardTitle className="text-3xl font-bold text-center mb-2">
+                What You'll Win
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {/* Prize Items */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {buildingBridgesEvent.prizes.map((prize, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
+                    <div className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2" />
+                    <span className="text-sm font-medium">{prize}</span>
                   </div>
-                )}
-                
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {promotion.title}
-                    <Badge variant="outline" className="text-green-600 border-green-200">
-                      +{promotion.tokenBonus}%
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription>{promotion.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Promo Code:</span>
-                      <code className="px-2 py-1 bg-muted rounded font-mono text-sm">
-                        {promotion.discountCode}
-                      </code>
+                ))}
+              </div>
+              
+              <Separator />
+              
+              {/* Bonus Section */}
+              <div>
+                <h4 className="font-semibold text-lg mb-3 text-center">Plus These Amazing Bonuses!</h4>
+                <div className="space-y-3">
+                  {buildingBridgesEvent.bonuses.map((bonus, index) => (
+                    <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10">
+                      <div className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-2" />
+                      <span className="text-sm font-medium">{bonus}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      Valid until {new Date(promotion.validUntil).toLocaleDateString()}
-                    </div>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button 
-                    onClick={() => handleUsePromotion(promotion.discountCode)}
-                    className="w-full group"
-                    variant={promotion.featured ? "default" : "outline"}
-                  >
-                    Use Promotion
-                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         <Separator className="my-12" />
 
-        {/* Prizes Section */}
+        {/* How to Claim Section */}
         <section>
-          <div className="flex items-center gap-3 mb-8">
-            <Trophy className="h-6 w-6 text-primary" />
-            <h2 className="text-3xl font-bold">Available Prizes</h2>
-            <Badge variant="secondary" className="ml-auto">
-              <Users className="h-3 w-3 mr-1" />
-              {availablePrizes.length} Available
-            </Badge>
-          </div>
+          <h2 className="text-3xl font-bold text-center mb-8">How to Claim Your Prizes</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availablePrizes.map((prize) => (
-              <Card key={prize.id} className="transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{prize.name}</CardTitle>
-                    <Badge 
-                      variant={prize.availability === "Limited" ? "destructive" : "secondary"}
-                      className="shrink-0"
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Winner Instructions */}
+            <Card className="relative bg-gradient-to-br from-background to-primary/5 border-primary/20">
+              <div className="absolute -top-2 -right-2">
+                <Badge className="bg-primary text-primary-foreground">
+                  <Trophy className="h-3 w-3 mr-1" />
+                  Winner
+                </Badge>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl text-center">🏆 If You're the Winner</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground text-center mb-4">
+                  {buildingBridgesEvent.claimInstructions.winner}
+                </div>
+                <Button 
+                  onClick={handleClaimWinnerPrize}
+                  className="w-full"
+                  size="lg"
+                >
+                  Claim Winner Prize
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+                <div className="text-center">
+                  <code className="text-sm bg-muted px-2 py-1 rounded font-mono">
+                    BRIDGES2025
+                  </code>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Friends Section */}
+            <Card className="bg-gradient-to-br from-background to-secondary/5 border-secondary/20">
+              <CardHeader>
+                <CardTitle className="text-xl text-center">👥 Friends (50% Off)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Each friend gets their own discount code:
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {buildingBridgesEvent.claimInstructions.friends.map((friendCode, index) => (
+                    <Button
+                      key={friendCode}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleFriendCoupon(friendCode)}
+                      className="font-mono text-xs"
                     >
-                      {prize.availability}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm">{prize.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Token Cost:</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-lg font-bold text-primary">{prize.tokenCost.toLocaleString()}</span>
-                        <span className="text-xs text-muted-foreground">tokens</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Est. Value:</span>
-                      <span className="text-sm font-medium">{prize.estimatedValue}</span>
-                    </div>
-                    
-                    <Badge variant="outline" className="w-fit">
-                      {prize.category}
-                    </Badge>
-                  </div>
-                </CardContent>
-                
-                <CardFooter>
-                  <Button 
-                    onClick={() => handleClaimPrize(prize.id)}
-                    className="w-full group"
-                    variant="outline"
-                    disabled={prize.availability === "Limited"}
-                  >
-                    {prize.availability === "Limited" ? "Currently Unavailable" : "Claim Prize"}
-                    {prize.availability !== "Limited" && (
-                      <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                      {friendCode}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                  Click any code to apply in Token Shop
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* School Section */}
+            <Card className="bg-gradient-to-br from-background to-accent/5 border-accent/20">
+              <CardHeader>
+                <CardTitle className="text-xl text-center">🏫 School Community</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Get your entire school 50% off by contacting us:
+                </p>
+                <Button 
+                  onClick={handleSchoolInquiry}
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                >
+                  Contact Us
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Subject: "Pico Hub - Building Bridges"
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 

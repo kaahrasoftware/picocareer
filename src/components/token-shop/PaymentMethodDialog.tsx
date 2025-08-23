@@ -21,21 +21,23 @@ interface PaymentMethodDialogProps {
   isOpen: boolean;
   onClose: () => void;
   selectedPackage: TokenPackage | null;
-  onContinueWithStripe: (priceId: string) => void;
+  onContinueWithStripe: (priceId: string, promotionCode?: string) => void;
+  initialDiscountCode?: string;
 }
 
 export function PaymentMethodDialog({ 
   isOpen, 
   onClose, 
   selectedPackage, 
-  onContinueWithStripe 
+  onContinueWithStripe,
+  initialDiscountCode = "" 
 }: PaymentMethodDialogProps) {
-  const [discountCode, setDiscountCode] = useState("");
+  const [discountCode, setDiscountCode] = useState(initialDiscountCode);
   
   if (!selectedPackage) return null;
 
   const handleStripePayment = () => {
-    onContinueWithStripe(selectedPackage.default_price);
+    onContinueWithStripe(selectedPackage.default_price, discountCode || undefined);
     onClose();
   };
 
