@@ -213,6 +213,11 @@ export function ModernMobileMenu({ isOpen, onClose }: ModernMobileMenuProps) {
       type: "link" as const 
     },
     { 
+      label: "Prizes", 
+      href: "/prizes", 
+      type: "link" as const 
+    },
+    { 
       label: "Pico Resources", 
       sections: picoResourcesItems, 
       type: "mega" as const 

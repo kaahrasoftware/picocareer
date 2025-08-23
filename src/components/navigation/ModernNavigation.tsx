@@ -243,6 +243,23 @@ export function ModernNavigation() {
         Hubs
       </Link>
 
+      {/* Prizes Link */}
+      <Link
+        to="/prizes"
+        className={cn(
+          "relative px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm",
+          "hover:bg-muted/80 hover:text-primary",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50",
+          "before:absolute before:inset-x-4 before:bottom-0 before:h-0.5 before:bg-primary before:rounded-full",
+          "before:scale-x-0 before:transition-transform before:duration-200",
+          isActive("/prizes")
+            ? "text-primary bg-primary/10 before:scale-x-100" 
+            : "text-muted-foreground hover:before:scale-x-100"
+        )}
+      >
+        Prizes
+      </Link>
+
       {/* Pico Resources Mega Menu */}
       <ModernMegaMenu 
         sections={picoResourcesItems} 
