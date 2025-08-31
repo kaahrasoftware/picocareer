@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -5408,16 +5408,16 @@ export type Database = {
     }
     Functions: {
       add_hub_member: {
-        Args: { _hub_id: string; _email: string; _role: string }
+        Args: { _email: string; _hub_id: string; _role: string }
         Returns: Json
       }
       add_tokens_to_wallet: {
         Args: {
-          p_wallet_id: string
           p_amount: number
           p_description: string
-          p_related_entity_type?: string
           p_related_entity_id?: string
+          p_related_entity_type?: string
+          p_wallet_id: string
         }
         Returns: undefined
       }
@@ -5435,9 +5435,9 @@ export type Database = {
       }
       cancel_session: {
         Args: {
-          p_session_id: string
-          p_reason?: string
           p_cancelled_by_user_id?: string
+          p_reason?: string
+          p_session_id: string
         }
         Returns: Json
       }
@@ -5446,22 +5446,22 @@ export type Database = {
         Returns: Json
       }
       check_hub_admin: {
-        Args: { user_id: string; target_hub_id: string }
+        Args: { target_hub_id: string; user_id: string }
         Returns: boolean
       }
       check_hub_membership: {
-        Args: { user_id: string; target_hub_id: string }
+        Args: { target_hub_id: string; user_id: string }
         Returns: boolean
       }
       check_pending_invitation: {
-        Args: { user_id: string; target_hub_id: string }
+        Args: { target_hub_id: string; user_id: string }
         Returns: boolean
       }
       check_quota_usage: {
         Args: {
           p_organization_id: string
-          p_quota_type: string
           p_period_type?: string
+          p_quota_type: string
         }
         Returns: Json
       }
@@ -5474,7 +5474,7 @@ export type Database = {
         Returns: undefined
       }
       check_verification_rate_limit: {
-        Args: { _token: string; _ip_address: string }
+        Args: { _ip_address: string; _token: string }
         Returns: boolean
       }
       clean_old_notifications: {
@@ -5485,8 +5485,8 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           cleaned_count: number
-          mentor_id: string
           mentor_email: string
+          mentor_id: string
         }[]
       }
       cleanup_expired_sessions: {
@@ -5499,25 +5499,25 @@ export type Database = {
       }
       create_assessment_session: {
         Args: {
-          p_organization_id: string
-          p_external_user_id: string
-          p_template_id?: string
           p_callback_url?: string
-          p_webhook_url?: string
-          p_return_url?: string
           p_client_metadata?: Json
           p_expires_in_minutes?: number
+          p_external_user_id: string
+          p_organization_id: string
+          p_return_url?: string
+          p_template_id?: string
+          p_webhook_url?: string
         }
         Returns: string
       }
       create_billing_event: {
         Args: {
-          p_organization_id: string
           p_event_type: string
-          p_quantity?: number
-          p_unit_price?: number
-          p_reference_id?: string
           p_metadata?: Json
+          p_organization_id: string
+          p_quantity?: number
+          p_reference_id?: string
+          p_unit_price?: number
         }
         Returns: string
       }
@@ -5532,27 +5532,27 @@ export type Database = {
       }
       create_session_and_update_availability: {
         Args: {
-          p_mentor_id: string
-          p_mentee_id: string
-          p_session_type_id: string
-          p_scheduled_at: string
-          p_notes: string
           p_meeting_platform: string
+          p_mentee_id: string
           p_mentee_phone_number: string
           p_mentee_telegram_username: string
-          p_start_time: string
+          p_mentor_id: string
+          p_notes: string
+          p_scheduled_at: string
           p_session_date: string
+          p_session_type_id: string
+          p_start_time: string
         }
         Returns: Json
       }
       deduct_tokens: {
         Args: {
-          p_wallet_id: string
           p_amount: number
-          p_description: string
           p_category?: Database["public"]["Enums"]["transaction_category"]
-          p_reference_id?: string
+          p_description: string
           p_metadata?: Json
+          p_reference_id?: string
+          p_wallet_id: string
         }
         Returns: Json
       }
@@ -5567,13 +5567,13 @@ export type Database = {
       fix_hub_metrics_inconsistencies: {
         Args: Record<PropertyKey, never>
         Returns: {
+          fixed: boolean
           hub_id: string
           name: string
-          old_storage: number
+          new_members: number
           new_storage: number
           old_members: number
-          new_members: number
-          fixed: boolean
+          old_storage: number
         }[]
       }
       generate_api_key: {
@@ -5591,11 +5591,11 @@ export type Database = {
       get_hub_recommendations: {
         Args: { p_hub_id: string }
         Returns: {
-          content_type: string
-          content_id: string
-          title: string
           bookmark_count: number
+          content_id: string
+          content_type: string
           search_count: number
+          title: string
         }[]
       }
       get_organization_template: {
@@ -5604,9 +5604,9 @@ export type Database = {
       }
       get_transaction_summary: {
         Args: {
-          p_wallet_id: string
-          p_start_date?: string
           p_end_date?: string
+          p_start_date?: string
+          p_wallet_id: string
         }
         Returns: Json
       }
@@ -5640,12 +5640,12 @@ export type Database = {
       }
       http_delete: {
         Args:
+          | { content: string; content_type: string; uri: string }
           | { uri: string }
-          | { uri: string; content: string; content_type: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_get: {
-        Args: { uri: string } | { uri: string; data: Json }
+        Args: { data: Json; uri: string } | { uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_head: {
@@ -5664,17 +5664,17 @@ export type Database = {
         }[]
       }
       http_patch: {
-        Args: { uri: string; content: string; content_type: string }
+        Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_post: {
         Args:
-          | { uri: string; content: string; content_type: string }
-          | { uri: string; data: Json }
+          | { content: string; content_type: string; uri: string }
+          | { data: Json; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_put: {
-        Args: { uri: string; content: string; content_type: string }
+        Args: { content: string; content_type: string; uri: string }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
       }
       http_reset_curlopt: {
@@ -5707,27 +5707,27 @@ export type Database = {
       }
       log_api_usage: {
         Args: {
-          p_organization_id: string
-          p_endpoint: string
-          p_method: string
-          p_status_code: number
           p_api_key_id?: string
-          p_session_id?: string
-          p_response_time_ms?: number
+          p_endpoint: string
+          p_error_message?: string
+          p_ip_address?: unknown
+          p_metadata?: Json
+          p_method: string
+          p_organization_id: string
           p_request_size_bytes?: number
           p_response_size_bytes?: number
-          p_ip_address?: unknown
+          p_response_time_ms?: number
+          p_session_id?: string
+          p_status_code: number
           p_user_agent?: string
-          p_error_message?: string
-          p_metadata?: Json
         }
         Returns: string
       }
       log_hub_audit_event: {
         Args: {
-          _hub_id: string
           _action: Database["public"]["Enums"]["audit_action"]
           _details?: Json
+          _hub_id: string
         }
         Returns: undefined
       }
@@ -5750,11 +5750,11 @@ export type Database = {
       monitor_availability_duplicates: {
         Args: Record<PropertyKey, never>
         Returns: {
-          profile_id: string
-          mentor_email: string
           duplicate_count: number
-          sample_start_time: string
+          mentor_email: string
+          profile_id: string
           sample_end_time: string
+          sample_start_time: string
         }[]
       }
       process_daily_login_reward: {
@@ -5762,7 +5762,7 @@ export type Database = {
         Returns: Json
       }
       process_referral_reward: {
-        Args: { p_referred_id: string; p_referral_code: string }
+        Args: { p_referral_code: string; p_referred_id: string }
         Returns: Json
       }
       process_welcome_reward: {
@@ -5783,16 +5783,16 @@ export type Database = {
       }
       refund_tokens: {
         Args: {
-          p_wallet_id: string
           p_amount: number
           p_description: string
-          p_reference_id?: string
           p_metadata?: Json
+          p_reference_id?: string
+          p_wallet_id: string
         }
         Returns: Json
       }
       reschedule_session: {
-        Args: { p_session_id: string; p_new_time: string }
+        Args: { p_new_time: string; p_session_id: string }
         Returns: Json
       }
       schedule_notification: {
