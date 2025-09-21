@@ -47,11 +47,34 @@ export function EventsSidebar({
   // Make sure date is valid before filtering
   const isValidDate = date && isValid(date);
   
-  const filteredEvents = events.filter((event) =>
-    isValidDate && event.start ? 
-      isSameDay(new Date(event.start), date) : 
-      false
-  );
+  const filteredEvents = events.filter((event) => {
+    if (!isValidDate) {
+      console.warn('Invalid date provided to EventsSidebar:', date);
+      return false;
+    }
+    
+    if (!event.start) {
+      console.warn('Event has no start date:', event.id);
+      return false;
+    }
+    
+    const eventDate = new Date(event.start);
+    
+    // Validate event date
+    if (isNaN(eventDate.getTime())) {
+      console.error('Invalid event start date:', event.start, 'for event:', event.id);
+      return false;
+    }
+    
+    const isSame = isSameDay(eventDate, date);
+    if (isSame) {
+      console.log('Found event for selected date:', event.id, event.title);
+    }
+    
+    return isSame;
+  });
+
+  console.log('EventsSidebar - Events for date', date?.toDateString(), ':', filteredEvents.length, 'total events:', events.length);
 
   const handleEventDeleted = () => {
     if (selectedEvent && onEventDelete) {

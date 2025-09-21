@@ -98,17 +98,32 @@ export function useSessionEvents() {
 
       // Transform sessions into calendar events
       const events: CalendarEvent[] = sessions.map((session) => {
+        console.log('Processing session:', session.id, 'scheduled_at:', session.scheduled_at);
+        
         // Check if current user has provided feedback for this session
         const hasFeedback = feedbackMap.has(session.id);
         
+        // Handle null/undefined dates gracefully
+        if (!session.scheduled_at) {
+          console.warn('Session has no scheduled_at date:', session.id);
+          return null;
+        }
+        
         const startDate = new Date(session.scheduled_at);
+        
+        // Validate date parsing
+        if (isNaN(startDate.getTime())) {
+          console.error('Invalid date for session:', session.id, session.scheduled_at);
+          return null;
+        }
+        
         const endDate = new Date(
           startDate.getTime() + (session.session_type?.duration || 60) * 60 * 1000
         );
         
         // Map session status to CalendarEvent status type
         const mapStatus = (status: string): 'scheduled' | 'completed' | 'cancelled' | 'no_show' => {
-          switch (status.toLowerCase()) {
+          switch (status?.toLowerCase()) {
             case 'completed':
               return 'completed';
             case 'cancelled':
@@ -120,13 +135,19 @@ export function useSessionEvents() {
           }
         };
         
+        // Handle null mentor/mentee data gracefully
+        const mentorName = session.mentor?.full_name || 'Unknown Mentor';
+        const menteeName = session.mentee?.full_name || 'Unknown Mentee';
+        
+        const sessionTitle = session.mentor?.id === currentUserId
+          ? `Session with ${menteeName}`
+          : `Session with ${mentorName}`;
+        
+        console.log('Created event for session:', session.id, 'title:', sessionTitle, 'start:', startDate);
+        
         return {
           id: session.id,
-          title: `Session with ${
-            session.mentor.id === currentUserId
-              ? session.mentee.full_name
-              : session.mentor.full_name
-          }`,
+          title: sessionTitle,
           description: `Mentoring session`,
           start: startDate,
           end: endDate,
@@ -141,10 +162,12 @@ export function useSessionEvents() {
             mentor: session.mentor,
             mentee: session.mentee,
             session_type: session.session_type,
-            has_feedback: hasFeedback, // Add feedback status
+            has_feedback: hasFeedback,
           },
         };
-      });
+      }).filter(Boolean) as CalendarEvent[]; // Remove null entries
+
+      console.log('Final events array:', events.length, 'events created');
 
       return events;
     },

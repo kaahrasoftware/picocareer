@@ -18,6 +18,12 @@ export function CalendarTab({ profile }: CalendarTabProps) {
   const { session } = useAuthSession();
   const isMentor = profile.id === session?.user.id && profile.user_type === 'mentor';
 
+  // Debug logging
+  console.log('CalendarTab - Events loaded:', events.length, 'events');
+  console.log('CalendarTab - Session user ID:', session?.user.id);
+  console.log('CalendarTab - Profile ID:', profile.id);
+  console.log('CalendarTab - Is mentor:', isMentor);
+
   // Handle date parameter from URL
   useEffect(() => {
     const dateParam = searchParams.get('date');
