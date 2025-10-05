@@ -632,13 +632,17 @@ export type Database = {
           options: Json | null
           order_index: number
           organization_id: string | null
+          pathway_tier: string | null
           prerequisites: Json | null
           profile_type: string[] | null
+          related_cluster_ids: string[] | null
+          related_pathway_ids: string[] | null
           target_audience: string[] | null
           template_id: string | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at: string
+          visual_config: Json | null
         }
         Insert: {
           conditional_logic?: Json | null
@@ -652,13 +656,17 @@ export type Database = {
           options?: Json | null
           order_index: number
           organization_id?: string | null
+          pathway_tier?: string | null
           prerequisites?: Json | null
           profile_type?: string[] | null
+          related_cluster_ids?: string[] | null
+          related_pathway_ids?: string[] | null
           target_audience?: string[] | null
           template_id?: string | null
           title: string
           type: Database["public"]["Enums"]["question_type"]
           updated_at?: string
+          visual_config?: Json | null
         }
         Update: {
           conditional_logic?: Json | null
@@ -672,13 +680,17 @@ export type Database = {
           options?: Json | null
           order_index?: number
           organization_id?: string | null
+          pathway_tier?: string | null
           prerequisites?: Json | null
           profile_type?: string[] | null
+          related_cluster_ids?: string[] | null
+          related_pathway_ids?: string[] | null
           target_audience?: string[] | null
           template_id?: string | null
           title?: string
           type?: Database["public"]["Enums"]["question_type"]
           updated_at?: string
+          visual_config?: Json | null
         }
         Relationships: [
           {
@@ -970,6 +982,39 @@ export type Database = {
           },
         ]
       }
+      career_pathways: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          order_index: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       career_recommendations: {
         Row: {
           assessment_id: string
@@ -1025,6 +1070,45 @@ export type Database = {
             columns: ["career_id"]
             isOneToOne: false
             referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      career_subject_mapping: {
+        Row: {
+          career_id: string
+          created_at: string
+          id: string
+          relevance_score: number | null
+          subject_cluster_id: string
+        }
+        Insert: {
+          career_id: string
+          created_at?: string
+          id?: string
+          relevance_score?: number | null
+          subject_cluster_id: string
+        }
+        Update: {
+          career_id?: string
+          created_at?: string
+          id?: string
+          relevance_score?: number | null
+          subject_cluster_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_subject_mapping_career_id_fkey"
+            columns: ["career_id"]
+            isOneToOne: false
+            referencedRelation: "careers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "career_subject_mapping_subject_cluster_id_fkey"
+            columns: ["subject_cluster_id"]
+            isOneToOne: false
+            referencedRelation: "subject_clusters"
             referencedColumns: ["id"]
           },
         ]
@@ -4811,6 +4895,44 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "mentor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subject_clusters: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          pathway_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index: number
+          pathway_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          pathway_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_clusters_pathway_id_fkey"
+            columns: ["pathway_id"]
+            isOneToOne: false
+            referencedRelation: "career_pathways"
             referencedColumns: ["id"]
           },
         ]

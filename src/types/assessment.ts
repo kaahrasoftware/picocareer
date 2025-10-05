@@ -1,4 +1,3 @@
-
 export interface AssessmentQuestion {
   id: string;
   title: string;
@@ -12,6 +11,14 @@ export interface AssessmentQuestion {
   targetAudience?: string[];
   prerequisites?: any;
   conditionalLogic?: any;
+  pathway_tier?: 'profile_detection' | 'career_choice' | 'subject_cluster' | 'refinement' | 'practical';
+  related_pathway_ids?: string[];
+  related_cluster_ids?: string[];
+  visual_config?: {
+    icon?: string;
+    color?: string;
+    layout?: 'cards' | 'buttons' | 'grid';
+  };
 }
 
 export interface QuestionResponse {
@@ -41,6 +48,17 @@ export interface CareerRecommendation {
   workEnvironment?: string;
   industry?: string;
   relatedCareers?: RelatedCareer[];
+  pathway?: {
+    id: string;
+    title: string;
+    color: string;
+  };
+  cluster?: {
+    id: string;
+    title: string;
+  };
+  pathwayJustification?: string;
+  clusterAlignment?: string;
 }
 
 export interface AssessmentResult {
@@ -52,6 +70,8 @@ export interface AssessmentResult {
   status: 'completed' | 'in_progress';
   detectedProfileType?: 'middle_school' | 'high_school' | 'college' | 'career_professional';
   profileDetectionCompleted?: boolean;
+  primaryPathways?: Array<{ id: string; title: string; score: number }>;
+  subjectClusters?: Array<{ id: string; title: string; pathway_id: string; score: number }>;
 }
 
 export interface AssessmentHistoryItem {
