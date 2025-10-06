@@ -32,6 +32,19 @@
     /* Font customization variables */
     --font-family-override: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     --font-size-scale: 1;
+    
+    /* Pathway colors - for career pathway visualization */
+    --pathway-stem: 199 89% 48%; /* Primary cyan for STEM */
+    --pathway-business: 220 100% 20%; /* Secondary navy for Business */
+    --pathway-creative: 280 65% 60%; /* Purple for Creative */
+    --pathway-health: 145 65% 50%; /* Green for Health */
+    --pathway-service: 35 90% 55%; /* Orange for Service */
+    --pathway-trades: 15 85% 50%; /* Red-orange for Trades */
+    
+    /* Assessment progress colors */
+    --progress-complete: 145 65% 50%;
+    --progress-active: 199 89% 48%;
+    --progress-pending: 217 33% 90%;
   }
 
   * {
