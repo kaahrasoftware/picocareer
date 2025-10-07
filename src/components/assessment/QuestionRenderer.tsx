@@ -11,7 +11,6 @@ import { AssessmentQuestion, QuestionResponse } from '@/types/assessment';
 import { QuestionTypeIndicator } from './QuestionTypeIndicator';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { ArrowRight, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface QuestionRendererProps {
   question: AssessmentQuestion;
@@ -93,45 +92,8 @@ export const QuestionRenderer = ({
   };
 
   const renderQuestionInput = () => {
-    // Check if we should use card layout
-    const useCardLayout = question.visual_config?.layout === 'cards';
-    
     switch (question.type) {
       case 'multiple_choice':
-        if (useCardLayout) {
-          // Card layout for visual pathway/cluster selection
-          return (
-            <RadioGroup value={answer} onValueChange={setAnswer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {question.options?.map((option, index) => (
-                <div 
-                  key={index} 
-                  className={cn(
-                    "relative cursor-pointer transition-all duration-200 rounded-xl border-2 p-6 space-y-3",
-                    answer === option 
-                      ? "border-primary bg-primary/5 shadow-lg scale-[1.02]" 
-                      : "border-muted hover:border-primary/30 hover:shadow-md hover:scale-[1.01]"
-                  )}
-                  onClick={() => setAnswer(option)}
-                >
-                  <RadioGroupItem 
-                    value={option} 
-                    id={`option-${index}`} 
-                    className="absolute top-4 right-4"
-                  />
-                  <div className="text-3xl mb-2">{question.visual_config?.icon || '🎯'}</div>
-                  <Label 
-                    htmlFor={`option-${index}`} 
-                    className="cursor-pointer text-lg font-semibold block"
-                  >
-                    {option}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          );
-        }
-        
-        // Default list layout
         return (
           <RadioGroup value={answer} onValueChange={setAnswer} className="space-y-3">
             {question.options?.map((option, index) => (

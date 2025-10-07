@@ -1,9 +1,9 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AssessmentQuestion, QuestionResponse, CareerRecommendation, ProfileType } from '@/types/assessment';
 import { detectProfileType, shouldShowQuestion } from '@/utils/profileDetection';
-import { useCareerPathways } from './useCareerPathways';
 
 export const useAssessmentFlow = () => {
   const [allQuestions, setAllQuestions] = useState<AssessmentQuestion[]>([]);
@@ -16,64 +16,16 @@ export const useAssessmentFlow = () => {
   const [showResults, setShowResults] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
-  const [selectedPathwayIds, setSelectedPathwayIds] = useState<string[]>([]);
-  const [selectedClusterIds, setSelectedClusterIds] = useState<string[]>([]);
   const { toast } = useToast();
-  const { data: pathways } = useCareerPathways();
 
-  // Filter questions hierarchically based on pathway tier and selections
+  // Dynamically filter questions based on detected profile type
   const filteredQuestions = useMemo(() => {
-    if (!allQuestions.length) return [];
+    if (allQuestions.length === 0) return [];
     
-    // Always start with profile detection questions
-    const profileDetectionQuestions = allQuestions.filter(
-      q => q.pathway_tier === 'profile_detection' || q.order <= 2
+    return allQuestions.filter(question => 
+      shouldShowQuestion(question, detectedProfileType, currentQuestionIndex)
     );
-
-    // If profile not detected yet, only show profile detection questions
-    if (!detectedProfileType || currentQuestionIndex < profileDetectionQuestions.length) {
-      return profileDetectionQuestions;
-    }
-
-    // After profile detection, build question flow hierarchically
-    let questions = [...profileDetectionQuestions];
-
-    // Add career choice questions (pathway selection)
-    const careerChoiceQuestions = allQuestions.filter(
-      q => q.pathway_tier === 'career_choice' && 
-           (!q.profileType || q.profileType.includes(detectedProfileType))
-    );
-    questions = [...questions, ...careerChoiceQuestions];
-
-    // If pathways are selected, add relevant subject cluster questions
-    if (selectedPathwayIds.length > 0) {
-      const subjectClusterQuestions = allQuestions.filter(
-        q => q.pathway_tier === 'subject_cluster' &&
-             q.related_pathway_ids?.some(id => selectedPathwayIds.includes(id)) &&
-             (!q.profileType || q.profileType.includes(detectedProfileType))
-      );
-      questions = [...questions, ...subjectClusterQuestions];
-    }
-
-    // If clusters are selected, add refinement questions
-    if (selectedClusterIds.length > 0) {
-      const refinementQuestions = allQuestions.filter(
-        q => q.pathway_tier === 'refinement' &&
-             (!q.related_cluster_ids || q.related_cluster_ids.some(id => selectedClusterIds.includes(id))) &&
-             (!q.profileType || q.profileType.includes(detectedProfileType))
-      );
-      questions = [...questions, ...refinementQuestions];
-    }
-
-    // Always add practical questions at the end
-    const practicalQuestions = allQuestions.filter(
-      q => q.pathway_tier === 'practical' &&
-           (!q.profileType || q.profileType.includes(detectedProfileType))
-    );
-    questions = [...questions, ...practicalQuestions];
-
-    return questions;
-  }, [allQuestions, detectedProfileType, currentQuestionIndex, selectedPathwayIds, selectedClusterIds]);
+  }, [allQuestions, detectedProfileType, currentQuestionIndex]);
 
   // Get current question from filtered set
   const currentQuestion = filteredQuestions[currentQuestionIndex] || null;
@@ -107,11 +59,7 @@ export const useAssessmentFlow = () => {
         profileType: q.profile_type,
         targetAudience: q.target_audience,
         prerequisites: q.prerequisites,
-        conditionalLogic: q.conditional_logic,
-        pathway_tier: q.pathway_tier as any,
-        related_pathway_ids: q.related_pathway_ids || [],
-        related_cluster_ids: q.related_cluster_ids || [],
-        visual_config: q.visual_config as any
+        conditionalLogic: q.conditional_logic
       }));
 
       setAllQuestions(formattedQuestions);
@@ -178,26 +126,6 @@ export const useAssessmentFlow = () => {
       return updatedResponses;
     });
 
-    // Track pathway selections (Career Choice tier)
-    if (currentQuestion?.pathway_tier === 'career_choice') {
-      const selectedIds = Array.isArray(response.answer) ? response.answer : [response.answer];
-      const pathwayTitles = selectedIds as string[];
-      
-      // Map selected pathway titles to IDs
-      if (pathways) {
-        const matchedPathwayIds = pathways
-          .filter(p => pathwayTitles.includes(p.title))
-          .map(p => p.id);
-        setSelectedPathwayIds(matchedPathwayIds);
-      }
-    }
-
-    // Track cluster selections (Subject Cluster tier)
-    if (currentQuestion?.pathway_tier === 'subject_cluster') {
-      const selectedIds = Array.isArray(response.answer) ? response.answer : [response.answer];
-      setSelectedClusterIds(prev => [...prev, ...(selectedIds as string[])]);
-    }
-
     // Save response to database if we have a valid assessment ID
     if (assessmentId && assessmentId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
       try {
@@ -218,7 +146,7 @@ export const useAssessmentFlow = () => {
     if (currentQuestionIndex < filteredQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
-  }, [currentQuestionIndex, detectedProfileType, filteredQuestions.length, assessmentId, currentQuestion, pathways]);
+  }, [currentQuestionIndex, detectedProfileType, filteredQuestions.length, assessmentId]);
 
   const completeAssessment = async () => {
     try {
@@ -277,8 +205,6 @@ export const useAssessmentFlow = () => {
     setShowResults(false);
     setHasStarted(false);
     setAssessmentId(null);
-    setSelectedPathwayIds([]);
-    setSelectedClusterIds([]);
   };
 
   return {
@@ -297,9 +223,6 @@ export const useAssessmentFlow = () => {
     handleAnswer,
     completeAssessment,
     retakeAssessment,
-    startAssessment,
-    selectedPathwayIds,
-    selectedClusterIds,
-    pathways: pathways || [],
+    startAssessment
   };
 };
